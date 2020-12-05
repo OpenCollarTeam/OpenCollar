@@ -29,15 +29,37 @@ integer g_iVertical = TRUE;  // can be vertical?
 integer g_iLayout = 1; // 0 - Horisontal, 1 - Vertical
 
 
-float g_fGap = 0.0075; // This is the space between buttons
-float g_Yoff = 0.002; // space between buttons and screen top/bottom border
-float g_Zoff = 0.04; // space between buttons and screen left/right border
+float g_fGap = 0.005; // This is the space between buttons
+float g_Yoff = 0.025; // space between buttons and screen top/bottom border
+float g_Zoff = 0.05; // space between buttons and screen left/right border
 
 
+list g_lMenuIDs;
+integer g_iMenuStride;
+
+string UPMENU="BACK";
+Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
+    key kMenuID = llGenerateKey();
+    
+    llRegionSayTo(g_kCollar,llList2Integer(g_lAPIListeners,0), llList2Json(JSON_OBJECT, ["pkt_type", "from_addon", "addon_name", g_sAddon, "iNum", DIALOG, "sMsg", (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, "kID", kMenuID]));
+
+    integer iIndex = llListFindList(g_lMenuIDs, [kID]);
+    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
+    else g_lMenuIDs += [kID, kMenuID, sName];
+}
+
+Menu(key kID, integer iAuth) {
+    string sPrompt = "\n[OpenCollar Remote]";
+    list lButtons = ["A Button"];
+    
+    //llSay(0, "opening menu");
+    Dialog(kID, sPrompt, lButtons, ["DISCONNECT", UPMENU], 0, iAuth, "Menu~Main");
+}
 
 SetButtonTexture(integer link, string name) {
     integer idx = llListFindList(BTNS, [name]);
-    if (idx == -1) return;
+    if (idx == -1) idx = llListFindList(BTNS, ["NONE"])/3;
+    else idx=idx/3;
     integer x = idx % BTN_XS;
     integer y = idx / BTN_XS;
     vector scale = <1.0 / BTN_XS, 1.0 / BTN_YS, 0>;
@@ -45,45 +67,48 @@ SetButtonTexture(integer link, string name) {
         scale.x * (x - (BTN_XS / 2.0 - 0.5)), 
         scale.y * -1 * (y - (BTN_YS / 2.0 - 0.5)),
     0>;
-    llSetLinkPrimitiveParamsFast(link, [
+    llSetLinkPrimitiveParams(link, [
         PRIM_TEXTURE,
             ALL_SIDES,
             BTN_TEXTURE,
             scale,
             offset,
-            0 
+            0 ,
+            PRIM_COLOR, ALL_SIDES, <1,1,1>, 1
     ]);   
 }
 
 // starting at the top left and moving to the right, the button sprites are in
 // this order.
 list BTNS = [
-    "Minimize",
-    "People",
-    "Menu",
-    "Couples",
-    "Favorite",
-    "Bookmarks",
-    "Lock",
-    "Outfits",
-    "Folders",
-    "Unleash",
-    "Leash",
-    "Yank",
-    "Sit",
-    "Stand",
-    "Rez",
-    "Pose",
-    "Stop",
-    "Hudmenu",
-    "Person",
-    "Restrictions",
-    "Titler",
-    "Detach",
-    "Maximize",
-    "Macros",
-    "Themes"
+    "Minimize", "@hide", 1,
+    "People", "@people", 2,
+    "Menu", "menu", 4,
+    "Couples", "menu Couples", 8,
+    "Favorite", "@fav", 16,
+    "Bookmarks", "menu Bookmarks", 32,
+    "Lock", "lock", 64,
+    "Outfits", "menu Outfits", 128,
+    "Folders", "menu Folders", 256,
+    "Unleash", "unleash", 512,
+    "Leash", "grab", 1024,
+    "Yank", "yank", 2048,
+    "Sit", "sit", 4096,
+    "Stand", "unsit", 8192,
+    "Rez", "@rez", 16384,
+    "Pose", "menu Pose", 32768,
+    "Stop", "stop", 65536,
+    "Hudmenu", "@menu", 131072,
+    "Person", "@person", 262144,
+    "Restrictions", "menu Restrictions", 524288,
+    "Titler", "menu Titler", 1048576,
+    "Detach", "menu Detach", 2097152,
+    "Maximize", "@show", 4194304,
+    "Macros", "menu Macros", 8388608,
+    "Themes", "menu Themes", 16777216,
+    "NONE", "@no", 0
 ];
+
 
 
 list g_lAttachPoints = [
@@ -104,6 +129,7 @@ integer g_iSPosition; // Do not pre-allocate script memory by setting this varia
 list g_lPrimOrder ;
 integer g_iColumn = 1;  // 0 - Column, 1 - Alternate
 integer g_iRows = 3;  // nummer of Rows: 1,2,3,4... up to g_iMaxRows
+integer g_iOldRows; // used during sensor to backup the row count
 integer g_iMaxRows = 6; // maximal Rows in Columns
 list g_lButtons ; // buttons names for Order menu
 PositionButtons() {
@@ -118,12 +144,23 @@ PositionButtons() {
         else { g_iLayout = 1; g_iVertical = TRUE; }
         llSetPos(offset); // Position the Root Prim on screen
         g_iSPosition = iPosition;
+        //llSetLinkPrimitiveParams(1, [PRIM_SIZE, ZERO_VECTOR]);
     }
     if (g_iHidden) { // -- Fixes Issue 615: HUD forgets hide setting on relog.
         SetButtonTexture(1, "Maximize");
-        llSetLinkPrimitiveParamsFast(LINK_ALL_OTHERS, [PRIM_POSITION, <1.0, 0.0, 0.0>]);
+        //llSetLinkPrimitiveParams(LINK_ROOT, [PRIM_SIZE, <0.05,0.05,0.05>]);
+        llSetLinkPrimitiveParams(LINK_ALL_OTHERS, [PRIM_POSITION, <1.0, 0.0, 0.0>]);
     } else {
-        llSetLinkTexture(1, TEXTURE_TRANSPARENT, ALL_SIDES);
+        
+        llSetLinkPrimitiveParams(1, [
+            PRIM_TEXTURE,
+                ALL_SIDES,
+                TEXTURE_TRANSPARENT,
+                <1,1,1>,
+                ZERO_VECTOR,
+                0 ,
+                PRIM_COLOR, ALL_SIDES, <1,1,1>, 1
+        ]);   
         //SetButtonTexture(1, "Minimize");
         float fYoff = size.y + g_fGap; 
         float fZoff = size.z + g_fGap; // This is the space between buttons
@@ -137,7 +174,7 @@ PositionButtons() {
         integer i;
         float fXoff = 0.01; // small X offset
         
-        for (i=2; i < n; i++) {
+        for (i=3; i < n+3; i++) {
             if (g_iColumn == 0) { // Column
                 if (!g_iLayout) pos = <fXoff, fYoff*(i-(i/(n/g_iRows))*(n/g_iRows)), fZoff*(i/(n/g_iRows))>;
                 else pos = <fXoff, fYoff*(i/(n/g_iRows)), fZoff*(i-(i/(n/g_iRows))*(n/g_iRows))>;
@@ -146,7 +183,7 @@ PositionButtons() {
                 else  pos = <fXoff, fYoff*(i-(i/g_iRows)*g_iRows), fZoff*(i/g_iRows)>;
             }
             
-            llSetLinkPrimitiveParamsFast(llList2Integer(lPrimOrder,i),[PRIM_POSITION,pos]);
+            llSetLinkPrimitiveParams(llList2Integer(lPrimOrder,i-3),[PRIM_POSITION,pos]);
         }
     }
 }
@@ -171,14 +208,16 @@ TextureButtons() {
 
 
 FindButtons() { // collect buttons names & links
-    g_lButtons = [] ;  // This appears to artificially require to be set with the number of blank buttons in the sprite map. TODO: Find a way to fix this so it does not require this.
+    g_lButtons = [] ;
     g_lPrimOrder = [];  
     integer i;
-    for (i=2; i<llGetNumberOfPrims(); i++) {
-        g_lButtons += llGetLinkPrimitiveParams(i, [PRIM_NAME]);
-        g_lPrimOrder += i;
+    for (i=LINK_ROOT+1; i<=llGetNumberOfPrims(); i++) {
+        if(llGetLinkName(i)!="Object"){
+            g_lButtons += llGetLinkPrimitiveParams(i, [PRIM_NAME]);
+            g_lPrimOrder += i;
+        }
     }
-    g_iMaxRows = llFloor(llSqrt(llGetListLength(g_lButtons)-1));
+    g_iMaxRows = llFloor(llSqrt(llGetListLength(g_lButtons)));
 }
 
 
@@ -212,22 +251,407 @@ integer PicturePrim() {
 }
 key g_kOwner;
 integer g_iPicturePrim;
+
+HideOthers()
+{
+    integer i=0;
+    integer end = llGetNumberOfPrims();
+    for(i=LINK_ROOT+1;i<=end;i++){
+        string name = llGetLinkName(i);
+        if(llListFindList(g_lButtons, [name])==-1){
+            llSetLinkPrimitiveParamsFast(i, [PRIM_SIZE, ZERO_VECTOR, PRIM_POS_LOCAL, ZERO_VECTOR]);
+            
+            llSetLinkPrimitiveParamsFast(i, [
+                PRIM_TEXTURE,
+                    ALL_SIDES,
+                    TEXTURE_TRANSPARENT,
+                    ZERO_VECTOR,
+                    ZERO_VECTOR,
+                    0 
+            ]); 
+        }
+    }
+}
+FormatHUD()
+{
+    llSetText("FORMATTING REMOTE HUD", <1,0,0>,1);
+    integer i=0;
+    integer end = llGetNumberOfPrims();
+    for(i=LINK_ROOT+1; i<=end; i++){
+        llSetText("Formatting HUD\nProgress: "+(string)(i*100/end)+"%",<1,0,0>,1);
+        llSetLinkPrimitiveParams(i,[PRIM_NAME, "Object"]);
+    }
+    llSetText("", ZERO_VECTOR,0);
+}
+
+list GetActiveButtons()
+{
+    list lTmp;
+    integer i=0;
+    integer end = llGetListLength(BTNS);
+    for(i=2;i<end;i+=3)
+    {
+        integer bits = (integer)llList2String(BTNS, i);
+        if(g_iBitMask&bits)
+        {
+            lTmp += llList2String(BTNS, i-2);
+            //llOwnerSay( "Add: "+llList2String(BTNS,i-2));
+        }
+    }
+    
+    return lTmp;
+}
+
+integer g_iBitMask;
+
+Recalc()
+{    
+    list active = GetActiveButtons();
+    integer i=0;
+    integer end = llGetListLength(active);
+    llSetLinkPrimitiveParams(1, [PRIM_SIZE, <0.05,0.05,0.05>]);
+    for(i=0;i<end;i++)
+    {
+        llSetLinkPrimitiveParamsFast(i+2, [PRIM_NAME, llList2String(active,i), PRIM_SIZE, <0.05,0.05,0.05>,
+            
+            PRIM_COLOR, ALL_SIDES, <1,1,1>, 1, PRIM_TEXT, "", ZERO_VECTOR, 0]);
+        //llOwnerSay("Set prim: "+llList2String(active,i));
+    }
+    FindButtons();
+    g_iPicturePrim = PicturePrim();
+    TextureButtons();
+    PositionButtons();
+    HideOthers();
+}
+
+integer ActivateAll()
+{
+    integer i=0;
+    integer end = llGetListLength(BTNS);
+    integer mask;
+    for(i=2;i<end;i+=3)
+    {
+        mask += (integer)llList2String(BTNS,i);
+    }
+    return mask;
+}
+
+FormatPrim(){
+    llSetText(">Processing Data", <1,0,0>,1);
+    list active = GetActiveButtons();
+    integer difference = llGetListLength(g_lButtons)-llGetListLength(active);
+    do
+    {
+        llSetLinkPrimitiveParams((integer)llList2String(g_lPrimOrder, -1), [PRIM_NAME, "Object"]);
+        g_lPrimOrder = llDeleteSubList(g_lPrimOrder,-1,-1);
+        difference--;
+    } while (difference);
+
+    g_lButtons = [];
+    g_lPrimOrder=[];
+    FindButtons();
+    HideOthers();
+    llSetText("",ZERO_VECTOR,0);
+}
+
+integer g_iOldMask;
+list g_lOptions;
+
+integer g_iScanned;
+
+list g_lAPIListeners;
+key g_kCollar=NULL_KEY;
+StopAPIs()
+{
+    integer i=0;
+    integer end = llGetListLength(g_lAPIListeners);
+    for(i=1;i<end;i+=2){
+        Link("offline", 0, "", llGetOwnerKey(g_kCollar));
+        llListenRemove(llList2Integer(g_lAPIListeners, i));
+    }
+    g_lAPIListeners = [];
+    g_kCollar=NULL_KEY;
+    llSetTimerEvent(0);
+}
+
+
+StartAPI(key ID){
+    integer API_CHANNEL = ((integer)("0x"+llGetSubString((string)ID,0,8)))+0xf6eb-0xd2;
+    g_lAPIListeners = [API_CHANNEL,llListen(API_CHANNEL, "", "", "")];
+    
+    Link("online",0,"",ID);
+}
+
+string g_sAddon = "OC_Remote";
+Link(string packet, integer iNum, string sStr, key kID){
+    string pkt = llList2Json(JSON_OBJECT, ["pkt_type", packet, "iNum", iNum, "addon_name", g_sAddon, "sMsg", sStr, "kID", kID]);
+    if(g_kCollar!= "" && g_kCollar!= NULL_KEY) 
+        llRegionSayTo(g_kCollar, llList2Integer(g_lAPIListeners,0), pkt);
+    else
+        llRegionSay(llList2Integer(g_lAPIListeners,0), pkt);
+}
+
+
+
+integer CMD_ZERO = 0;
+integer CMD_OWNER = 500;
+integer CMD_TRUSTED = 501;
+integer CMD_GROUP = 502;
+integer CMD_WEARER = 503;
+integer CMD_EVERYONE = 504;
+integer CMD_BLOCKED = 598; // <--- Used in auth_request, will not return on a CMD_ZERO
+integer CMD_RLV_RELAY = 507;
+integer CMD_SAFEWORD = 510;
+integer CMD_RELAY_SAFEWORD = 511;
+integer CMD_NOACCESS=599;
+
+integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved
+//str must be in form of "token=value"
+integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+integer LM_SETTING_RESPONSE = 2002;//the settings script sends responses on this channel
+integer LM_SETTING_DELETE = 2003;//delete token from settings
+integer LM_SETTING_EMPTY = 2004;//sent when a token has no value
+
+
+integer DIALOG = -9000;
+integer DIALOG_RESPONSE = -9001;
+integer DIALOG_TIMEOUT = -9002;
+
+
+integer g_iLMLastRecv;
+
+UserCommand(integer iNum, string sStr, key kID) {
+    if (iNum<CMD_OWNER || iNum>CMD_WEARER) return;
+    if (iNum == CMD_OWNER && llToLower(sStr) == "runaway") {
+        return;
+    }
+    if (llToLower(sStr)==llToLower(g_sAddon) || llToLower(sStr) == "menu "+llToLower(g_sAddon)) Menu(kID, iNum);
+    //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
+    else {
+        integer iWSuccess = 0; 
+        string sChangetype = llList2String(llParseString2List(sStr, [" "], []),0);
+        string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),1);
+        string sText;
+        
+        if(sChangetype == "remote")
+        {
+            Menu(kID, iNum);
+        }
+    }
+}
 default
 {
     state_entry() {
+        g_iBitMask = ActivateAll();
+        llSetText("",ZERO_VECTOR,0);
         g_kOwner = llGetOwner();
-        integer i=0;
-        integer end = llGetListLength(BTNS);
-        for(i=1;i<end;i++)
-        {
-            llSetLinkPrimitiveParams(i+2, [PRIM_NAME, llList2String(BTNS,i)]);
-        }
-        FindButtons(); // collect buttons names
+        FormatHUD();
+        Recalc();
         llSleep(1.0);//giving time for others to reset before populating menu
+        llSetObjectName("OpenCollar Remote - 8.0");
+        llOwnerSay("HUD is ready");
+    }
+    
+    attach(key id){
+        if(id){
+            Recalc();
+            llOwnerSay("Ready");
+        }
+    }
+    
+    changed(integer iChange){
+        if(iChange&CHANGED_OWNER){
+            llOwnerSay("Owner change detected. The HUD is now initializing factory defaults");
+            llResetScript();
+        }
+    }
+    
+    on_rez(integer iRez){
+        Recalc();
+        llOwnerSay("Ready");
+    }
+    
+    no_sensor()
+    {
+        llOwnerSay("No one was found nearby");
+        g_iScanned=FALSE;
+    }
+    
+    sensor(integer iNum)
+    {
+        g_lOptions=[];
+        integer i=0;
         
-        g_iPicturePrim = PicturePrim();
+        g_iOldMask = g_iBitMask;
+        g_iBitMask = 4194304;
+        FormatPrim();
+        Recalc();
+        
+        integer iActualPrim=3;
+        for(i=0;i<iNum;i++){
+            g_lOptions += llDetectedKey(i);
+            g_lButtons += [(string)llDetectedKey(i), (string)llDetectedKey(i)];
+            g_lPrimOrder += [iActualPrim, iActualPrim+1];
+            llSetLinkPrimitiveParamsFast(iActualPrim, [PRIM_SIZE, <0.05,0.05,0.05>, PRIM_NAME, (string)llDetectedKey(i)]);
+            llSetLinkPrimitiveParamsFast(iActualPrim+1, [PRIM_TEXT, llGetDisplayName(llDetectedKey(i)), <0,1,0>, 1, PRIM_SIZE, ZERO_VECTOR, PRIM_NAME, (string)llDetectedKey(i)]);
+
+            iActualPrim +=2;
+        }
         TextureButtons();
-        //SetButtonTexture(3, "Menu");
         PositionButtons();
+        HideOthers();
+        
+        g_iScanned = TRUE;
+        
+        i=0;
+        integer end = llGetNumberOfPrims();
+        string sOldName;
+        llSleep(2);
+        for(i=LINK_ROOT+1; i<=end;i++)
+        {
+            string sName = llGetLinkName(i);
+            if(sName == sOldName){
+                vector pos = (vector)llList2String(llGetLinkPrimitiveParams(i-1, [PRIM_POS_LOCAL]),0);
+                vector oPos = (vector)llList2String(llGetLinkPrimitiveParams(i, [PRIM_POS_LOCAL]),0);
+                
+                
+                llSetLinkPrimitiveParams(i, [PRIM_TEXT, llGetDisplayName(llGetLinkName(i)), <0,1,0>, 1, PRIM_SIZE, ZERO_VECTOR, PRIM_POS_LOCAL, pos]);
+                llOwnerSay("Set position to: "+(string)pos+"\nOriginal pos: "+(string)oPos);
+            }
+            sOldName=sName;
+            
+            if(sName == "Object")return; // we have passed the objects that need repositioning now.
+        }
+        
+    }
+    
+    timer()
+    {
+        if(llGetTime()>=10 && g_kCollar == NULL_KEY){
+            llWhisper(0, "Selected target does not use opencollar or the API has failed. Timeout occured.");
+            StopAPIs();
+            llSetTimerEvent(0);
+        }
+        
+        if(llGetUnixTime() >= g_iLMLastRecv + (3*60) && g_kCollar != NULL_KEY)
+        {
+            // OKAY
+            Link("ping", 0, "", g_kCollar);
+        }
+    }
+    
+    touch_start(integer t){
+        string sName = llGetLinkName(llDetectedLinkNumber(0));
+        string sCmd = llList2String(BTNS, llListFindList(BTNS, [sName])+1);
+        
+        integer iImplemented = FALSE;
+        
+        if(g_iScanned && sCmd != "@show"){
+            key av = (key)sName;
+            sCmd = "@show";
+            llOwnerSay("Attempting to connect ...");
+            
+            // Open the API Listener, stop any other API Listener
+            g_iScanned=FALSE;
+            
+            StopAPIs();
+            
+            StartAPI(av);
+            llResetTime();
+            llSetTimerEvent(1);
+        }
+        if(sCmd == "@hide"){
+            iImplemented=1;
+            g_iOldMask = g_iBitMask;
+            g_iBitMask = 4194304;
+            FormatPrim();
+            Recalc();
+        } else if(sCmd == "@show"){
+            iImplemented=1;
+            g_iBitMask = g_iOldMask;
+            g_iOldMask = 0;
+            Recalc();
+            g_iScanned=FALSE;
+        } else if(sCmd == "@people")
+        {
+            // Run a sensor sweep of those nearby within 20 meters.
+            // The user will then have the option to pick from those names.
+            StopAPIs();
+            llSensor("", "", AGENT,  20, PI);
+        } else if(sCmd == "@menu"){
+            Link("from_addon", 0, "menu OC_Remote", llDetectedKey(0));
+            iImplemented =1;
+        } else if(sCmd == "@fav"){
+        } else {
+            Link("from_addon", 0, sCmd, llDetectedKey(0));
+            iImplemented=1;
+        }
+        
+        if(!iImplemented)
+            llSetText("Not Implemented\nName: "+sName+"\nCmd: "+sCmd, <0,1,0>,1);
+        else
+            llSetText("", ZERO_VECTOR,0);
+    }
+    
+    listen(integer c,string n,key i,string m){
+        //llOwnerSay( "message from collar: "+m);
+        if(llJsonGetValue(m,["pkt_type"])=="approved" && g_kCollar==NULL_KEY){
+            // This signal, indicates the collar has approved the addon and that communication requests will be responded to if the requests are valid collar LMs.
+            g_kCollar = i;
+            //Link("from_addon", LM_SETTING_REQUEST, "ALL","");
+        } else if(llJsonGetValue(m,["pkt_type"])=="dc" && g_kCollar==i){
+            g_kCollar=NULL_KEY;
+            llResetScript(); // This addon is designed to always be connected because it is a test
+        } else if(llJsonGetValue(m,["pkt_type"])=="pong" && g_kCollar==i)
+        {
+            g_iLMLastRecv = llGetUnixTime();
+        } else if(llJsonGetValue(m,["pkt_type"])=="from_collar"){
+            // process link message if in range of addon
+            if(llVecDist(llGetPos(), llList2Vector(llGetObjectDetails(i, [OBJECT_POS]),0))<=10.0){
+                // process it!
+                integer iNum = (integer)llJsonGetValue(m,["iNum"]);
+                string sStr = llJsonGetValue(m,["sMsg"]);
+                key kID = (key)llJsonGetValue(m,["kID"]);
+                
+                if(iNum == LM_SETTING_RESPONSE){
+                    list lPar = llParseString2List(sStr, ["_","="],[]);
+                    string sToken = llList2String(lPar,0);
+                    string sVar = llList2String(lPar,1);
+                    string sVal = llList2String(lPar,2);
+                    
+                    if(sToken == "auth"){
+                        if(sVar == "owner"){
+                            //llSay(0, "owner values is: "+sVal);
+                        }
+                    }
+                } else if(iNum >= CMD_OWNER && iNum <= CMD_EVERYONE){
+                    UserCommand(iNum, sStr, kID);
+                    
+                } else if (iNum == DIALOG_TIMEOUT) {
+                    integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
+                    g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
+                }else if(iNum == DIALOG_RESPONSE){
+                    integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
+                    if(iMenuIndex!=-1){
+                        string sMenu = llList2String(g_lMenuIDs, iMenuIndex+1);
+                        g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
+                        list lMenuParams = llParseString2List(sStr, ["|"],[]);
+                        key kAv = llList2Key(lMenuParams,0);
+                        string sMsg = llList2String(lMenuParams,1);
+                        integer iAuth = llList2Integer(lMenuParams,3);
+                        
+                        if(sMenu == "Menu~Main"){
+                            if(sMsg == UPMENU) Link("from_addon", iAuth, "menu Addons", kAv);
+                            else if(sMsg == "A Button") llSay(0, "This is a example addon.");
+                            else if(sMsg == "DISCONNECT"){
+                                Link("offline", 0, "",llGetOwnerKey(g_kCollar));
+                                g_lMenuIDs=[];
+                                g_kCollar=NULL_KEY;
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
