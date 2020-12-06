@@ -184,9 +184,9 @@ string g_sWearerName;
 UserCommand(integer iNum, string sStr, key kID) {
     // Serenity  -   Remove line that prevented anyone but owner, wearer or trusted from executing commands here. That made it so that even if public or group was enabled it would block functionality. Additionally - the link message block already checks auth level
     if (iNum == CMD_OWNER && sStr == "runaway") {
-        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_owner","");
-        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_trust","");
-        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_block","");
+        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_owner","origin");
+        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_trust","origin");
+        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_block","origin");
         return;
     }
     if (sStr==g_sSubMenu || sStr == "menu "+g_sSubMenu || sStr == "menu") Menu(kID, iNum);
@@ -526,10 +526,10 @@ state active
                         if(iAuth >=CMD_OWNER && iAuth <= CMD_TRUSTED){
                             if(g_kGroup!=""){
                                 g_kGroup="";
-                                llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_group", "");
+                                llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_group", "origin");
                             }else{
                                 g_kGroup = llList2Key(llGetObjectDetails(llGetKey(), [OBJECT_GROUP]),0);
-                                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_group="+(string)g_kGroup, "");
+                                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_group="+(string)g_kGroup, "origin");
                             }
                         } else {
                             llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to changing group access", kAv);
@@ -539,8 +539,8 @@ state active
                             
                             g_iPublic=1-g_iPublic;
                             
-                            if(g_iPublic)llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_public=1", "");
-                            else llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_public","");
+                            if(g_iPublic)llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_public=1", "origin");
+                            else llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_public","origin");
                             
                         } else {
                             llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to changing public", kAv);
@@ -549,8 +549,8 @@ state active
                         if(iAuth >=CMD_OWNER && iAuth <= CMD_TRUSTED){
                             g_iLimitRange=1-g_iLimitRange;
                         
-                            if(!g_iLimitRange)llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_limitrange=0","");
-                            else llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_limitrange", "");
+                            if(!g_iLimitRange)llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_limitrange=0","origin");
+                            else llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_limitrange", "origin");
                         } else {
                             llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to changing range limit", kAv);
                         }

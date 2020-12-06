@@ -50,7 +50,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 
 Menu(key kID, integer iAuth) {
     string sPrompt = "\n[OpenCollar Remote]";
-    list lButtons = ["A Button"];
+    list lButtons = ["+ Favorite"];
     
     //llSay(0, "opening menu");
     Dialog(kID, sPrompt, lButtons, ["DISCONNECT", UPMENU], 0, iAuth, "Menu~Main");
@@ -67,7 +67,7 @@ SetButtonTexture(integer link, string name) {
         scale.x * (x - (BTN_XS / 2.0 - 0.5)), 
         scale.y * -1 * (y - (BTN_YS / 2.0 - 0.5)),
     0>;
-    llSetLinkPrimitiveParams(link, [
+    llSetLinkPrimitiveParamsFast(link, [
         PRIM_TEXTURE,
             ALL_SIDES,
             BTN_TEXTURE,
@@ -149,10 +149,10 @@ PositionButtons() {
     if (g_iHidden) { // -- Fixes Issue 615: HUD forgets hide setting on relog.
         SetButtonTexture(1, "Maximize");
         //llSetLinkPrimitiveParams(LINK_ROOT, [PRIM_SIZE, <0.05,0.05,0.05>]);
-        llSetLinkPrimitiveParams(LINK_ALL_OTHERS, [PRIM_POSITION, <1.0, 0.0, 0.0>]);
+        llSetLinkPrimitiveParamsFast(LINK_ALL_OTHERS, [PRIM_POSITION, <1.0, 0.0, 0.0>]);
     } else {
         
-        llSetLinkPrimitiveParams(1, [
+        llSetLinkPrimitiveParamsFast(1, [
             PRIM_TEXTURE,
                 ALL_SIDES,
                 TEXTURE_TRANSPARENT,
@@ -183,7 +183,7 @@ PositionButtons() {
                 else  pos = <fXoff, fYoff*(i-(i/g_iRows)*g_iRows), fZoff*(i/g_iRows)>;
             }
             
-            llSetLinkPrimitiveParams(llList2Integer(lPrimOrder,i-3),[PRIM_POSITION,pos]);
+            llSetLinkPrimitiveParamsFast(llList2Integer(lPrimOrder,i-3),[PRIM_POSITION,pos]);
         }
     }
 }
@@ -279,7 +279,7 @@ FormatHUD()
     integer end = llGetNumberOfPrims();
     for(i=LINK_ROOT+1; i<=end; i++){
         llSetText("Formatting HUD\nProgress: "+(string)(i*100/end)+"%",<1,0,0>,1);
-        llSetLinkPrimitiveParams(i,[PRIM_NAME, "Object"]);
+        llSetLinkPrimitiveParamsFast(i,[PRIM_NAME, "Object"]);
     }
     llSetText("", ZERO_VECTOR,0);
 }
@@ -309,7 +309,7 @@ Recalc()
     list active = GetActiveButtons();
     integer i=0;
     integer end = llGetListLength(active);
-    llSetLinkPrimitiveParams(1, [PRIM_SIZE, <0.05,0.05,0.05>]);
+    llSetLinkPrimitiveParamsFast(1, [PRIM_SIZE, <0.05,0.05,0.05>]);
     for(i=0;i<end;i++)
     {
         llSetLinkPrimitiveParamsFast(i+2, [PRIM_NAME, llList2String(active,i), PRIM_SIZE, <0.05,0.05,0.05>,
@@ -342,7 +342,7 @@ FormatPrim(){
     integer difference = llGetListLength(g_lButtons)-llGetListLength(active);
     do
     {
-        llSetLinkPrimitiveParams((integer)llList2String(g_lPrimOrder, -1), [PRIM_NAME, "Object"]);
+        llSetLinkPrimitiveParamsFast((integer)llList2String(g_lPrimOrder, -1), [PRIM_NAME, "Object"]);
         g_lPrimOrder = llDeleteSubList(g_lPrimOrder,-1,-1);
         difference--;
     } while (difference);
@@ -384,6 +384,7 @@ StartAPI(key ID){
 
 string g_sAddon = "OC_Remote";
 Link(string packet, integer iNum, string sStr, key kID){
+    if(llList2Integer(g_lAPIListeners,0)==0)return; // nothing is set or connected!!!!!!!
     string pkt = llList2Json(JSON_OBJECT, ["pkt_type", packet, "iNum", iNum, "addon_name", g_sAddon, "sMsg", sStr, "kID", kID]);
     if(g_kCollar!= "" && g_kCollar!= NULL_KEY) 
         llRegionSayTo(g_kCollar, llList2Integer(g_lAPIListeners,0), pkt);
@@ -439,6 +440,8 @@ UserCommand(integer iNum, string sStr, key kID) {
         }
     }
 }
+
+list g_lFavorites;
 default
 {
     state_entry() {
@@ -450,10 +453,11 @@ default
         llSleep(1.0);//giving time for others to reset before populating menu
         llSetObjectName("OpenCollar Remote - 8.0");
         llOwnerSay("HUD is ready");
+        g_lFavorites = [llGetOwner()];
     }
     
     attach(key id){
-        if(id){
+        if(id!=NULL_KEY){
             Recalc();
             llOwnerSay("Ready");
         }
@@ -474,7 +478,49 @@ default
     no_sensor()
     {
         llOwnerSay("No one was found nearby");
-        g_iScanned=FALSE;
+        g_iScanned=TRUE;
+        
+        g_lOptions=[];
+        integer i=0;
+        
+        g_iOldMask = g_iBitMask;
+        g_iBitMask = 4194304;
+        FormatPrim();
+        Recalc();
+        
+        
+        integer iActualPrim=3;
+        if(llListFindList(g_lButtons, [(string)llGetOwner()])==-1){
+            g_lOptions += [(string)llGetOwner()];
+            g_lButtons += [(string)llGetOwner(), (string)llGetOwner()];
+            g_lPrimOrder += [iActualPrim, iActualPrim+1];
+            llSetLinkPrimitiveParamsFast(iActualPrim, [PRIM_SIZE, <0.05,0.05,0.05>, PRIM_NAME, (string)llGetOwner()]);
+            llSetLinkPrimitiveParamsFast(iActualPrim+1, [PRIM_TEXT, llGetDisplayName(llGetOwner()), <0,1,0>, 1, PRIM_SIZE, ZERO_VECTOR, PRIM_NAME, (string)llGetOwner()]);
+        }
+        TextureButtons();
+        PositionButtons();
+        HideOthers();
+        
+        g_iScanned = TRUE;
+        i=0;
+        integer end = llGetNumberOfPrims();
+        string sOldName;
+        llSleep(2);
+        for(i=LINK_ROOT+1; i<=end;i++)
+        {
+            string sName = llGetLinkName(i);
+            if(sName == sOldName){
+                vector pos = (vector)llList2String(llGetLinkPrimitiveParams(i-1, [PRIM_POS_LOCAL]),0);
+                vector oPos = (vector)llList2String(llGetLinkPrimitiveParams(i, [PRIM_POS_LOCAL]),0);
+                
+                
+                llSetLinkPrimitiveParamsFast(i, [PRIM_TEXT, llGetDisplayName(llGetLinkName(i)), <0,1,0>, 1, PRIM_SIZE, ZERO_VECTOR, PRIM_POS_LOCAL, pos]);
+                //llOwnerSay("Set position to: "+(string)pos+"\nOriginal pos: "+(string)oPos);
+            }
+            sOldName=sName;
+            
+            if(sName == "Object")return; // we have passed the objects that need repositioning now.
+        }
     }
     
     sensor(integer iNum)
@@ -497,6 +543,13 @@ default
 
             iActualPrim +=2;
         }
+        if(llListFindList(g_lButtons, [(string)llGetOwner()])==-1){
+            g_lOptions += [(string)llGetOwner()];
+            g_lButtons += [(string)llGetOwner(), (string)llGetOwner()];
+            g_lPrimOrder += [iActualPrim, iActualPrim+1];
+            llSetLinkPrimitiveParamsFast(iActualPrim, [PRIM_SIZE, <0.05,0.05,0.05>, PRIM_NAME, (string)llGetOwner()]);
+            llSetLinkPrimitiveParamsFast(iActualPrim+1, [PRIM_TEXT, llGetDisplayName(llGetOwner()), <0,1,0>, 1, PRIM_SIZE, ZERO_VECTOR, PRIM_NAME, (string)llGetOwner()]);
+        }
         TextureButtons();
         PositionButtons();
         HideOthers();
@@ -515,8 +568,8 @@ default
                 vector oPos = (vector)llList2String(llGetLinkPrimitiveParams(i, [PRIM_POS_LOCAL]),0);
                 
                 
-                llSetLinkPrimitiveParams(i, [PRIM_TEXT, llGetDisplayName(llGetLinkName(i)), <0,1,0>, 1, PRIM_SIZE, ZERO_VECTOR, PRIM_POS_LOCAL, pos]);
-                llOwnerSay("Set position to: "+(string)pos+"\nOriginal pos: "+(string)oPos);
+                llSetLinkPrimitiveParamsFast(i, [PRIM_TEXT, llGetDisplayName(llGetLinkName(i)), <0,1,0>, 1, PRIM_SIZE, ZERO_VECTOR, PRIM_POS_LOCAL, pos]);
+                //llOwnerSay("Set position to: "+(string)pos+"\nOriginal pos: "+(string)oPos);
             }
             sOldName=sName;
             
@@ -537,6 +590,10 @@ default
         {
             // OKAY
             Link("ping", 0, "", g_kCollar);
+        }
+        
+        if(g_kCollar!=NULL_KEY){
+            llSetText("Connected to: "+llGetUsername(llGetOwnerKey(g_kCollar)),<0,1,0>,1);
         }
     }
     
@@ -577,11 +634,78 @@ default
             // Run a sensor sweep of those nearby within 20 meters.
             // The user will then have the option to pick from those names.
             StopAPIs();
+            iImplemented=1;
             llSensor("", "", AGENT,  20, PI);
         } else if(sCmd == "@menu"){
             Link("from_addon", 0, "menu OC_Remote", llDetectedKey(0));
             iImplemented =1;
         } else if(sCmd == "@fav"){
+            iImplemented=1;
+            if(g_kCollar!=NULL_KEY){
+                Link("offline", 0, "", llGetOwnerKey(g_kCollar));
+                llOwnerSay("HUD has disconnected from the remote collar");
+                g_kCollar=NULL_KEY;
+                llSetTimerEvent(0);
+                StopAPIs();
+                llSetText("", ZERO_VECTOR,0);
+            }
+            g_lOptions=[];
+            integer i=0;
+            
+            g_iOldMask = g_iBitMask;
+            g_iBitMask = 4194304;
+            FormatPrim();
+            Recalc();
+            
+            
+            integer end = llGetListLength(g_lFavorites);
+            
+            integer iActualPrim=3;
+            for(i=0;i<end;i++){
+                if(llGetAgentSize((key)llList2String(g_lFavorites,i))!=ZERO_VECTOR)
+                {
+                    // This user is in the region, display the box for them
+                    key user = (key)llList2String(g_lFavorites,i);
+                    g_lOptions += [(string)user];
+                    g_lButtons += [(string)user, (string)user];
+                    g_lPrimOrder += [iActualPrim, iActualPrim+1];
+                    llSetLinkPrimitiveParamsFast(iActualPrim, [PRIM_SIZE, <0.05,0.05,0.05>, PRIM_NAME, (string)user]);
+                    llSetLinkPrimitiveParamsFast(iActualPrim+1, [PRIM_TEXT, llGetDisplayName(user), <0,1,0>, 1, PRIM_SIZE, ZERO_VECTOR, PRIM_NAME, (string)user]);
+                    iActualPrim+=2;
+                }
+            }
+            TextureButtons();
+            PositionButtons();
+            HideOthers();
+            
+                
+            g_iScanned = TRUE;
+            
+            i=0;
+            end = llGetNumberOfPrims();
+            string sOldName;
+            llSleep(2);
+            for(i=LINK_ROOT+1; i<=end;i++)
+            {
+                string sName = llGetLinkName(i);
+                if(sName == sOldName){
+                    vector pos = (vector)llList2String(llGetLinkPrimitiveParams(i-1, [PRIM_POS_LOCAL]),0);
+                    vector oPos = (vector)llList2String(llGetLinkPrimitiveParams(i, [PRIM_POS_LOCAL]),0);
+                    
+                    
+                    llSetLinkPrimitiveParamsFast(i, [PRIM_TEXT, llGetDisplayName(llGetLinkName(i)), <0,1,0>, 1, PRIM_SIZE, ZERO_VECTOR, PRIM_POS_LOCAL, pos]);
+                    //llOwnerSay("Set position to: "+(string)pos+"\nOriginal pos: "+(string)oPos);
+                }
+                sOldName=sName;
+                
+                if(sName == "Object")return; // we have passed the objects that need repositioning now.
+            }
+        } else if(sCmd == "@person")
+        {
+            if(g_kCollar!=NULL_KEY)
+                llOwnerSay("You are connected to secondlife:///app/agent/"+(string)llGetOwnerKey(g_kCollar)+"/about's collar");
+            else
+                llOwnerSay("Not connected to a collar!");
         } else {
             Link("from_addon", 0, sCmd, llDetectedKey(0));
             iImplemented=1;
@@ -642,11 +766,18 @@ default
                         
                         if(sMenu == "Menu~Main"){
                             if(sMsg == UPMENU) Link("from_addon", iAuth, "menu Addons", kAv);
-                            else if(sMsg == "A Button") llSay(0, "This is a example addon.");
+                            else if(sMsg == "+ Favorite"){
+                                llOwnerSay("Adding collar to favorites...");
+                                if(llListFindList(g_lFavorites, [(string)llGetOwnerKey(g_kCollar)])==-1)g_lFavorites += [(string)llGetOwnerKey(g_kCollar)];
+                            }
                             else if(sMsg == "DISCONNECT"){
                                 Link("offline", 0, "",llGetOwnerKey(g_kCollar));
                                 g_lMenuIDs=[];
                                 g_kCollar=NULL_KEY;
+                                llSetTimerEvent(0);
+                                llSetText("",ZERO_VECTOR,0);
+                                
+                                llOwnerSay("HUD has been disconnected from the remote collar");
                             }
                         }
                     }
