@@ -755,6 +755,7 @@ state active
                     if(sMsg == "No"){
                         g_iMode = 0;
                         llMessageLinked(LINK_SET, 0, "menu Access", kAv);
+                        llMessageLinked(LINK_SET, NOTIFY,  "1" + SLURL(kAv) + " declined being added to the access list.", g_kWearer);
                     } else if(sMsg == "Yes"){
                         UpdateLists(g_kTry, g_kMenuUser);
                         // Not enough time to update the lists via settings. Handle via timer callback.
