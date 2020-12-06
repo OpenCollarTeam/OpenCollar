@@ -500,7 +500,6 @@ state active
                     } else {
                         // do weld
                         llMessageLinked(LINK_SET, NOTIFY, "1Please wait...", g_kWelder);
-                        llMessageLinked(LINK_SET, NOTIFY_OWNERS, "%WEARERNAME%'s collar has been welded", g_kWelder);
                         llMessageLinked(LINK_SET, LM_SETTING_SAVE, "intern_weld=1", g_kWelder);
                         g_iWelded=TRUE;
                     }
@@ -752,7 +751,8 @@ state active
             if(kID == "welder_auth_check"){ //pop menu for welder
                 list lParameters = llParseString2List(sStr, ["|"],[]);
                 Menu(g_kWeldBy,llList2Integer(lParameters,2));
-                llMessageLinked(LINK_SET, NOTIFY, "1Weld completed", g_kWelder);
+                llMessageLinked(LINK_SET, NOTIFY_OWNERS, "%WEARERNAME%'s collar has been welded", g_kWelder);
+                llMessageLinked(LINK_SET, NOTIFY, "1Weld completed", g_kWearer); //We shouldn't have to send this to the welder. Welder should always be an owner.
             }
         
         } else if(iNum == REBOOT){
