@@ -384,6 +384,7 @@ StartAPI(key ID){
 
 string g_sAddon = "OC_Remote";
 Link(string packet, integer iNum, string sStr, key kID){
+    if(llList2Integer(g_lAPIListeners,0)==0)return; // nothing is set or connected!!!!!!!
     string pkt = llList2Json(JSON_OBJECT, ["pkt_type", packet, "iNum", iNum, "addon_name", g_sAddon, "sMsg", sStr, "kID", kID]);
     if(g_kCollar!= "" && g_kCollar!= NULL_KEY) 
         llRegionSayTo(g_kCollar, llList2Integer(g_lAPIListeners,0), pkt);
@@ -477,7 +478,49 @@ default
     no_sensor()
     {
         llOwnerSay("No one was found nearby");
-        g_iScanned=FALSE;
+        g_iScanned=TRUE;
+        
+        g_lOptions=[];
+        integer i=0;
+        
+        g_iOldMask = g_iBitMask;
+        g_iBitMask = 4194304;
+        FormatPrim();
+        Recalc();
+        
+        
+        integer iActualPrim=3;
+        if(llListFindList(g_lButtons, [(string)llGetOwner()])==-1){
+            g_lOptions += [(string)llGetOwner()];
+            g_lButtons += [(string)llGetOwner(), (string)llGetOwner()];
+            g_lPrimOrder += [iActualPrim, iActualPrim+1];
+            llSetLinkPrimitiveParamsFast(iActualPrim, [PRIM_SIZE, <0.05,0.05,0.05>, PRIM_NAME, (string)llGetOwner()]);
+            llSetLinkPrimitiveParamsFast(iActualPrim+1, [PRIM_TEXT, llGetDisplayName(llGetOwner()), <0,1,0>, 1, PRIM_SIZE, ZERO_VECTOR, PRIM_NAME, (string)llGetOwner()]);
+        }
+        TextureButtons();
+        PositionButtons();
+        HideOthers();
+        
+        g_iScanned = TRUE;
+        i=0;
+        integer end = llGetNumberOfPrims();
+        string sOldName;
+        llSleep(2);
+        for(i=LINK_ROOT+1; i<=end;i++)
+        {
+            string sName = llGetLinkName(i);
+            if(sName == sOldName){
+                vector pos = (vector)llList2String(llGetLinkPrimitiveParams(i-1, [PRIM_POS_LOCAL]),0);
+                vector oPos = (vector)llList2String(llGetLinkPrimitiveParams(i, [PRIM_POS_LOCAL]),0);
+                
+                
+                llSetLinkPrimitiveParamsFast(i, [PRIM_TEXT, llGetDisplayName(llGetLinkName(i)), <0,1,0>, 1, PRIM_SIZE, ZERO_VECTOR, PRIM_POS_LOCAL, pos]);
+                //llOwnerSay("Set position to: "+(string)pos+"\nOriginal pos: "+(string)oPos);
+            }
+            sOldName=sName;
+            
+            if(sName == "Object")return; // we have passed the objects that need repositioning now.
+        }
     }
     
     sensor(integer iNum)
@@ -591,16 +634,19 @@ default
             // Run a sensor sweep of those nearby within 20 meters.
             // The user will then have the option to pick from those names.
             StopAPIs();
+            iImplemented=1;
             llSensor("", "", AGENT,  20, PI);
         } else if(sCmd == "@menu"){
             Link("from_addon", 0, "menu OC_Remote", llDetectedKey(0));
             iImplemented =1;
         } else if(sCmd == "@fav"){
+            iImplemented=1;
             if(g_kCollar!=NULL_KEY){
                 Link("offline", 0, "", llGetOwnerKey(g_kCollar));
                 llOwnerSay("HUD has disconnected from the remote collar");
                 g_kCollar=NULL_KEY;
                 llSetTimerEvent(0);
+                StopAPIs();
                 llSetText("", ZERO_VECTOR,0);
             }
             g_lOptions=[];
@@ -610,6 +656,7 @@ default
             g_iBitMask = 4194304;
             FormatPrim();
             Recalc();
+            
             
             integer end = llGetListLength(g_lFavorites);
             
@@ -653,6 +700,12 @@ default
                 
                 if(sName == "Object")return; // we have passed the objects that need repositioning now.
             }
+        } else if(sCmd == "@person")
+        {
+            if(g_kCollar!=NULL_KEY)
+                llOwnerSay("You are connected to secondlife:///app/agent/"+(string)llGetOwnerKey(g_kCollar)+"/about's collar");
+            else
+                llOwnerSay("Not connected to a collar!");
         } else {
             Link("from_addon", 0, sCmd, llDetectedKey(0));
             iImplemented=1;
