@@ -77,7 +77,18 @@ SetButtonTexture(integer link, string name) {
             PRIM_COLOR, ALL_SIDES, <1,1,1>, 1
     ]);   
 }
-
+string profile_key_prefix = "<meta name=\"imageid\" content=\"";
+string profile_img_prefix = "<img alt=\"profile image\" src=\"http://secondlife.com/app/image/";
+integer profile_key_prefix_length; // calculated from profile_key_prefix in state_entry()
+integer profile_img_prefix_length; // calculated from profile_key_prefix in state_entry()
+ 
+GetProfilePic(key id) //Run the HTTP Request then set the texture
+{
+    //key id=llDetectedKey(0); This breaks the function, better off not used
+    string URL_RESIDENT = "http://world.secondlife.com/resident/";
+    g_kPicReq=llHTTPRequest( URL_RESIDENT + (string)id,[HTTP_METHOD,"GET"],"");
+}
+key g_kPicReq;
 // starting at the top left and moving to the right, the button sprites are in
 // this order.
 list BTNS = [
@@ -174,7 +185,7 @@ PositionButtons() {
         integer i;
         float fXoff = 0.01; // small X offset
         
-        for (i=3; i < n+3; i++) {
+        for (i=2; i < n+2; i++) {
             if (g_iColumn == 0) { // Column
                 if (!g_iLayout) pos = <fXoff, fYoff*(i-(i/(n/g_iRows))*(n/g_iRows)), fZoff*(i/(n/g_iRows))>;
                 else pos = <fXoff, fYoff*(i/(n/g_iRows)), fZoff*(i-(i/(n/g_iRows))*(n/g_iRows))>;
@@ -183,7 +194,7 @@ PositionButtons() {
                 else  pos = <fXoff, fYoff*(i-(i/g_iRows)*g_iRows), fZoff*(i/g_iRows)>;
             }
             
-            llSetLinkPrimitiveParamsFast(llList2Integer(lPrimOrder,i-3),[PRIM_POSITION,pos]);
+            llSetLinkPrimitiveParamsFast(llList2Integer(lPrimOrder,i-2),[PRIM_POSITION,pos]);
         }
     }
 }
@@ -208,11 +219,11 @@ TextureButtons() {
 
 
 FindButtons() { // collect buttons names & links
-    g_lButtons = [] ;
-    g_lPrimOrder = [];  
+    g_lButtons = ["Person"] ;
+    g_lPrimOrder = [2];  
     integer i;
     for (i=LINK_ROOT+1; i<=llGetNumberOfPrims(); i++) {
-        if(llGetLinkName(i)!="Object"){
+        if(llGetLinkName(i)!="Object" && llGetLinkName(i)!="Person"){
             g_lButtons += llGetLinkPrimitiveParams(i, [PRIM_NAME]);
             g_lPrimOrder += i;
         }
@@ -310,12 +321,15 @@ Recalc()
     integer i=0;
     integer end = llGetListLength(active);
     llSetLinkPrimitiveParamsFast(1, [PRIM_SIZE, <0.05,0.05,0.05>]);
+    llSetLinkPrimitiveParamsFast(2, [PRIM_NAME, "Person", PRIM_DESC, "Picture"]);
     for(i=0;i<end;i++)
     {
-        llSetLinkPrimitiveParamsFast(i+2, [PRIM_NAME, llList2String(active,i), PRIM_SIZE, <0.05,0.05,0.05>,
+        if(llList2String(active,i)!="Person"){
+            llSetLinkPrimitiveParamsFast(i+3, [PRIM_NAME, llList2String(active,i), PRIM_SIZE, <0.05,0.05,0.05>,
             
-            PRIM_COLOR, ALL_SIDES, <1,1,1>, 1, PRIM_TEXT, "", ZERO_VECTOR, 0]);
-        //llOwnerSay("Set prim: "+llList2String(active,i));
+                PRIM_COLOR, ALL_SIDES, <1,1,1>, 1, PRIM_TEXT, "", ZERO_VECTOR, 0]);
+            //llOwnerSay("Set prim: "+llList2String(active,i));
+        }
     }
     FindButtons();
     g_iPicturePrim = PicturePrim();
@@ -442,9 +456,13 @@ UserCommand(integer iNum, string sStr, key kID) {
 }
 
 list g_lFavorites;
+key g_kProfilePic;
+integer g_iRetexture;
 default
 {
     state_entry() {
+        profile_key_prefix_length = llStringLength(profile_key_prefix);
+        profile_img_prefix_length = llStringLength(profile_img_prefix);
         g_iBitMask = ActivateAll();
         llSetText("",ZERO_VECTOR,0);
         g_kOwner = llGetOwner();
@@ -452,7 +470,7 @@ default
         Recalc();
         llSleep(1.0);//giving time for others to reset before populating menu
         llSetObjectName("OpenCollar Remote - 8.0");
-        llOwnerSay("HUD is ready");
+        llOwnerSay("HUD is ready with "+(string)llGetFreeMemory()+"b free memory");
         g_lFavorites = [llGetOwner()];
     }
     
@@ -489,7 +507,7 @@ default
         Recalc();
         
         
-        integer iActualPrim=3;
+        integer iActualPrim=10;
         if(llListFindList(g_lButtons, [(string)llGetOwner()])==-1){
             g_lOptions += [(string)llGetOwner()];
             g_lButtons += [(string)llGetOwner(), (string)llGetOwner()];
@@ -519,7 +537,6 @@ default
             }
             sOldName=sName;
             
-            if(sName == "Object")return; // we have passed the objects that need repositioning now.
         }
     }
     
@@ -533,7 +550,7 @@ default
         FormatPrim();
         Recalc();
         
-        integer iActualPrim=3;
+        integer iActualPrim=10;
         for(i=0;i<iNum;i++){
             g_lOptions += llDetectedKey(i);
             g_lButtons += [(string)llDetectedKey(i), (string)llDetectedKey(i)];
@@ -573,7 +590,6 @@ default
             }
             sOldName=sName;
             
-            if(sName == "Object")return; // we have passed the objects that need repositioning now.
         }
         
     }
@@ -592,8 +608,10 @@ default
             Link("ping", 0, "", g_kCollar);
         }
         
-        if(g_kCollar!=NULL_KEY){
-            llSetText("Connected to: "+llGetUsername(llGetOwnerKey(g_kCollar)),<0,1,0>,1);
+        if(llGetTime()>=3 && g_iRetexture && g_kProfilePic!=NULL_KEY)
+        {
+            g_iRetexture=0;
+            llSetLinkPrimitiveParams(g_iPicturePrim, [PRIM_TEXTURE, ALL_SIDES, g_kProfilePic, <1,1,0>, ZERO_VECTOR, 0]);
         }
     }
     
@@ -629,6 +647,11 @@ default
             g_iOldMask = 0;
             Recalc();
             g_iScanned=FALSE;
+            
+            if(g_kCollar!=NULL_KEY){
+                llResetTime();
+                g_iRetexture=1;
+            }
         } else if(sCmd == "@people")
         {
             // Run a sensor sweep of those nearby within 20 meters.
@@ -660,7 +683,7 @@ default
             
             integer end = llGetListLength(g_lFavorites);
             
-            integer iActualPrim=3;
+            integer iActualPrim=10;
             for(i=0;i<end;i++){
                 if(llGetAgentSize((key)llList2String(g_lFavorites,i))!=ZERO_VECTOR)
                 {
@@ -698,10 +721,10 @@ default
                 }
                 sOldName=sName;
                 
-                if(sName == "Object")return; // we have passed the objects that need repositioning now.
             }
         } else if(sCmd == "@person")
         {
+            iImplemented=1;
             if(g_kCollar!=NULL_KEY)
                 llOwnerSay("You are connected to secondlife:///app/agent/"+(string)llGetOwnerKey(g_kCollar)+"/about's collar");
             else
@@ -717,11 +740,46 @@ default
             llSetText("", ZERO_VECTOR,0);
     }
     
+    http_response(key kReq, integer iStat, list lMeta, string sBody)
+    {
+        if(g_kPicReq==kReq)
+        {
+            if(iStat==200){
+                integer s1 = llSubStringIndex(sBody, profile_key_prefix);
+                integer s1l = profile_key_prefix_length;
+                if(s1 == -1)
+                { // second try
+                    s1 = llSubStringIndex(sBody, profile_img_prefix);
+                    s1l = profile_img_prefix_length;
+                }
+                
+                if(s1==-1)
+                {
+                    llOwnerSay("No profile picture found");
+                    g_kProfilePic=NULL_KEY;
+                }else{
+                    s1+=s1l;
+                
+                    key UUID=llGetSubString(sBody, s1, s1 + 35);
+                    g_kProfilePic = UUID;
+                    
+                    llSetLinkPrimitiveParams(g_iPicturePrim, [PRIM_TEXTURE, ALL_SIDES, g_kProfilePic, <1,1,0>, ZERO_VECTOR, 0]);
+                }
+                
+            }else {
+                g_kProfilePic=NULL_KEY;
+                llOwnerSay("Error when retrieving profile picture");
+            }
+        }
+    }
+    
     listen(integer c,string n,key i,string m){
         //llOwnerSay( "message from collar: "+m);
         if(llJsonGetValue(m,["pkt_type"])=="approved" && g_kCollar==NULL_KEY){
             // This signal, indicates the collar has approved the addon and that communication requests will be responded to if the requests are valid collar LMs.
             g_kCollar = i;
+            GetProfilePic(llGetOwnerKey(i));
+            llOwnerSay("Connected!");
             //Link("from_addon", LM_SETTING_REQUEST, "ALL","");
         } else if(llJsonGetValue(m,["pkt_type"])=="dc" && g_kCollar==i){
             g_kCollar=NULL_KEY;
