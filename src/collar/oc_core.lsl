@@ -499,8 +499,7 @@ state active
                         // do weld
                         llMessageLinked(LINK_SET, NOTIFY, "1Please wait...", g_kWelder);
                         llMessageLinked(LINK_SET, NOTIFY_OWNERS, "%WEARERNAME%'s collar has been welded", g_kWelder);
-                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "intern_weld=1", "origin");
-                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "intern_weldby=" + (string)g_kWelder, "origin");
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "intern_weld=1", g_kWelder);
                         g_iWelded=TRUE;
                         
                         llMessageLinked(LINK_SET, NOTIFY, "1Weld completed", g_kWelder);
