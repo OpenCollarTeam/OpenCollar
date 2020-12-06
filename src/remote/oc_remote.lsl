@@ -34,28 +34,6 @@ float g_Yoff = 0.025; // space between buttons and screen top/bottom border
 float g_Zoff = 0.05; // space between buttons and screen left/right border
 
 
-list g_lMenuIDs;
-integer g_iMenuStride;
-
-string UPMENU="BACK";
-Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
-    key kMenuID = llGenerateKey();
-    
-    llRegionSayTo(g_kCollar,llList2Integer(g_lAPIListeners,0), llList2Json(JSON_OBJECT, ["pkt_type", "from_addon", "addon_name", g_sAddon, "iNum", DIALOG, "sMsg", (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, "kID", kMenuID]));
-
-    integer iIndex = llListFindList(g_lMenuIDs, [kID]);
-    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
-    else g_lMenuIDs += [kID, kMenuID, sName];
-}
-
-Menu(key kID, integer iAuth) {
-    string sPrompt = "\n[OpenCollar Remote]";
-    list lButtons = ["+ Favorite"];
-    
-    //llSay(0, "opening menu");
-    Dialog(kID, sPrompt, lButtons, ["DISCONNECT", UPMENU], 0, iAuth, "Menu~Main");
-}
-
 SetButtonTexture(integer link, string name) {
     integer idx = llListFindList(BTNS, [name]);
     if (idx == -1) idx = llListFindList(BTNS, ["NONE"])/3;
@@ -408,52 +386,8 @@ Link(string packet, integer iNum, string sStr, key kID){
 
 
 
-integer CMD_ZERO = 0;
-integer CMD_OWNER = 500;
-integer CMD_TRUSTED = 501;
-integer CMD_GROUP = 502;
-integer CMD_WEARER = 503;
-integer CMD_EVERYONE = 504;
-integer CMD_BLOCKED = 598; // <--- Used in auth_request, will not return on a CMD_ZERO
-integer CMD_RLV_RELAY = 507;
-integer CMD_SAFEWORD = 510;
-integer CMD_RELAY_SAFEWORD = 511;
-integer CMD_NOACCESS=599;
-
-integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved
-//str must be in form of "token=value"
-integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
-integer LM_SETTING_RESPONSE = 2002;//the settings script sends responses on this channel
-integer LM_SETTING_DELETE = 2003;//delete token from settings
-integer LM_SETTING_EMPTY = 2004;//sent when a token has no value
-
-
-integer DIALOG = -9000;
-integer DIALOG_RESPONSE = -9001;
-integer DIALOG_TIMEOUT = -9002;
-
 
 integer g_iLMLastRecv;
-
-UserCommand(integer iNum, string sStr, key kID) {
-    if (iNum<CMD_OWNER || iNum>CMD_WEARER) return;
-    if (iNum == CMD_OWNER && llToLower(sStr) == "runaway") {
-        return;
-    }
-    if (llToLower(sStr)==llToLower(g_sAddon) || llToLower(sStr) == "menu "+llToLower(g_sAddon)) Menu(kID, iNum);
-    //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
-    else {
-        integer iWSuccess = 0; 
-        string sChangetype = llList2String(llParseString2List(sStr, [" "], []),0);
-        string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),1);
-        string sText;
-        
-        if(sChangetype == "remote")
-        {
-            Menu(kID, iNum);
-        }
-    }
-}
 
 list g_lFavorites;
 key g_kProfilePic;
@@ -472,6 +406,7 @@ default
         llSetObjectName("OpenCollar Remote - 8.0");
         llOwnerSay("HUD is ready with "+(string)llGetFreeMemory()+"b free memory");
         g_lFavorites = [llGetOwner()];
+        llMessageLinked(LINK_SET,-10,"","");
     }
     
     attach(key id){
@@ -656,7 +591,7 @@ default
         {
             // Run a sensor sweep of those nearby within 20 meters.
             // The user will then have the option to pick from those names.
-            StopAPIs();
+            llMessageLinked(LINK_SET,-1,"","");
             iImplemented=1;
             llSensor("", "", AGENT,  20, PI);
         } else if(sCmd == "@menu"){
@@ -665,11 +600,7 @@ default
         } else if(sCmd == "@fav"){
             iImplemented=1;
             if(g_kCollar!=NULL_KEY){
-                Link("offline", 0, "", llGetOwnerKey(g_kCollar));
-                llOwnerSay("HUD has disconnected from the remote collar");
-                g_kCollar=NULL_KEY;
-                llSetTimerEvent(0);
-                StopAPIs();
+                llMessageLinked(LINK_SET,-1,"","");
                 llSetText("", ZERO_VECTOR,0);
             }
             g_lOptions=[];
@@ -780,10 +711,10 @@ default
             g_kCollar = i;
             GetProfilePic(llGetOwnerKey(i));
             llOwnerSay("Connected!");
+            llMessageLinked(LINK_SET, 2, "", g_kCollar);
             //Link("from_addon", LM_SETTING_REQUEST, "ALL","");
         } else if(llJsonGetValue(m,["pkt_type"])=="dc" && g_kCollar==i){
-            g_kCollar=NULL_KEY;
-            llResetScript(); // This addon is designed to always be connected because it is a test
+            llMessageLinked(LINK_SET, -1, "", "");
         } else if(llJsonGetValue(m,["pkt_type"])=="pong" && g_kCollar==i)
         {
             g_iLMLastRecv = llGetUnixTime();
@@ -791,56 +722,26 @@ default
             // process link message if in range of addon
             if(llVecDist(llGetPos(), llList2Vector(llGetObjectDetails(i, [OBJECT_POS]),0))<=10.0){
                 // process it!
-                integer iNum = (integer)llJsonGetValue(m,["iNum"]);
-                string sStr = llJsonGetValue(m,["sMsg"]);
-                key kID = (key)llJsonGetValue(m,["kID"]);
-                
-                if(iNum == LM_SETTING_RESPONSE){
-                    list lPar = llParseString2List(sStr, ["_","="],[]);
-                    string sToken = llList2String(lPar,0);
-                    string sVar = llList2String(lPar,1);
-                    string sVal = llList2String(lPar,2);
-                    
-                    if(sToken == "auth"){
-                        if(sVar == "owner"){
-                            //llSay(0, "owner values is: "+sVal);
-                        }
-                    }
-                } else if(iNum >= CMD_OWNER && iNum <= CMD_EVERYONE){
-                    UserCommand(iNum, sStr, kID);
-                    
-                } else if (iNum == DIALOG_TIMEOUT) {
-                    integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-                    g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
-                }else if(iNum == DIALOG_RESPONSE){
-                    integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-                    if(iMenuIndex!=-1){
-                        string sMenu = llList2String(g_lMenuIDs, iMenuIndex+1);
-                        g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
-                        list lMenuParams = llParseString2List(sStr, ["|"],[]);
-                        key kAv = llList2Key(lMenuParams,0);
-                        string sMsg = llList2String(lMenuParams,1);
-                        integer iAuth = llList2Integer(lMenuParams,3);
-                        
-                        if(sMenu == "Menu~Main"){
-                            if(sMsg == UPMENU) Link("from_addon", iAuth, "menu Addons", kAv);
-                            else if(sMsg == "+ Favorite"){
-                                llOwnerSay("Adding collar to favorites...");
-                                if(llListFindList(g_lFavorites, [(string)llGetOwnerKey(g_kCollar)])==-1)g_lFavorites += [(string)llGetOwnerKey(g_kCollar)];
-                            }
-                            else if(sMsg == "DISCONNECT"){
-                                Link("offline", 0, "",llGetOwnerKey(g_kCollar));
-                                g_lMenuIDs=[];
-                                g_kCollar=NULL_KEY;
-                                llSetTimerEvent(0);
-                                llSetText("",ZERO_VECTOR,0);
-                                
-                                llOwnerSay("HUD has been disconnected from the remote collar");
-                            }
-                        }
-                    }
-                }
+                llMessageLinked(LINK_SET, 0, m, "");
             }
+        }
+    }
+    link_message(integer iSender, integer iNum, string sMsg, key kID)
+    {
+        if(iNum == -1){
+            if(g_kCollar!=NULL_KEY)
+                llOwnerSay("HUD has been disconnected from the remote collar");
+            Link("offline", 0, "",llGetOwnerKey(g_kCollar));
+            g_kCollar=NULL_KEY;
+            llSetTimerEvent(0);
+            llSetText("",ZERO_VECTOR,0);
+                    
+        } else if(iNum == -2){ // Favorites
+            if(sMsg == "add"){
+                if(llListFindList(g_lFavorites, [(string)llGetOwnerKey(g_kCollar)])==-1)g_lFavorites += [(string)llGetOwnerKey(g_kCollar)];
+            }
+        } else if(iNum ==1 ){ // Destination : collar
+            Link(kID, (integer)llJsonGetValue(sMsg, ["num"]), llJsonGetValue(sMsg, ["msg"]), llJsonGetValue(sMsg, ["id"]));
         }
     }
 }
