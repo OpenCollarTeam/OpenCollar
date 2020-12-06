@@ -74,7 +74,8 @@ integer TIMEOUT_READY = 30497;
 integer TIMEOUT_REGISTER = 30498;
 integer TIMEOUT_FIRED = 30499;
 
-
+integer AUTH_REQUEST = 600;
+integer AUTH_REPLY=601;
 
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
@@ -478,6 +479,7 @@ state active
                         }
                     } else if(sMsg == "Weld"){
                         UserCommand(iAuth, "weld", kAv);
+                        iRespring=FALSE;
                     } else if(sMsg == "FEEDBACK"){
                         Dialog(kAv, "Please submit your feedback for this alpha/beta/rc", [],[],0,iAuth,"Main~Feedback");
                         iRespring=FALSE;
@@ -744,6 +746,16 @@ state active
                     llMessageLinked(LINK_SET, REBOOT,"reboot","");
                 }
             }
+        } else if(iNum == TIMEOUT_FIRED){
+            if(sStr == "check_weld") { //Wearer accepted weld. Now recheck auth for menu pop
+                llMessageLinked(LINK_SET, AUTH_REQUEST , "welder_auth_check", g_kWeldBy);
+            }
+        } else if(iNum == AUTH_REPLY){
+            if(kID == "welder_auth_check"){ //pop menu for welder
+                list lParameters = llParseString2List(sStr, ["|"],[]);
+                Menu(g_kWeldBy,llList2Integer(lParameters,2));
+            }
+        
         } else if(iNum == REBOOT){
             if(sStr=="reboot"){
                 llResetScript();
