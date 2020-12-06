@@ -341,7 +341,7 @@ FindLeashpointOrLock()
     g_iWeldStorage=-99;
     integer i=0;
     integer end = llGetNumberOfPrims();
-    for(i=0;i<end;i++){
+    for(i=0;i<=end;i++){
         if(llToLower(llGetLinkName(i))=="lock"){
             g_iWeldStorage = i;
             return;
@@ -349,8 +349,6 @@ FindLeashpointOrLock()
             g_iWeldStorage = i; // keep going incase we find the lock prim
         }
     }
-    if(g_iWeldStorage!=-99)return;
-    g_iWeldStorage=-99;
 }
 
 CheckForAndSaveWeld(){
@@ -561,6 +559,13 @@ default
             string sVal = llList2String(lTmp,1);
             
             if(sTok == "intern_weld" || sTok == "intern_weldby") llMessageLinked(LINK_SET,TIMEOUT_REGISTER, "10", "check_weld");
+            
+            if(sTok == "intern_weld") {
+                if(kID) { //arrow code because X && KiD throws error
+                    g_lSettings = SetSetting("intern_weldby", (string)kID); //Setting the welder so CheckForAndSaveWeld() can set the WeldStorage desc
+                    llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "intern_weldby=" + (string)kID, ""); //We need to tell oc_core who is the welder
+                }
+            }
             
             g_lSettings = SetSetting(sTok,sVal);
             
