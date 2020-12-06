@@ -596,7 +596,13 @@ default
             Link("from_addon", 0, "menu OC_Remote", llDetectedKey(0));
             iImplemented =1;
         } else if(sCmd == "@fav"){
-            
+            if(g_kCollar!=NULL_KEY){
+                Link("offline", 0, "", llGetOwnerKey(g_kCollar));
+                llOwnerSay("HUD has disconnected from the remote collar");
+                g_kCollar=NULL_KEY;
+                llSetTimerEvent(0);
+                llSetText("", ZERO_VECTOR,0);
+            }
             g_lOptions=[];
             integer i=0;
             
@@ -715,6 +721,10 @@ default
                                 Link("offline", 0, "",llGetOwnerKey(g_kCollar));
                                 g_lMenuIDs=[];
                                 g_kCollar=NULL_KEY;
+                                llSetTimerEvent(0);
+                                llSetText("",ZERO_VECTOR,0);
+                                
+                                llOwnerSay("HUD has been disconnected from the remote collar");
                             }
                         }
                     }
