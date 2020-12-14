@@ -33,7 +33,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 
 Menu(key kID, integer iAuth) {
     string sPrompt = "\n[OpenCollar Remote]";
-    list lButtons = ["+ Favorite", "- Favorite"];
+    list lButtons = ["+ Favorite", "- Favorite", "Buttons"];
     
     //llSay(0, "opening menu");
     Dialog(kID, sPrompt, lButtons, ["DISCONNECT", UPMENU], 0, iAuth, "Menu~Main");
@@ -91,11 +91,35 @@ UserCommand(integer iNum, string sStr, key kID) {
         }
     }
 }
+
+integer g_iBitMask;
+list g_lBTNS;
+list g_lCheckboxes;
+string Checkbox(string sLabel, integer iMode)
+{
+    if(iMode) return llList2String(g_lCheckboxes,TRUE)+" "+sLabel;
+    else return llList2String(g_lCheckboxes,FALSE)+" "+sLabel;
+}
+MenuButtons(key kID, integer iAuth, integer iPage)
+{
+    string prompt = "[OpenCollar Remote]\n=Button Manager=\n\nButtons: "+(string)g_iBitMask;
+    list buttons = [];
+    
+    integer i=0;
+    integer end = llGetListLength(g_lBTNS);
+    for(i=0;i<end;i+=3)
+    {
+        buttons += Checkbox(llList2String(g_lBTNS, i), (integer)(g_iBitMask&(integer)llList2String(g_lBTNS,i+2)));
+    }
+    
+    Dialog(kID, prompt, buttons, ["APPLY", UPMENU], iPage, iAuth, "Menu~Buttons");
+}
 default
 {
     state_entry()
     {
         llOwnerSay("oc_remote_menus ready with "+(string)llGetFreeMemory()+" bytes free");
+        llMessageLinked(LINK_SET, 2, "","");
     }
     on_rez(integer t){llResetScript();}
     link_message(integer iSender, integer iNums, string sMsg, key kID)
@@ -118,6 +142,10 @@ default
                     if(sVar == "owner"){
                         //llSay(0, "owner values is: "+sVal);
                     }
+                } else if(sToken == "global"){
+                    if(sVar == "checkboxes"){
+                        g_lCheckboxes = llParseString2List(sVal, [","],[]);
+                    }
                 }
             } else if(iNum >= CMD_OWNER && iNum <= CMD_EVERYONE){
                 UserCommand(iNum, sStr, kID);
@@ -133,6 +161,7 @@ default
                     list lMenuParams = llParseString2List(sStr, ["|"],[]);
                     key kAv = llList2Key(lMenuParams,0);
                     string sMsg = llList2String(lMenuParams,1);
+                    integer iPage = llList2Integer(lMenuParams,2);
                     integer iAuth = llList2Integer(lMenuParams,3);
                     
                     if(sMenu == "Menu~Main"){
@@ -147,6 +176,31 @@ default
                         }
                         else if(sMsg == "DISCONNECT"){
                             llMessageLinked(LINK_SET, -1, "", "");
+                        } else if(sMsg == "Buttons")
+                        {
+                            // display button toggle menu
+                            MenuButtons(kAv, iAuth,0);
+                        }
+                    } else if(sMenu == "Menu~Buttons")
+                    {
+                        if(sMsg == UPMENU) Menu(kAv, iAuth);
+                        else if(sMsg == "APPLY"){
+                            llMessageLinked(LINK_SET, -5, (string)g_iBitMask, "");
+                            MenuButtons(kAv,iAuth, iPage);
+                        }
+                        else {
+                            list lSeg = llParseString2List(sMsg, [" "],[]);
+                            integer cBoxMode = llListFindList(g_lCheckboxes, [llList2String(lSeg, 0)]);
+                            string label = llDumpList2String(llList2List(lSeg,1,-1), " ");
+                            
+                            integer mask = (integer)llList2String(g_lBTNS, llListFindList(g_lBTNS,[label])+2);
+                            if(cBoxMode)g_iBitMask = g_iBitMask - mask;
+                            else g_iBitMask += mask;
+                            
+                            //llMessageLinked(LINK_SET, -5, (string)g_iBitMask, "");
+                            
+                            
+                            MenuButtons(kAv,iAuth, iPage);
                         }
                     }
                 }
@@ -156,6 +210,13 @@ default
             
         } else if(iNums==-10){
             llResetScript();
+        } else if(iNums == -3)
+        {
+            g_iBitMask = (integer)sMsg;
+            llMessageLinked(LINK_SET, 3, "", "");
+        } else if(iNums == -4)
+        {
+            g_lBTNS = llParseStringKeepNulls(sMsg, ["`"],[]);
         }
     }
 }
