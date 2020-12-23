@@ -206,6 +206,8 @@ UserCommand(integer iNum, string sStr, key kID) {
                 else
                     llMessageLinked(LINK_SET, LM_SETTING_DELETE, "anim_animlock","");
             } else llMessageLinked(LINK_SET, NOTIFY,"0%NOACCESS% to change animation lock",kID);
+        } else if(sChangetype == "pose"){
+            PoseMenu(kID, iNum);
         }
         
         @checkRemenu;
