@@ -130,7 +130,7 @@ Menu(key kID, integer iAuth) {
     
     
     list lUtility;
-    if(g_iAmNewer)lUtility += ["FEEDBACK", "BUG"];
+    //if(g_iAmNewer)lUtility += ["FEEDBACK", "BUG"];
     
     Dialog(kID, sPrompt, lButtons, lUtility, 0, iAuth, "Menu~Main");
 }
