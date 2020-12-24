@@ -578,6 +578,12 @@ state active
                 
                 
                 return;
+            } else if(PacketType == "update"){
+                if(llListFindList(g_lAddons, [i])==-1)return;
+                
+                string updateNums = llJsonGetValue(m,["optin"]);
+                integer index = llListFindList(g_lAddons, [i]);
+                g_lAddons = llListReplaceList(g_lAddons, [ updateNums], index+3, index+3);
             }
         } else if(c == GENERAL_API_CHANNEL){
             if(m=="scan"){
