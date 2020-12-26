@@ -11,6 +11,14 @@ integer API_CHANNEL = 0x60b97b5e;
 list g_lCollars;
 string g_sAddon = "Test Addon";
 
+/*
+ * Since Release Candidate 1, Addons will not receive all link messages without prior opt-in.
+ * To opt in, add the needed link messages to g_lOptedLM = [], they'll be transmitted on
+ * the initial registration and can be updated at any time by sending a packet of type `update`
+ * Following LMs require opt-in:
+ * [ALIVE, READY, STARTUP, CMD_ZERO, MENUNAME_REQUEST, MENUNAME_RESPONSE, MENUNAME_REMOVE, SAY, NOTIFY, DIALOG, SENSORDIALOG]
+ */
+list g_lOptedLM     = [];
 
 integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
@@ -81,11 +89,12 @@ UserCommand(integer iNum, string sStr, key kID) {
     }
 }
 
-Link(string packet, integer iNum, string sStr, key kID, list lLinkParams){
+Link(string packet, integer iNum, string sStr, key kID){
     list packet_data = ["pkt_type", packet, "iNum", iNum, "addon_name", g_sAddon, "bridge", FALSE, "sMsg", sStr, "kID", kID];
-    if (llGetListLength(lLinkParams) >= 2) // only append if there's a minimum of one key=value set
+
+    if (packet == "online" || packet == "update") // only add optin if packet type is online or update
     {
-        packet_data += lLinkParams;
+        packet_data += ["optin", g_lOptedLM];
     }
 
     string pkt = llList2Json(JSON_OBJECT, packet_data);
