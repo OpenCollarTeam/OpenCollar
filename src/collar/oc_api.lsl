@@ -408,7 +408,7 @@ list StrideOfList(list src, integer stride, integer start, integer end)
     return l;
 }
 AddonsMenu(key kID, integer iAuth){
-    Dialog(kID, "[Addons]\n\nThese are addons you have worn, or rezzed that are compatible with OpenCollar and have requested collar access", StrideOfList(g_lAddons,3,1,llGetListLength(g_lAddons)), [UPMENU],0,iAuth,"addons");
+    Dialog(kID, "[Addons]\n\nThese are addons you have worn, or rezzed that are compatible with OpenCollar and have requested collar access", StrideOfList(g_lAddons,4,1,llGetListLength(g_lAddons)), [UPMENU],0,iAuth,"addons");
 }
 
 SW(){
