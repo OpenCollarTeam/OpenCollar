@@ -136,7 +136,7 @@ default
     }
     
     listen(integer channel, string name, key id, string msg){
-        string sPacketType = sPacketType
+        string sPacketType = llJsonGetValue(msg, ["pkt_type"]);
         if (sPacketType == "approved" && g_kCollar == NULL_KEY)
         {
             // This signal, indicates the collar has approved the addon and that communication requests will be responded to if the requests are valid collar LMs.
