@@ -11,15 +11,6 @@ integer API_CHANNEL = 0x60b97b5e;
 list g_lCollars;
 string g_sAddon = "Test Addon";
 
-/*
- * Since Release Candidate 1, Addons will not receive all link messages without prior opt-in.
- * To opt in, add the needed link messages to g_lOptedLM = [], they'll be transmitted on
- * the initial registration and can be updated at any time by sending a packet of type `update`
- * Following LMs require opt-in:
- * [ALIVE, READY, STARTUP, CMD_ZERO, MENUNAME_REQUEST, MENUNAME_RESPONSE, MENUNAME_REMOVE, SAY, NOTIFY, DIALOG, SENSORDIALOG]
- */
-list g_lOptedLM     = [];
-
 integer CMD_ZERO            = 0;
 integer CMD_OWNER           = 500;
 integer CMD_TRUSTED         = 501;
@@ -41,6 +32,15 @@ integer LM_SETTING_EMPTY    = 2004; //sent when a token has no value
 integer DIALOG          = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT  = -9002;
+
+/*
+ * Since Release Candidate 1, Addons will not receive all link messages without prior opt-in.
+ * To opt in, add the needed link messages to g_lOptedLM = [], they'll be transmitted on
+ * the initial registration and can be updated at any time by sending a packet of type `update`
+ * Following LMs require opt-in:
+ * [ALIVE, READY, STARTUP, CMD_ZERO, MENUNAME_REQUEST, MENUNAME_RESPONSE, MENUNAME_REMOVE, SAY, NOTIFY, DIALOG, SENSORDIALOG]
+ */
+list g_lOptedLM     = [];
 
 list g_lMenuIDs;
 integer g_iMenuStride;
@@ -90,7 +90,7 @@ Link(string packet, integer iNum, string sStr, key kID){
 
     if (packet == "online" || packet == "update") // only add optin if packet type is online or update
     {
-        packet_data += [ "optin", g_lOptedLM ];
+        llListInsertList(packet_data, [ "optin", g_lOptedLM ], -1);
     }
 
     string pkt = llList2Json(JSON_OBJECT, packet_data);
@@ -140,7 +140,7 @@ default
         if (sPacketType == "approved" && g_kCollar == NULL_KEY)
         {
             // This signal, indicates the collar has approved the addon and that communication requests will be responded to if the requests are valid collar LMs.
-            g_kCollar = i;
+            g_kCollar = id;
             Link("from_addon", LM_SETTING_REQUEST, "ALL", "");
         }
         else if (sPacketType == "dc" && g_kCollar == id)
@@ -155,7 +155,7 @@ default
         else if(sPacketType == "from_collar")
         {
             // process link message if in range of addon
-            if (llVecDist(llGetPos(), llList2Vector(llGetObjectDetails(i, [OBJECT_POS]), 0)) <= 10.0)
+            if (llVecDist(llGetPos(), llList2Vector(llGetObjectDetails(id, [OBJECT_POS]), 0)) <= 10.0)
             {
                 integer iNum = (integer) llJsonGetValue(msg, ["iNum"]);
                 string sStr  = llJsonGetValue(msg, ["sMsg"]);
