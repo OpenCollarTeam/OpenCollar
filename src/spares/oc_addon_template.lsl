@@ -198,9 +198,16 @@ default
                         string sMsg = llList2String(lMenuParams, 1);
                         integer iAuth = llList2Integer(lMenuParams, 3);
                         
-                        if (sMenu == "Menu~Main"){
-                            if (sMsg == UPMENU) Link("from_addon", iAuth, "menu Addons", kAv);
-                            else if (sMsg == "A Button") llSay(0, "This is an example addon.");
+                        if (sMenu == "Menu~Main")
+                        {
+                            if (sMsg == UPMENU)
+                            {
+                                Link("from_addon", iAuth, "menu Addons", kAv);
+                            }
+                            else if (sMsg == "A Button")
+                            {
+                                llSay(0, "This is an example addon.");
+                            }
                             else if (sMsg == "DISCONNECT")
                             {
                                 Link("offline", 0, "", llGetOwnerKey(g_kCollar));
