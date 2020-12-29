@@ -18,7 +18,7 @@ https://github.com/OpenCollarTeam/OpenCollar
 
 // this texture is a spritemap with all buttons on it, for faster texture
 // loading than having separate textures for each button.
-string BTN_TEXTURE = "243f5127-2fd1-7a8e-0c51-6603eeb9036f";
+string BTN_TEXTURE = "da46036f-7f4d-59e5-3fcf-a43d692e3ea7";
 
 // There are 3 columns of buttons and 8 rows of buttons in the sprite map.
 integer BTN_XS = 3;
@@ -28,6 +28,9 @@ integer BTN_YS = 9;
 integer g_iVertical = TRUE;  // can be vertical?
 integer g_iLayout = 1; // 0 - Horisontal, 1 - Vertical
 
+
+integer AUTH_REQUEST = 600;
+integer AUTH_REPLY=601;
 
 float g_fGap = 0.005; // This is the space between buttons
 float g_Yoff = 0.025; // space between buttons and screen top/bottom border
@@ -85,7 +88,7 @@ list BTNS = [
     "Sit", "sit", 4096,
     "Stand", "unsit", 8192,
     "Rez", "@rez", 16384,
-    "Pose", "menu Pose", 32768,
+    "Pose", "pose", 32768,
     "Stop", "stop", 65536,
     "Hudmenu", "@menu", 131072,
     "Person", "@person", 262144,
@@ -515,7 +518,7 @@ default
     {
         llSetText("",ZERO_VECTOR,0);
         if(llGetTime()>=10 && g_kCollar == NULL_KEY){
-            llWhisper(0, "Selected target does not use opencollar or the API has failed. Timeout occured.");
+            llWhisper(0, "Timeout occured.");
             StopAPIs();
             llSetTimerEvent(0);
         }
@@ -681,6 +684,8 @@ default
             llOwnerSay("Connected!");
             llMessageLinked(LINK_SET, 2, "", g_kCollar);
             Link("from_addon", LM_SETTING_REQUEST, "ALL","");
+            Link("from_addon", AUTH_REQUEST, "check_auth_remote", llGetOwner());
+            
         } else if(llJsonGetValue(m,["pkt_type"])=="dc" && g_kCollar==i){
             llMessageLinked(LINK_SET, -1, "", "");
         } else if(llJsonGetValue(m,["pkt_type"])=="pong" && g_kCollar==i)
@@ -692,6 +697,10 @@ default
                 // process it!
                 llMessageLinked(LINK_SET, 0, m, "");
             }
+        } else if(llJsonGetValue(m, ["pkt_type"]) == "denied")
+        {
+            llMessageLinked(LINK_SET, -1, "", "");
+            llOwnerSay("Collar denied access");
         }
     }
     link_message(integer iSender, integer iNum, string sMsg, key kID)
@@ -708,6 +717,11 @@ default
         } else if(iNum == -2){ // Favorites
             if(sMsg == "add"){
                 if(llListFindList(g_lFavorites, [(string)llGetOwnerKey(g_kCollar)])==-1)g_lFavorites += [(string)llGetOwnerKey(g_kCollar)];
+            }else {
+                integer index = llListFindList(g_lFavorites, [(string)llGetOwnerKey(g_kCollar)]);
+                if(index!=-1){
+                    g_lFavorites = llDeleteSubList(g_lFavorites, index,index);
+                }
             }
         } else if(iNum ==1 ){ // Destination : collar
             Link(kID, (integer)llJsonGetValue(sMsg, ["num"]), llJsonGetValue(sMsg, ["msg"]), llJsonGetValue(sMsg, ["id"]));

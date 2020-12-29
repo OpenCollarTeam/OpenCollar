@@ -39,6 +39,8 @@ Menu(key kID, integer iAuth) {
     Dialog(kID, sPrompt, lButtons, ["DISCONNECT", UPMENU], 0, iAuth, "Menu~Main");
 }
 
+integer AUTH_REQUEST = 600;
+integer AUTH_REPLY=601;
 integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
 integer CMD_TRUSTED = 501;
@@ -122,8 +124,9 @@ default
         llMessageLinked(LINK_SET, 2, "","");
     }
     on_rez(integer t){llResetScript();}
-    link_message(integer iSender, integer iNums, string sMsg, key kID)
+    link_message(integer iSender, integer iNums, string sMsg, key kIDx)
     {
+        //llSay(0, llDumpList2String([iSender,iNums, sMsg, kIDx], "~"));
         if(iNums==0)
         {
             
@@ -153,6 +156,21 @@ default
             } else if (iNum == DIALOG_TIMEOUT) {
                 integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
                 g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
+            } else if(iNum == AUTH_REPLY){
+                list lTmp = llParseString2List(sStr, ["|"],[]);
+                if(llList2String(lTmp,0) == "AuthReply" && kID == "check_auth_remote")
+                {
+                    if(llList2String(lTmp,1) == (string)llGetOwner()){
+                        integer iAuth = (integer)llList2String(lTmp,2);
+                        if(iAuth == CMD_NOACCESS){
+                            llMessageLinked(LINK_SET,-1, "", "");
+                            llOwnerSay("You do not have access to this collar");
+                            llMessageLinked(LINK_SET,-2,"rem","");
+                        } else {
+                            llMessageLinked(LINK_SET,-2,"add", "");
+                        }
+                    }
+                }
             }else if(iNum == DIALOG_RESPONSE){
                 integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
                 if(iMenuIndex!=-1){
