@@ -75,7 +75,7 @@ string g_sAddon = "OC_Remote";
 
 
 UserCommand(integer iNum, string sStr, key kID) {
-    if (iNum<CMD_OWNER || iNum>CMD_WEARER) return;
+    if(iNum==CMD_NOACCESS)return;
     if (iNum == CMD_OWNER && llToLower(sStr) == "runaway") {
         return;
     }

@@ -98,15 +98,16 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 integer g_iHide=FALSE;
 integer g_iAllowHide=TRUE;
 Settings(key kID, integer iAuth){
-    string sPrompt = "OpenCollar\n\n[Settings]";
+    string sPrompt = "OpenCollar\n\n[Settings]\n\nEditor - Interactive Settings Editor\nWearerAddons - Allow/Disallow use of wearer owned addons\nAddonLimited - Limit whether wearer owned addons can modify the owners list or weld state (default enabled)";
     list lButtons = ["Print", "Load", "Fix Menus"];
     if (llGetInventoryType("oc_resizer") == INVENTORY_SCRIPT) lButtons += ["Resize"];
     else lButtons += ["-"];
-    lButtons += [Checkbox(g_iHide, "Hide"), "EDITOR", Checkbox(g_iAllowHide, "AllowHiding")];
+    lButtons += [Checkbox(g_iHide, "Hide"), "EDITOR", Checkbox(g_iAllowHide, "AllowHiding"), Checkbox(g_iWearerAddons, "WearerAddons"), Checkbox(g_iWearerAddonLimited,"AddonLimited")];
     Dialog(kID, sPrompt, lButtons, [UPMENU],0,iAuth, "Menu~Settings");
 }
 
 integer g_iWelded=FALSE;
+integer g_iWearerAddons=TRUE;
 // The original idea in #356, was to make this as a app, but i fail to see why we must use an extra app just to create the weld, the extra app or possibly an addon could be made to unweld should the wearer desire it.
 
 list g_lApps;
@@ -317,7 +318,7 @@ UserCommand(integer iNum, string sStr, key kID) {
         }
     }
 }
-
+integer g_iWearerAddonLimited=TRUE;
 integer g_iUpdateListener;
 key g_kUpdater;
 integer g_iDiscoveredUpdaters;
@@ -595,6 +596,16 @@ state active
                     } else if(sMsg == "EDITOR"){
                         llMessageLinked(LINK_SET, 0, "settings edit", kAv);
                         iRespring=FALSE;
+                    } else if(sMsg == Checkbox(g_iWearerAddons, "WearerAddons")){
+                        if(iAuth == CMD_OWNER || iAuth == CMD_TRUSTED){
+                            g_iWearerAddons=1-g_iWearerAddons;
+                            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_weareraddon="+(string)g_iWearerAddons,"");
+                        }else llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to toggling wearer addons", kAv);
+                    } else if(sMsg == Checkbox(g_iWearerAddonLimited, "AddonLimited")){
+                        if(iAuth == CMD_OWNER || iAuth == CMD_TRUSTED){
+                            g_iWearerAddonLimited=1-g_iWearerAddonLimited;
+                            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_addonlimit="+(string)g_iWearerAddonLimited,"");
+                        }else llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to toggling wearer addon limitations", kAv);
                     }
                     
                     
@@ -671,6 +682,10 @@ state active
                     g_lCheckboxes = llCSV2List(sVal);
                 } else if(sVar == "hide"){
                     g_iHide=(integer)sVal;
+                } else if(sVar == "weareraddon"){
+                    g_iWearerAddons=(integer)sVal;
+                } else if(sVar == "addonlimit"){
+                    g_iWearerAddonLimited=(integer)sVal;
                 }
             } else if(sToken == "auth"){
                 if(sVar == "group"){
@@ -729,6 +744,10 @@ state active
                     g_sPrefix = llGetSubString(llKey2Name(g_kWearer),0,1);
                 } else if(sVar = "channel"){
                     g_iChannel = 1;
+                } else if(sVar == "weareraddon"){
+                    g_iWearerAddons=TRUE;
+                } else if(sVar=="addonlimit"){
+                    g_iWearerAddonLimited=TRUE;
                 }
             } else if(sToken == "auth"){
                 if(sVar == "group"){

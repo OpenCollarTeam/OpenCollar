@@ -439,7 +439,9 @@ integer SENSORDIALOG = -9003;
 integer SAY = 1004;
 list g_lAddonFiltered = [];
 
+integer g_iWearerAddonLimited=TRUE;
 string g_sPendingAddonOptin;
+integer g_iWearerAddons=TRUE;
 default
 {
     on_rez(integer iNum){
@@ -540,18 +542,32 @@ state active
                     // first- Check if a pairing was done with this addon, if not ask the user for confirmation, add it to Addons, and then move on
                     
                     if(llListFindList(g_lAddons, [i])==-1 && llGetOwnerKey(i)!=g_kWearer){
-                        g_kAddonPending = i;
-                        g_sPendingAddonOptin = llJsonGetValue(m,["optin"]);
-                        g_sAddonName = llJsonGetValue(m,["addon_name"]);
-                        Dialog(g_kWearer, "[ADDON]\n\nAn object named: "+n+"\nAddon Name: "+g_sAddonName+"\nOwned by: secondlife:///app/agent/"+(string)llGetOwnerKey(i)+"/about\n\nHas requested internal collar access. Grant it?", ["Yes", "No"],[],0,CMD_WEARER,"addon~add");
-                        return;
+                        integer AddonOwnerAuth = CalcAuth(llGetOwnerKey(i));
+                        if(AddonOwnerAuth == CMD_OWNER || AddonOwnerAuth == CMD_TRUSTED){
+                            
+                            g_lAddons += [i, llJsonGetValue(m,["addon_name"]), llGetUnixTime(), llJsonGetValue(m,["optin"])];
+                            SayToAddonX(i, "approved", 0, "", "");
+                            llMessageLinked(LINK_SET, NOTIFY, "0Addon connected successfully: "+llJsonGetValue(m,["addon_name"]), g_kWearer);
+                        }
+                        else{
+                            g_kAddonPending = i;
+                            g_sPendingAddonOptin = llJsonGetValue(m,["optin"]);
+                            g_sAddonName = llJsonGetValue(m,["addon_name"]);
+                            Dialog(g_kWearer, "[ADDON]\n\nAn object named: "+n+"\nAddon Name: "+g_sAddonName+"\nOwned by: secondlife:///app/agent/"+(string)llGetOwnerKey(i)+"/about\n\nHas requested internal collar access. Grant it?", ["Yes", "No"],[],0,CMD_WEARER,"addon~add");
+                            return;
+                        }
                     }else if(llListFindList(g_lAddons, [i])==-1 && llGetOwnerKey(i) == g_kWearer){
                         // Add the addon and be done with
+                        if(!g_iWearerAddons){
+                            SayToAddonX(i, "denied", 0, "", "");
+                            llMessageLinked(LINK_SET, NOTIFY, "0Addon ("+llJsonGetValue(m,["addon_name"])+") denied because wearer owned addons is disallowed by settings", g_kWearer);
+                            return;
+                        }
                         g_lAddons += [i, llJsonGetValue(m,["addon_name"]), llGetUnixTime(), llJsonGetValue(m,["optin"])];
-                        SayToAddon("approved", 0, "", "");
+                        SayToAddonX(i, "approved", 0, "", "");
                         llMessageLinked(LINK_SET, NOTIFY, "0Addon connected successfully: "+llJsonGetValue(m,["addon_name"]), g_kWearer);
                     } else if(llListFindList(g_lAddons,[i])!=-1){
-                        SayToAddon("approved", 0, "", "");
+                        SayToAddonX(i, "approved", 0, "", "");
                     }
                 }
             } else if(PacketType == "offline"){
@@ -573,6 +589,13 @@ state active
                 integer iNum = (integer)llJsonGetValue(m,["iNum"]);
                 string sMsg = llJsonGetValue(m,["sMsg"]);
                 key kID = llJsonGetValue(m,["kID"]);
+                
+                if((iNum == LM_SETTING_DELETE || iNum == LM_SETTING_SAVE)&& llGetOwnerKey(i)==g_kWearer && g_iWearerAddonLimited){
+                    string sTest = llToLower(sMsg);
+                    if(llSubStringIndex(sMsg, "auth_")!=-1)return;
+                    if(llSubStringIndex(sMsg,"intern_")!=-1)return;
+                }
+                
                 llMessageLinked(LINK_SET, iNum, sMsg,kID);
                 
                 
@@ -687,6 +710,10 @@ state active
                     g_sSafeword = sVal;
                 } else if(sVar == "safeworddisable"){
                     g_iSafewordDisable=1;
+                } else if(sVar == "weareraddon"){
+                    g_iWearerAddons=(integer)sVal;
+                } else if(sVar == "addonlimit"){
+                    g_iWearerAddonLimited=(integer)sVal;
                 }
             }
         } else if(iNum == LM_SETTING_DELETE){
@@ -728,6 +755,10 @@ state active
                     g_sSafeword = "RED";
                 } else if(sVar == "safeworddisable"){
                     g_iSafewordDisable=0;
+                } else if(sVar == "weareraddon"){
+                    g_iWearerAddons=1;
+                } else if(sVar == "addonlimit"){
+                    g_iWearerAddonLimited=1;
                 }
             }
         } else if(iNum == REBOOT){

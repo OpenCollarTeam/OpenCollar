@@ -394,14 +394,26 @@ StartAPI(key ID){
     Link("online",0,"",ID);
 }
 
+list g_lOptedLM = [];
 string g_sAddon = "OC_Remote";
 Link(string packet, integer iNum, string sStr, key kID){
-    if(llList2Integer(g_lAPIListeners,0)==0)return; // nothing is set or connected!!!!!!!
-    string pkt = llList2Json(JSON_OBJECT, ["pkt_type", packet, "iNum", iNum, "addon_name", g_sAddon, "sMsg", sStr, "kID", kID]);
-    if(g_kCollar!= "" && g_kCollar!= NULL_KEY) 
+    if(llGetListLength(g_lAPIListeners)==0)return;
+    list packet_data = [ "pkt_type", packet, "iNum", iNum, "addon_name", g_sAddon, "bridge", FALSE, "sMsg", sStr, "kID", kID ];
+
+    if (packet == "online" || packet == "update") // only add optin if packet type is online or update
+    {
+        llListInsertList(packet_data, [ "optin", llDumpList2String(g_lOptedLM, "~") ], -1);
+    }
+
+    string pkt = llList2Json(JSON_OBJECT, packet_data);
+    if (g_kCollar != "" && g_kCollar != NULL_KEY)
+    {
         llRegionSayTo(g_kCollar, llList2Integer(g_lAPIListeners,0), pkt);
+    }
     else
+    {
         llRegionSay(llList2Integer(g_lAPIListeners,0), pkt);
+    }
 }
 
 
@@ -467,7 +479,7 @@ default
         llSleep(1.0);//giving time for others to reset before populating menu
         llSetObjectName("OpenCollar Remote - 8.0");
         llOwnerSay("HUD is ready with "+(string)llGetFreeMemory()+"b free memory");
-        g_lFavorites = [llGetOwner()];
+        g_lFavorites = [(string)llGetOwner()];
         llMessageLinked(LINK_SET,-10,"","");
     }
     
@@ -661,6 +673,7 @@ default
     }
     
     listen(integer c,string n,key i,string m){
+        //llWhisper(0,m);
         if(c==g_iChannel)
         {
                 
