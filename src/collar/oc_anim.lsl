@@ -6,6 +6,7 @@ Copyright 2019
 
 Aria (Tashia Redrose)
     * July 2020         - Rewrote oc_anim
+    * Dec 2020          - Fix bug where animations were not treated case insensitive, and where animations with a space in the name could not be played by chat command or menu button
 
 et al.
 
@@ -111,7 +112,7 @@ Menu(key kID, integer iAuth) {
 string UP_ARROW = "↑";
 string DOWN_ARROW = "↓";
 
-PoseMenu(key kID, integer iAuth){
+PoseMenu(key kID, integer iAuth, integer iPage){
     string sPrompt = "\n[Pose Menu]\n\nCurrent Animation: "+setor((g_sPose==""), "None", g_sPose);
     sPrompt += "\nCurrent Height Adjustment: ";
     if(g_lCurrentAnimations==[])sPrompt+=(string)g_fStandHover;
@@ -120,10 +121,29 @@ PoseMenu(key kID, integer iAuth){
         if(iPos==-1)sPrompt += "0";
         else sPrompt += llList2String(g_lAdjustments,iPos+1);
     }
-    Dialog(kID, sPrompt, g_lPoses, [ UP_ARROW, DOWN_ARROW, "STOP",UPMENU], 0, iAuth, "Animations~Poses");
+    Dialog(kID, sPrompt, GetPoseList(-1), [ UP_ARROW, DOWN_ARROW, "STOP",UPMENU], iPage, iAuth, "Animations~Poses");
 }
 
-list g_lPoses = [];
+list GetPoseList(integer iType)
+{
+    // -1 = as it exists in inventory
+    // 0 = lower case
+    
+    list lTmp;
+    integer i=0;
+    integer end = llGetInventoryNumber(INVENTORY_ANIMATION);
+    for(i=0;i<end;i++){
+        
+        string name = llGetInventoryName(INVENTORY_ANIMATION, i);
+        if(llGetSubString(name,0,0)!="~"){
+            if(iType == -1)lTmp += [name];
+            else lTmp += [llToLower(name)];
+        }
+    }
+    
+    return lTmp;
+}
+
 UserCommand(integer iNum, string sStr, key kID) {
     string ssStr = llToLower(sStr);
     if (iNum<CMD_OWNER || iNum>CMD_WEARER) return;
@@ -134,20 +154,32 @@ UserCommand(integer iNum, string sStr, key kID) {
     if (ssStr==llToLower(g_sSubMenu) || ssStr == "menu "+llToLower(g_sSubMenu)) Menu(kID, iNum);
     //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else {
+        list lTmp = llParseString2List(sStr, [" "],[]);
         integer iWSuccess = 0; 
-        string sChangetype = llList2String(llParseString2List(sStr, [" "], []),0);
-        string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),1);
+        string sChangetype = llList2String(lTmp,0);
+        string sChangevalue = llList2String(lTmp,1);
+        integer iPageNum = llList2Integer(lTmp,2);
+        integer iHeightAdjust=FALSE;
+        if(llSubStringIndex(sStr,"remenu") != -1){
+            integer len = llGetListLength(lTmp);
+            len = len-3;
+            sChangetype = llDumpList2String(llList2List(lTmp, 0,len), " ");
+            sChangevalue = llList2String(lTmp, len+1);
+            iPageNum = llList2Integer(lTmp, len+2);
+        }
         string sText;
-        
+        //llOwnerSay("usercommand: "+sStr+"; "+sChangetype+"; "+sChangevalue);
         if(g_iAnimLock && kID == g_kWearer && (llGetInventoryType(sChangetype)!=INVENTORY_NONE)) {
             llMessageLinked(LINK_SET, NOTIFY,"0%NOACCESS% to changing animations", g_kWearer);
             jump checkRemenu;
         }
-        if(llListFindList(g_lPoses,[sChangetype])!=-1){
+        if(llListFindList(GetPoseList(0),[llToLower(sChangetype)])!=-1){
             // this is a pose
             if (g_sPose != "")StopAnimation(g_sPose);
-            g_sPose = sChangetype;
-            StartAnimation(sChangetype);
+            // get actual pose name as it exists in inventory
+            integer index = llListFindList(GetPoseList(0), [llToLower(sChangetype)]);
+            g_sPose = llGetInventoryName(INVENTORY_ANIMATION,index);
+            StartAnimation(g_sPose);
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, "anim_pose="+llList2String(g_lCurrentAnimations, 0),"");
         } else if(llToLower(sChangetype) == "stop" || llToLower(sChangetype)=="release"){
             if(g_iAnimLock && kID == g_kWearer){
@@ -161,10 +193,14 @@ UserCommand(integer iNum, string sStr, key kID) {
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, "anim_pose","");
         } else if(sChangetype == UP_ARROW || sChangetype == "up" || sChangetype == DOWN_ARROW || sChangetype == "down"){
             // adjust current pose
+            //llOwnerSay(" up or down");
+            //sChangevalue="remenu";
+            iHeightAdjust=1;
             integer iUp= FALSE;
             if(sChangetype == UP_ARROW || sChangetype == "up")iUp=TRUE;
             if(g_lCurrentAnimations == []){
                 // adjust standing
+                //llOwnerSay("up: "+(string)iUp+"; anims list blank");
                 if(iUp)g_fStandHover += g_fAdjustment;
                 else g_fStandHover-=g_fAdjustment;
                 if(g_fStandHover==0)llMessageLinked(LINK_SET,LM_SETTING_DELETE,"offset_standhover","");
@@ -173,14 +209,19 @@ UserCommand(integer iNum, string sStr, key kID) {
             } else {
                 integer iPos=llListFindList(g_lAdjustments,llList2List(g_lCurrentAnimations, 0, 0));
                 if(iPos==-1){
+                   // llOwnerSay("up:"+(string)iUp+"; anim not found in adjustments");
                     // OK now we make a new entry
                     
                     if(iUp)
                         g_lAdjustments+=[llList2String(g_lCurrentAnimations, 0), g_fAdjustment];
                     else
                         g_lAdjustments+=[llList2String(g_lCurrentAnimations, 0),-g_fAdjustment];
+                        
+                    
+                    llMessageLinked(LINK_SET, NOTIFY, "0The hover height for '"+llList2String(g_lCurrentAnimations, 0)+"' is now "+(string)g_fAdjustment, g_kWearer);
                 } else {
                     
+                    //llOwnerSay("up:"+(string)iUp+"; anim update");
                     float fCurrent = (float)llList2String(g_lAdjustments, iPos+1);
                     if(iUp)
                         fCurrent+=g_fAdjustment;
@@ -196,6 +237,10 @@ UserCommand(integer iNum, string sStr, key kID) {
                 }
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, "offset_hovers="+llDumpList2String(g_lAdjustments,","),"");
                 
+                //llOwnerSay("up:"+(string)iUp+"; saved hover list");
+                if(llGetListLength(g_lCurrentAnimations)!=0)
+                    PlayAnimation();
+                
                 
             }
         } else if(sChangetype == "animlock"){
@@ -207,28 +252,14 @@ UserCommand(integer iNum, string sStr, key kID) {
                     llMessageLinked(LINK_SET, LM_SETTING_DELETE, "anim_animlock","");
             } else llMessageLinked(LINK_SET, NOTIFY,"0%NOACCESS% to change animation lock",kID);
         } else if(llToLower(sChangetype) == "pose"){
-            PoseMenu(kID, iNum);
+            PoseMenu(kID, iNum,0);
         } else if(llToLower(sChangetype) == "menu" && llToLower(sChangevalue) == "pose"){
-            PoseMenu(kID, iNum);
+            PoseMenu(kID, iNum,0);
         }
         
         @checkRemenu;
-        if(sChangevalue == "remenu" && llGetInventoryType(sChangetype)==INVENTORY_ANIMATION)PoseMenu(kID,iNum);
+        if(sChangevalue == "remenu" && (llGetInventoryType(sChangetype)==INVENTORY_ANIMATION || iHeightAdjust))PoseMenu(kID,iNum, iPageNum);
 
-    }
-}
-
-Scan()
-{
-    g_lPoses = [];
-    integer i=0;
-    integer end = llGetInventoryNumber(INVENTORY_ANIMATION);
-    for(i=0;i<end;i++){
-        string sAnimName = llGetInventoryName(INVENTORY_ANIMATION,i);
-        if(llGetSubString(sAnimName,0,0)=="~")jump nextAnim;
-
-        g_lPoses+=sAnimName;
-        @nextAnim;
     }
 }
 
@@ -367,11 +398,7 @@ state active
         g_kWearer = llGetOwner();
         if(llGetStartParameter()!=0)state inUpdate;
 
-        Scan();
-
         llRequestPermissions(g_kWearer, PERMISSION_OVERRIDE_ANIMATIONS | PERMISSION_TRIGGER_ANIMATION | PERMISSION_TAKE_CONTROLS);
-        
-        
     }
     
     changed(integer t){
@@ -462,6 +489,7 @@ state active
                 list lMenuParams = llParseString2List(sStr, ["|"],[]);
                 key kAv = llList2Key(lMenuParams,0);
                 string sMsg = llList2String(lMenuParams,1);
+                integer iPage = llList2Integer(lMenuParams,2);
                 integer iAuth = llList2Integer(lMenuParams,3);
                 integer iRespring = TRUE;
                 
@@ -474,7 +502,7 @@ state active
                         llMessageLinked(LINK_SET,0,"animlock remenu", kAv);
                     }
                     else if(sMsg == "Pose"){
-                        PoseMenu(kAv,iAuth);
+                        PoseMenu(kAv,iAuth, 0);
                         iRespring=FALSE;
                     }else {
                         iRespring=FALSE;
@@ -489,12 +517,12 @@ state active
                     
                     } else {
                         // Set standing animation
-                        llMessageLinked(LINK_SET, 0, sMsg + " remenu", kAv);
+                        llMessageLinked(LINK_SET, 0, sMsg + " remenu "+(string)iPage, kAv);
                         iRespring=FALSE;
                     }
 
 
-                    if(iRespring)PoseMenu(kAv,iAuth);
+                    if(iRespring)PoseMenu(kAv,iAuth, iPage);
                 }
             }
             
@@ -578,7 +606,7 @@ state active
         } else if(iNum == ANIM_STOP){
             StopAnimation(sStr);
         } else if (iNum == ANIM_LIST_REQ){
-            llMessageLinked(LINK_SET, ANIM_LIST_RES, llDumpList2String(g_lPoses, "|"), "");
+            llMessageLinked(LINK_SET, ANIM_LIST_RES, llDumpList2String(GetPoseList(0), "|"), "");
         } else if(iNum == REBOOT){
             StopAllAnimations();
             llResetScript();

@@ -249,11 +249,11 @@ default {
                             }
                             sSetting = sToken+"="+llDumpList2String(lTest,",");
                         }
-                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, sSetting, "");
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, sSetting, "origin");
                     } else {
                         //Debug("SP - Deleting :"+ llList2String(sDeprecatedSplitSettingTokenForTest,0));
                          //remove it if it's somehow persistent still
-                        llMessageLinked(LINK_SET, LM_SETTING_DELETE, sToken, "");
+                        llMessageLinked(LINK_SET, LM_SETTING_DELETE, sToken, "origin");
                     }
                 }
             }
@@ -283,9 +283,6 @@ default {
             }
             
             llSleep(15); // oc_sys sleeps for 10 seconds
-            llOwnerSay("Fixing menus ...");
-            llMessageLinked(LINK_SET, CMD_OWNER, "fix", llGetOwner());
-            llSleep(5);
             llOwnerSay("Installation Completed!");
             // delete shim script
             llRemoveInventory(llGetScriptName());
@@ -298,7 +295,10 @@ default {
         if (iNum == LM_SETTING_RESPONSE) {
             if (sStr != "settings=sent") {
                 if (llListFindList(g_lSettings, [sStr]) == -1) {
-                    g_lSettings += [sStr];
+                    if(llListFindList(g_lSettings,["intern_weld=1"])==-1 && llSubStringIndex(sStr, "intern_weldby")!=-1)return;
+                    else{
+                        g_lSettings += [sStr];
+                    }
                 }
             }else{
                 if(g_iIgnoreSent)return;

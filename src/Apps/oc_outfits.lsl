@@ -8,6 +8,7 @@ Aria (Tashia Redrose)
     * Dec 2019      - Rewrote Capture & Reset Script Version to 1.0
     * Jan 2020      - Added BrowseCore, and added in chat commands for Outfits
     * Apr 2020      - Added chat commands, and a link message API to wear/remove
+    * Dec 2020      - Fix up change commands to be more obvious
 Lillith (Lillith Xue)
     * Dec 2019      - Fixed bug: Outfits not working for non-wearer as menu user due to listen typo
 
@@ -21,7 +22,7 @@ https://github.com/OpenCollarTeam/OpenCollar
 
 string g_sParentMenu = "Apps";
 string g_sSubMenu = "Outfits";
-string g_sAppVersion = "1.4";
+string g_sAppVersion = "1.5";
 string g_sScriptVersion = "8.0";
 
 
@@ -87,7 +88,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 }
 
 Menu(key kID, integer iAuth) {
-    string sPrompt = "\n[Outfits App "+g_sAppVersion+"]";
+    string sPrompt = "\n[Outfits App "+g_sAppVersion+"]\n\nChat Commands: \n-> wear <path>\n-> naked";
     list lButtons = [TickBox(g_iLockCore, "Lock Core"), "◌ Configure", "Browse", "BrowseCore", "Help" ];
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "Menu~Main");
 }
@@ -421,7 +422,7 @@ state active
         } else if(iNum == OUTFITS_ADD){
             UserCommand(CMD_OWNER, "wear "+sStr, kID);
         } else if(iNum == OUTFITS_REM){
-            UserCommand(CMD_OWNER, "rem "+sStr, kID);
+            UserCommand(CMD_OWNER, "naked", kID);
         } else if(iNum == LM_SETTING_RESPONSE){
             // Detect here the Settings
             list lSettings = llParseString2List(sStr, ["_","="],[]);
