@@ -177,21 +177,35 @@ UserCommand(integer iNum, string sStr, key kID) {
     //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else {
         integer iWSuccess = 0; 
-        string sChangetype = llGetSubString(sStr, 0, 0);
-        string sChangevalue = llStringTrim(llGetSubString(sStr, 1, -1), STRING_TRIM);
+        string sChangetype = llGetSubString(sStr, 0, 1);
+        string sChangevalue = llStringTrim(llGetSubString(sStr, 2, -1), STRING_TRIM);
         string sText;
     
         if(iNum == CMD_TRUSTED && !Bool((g_iAccessBitSet&1)))return R(); 
         if(iNum == CMD_EVERYONE && !Bool((g_iAccessBitSet&2)))return R(); 
         if(iNum == CMD_GROUP && !Bool((g_iAccessBitSet&4)))return R(); 
-        if(iNum == CMD_WEARER && !Bool((g_iAccessBitSet&8)))return R();     
+        if(iNum == CMD_WEARER && !Bool((g_iAccessBitSet&8)))return R();
+        if(sChangetype == "--"){
+            llOwnerSay("@detachall:"+sChangevalue+"=force");
+            return;
+        } else if(sChangetype == "&&"){
+            llOwnerSay("@attachallover:"+sChangevalue+"=force");
+            return;
+        } else if(sChangetype == "++"){
+            llOwnerSay("@attachall:"+sChangevalue+"=force");
+            return;
+        }
+        sChangetype = llGetSubString(sStr,0,0);
+        sChangevalue = llStringTrim(llGetSubString(sStr, 1, -1), STRING_TRIM);
+             
         if(sChangetype == "&"){
             // add folder path
-            llOwnerSay("@attachallover:"+sChangevalue+"=force");
+            llOwnerSay("@attachover:"+sChangevalue+"=force");
         } else if(sChangetype == "-"){
-            llOwnerSay("@detachall:"+sChangevalue+"=force");
+            llOwnerSay("@detach:"+sChangevalue+"=force");
+        } else if(sChangetype == "+"){
+            llOwnerSay("@attach:"+sChangevalue+"=force");
         }
-        
     }
 }
 

@@ -276,12 +276,12 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
         if(g_iShowLevel)sThisPrompt += "\nAuth Level: "+(string)iAuth;
         list lPretty = PrettyButtons(lButtons, lUtilityButtons, lNavButtons);
         
-        llMessageLinked(LINK_SET, DIALOG+1, sThisPrompt + "|" + llDumpList2String(lPretty, "`") + "|" + (string)iAuth, "");
+        //llMessageLinked(LINK_SET, DIALOG+1, sThisPrompt + "|" + llDumpList2String(lPretty, "`") + "|" + (string)iAuth, "");
         
         llDialog(kRecipient, sThisPrompt, lPretty, iChan);
     }
     else{
-        llMessageLinked(LINK_SET, DIALOG+2, sThisPrompt+"|"+(string)iAuth, "");
+        //llMessageLinked(LINK_SET, DIALOG+2, sThisPrompt+"|"+(string)iAuth, "");
         llTextBox(kRecipient, sThisPrompt, iChan);
     }
     
