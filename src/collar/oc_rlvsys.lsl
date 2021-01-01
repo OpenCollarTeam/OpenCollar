@@ -453,6 +453,7 @@ state active
                 if (sMenu == g_sSubMenu) {
                     if (sMsg == TURNON) {
                         UserCommand(iAuth, "rlv on", kAv);
+                        DoMenu(kAv, iAuth);
                     } else if (sMsg == TURNOFF) {
                         UserCommand(iAuth, "rlv off", kAv);
                         DoMenu(kAv, iAuth);

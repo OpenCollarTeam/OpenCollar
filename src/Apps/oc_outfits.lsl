@@ -1,4 +1,5 @@
 /*
+oc_outfits
 This file is a part of OpenCollar.
 Copyright ©2020
 
@@ -9,6 +10,8 @@ Aria (Tashia Redrose)
     * Jan 2020      - Added BrowseCore, and added in chat commands for Outfits
     * Apr 2020      - Added chat commands, and a link message API to wear/remove
     * Dec 2020      - Fix up change commands to be more obvious
+Felkami (Caraway Ohmai)
+    * Jan 2021      - #461, Made menu call case insensitive
 Lillith (Lillith Xue)
     * Dec 2019      - Fixed bug: Outfits not working for non-wearer as menu user due to listen typo
 
@@ -166,27 +169,53 @@ ConfigMenu(key kID, integer iAuth){
     Dialog(kID, "\n[Outfits App "+g_sAppVersion+"]\n \nConfigure Access\n * Owner: ALWAYS\n * Trusted: "+sTrusted+"\n * Public: "+sPublic+"\n * Group: "+sGroup+"\n * Wearer: "+sWearer+"\n * Jail: "+sJail+"\n * Strip All (even not in .outfits): "+sStripAll+"\n \n** WARNING: If you disable the jail, then outfits WILL be able to browse your entire #RLV folder, not just under #RLV/.outfits", [TickBox(iTrusted, "Trusted"), TickBox(iPublic, "Public") ,TickBox(iGroup, "Group"), TickBox(iWearer, "Wearer"), TickBox(iJail, "Jail"), TickBox(iStripAll, "Strip All")], [UPMENU], 0, iAuth, "Menu~Configure");
 }
 
-UserCommand(integer iNum, string sStr, key kID) {
-    if(iNum == 599)return;//No Access
+
+/*  Guard method. Tests if the user is authorized
+    
+    Return:
+        FALSE == Allow access
+        1 == Deny
+        2 == Deny and notify
+*/
+integer AuthDenied(integer iNum) {
+    integer deny = FALSE;
+    
+    if(iNum == 599) deny = 1;//No Access
     // Verify access rights now
-    if(iNum > CMD_EVERYONE)return;
-    if(iNum == CMD_TRUSTED && !Bool((g_iAccessBitSet&1)))return; 
-    if(iNum == CMD_EVERYONE && !Bool((g_iAccessBitSet&2)))return; 
-    if(iNum == CMD_GROUP && !Bool((g_iAccessBitSet&4)))return; 
-    if(iNum == CMD_WEARER && !Bool((g_iAccessBitSet&8)))return; 
-    if (iNum<CMD_OWNER || iNum>CMD_EVERYONE) return;
+    if(iNum > CMD_EVERYONE) deny = 1;
+    if(iNum == CMD_TRUSTED && !Bool((g_iAccessBitSet&1))) deny = 2; 
+    if(iNum == CMD_EVERYONE && !Bool((g_iAccessBitSet&2))) deny = 2; 
+    if(iNum == CMD_GROUP && !Bool((g_iAccessBitSet&4))) deny = 2; 
+    if(iNum == CMD_WEARER && !Bool((g_iAccessBitSet&8))) deny = 2; 
+    if (iNum<CMD_OWNER || iNum>CMD_EVERYONE) deny = 1;
+    
+    return deny;
+}
+
+UserCommand(integer iNum, string sStr, key kID) {
+
+    integer deny = AuthDenied(iNum);
+    if(deny == 2) {
+        //We have to validate against known commands for Outfits, or else we'll pop denied errors every time a public user sneezes
+        string sChangetype = llToLower(llList2String(llParseString2List(sStr, [" "], []),0));
+        
+        if(sStr==g_sSubMenu || llToLower(sStr) == "menu "+ llToLower(g_sSubMenu) || sChangetype == "wear" || sChangetype == "naked")
+            llMessageLinked(LINK_SET,NOTIFY, "0%NOACCESS% to outifts", kID);
+    }
+    if(deny) return;
+    
     //if (llSubStringIndex(sStr,llToLower(g_sSubMenu)) && sStr != "menu "+g_sSubMenu) return;
     if (iNum == CMD_OWNER && sStr == "runaway") {
         g_lOwner = g_lTrust = g_lBlock = [];
         return;
     }
-    if (sStr==g_sSubMenu || sStr == "menu "+g_sSubMenu) Menu(kID, iNum);
+    if (sStr==g_sSubMenu || llToLower(sStr) == "menu "+ llToLower(g_sSubMenu)) Menu(kID, iNum);
     //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else {
         integer iWSuccess = 0; 
         list Params=llParseString2List(sStr, [" "], []);
         
-        string sChangetype = llList2String(Params,0);
+        string sChangetype = llToLower(llList2String(Params,0));
         string sChangevalue = llDumpList2String(llList2List(Params,1,-1)," ");
         string sText;
         
@@ -218,7 +247,7 @@ UserCommand(integer iNum, string sStr, key kID) {
             RmCorelock();
             llSleep(1);
         }
-        if(sChangetype == "wear"){
+        if(sChangetype == "wear"){ //This looks like dead code TODO: Verify for removal?
             if (g_sPath != "" && g_sPath != ".") llOwnerSay("@attachallover:"+g_sPath+"=force");
         }
     }
@@ -310,14 +339,24 @@ state active
             if(sStr=="update_active")llResetScript();
         }
         else if(iNum == DIALOG_RESPONSE){
+        
+            list lMenuParams = llParseString2List(sStr, ["|"],[]);
+            integer iAuth = llList2Integer(lMenuParams,3);
+            
+            if(AuthDenied(iAuth)) {
+                //Test to see if this is a denied auth. If we're here and its denied, we respring. A CMD_* call is already sent out which will produce the NOTIFY
+                if(llSubStringIndex(sStr, g_sSubMenu) != -1)
+                    llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, llGetSubString(sStr, 0, 35));
+            }
+            
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if(iMenuIndex!=-1){
                 string sMenu = llList2String(g_lMenuIDs, iMenuIndex+1);
                 g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
-                list lMenuParams = llParseString2List(sStr, ["|"],[]);
+                //list lMenuParams = llParseString2List(sStr, ["|"],[]);
                 key kAv = llList2Key(lMenuParams,0);
                 string sMsg = llList2String(lMenuParams,1);
-                integer iAuth = llList2Integer(lMenuParams,3);
+                //integer iAuth = llList2Integer(lMenuParams,3);
                 
                 integer iRespring=TRUE;
                 

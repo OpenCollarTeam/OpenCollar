@@ -7,8 +7,9 @@ Copyright ©2020
 Aria (Tashia Redrose)
     *May 2020       -       Created new Integrated relay
     *July 2020      -       Finish integrated relay. Fix bug where the wearer could lock themselves out of the relay options
+    
 Felkami (Caraway Ohmai)
-    *Dec 2020       -       Modiifed runaway language to not assume relay on at runaway
+    *Dec 2020       -       Fixed #461, Modified runaway language to not assume relay on at runaway
     
 et al.
 
@@ -51,12 +52,12 @@ Release(){
         
 //MESSAGE MAP
 integer RLV_CLEAR=6002;
-//integer CMD_ZERO = 0;
+integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
 integer CMD_TRUSTED = 501;
 //integer CMD_GROUP = 502;
 integer CMD_WEARER = 503;
-//integer CMD_EVERYONE = 504;
+integer CMD_EVERYONE = 504;
 integer CMD_RLV_RELAY = 507;
 integer CMD_SAFEWORD = 510;
 integer CMD_RELAY_SAFEWORD = 51200;
@@ -383,9 +384,17 @@ state active
     }
     link_message(integer iSender,integer iNum,string sStr,key kID){
         if(iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
-        else if(iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
+        else if(iNum == CMD_EVERYONE && (llToLower(sStr)==llToLower(g_sSubMenu) || llToLower(sStr) == "menu "+llToLower(g_sSubMenu)) ){
+            //Test if this is a denied auth
+            llMessageLinked(LINK_SET,NOTIFY, "0%NOACCESS% to relay options", kID);
+        }else if(iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu+"|"+ g_sSubMenu,"");
         else if(iNum == DIALOG_RESPONSE){
+        
+            //Test to see if this is a denied auth. If we're here and its denied, we respring. A CMD_* call is already sent out which will produce the NOTIFY
+            //We're hard coding page 0 because new menu calls should always be page 0
+            if(llSubStringIndex(sStr, g_sSubMenu + "|0|" + (string)CMD_EVERYONE) != -1) llMessageLinked(LINK_SET, CMD_ZERO, "menu "+g_sParentMenu, llGetSubString(sStr, 0, 35));
+            
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if(iMenuIndex!=-1){
                 string sMenu = llList2String(g_lMenuIDs, iMenuIndex+1);

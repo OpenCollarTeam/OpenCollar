@@ -1,3 +1,4 @@
+// oc_rlvextension
 // This file is part of OpenCollar.
 //  Copyright (c) 2018 - 2019 Tashia Redrose, Silkie Sabra, lillith xue                            
 // Licensed under the GPLv2.  See LICENSE for full details. 
@@ -470,10 +471,15 @@ state active
                     }
                 } else if (sMenu == "Force Sit") MenuForceSit(kAv,iAuth);
                 else if (sMenu == "Restrictions~sensor") {
-                    if(sMsg == Checkbox(g_iStrictSit,"Strict Sit") && iAuth == CMD_OWNER){
-                        g_iStrictSit=1-g_iStrictSit;
-                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvext_strict="+(string)g_iStrictSit, "");
-                        MenuForceSit(kAv,iAuth);
+                    if(sMsg == Checkbox(g_iStrictSit,"Strict Sit")){
+                        if(iAuth != CMD_OWNER) {
+                            llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS%", kAv);
+                            MenuForceSit(kAv,iAuth);
+                        } else{
+                            g_iStrictSit=1-g_iStrictSit;
+                            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvext_strict="+(string)g_iStrictSit, "");
+                            MenuForceSit(kAv,iAuth);
+                        }
                         return;
                     }
                     
