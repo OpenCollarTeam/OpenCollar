@@ -1,4 +1,4 @@
-  
+    
 /*
 This file is a part of OpenCollar.
 Copyright ©2020
@@ -9,6 +9,8 @@ Copyright ©2020
 Aria (Tashia Redrose)
     *June 2020       -       Created oc_api
       * This implements some auth features, and acts as a API Bridge for addons and plugins
+Felkami (Caraway Ohmai)
+    *Dec 2020        -       Fix: 457Switched optin from searching by string to list
     
     
 et al.
@@ -644,8 +646,10 @@ state active
                 integer say;
                 integer end = llGetListLength (g_lAddons);
                 for(i=0;i<end;i+=4){
-                    string Nums = llList2String(g_lAddons, i+3);
-                    if(llSubStringIndex(Nums, (string)iNum)!=-1){
+                    //string Nums = llList2String(g_lAddons, i+3);
+                    list Nums = llParseString2List( llList2String(g_lAddons, i+3), ["~"], []);
+                    //if(llSubStringIndex(Nums, (string)iNum)!=-1){
+                    if(llListFindList(Nums, [(string)iNum]) != -1){
                         say=1;
                     }
                 }
