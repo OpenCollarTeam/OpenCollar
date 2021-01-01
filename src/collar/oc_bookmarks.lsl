@@ -1,8 +1,11 @@
+// oc_bookmarks
 // This file is part of OpenCollar.
 // Copyright (c) 2008 - 2017 Satomi Ahn, Nandana Singh, Wendy Starfall,  
 // Sumi Perl, Master Starship, littlemousy, mewtwo064, ml132,       
 // Romka Swallowtail, Garvin Twine et al.                 
-// Licensed under the GPLv2.  See LICENSE for full details. 
+// Licensed under the GPLv2.  See LICENSE for full details.
+
+
 string g_sScriptVersion = "8.0";
 integer LINK_CMD_DEBUG=1999;
 DebugOutput(key kID, list ITEMS){
@@ -507,7 +510,17 @@ state active
             //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
             
         } else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER && iNum != CMD_GROUP) UserCommand(iNum, sStr, kID); // This is intentionally not available to public access.
-        else if(iNum == DIALOG_RESPONSE) {
+        else if( (iNum == CMD_EVERYONE || iNum == CMD_GROUP) && (llToLower(sStr)==llToLower(g_sSubMenu) || llToLower(sStr) == "menu "+llToLower(g_sSubMenu)) ){
+            //Test if this is a denied auth
+            llMessageLinked(LINK_SET,NOTIFY, "0%NOACCESS% to bookmarks", kID);
+        } else if(iNum == DIALOG_RESPONSE) {
+        
+            //Test to see if this is a denied auth. If we're here and its denied, we respring. A CMD_* call is already sent out which will produce the NOTIFY
+            //We're hard coding page 0 because new menu calls should always be page 0
+            if((llSubStringIndex(sStr, g_sSubMenu + "|0|" + (string)CMD_EVERYONE) != -1) || (llSubStringIndex(sStr, g_sSubMenu + "|0|" + (string)CMD_GROUP) != -1)){
+                llMessageLinked(LINK_SET, CMD_EVERYONE, "menu "+g_sParentMenu, llGetSubString(sStr, 0, 35));
+            }
+            
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (iMenuIndex != -1) {
                 list lMenuParams = llParseStringKeepNulls(sStr, ["|"], []);
