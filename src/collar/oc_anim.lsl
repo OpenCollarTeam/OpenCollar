@@ -7,7 +7,8 @@ Copyright 2019
 Aria (Tashia Redrose)
     * July 2020         - Rewrote oc_anim
     * Dec 2020          - Fix bug where animations were not treated case insensitive, and where animations with a space in the name could not be played by chat command or menu button
-
+Felkami (Caraway Ohmai)
+    * Dec 2020          - Fixed #456, #462 added LockMeister AO suppress
 et al.
 
 
@@ -160,6 +161,8 @@ UserCommand(integer iNum, string sStr, key kID) {
         string sChangevalue = llList2String(lTmp,1);
         integer iPageNum = llList2Integer(lTmp,2);
         integer iHeightAdjust=FALSE;
+        
+        
         if(llSubStringIndex(sStr,"remenu") != -1){
             integer len = llGetListLength(lTmp);
             len = len-3;
@@ -245,12 +248,14 @@ UserCommand(integer iNum, string sStr, key kID) {
             }
         } else if(sChangetype == "animlock"){
             if(iNum == CMD_OWNER){
-                g_iAnimLock=1-g_iAnimLock;
+                //g_iAnimLock=1-g_iAnimLock;
+                g_iAnimLock = !(g_iAnimLock);
                 if(g_iAnimLock)
                     llMessageLinked(LINK_SET,LM_SETTING_SAVE, "anim_animlock="+(string)g_iAnimLock,"");
                 else
                     llMessageLinked(LINK_SET, LM_SETTING_DELETE, "anim_animlock","");
             } else llMessageLinked(LINK_SET, NOTIFY,"0%NOACCESS% to change animation lock",kID);
+            Menu(kID,iNum);
         } else if(llToLower(sChangetype) == "pose"){
             PoseMenu(kID, iNum,0);
         } else if(llToLower(sChangetype) == "menu" && llToLower(sChangevalue) == "pose"){
@@ -277,12 +282,16 @@ float g_fAdjustment = 0.02;
 integer g_iStoppedAdjust;
 string g_sPose = "";
 
+MessageAOs(string sONOFF) { // send string as "ON" / "OFF" saves 2 llToUpper
+    llRegionSayTo(g_kWearer, -8888, (string)g_kWearer + "boot" + llToLower(sONOFF)); // for Firestorm AO
+}
 
 integer g_iTimerMode;
 integer TIMER_START_ANIMATION =1;
 MoveStart(){
     if(g_lCurrentAnimations!=[]){
         if(!g_iStoppedAdjust){
+            MessageAOs("on"); //Enable AO's for walk animation
             llStopAnimation(llList2String(g_lCurrentAnimations, 0));
             llMessageLinked(LINK_SET, RLV_CMD, "adjustheight:1;0;0=force",g_kWearer);
         }
@@ -292,6 +301,7 @@ MoveStart(){
 }
 
 MoveEnd(){
+    //We don't need to disable AO's like we do for MoveStart(). PlayAnimation will be called eventually
     if(g_iLeashMove)return;
     if(g_iPermissionGranted){
         if(g_lCurrentAnimations==[]){
@@ -313,6 +323,7 @@ PlayAnimation(){
     if(g_lCurrentAnimations==[])return;
     // i think we must just try to start it even if it may already be playing.
     if(g_iPermissionGranted){
+        MessageAOs("off");
         llStartAnimation(llList2String(g_lCurrentAnimations, 0));
         integer iPos = llListFindList(g_lAdjustments,llList2List(g_lCurrentAnimations, 0, 0));
         if(iPos!=-1){
@@ -329,7 +340,10 @@ StopAnimation(string anim){
     if(g_lCurrentAnimations==[])return;
     integer aPos = llListFindList(g_lCurrentAnimations, [anim]);
     if (aPos == -1)return;
-    if (aPos == 0) llStopAnimation(llList2String(g_lCurrentAnimations, 0));
+    if (aPos == 0){
+        MessageAOs("on");
+        llStopAnimation(llList2String(g_lCurrentAnimations, 0));
+    }
     g_lCurrentAnimations = llDeleteSubList(g_lCurrentAnimations, aPos, aPos);
     if (aPos == 0){
         if (g_lCurrentAnimations == []){
@@ -499,7 +513,8 @@ state active
                         llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
                     }
                     else if(sMsg == Checkbox(g_iAnimLock, "AnimLock")){
-                        llMessageLinked(LINK_SET,0,"animlock remenu", kAv);
+                        llMessageLinked(LINK_SET,0,"animlock remenu "+(string)iPage, kAv);
+                        iRespring=FALSE;
                     }
                     else if(sMsg == "Pose"){
                         PoseMenu(kAv,iAuth, 0);
@@ -552,7 +567,7 @@ state active
                 }
             } else if(sTok == "anim"){
                 if(sVar == "pose"){
-                    if (g_sPose != "")StopAnimation(g_sPose);
+                    if (g_sPose != "" && g_sPose != sVal)StopAnimation(g_sPose);
                     g_sPose = sVal;
                     StartAnimation(sVal);
                 } else if(sVar == "animlock"){
