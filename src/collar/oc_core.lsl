@@ -20,7 +20,7 @@ https://github.com/OpenCollarTeam/OpenCollar
 
 integer NOTIFY_OWNERS=1003;
 
-string g_sParentMenu = ""; 
+//string g_sParentMenu = ""; 
 string g_sSubMenu = "Main";
 string COLLAR_VERSION = "8.0.0000"; // Provide enough room
 // LEGEND: Major.Minor.Build RC Beta Alpha
@@ -45,17 +45,17 @@ integer CMD_TRUSTED = 501;
 //integer CMD_GROUP = 502;
 integer CMD_WEARER = 503;
 integer CMD_EVERYONE = 504;
-integer CMD_RLV_RELAY = 507;
+//integer CMD_RLV_RELAY = 507;
 //integer CMD_SAFEWORD = 510;
-integer CMD_RELAY_SAFEWORD = 511;
-integer CMD_NOACCESS=599;
+//integer CMD_RELAY_SAFEWORD = 511;
+//integer CMD_NOACCESS=599;
 
 integer NOTIFY = 1002;
 integer REBOOT = -1000;
 
 integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved
 //str must be in form of "token=value"
-integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+//integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
 integer LM_SETTING_RESPONSE = 2002;//the settings script sends responses on this channel
 integer LM_SETTING_DELETE = 2003;//delete token from settings
 integer LM_SETTING_EMPTY = 2004;//sent when a token has no value
@@ -64,14 +64,14 @@ integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
 integer MENUNAME_REMOVE = 3003;
 
-integer RLV_CMD = 6000;
+//integer RLV_CMD = 6000;
 integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
 
-integer RLV_OFF = 6100; // send to inform plugins that RLV is disabled now, no message or key needed
-integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no message or key needed
+//integer RLV_OFF = 6100; // send to inform plugins that RLV is disabled now, no message or key needed
+//integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no message or key needed
 
-integer TIMEOUT_READY = 30497;
-integer TIMEOUT_REGISTER = 30498;
+//integer TIMEOUT_READY = 30497;
+//integer TIMEOUT_REGISTER = 30498;
 integer TIMEOUT_FIRED = 30499;
 
 integer AUTH_REQUEST = 600;
@@ -81,7 +81,7 @@ integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 string UPMENU = "BACK";
-string ALL = "ALL";
+//string ALL = "ALL";
 
 string g_sLockSound="dec9fb53-0fef-29ae-a21d-b3047525d312";
 string g_sUnlockSound="82fa6d06-b494-f97c-2908-84009380c8d1";
@@ -181,8 +181,8 @@ string Checkbox(integer iValue, string sLabel) {
     return llList2String(g_lCheckboxes, bool(iValue))+" "+sLabel;
 }
 integer g_iUpdatePin = 0;
-string g_sDeviceName;
-string g_sWearerName;
+//string g_sDeviceName;
+//string g_sWearerName;
 
 
 UserCommand(integer iNum, string sStr, key kID) {
@@ -196,11 +196,11 @@ UserCommand(integer iNum, string sStr, key kID) {
     if (sStr==g_sSubMenu || sStr == "menu "+g_sSubMenu || sStr == "menu") Menu(kID, iNum);
     //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else {
-        integer iWSuccess = 0; 
+        //integer iWSuccess = 0; 
         list lParameters = llParseString2List(sStr, [" "], []);
         string sChangetype = llList2String(lParameters,0);
         string sChangevalue = llList2String(lParameters,1);
-        string sText;
+        //string sText;
         
         if(sChangetype=="fix"){
             g_lMainMenu=["Apps", "Addons", "Access", "Settings", "Help/About"];
@@ -746,7 +746,7 @@ state active
                 } else if(sVar == "prefix"){
                     // revert to default calculation
                     g_sPrefix = llGetSubString(llKey2Name(g_kWearer),0,1);
-                } else if(sVar = "channel"){
+                } else if(sVar == "channel"){
                     g_iChannel = 1;
                 } else if(sVar == "weareraddon"){
                     g_iWearerAddons=TRUE;

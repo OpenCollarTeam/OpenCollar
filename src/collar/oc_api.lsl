@@ -40,21 +40,21 @@ integer ACTION_BLOCK = 32;
 integer API_CHANNEL = 0x60b97b5e;
 integer GENERAL_API_CHANNEL = 0x60b97b5e;
 
-integer g_iLastGranted;
-key g_kLastGranted;
-string g_sLastGranted;
+//integer g_iLastGranted;
+//key g_kLastGranted;
+//string g_sLastGranted;
 
-integer TIMEOUT_READY = 30497;
+//integer TIMEOUT_READY = 30497;
 integer TIMEOUT_REGISTER = 30498;
 integer TIMEOUT_FIRED = 30499;
 
 
 
-integer RLV_CMD = 6000;
+//integer RLV_CMD = 6000;
 integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
 
-integer RLV_OFF = 6100; // send to inform plugins that RLV is disabled now, no message or key needed
-integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no message or key needed
+//integer RLV_OFF = 6100; // send to inform plugins that RLV is disabled now, no message or key needed
+//integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no message or key needed
 //MESSAGE MAP
 integer AUTH_REQUEST = 600;
 integer AUTH_REPLY=601;
@@ -66,9 +66,9 @@ integer CMD_GROUP = 502;
 integer CMD_WEARER = 503;
 integer CMD_EVERYONE = 504;
 integer CMD_BLOCKED = 598; // <--- Used in auth_request, will not return on a CMD_ZERO
-integer CMD_RLV_RELAY = 507;
+//integer CMD_RLV_RELAY = 507;
 integer CMD_SAFEWORD = 510;
-integer CMD_RELAY_SAFEWORD = 511;
+//integer CMD_RELAY_SAFEWORD = 511;
 integer CMD_NOACCESS=599;
 
 string Auth2Str(integer iAuth){
@@ -92,7 +92,7 @@ integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have s
 integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
 integer LM_SETTING_RESPONSE = 2002;//the settings script sends responses on this channel
 integer LM_SETTING_DELETE = 2003;//delete token from settings
-integer LM_SETTING_EMPTY = 2004;//sent when a token has no value
+//integer LM_SETTING_EMPTY = 2004;//sent when a token has no value
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
     key kMenuID = llGenerateKey();
@@ -203,7 +203,7 @@ RunawayMenu(key kID, integer iAuth){
 
 WearerConfirmListUpdate(key kID, string sReason)
 {
-    key g_kAdder = g_kMenuUser;
+    //key g_kAdder = g_kMenuUser;
     //g_kMenuUser=kID;
     // This should only be triggered if the wearer is being affected by a sensitive action
     Dialog(g_kWearer, "\n[Access]\n\nsecondlife:///app/agent/"+(string)kID+"/about wants change your access level.\n\nChange that will occur: "+sReason+"\n\nYou may grant or deny this action.", [], ["Allow", "Disallow"], 0, CMD_WEARER, "WearerConfirmation");
@@ -324,26 +324,26 @@ UserCommand(integer iAuth, string sCmd, key kID){
         else if(sCmd == "safeword-enable")g_iSafewordDisable=FALSE;
             
         list lCmd = llParseString2List(sCmd, [" "],[]);
-        string sCmd = llToLower(llList2String(lCmd,0));
+        string sCmdx = llToLower(llList2String(lCmd,0));
                 
-        if(sCmd == "channel"){
+        if(sCmdx == "channel"){
             g_iChannel = (integer)llList2String(lCmd,1);
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_channel="+(string)g_iChannel, kID);
-        } else if(sCmd == "prefix"){
+        } else if(sCmdx == "prefix"){
             if(llList2String(lCmd,1)==""){
                 llMessageLinked(LINK_SET,NOTIFY,"0The prefix is currently set to: "+g_sPrefix+". If you wish to change it, supply the new prefix to this same command", kID);
                 return;
             }
             g_sPrefix = llList2String(lCmd,1);
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_prefix="+g_sPrefix,kID);
-        } else if(sCmd == "add" || sCmd == "rem"){
+        } else if(sCmdx == "add" || sCmdx == "rem"){
             string sType = llToLower(llList2String(lCmd,1));
             string sID;
             if(llGetListLength(lCmd)==3) sID = llList2String(lCmd,2);
                     
             g_kMenuUser=kID;
             g_iCurrentAuth = iAuth;
-            if(sCmd=="add")
+            if(sCmdx=="add")
                 g_iMode = ACTION_ADD;
             else g_iMode=ACTION_REM;
             if(sType == "owner")g_iMode = g_iMode|ACTION_OWNER;
@@ -420,12 +420,12 @@ SW(){
 list g_lAddons;
 key g_kAddonPending;
 string g_sAddonName;
-integer g_iInterfaceChannel;
-integer g_iLMCounter=0;
-string tf(integer a){
-    if(a)return "true";
-    return "false";
-}
+//integer g_iInterfaceChannel;
+//integer g_iLMCounter=0;
+//string tf(integer a){
+//    if(a)return "true";
+//    return "false";
+//}
 
 SayToAddon(string pkt, integer iNum, string sStr, key kID){
     llRegionSay(API_CHANNEL, llList2Json(JSON_OBJECT, ["addon_name", "OpenCollar", "pkt_type", pkt, "iNum", iNum, "sMsg", sStr, "kID", kID]));
@@ -593,7 +593,7 @@ state active
                 key kID = llJsonGetValue(m,["kID"]);
                 
                 if((iNum == LM_SETTING_DELETE || iNum == LM_SETTING_SAVE)&& llGetOwnerKey(i)==g_kWearer && g_iWearerAddonLimited){
-                    string sTest = llToLower(sMsg);
+                    //string sTest = llToLower(sMsg);
                     if(llSubStringIndex(sMsg, "auth_")!=-1)return;
                     if(llSubStringIndex(sMsg,"intern_")!=-1)return;
                 }
@@ -672,6 +672,11 @@ state active
             //llOwnerSay("{API} Calculate auth for "+(string)kID+"="+(string)iAuth+";"+sStr);
             llMessageLinked(LINK_SET, AUTH_REPLY, "AuthReply|"+(string)kID+"|"+(string)iAuth,sStr);
         } else if(iNum >= CMD_OWNER && iNum <= CMD_NOACCESS) UserCommand(iNum, sStr, kID);
+            
+        else if (iNum == DIALOG_TIMEOUT) {
+            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
+            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
+        }
         else if(iNum == LM_SETTING_RESPONSE){
             list lPar = llParseString2List(sStr, ["_","="],[]);
             string sToken = llList2String(lPar,0);
@@ -722,10 +727,9 @@ state active
             }
         } else if(iNum == LM_SETTING_DELETE){
             
-            list lPar = llParseString2List(sStr, ["_","="],[]);
+            list lPar = llParseString2List(sStr, ["_"],[]);
             string sToken = llList2String(lPar,0);
             string sVar = llList2String(lPar,1);
-            string sVal = llList2String(lPar,2);
             
             //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
             //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
@@ -780,7 +784,7 @@ state active
                 key kAv = llList2Key(lMenuParams,0);
                 string sMsg = llList2String(lMenuParams,1);
                 integer iAuth = llList2Integer(lMenuParams,3);
-                integer iRespring=TRUE;
+                //integer iRespring=TRUE;
                 
                 if(sMenu == "scan~add"){
                     if(sMsg == UPMENU){

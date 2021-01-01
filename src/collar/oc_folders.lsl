@@ -21,41 +21,41 @@ string g_sSubMenu = "# Folders";
 
 
 //MESSAGE MAP
-integer CMD_ZERO = 0;
+//integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
 integer CMD_TRUSTED = 501;
 integer CMD_GROUP = 502;
 integer CMD_WEARER = 503;
 integer CMD_EVERYONE = 504;
-integer CMD_RLV_RELAY = 507;
-integer CMD_SAFEWORD = 510;
-integer CMD_RELAY_SAFEWORD = 511;
+//integer CMD_RLV_RELAY = 507;
+//integer CMD_SAFEWORD = 510;
+//integer CMD_RELAY_SAFEWORD = 511;
 
 integer NOTIFY = 1002;
 integer REBOOT = -1000;
 
 integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved
 //str must be in form of "token=value"
-integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+//integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
 integer LM_SETTING_RESPONSE = 2002;//the settings script sends responses on this channel
-integer LM_SETTING_DELETE = 2003;//delete token from settings
-integer LM_SETTING_EMPTY = 2004;//sent when a token has no value
+//integer LM_SETTING_DELETE = 2003;//delete token from settings
+//integer LM_SETTING_EMPTY = 2004;//sent when a token has no value
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
-integer MENUNAME_REMOVE = 3003;
+//integer MENUNAME_REMOVE = 3003;
 
-integer RLV_CMD = 6000;
-integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
+//integer RLV_CMD = 6000;
+//integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
 
-integer RLV_OFF = 6100; // send to inform plugins that RLV is disabled now, no message or key needed
-integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no message or key needed
+//integer RLV_OFF = 6100; // send to inform plugins that RLV is disabled now, no message or key needed
+//integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no message or key needed
 
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 string UPMENU = "BACK";
-string ALL = "ALL";
+//string ALL = "ALL";
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
     key kMenuID = llGenerateKey();
@@ -176,10 +176,10 @@ UserCommand(integer iNum, string sStr, key kID) {
     if (llToLower(sStr)==llToLower(g_sSubMenu) || llToLower(sStr) == "menu "+llToLower(g_sSubMenu)) Menu(kID, iNum);
     //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else {
-        integer iWSuccess = 0; 
+        //integer iWSuccess = 0; 
         string sChangetype = llGetSubString(sStr, 0, 1);
         string sChangevalue = llStringTrim(llGetSubString(sStr, 2, -1), STRING_TRIM);
-        string sText;
+        //string sText;
     
         if(iNum == CMD_TRUSTED && !Bool((g_iAccessBitSet&1)))return R(); 
         if(iNum == CMD_EVERYONE && !Bool((g_iAccessBitSet&2)))return R(); 
@@ -209,9 +209,9 @@ UserCommand(integer iNum, string sStr, key kID) {
     }
 }
 
-integer TIMEOUT_READY = 30497;
-integer TIMEOUT_REGISTER = 30498;
-integer TIMEOUT_FIRED = 30499;
+//integer TIMEOUT_READY = 30497;
+//integer TIMEOUT_REGISTER = 30498;
+//integer TIMEOUT_FIRED = 30499;
 
 
 key g_kWearer;
@@ -437,16 +437,7 @@ state active
                     g_iAccessBitSet=(integer)llList2String(lSettings,2);
                 }
             }
-        } else if(iNum == LM_SETTING_EMPTY){
-            
-            //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
-            //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
-            
-        } else if(iNum == LM_SETTING_DELETE){
-            
-            //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
-            //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
-        }
+        } 
         //llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
     }
 }

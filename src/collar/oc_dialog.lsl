@@ -6,16 +6,16 @@
 
 integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
-integer CMD_TRUSTED = 501;
-integer CMD_GROUP = 502;
+//integer CMD_TRUSTED = 501;
+//integer CMD_GROUP = 502;
 integer CMD_WEARER = 503;
 integer NOTIFY = 1002;
 integer NOTIFY_OWNERS=1003;
 integer SAY = 1004;
 integer REBOOT = -1000;
-integer LOADPIN = -1904;
-integer LM_SETTING_SAVE = 2000;
-integer LM_SETTING_REQUEST = 2001;
+//integer LOADPIN = -1904;
+//integer LM_SETTING_SAVE = 2000;
+//integer LM_SETTING_REQUEST = 2001;
 integer LM_SETTING_RESPONSE = 2002;
 integer LM_SETTING_DELETE = 2003;
 integer LM_SETTING_EMPTY = 2004;//sent when a token has no value
@@ -23,9 +23,9 @@ integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
-integer TIMEOUT_READY = 30497;
-integer TIMEOUT_REGISTER = 30498;
-integer TIMEOUT_FIRED = 30499;
+//integer TIMEOUT_READY = 30497;
+//integer TIMEOUT_REGISTER = 30498;
+//integer TIMEOUT_FIRED = 30499;
 
 
 
@@ -50,7 +50,7 @@ string NameURI(key kID){
     return "secondlife:///app/agent/"+(string)kID+"/about";
 }
 key g_kWearer;
-string g_sSettingToken = "dialog_";
+//string g_sSettingToken = "dialog_";
 string g_sGlobalToken = "global_";
 integer g_iListenChan=1;
 string g_sPrefix;
@@ -456,8 +456,8 @@ dequeueSensor() {
 }
 integer g_iShowLevel;
 
-UserCommand (integer iAuth, string sCmd,  key kID){
-}
+//UserCommand (integer iAuth, string sCmd,  key kID){
+//}
 integer ALIVE = -55;
 integer READY = -56;
 integer STARTUP = -57;
@@ -655,7 +655,7 @@ state active
             Dialog(kRCPT, sPrompt, lButtons, ubuttons, iPage, kID, iDigits, iAuth,"", iSorted);
         }
         
-        else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
+        else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) return;
         else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
