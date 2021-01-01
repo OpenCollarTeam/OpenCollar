@@ -7,8 +7,10 @@ Copyright 2019
 Aria (Tashia Redrose)
     * July 2020         - Rewrote oc_anim
     * Dec 2020          - Fix bug where animations were not treated case insensitive, and where animations with a space in the name could not be played by chat command or menu button
+    
 Felkami (Caraway Ohmai)
-    * Dec 2020          - Fixed #456, #462 added LockMeister AO suppress
+    * Dec 2020          - Fixed #456, #462, #461, added LockMeister AO suppress
+
 et al.
 
 
@@ -22,12 +24,12 @@ string g_sSubMenu = "Animations";
 
 integer g_iIsMoving;
 //MESSAGE MAP
-//integer CMD_ZERO = 0;
+integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
 integer CMD_TRUSTED = 501;
 //integer CMD_GROUP = 502;
 integer CMD_WEARER = 503;
-//integer CMD_EVERYONE = 504;
+integer CMD_EVERYONE = 504;
 integer CMD_RLV_RELAY = 507;
 //integer CMD_SAFEWORD = 510;
 integer CMD_RELAY_SAFEWORD = 511;
@@ -160,7 +162,7 @@ UserCommand(integer iNum, string sStr, key kID) {
         string sChangetype = llList2String(lTmp,0);
         string sChangevalue = llList2String(lTmp,1);
         integer iPageNum = llList2Integer(lTmp,2);
-        integer iHeightAdjust=FALSE;
+        integer iRespring=FALSE; //For sChangevalue == remenu, do we still want menu respring?
         
         
         if(llSubStringIndex(sStr,"remenu") != -1){
@@ -185,6 +187,7 @@ UserCommand(integer iNum, string sStr, key kID) {
             StartAnimation(g_sPose);
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, "anim_pose="+llList2String(g_lCurrentAnimations, 0),"");
         } else if(llToLower(sChangetype) == "stop" || llToLower(sChangetype)=="release"){
+            iRespring = TRUE;
             if(g_iAnimLock && kID == g_kWearer){
                 llMessageLinked(LINK_SET,NOTIFY,"0%NOACCESS% to stopping animation", g_kWearer);
                 jump checkRemenu;
@@ -198,7 +201,7 @@ UserCommand(integer iNum, string sStr, key kID) {
             // adjust current pose
             //llOwnerSay(" up or down");
             //sChangevalue="remenu";
-            iHeightAdjust=1;
+            iRespring=1;
             integer iUp= FALSE;
             if(sChangetype == UP_ARROW || sChangetype == "up")iUp=TRUE;
             if(g_lCurrentAnimations == []){
@@ -247,6 +250,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                 
             }
         } else if(sChangetype == "animlock"){
+            string text;
             if(iNum == CMD_OWNER){
                 //g_iAnimLock=1-g_iAnimLock;
                 g_iAnimLock = !(g_iAnimLock);
@@ -254,8 +258,11 @@ UserCommand(integer iNum, string sStr, key kID) {
                     llMessageLinked(LINK_SET,LM_SETTING_SAVE, "anim_animlock="+(string)g_iAnimLock,"");
                 else
                     llMessageLinked(LINK_SET, LM_SETTING_DELETE, "anim_animlock","");
-            } else llMessageLinked(LINK_SET, NOTIFY,"0%NOACCESS% to change animation lock",kID);
-            Menu(kID,iNum);
+                text = "0Animation lock updated";
+            } else text = "0%NOACCESS% to change animation lock";
+            
+            if(sChangevalue == "remenu") Menu(kID,iNum);
+            else llMessageLinked(LINK_SET, NOTIFY, text, kID);
         } else if(llToLower(sChangetype) == "pose"){
             PoseMenu(kID, iNum,0);
         } else if(llToLower(sChangetype) == "menu" && llToLower(sChangevalue) == "pose"){
@@ -263,7 +270,7 @@ UserCommand(integer iNum, string sStr, key kID) {
         }
         
         @checkRemenu;
-        if(sChangevalue == "remenu" && (llGetInventoryType(sChangetype)==INVENTORY_ANIMATION || iHeightAdjust))PoseMenu(kID,iNum, iPageNum);
+        if(sChangevalue == "remenu" && (llGetInventoryType(sChangetype)==INVENTORY_ANIMATION || iRespring))PoseMenu(kID,iNum, iPageNum);
 
     }
 }
@@ -480,7 +487,10 @@ state active
     
     link_message(integer iSender,integer iNum,string sStr,key kID){
         if(iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
-        else if(iNum == MENUNAME_REQUEST && sStr == g_sParentMenu){
+        else if(iNum == CMD_EVERYONE && (llToLower(sStr)==llToLower(g_sSubMenu) || llToLower(sStr) == "menu "+llToLower(g_sSubMenu)) ){
+            //Test if this is a denied auth
+            llMessageLinked(LINK_SET,NOTIFY,"0%NOACCESS% to animations.", kID);
+        }else if(iNum == MENUNAME_REQUEST && sStr == g_sParentMenu){
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu+"|"+ g_sSubMenu,"");
             llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, "");
         }else if(iNum == MENUNAME_RESPONSE){
@@ -496,6 +506,11 @@ state active
             }
         }
         else if(iNum == DIALOG_RESPONSE){
+        
+            //Test to see if this is a denied auth. If we're here and its denied, we respring. A CMD_* call is already sent out which will produce the NOTIFY
+            //We're hard coding page 0 because new menu calls should always be page 0
+            if(llSubStringIndex(sStr, g_sSubMenu + "|0|" + (string)CMD_EVERYONE) != -1) llMessageLinked(LINK_SET, CMD_ZERO, "menu "+g_sParentMenu, llGetSubString(sStr, 0, 35));
+
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if(iMenuIndex!=-1){
                 string sMenu = llList2String(g_lMenuIDs, iMenuIndex+1);
