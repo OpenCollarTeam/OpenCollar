@@ -7,6 +7,8 @@ Copyright ©2020
 Aria (Tashia Redrose)
     *May 2020       -       Created new Integrated relay
     *July 2020      -       Finish integrated relay. Fix bug where the wearer could lock themselves out of the relay options
+Felkami (Caraway Ohmai)
+    *Dec 2020       -       Modiifed runaway language to not assume relay on at runaway
     
 et al.
 
@@ -572,10 +574,10 @@ state active
             integer iOldMode=g_iMode;
             g_iMode=0;
             if(!g_iLocked)llOwnerSay("@detach=y");
-            llMessageLinked(LINK_SET, NOTIFY,"0Relay temporarily disabled due to safeword or clear all. The relay will reactivate in 30 seconds", g_kWearer);
+            llMessageLinked(LINK_SET, NOTIFY,"0Relay temporarily suppressed for 30 seconds due to safeword or clear all.", g_kWearer);
             llSleep(30);
             g_iMode=iOldMode;
-            llMessageLinked(LINK_SET,NOTIFY, "0Relay has been reactivated",g_kWearer);
+            llMessageLinked(LINK_SET,NOTIFY, "0 Relay settings have been restored.",g_kWearer);
         } else if(iNum == REBOOT){
             if((Source=="" || Source==NULL_KEY) || sStr=="reboot --f") 
                 llResetScript();
