@@ -384,6 +384,9 @@ state active
                             // comment line. Ignore it
                         }else {
                             list lProp = llParseStringKeepNulls(sData, [": ", " = "],["!"]);
+                            if(llList2String(lProp,0)=="")lProp=llDeleteSubList(lProp,0,0);
+                            
+                            
                             if(llList2String(lProp,0)=="!"){
                                 // Face parameter line
                                 integer iFace = (integer)llList2String(lProp,1);
@@ -401,7 +404,7 @@ state active
                                 } else if(llList2String(lProp,2) == "texture_rot"){
                                     g_sTmp = llJsonSetValue(g_sTmp, ["texture_rot"], llList2String(lProp,3));
                                 } else if(llList2String(lProp,2) == "glow"){
-                                    lParam = [PRIM_GLOW, iFace, (float)llList2String(lProp,3)];
+                                    lParam += [PRIM_GLOW, iFace, (float)llList2String(lProp,3)];
                                 } else if(llList2String(lProp,2) == "normal"){
                                     g_sTmp = llJsonSetValue(g_sTmp, ["normal"], llList2String(lProp,3));
                                 } else if(llList2String(lProp,2) == "normal_repeat"){
@@ -425,31 +428,35 @@ state active
                                 } else if(llList2String(lProp,2) == "specular_environment"){
                                     g_sTmp = llJsonSetValue(g_sTmp, ["specular_environment"], llList2String(lProp,3));
                                 } else if(llList2String(lProp,2) == "fullbright"){
-                                    lParam = [PRIM_FULLBRIGHT, (integer)llList2String(lProp,3)];
+                                    lParam += [PRIM_FULLBRIGHT, iFace, (integer)llList2String(lProp,3)];
                                 }
+                                //if(g_sTmp!="")
+                                    //llSay(0, "Applier Json: "+g_sTmp);
                                 
                                 
-                                
-                                if(llJsonValueType(g_sTmp, ["color"])== JSON_STRING && llJsonValueType(g_sTmp,["alpha"])==JSON_STRING){
-                                    lParam = [PRIM_COLOR, iFace, (vector)llJsonGetValue(g_sTmp, ["color"]), (float)llJsonGetValue(g_sTmp,["alpha"])];
+                                if(llJsonValueType(g_sTmp, ["color"])!= JSON_INVALID && llJsonValueType(g_sTmp,["alpha"])!=JSON_INVALID){
+                                    lParam += [PRIM_COLOR, iFace, (vector)llJsonGetValue(g_sTmp, ["color"]), (float)llJsonGetValue(g_sTmp,["alpha"])];
                                     g_sTmp = llJsonSetValue(g_sTmp, ["color"], JSON_DELETE);
                                     g_sTmp = llJsonSetValue(g_sTmp,["alpha"], JSON_DELETE);
-                                } else if(llJsonValueType(g_sTmp,["texture"]) == JSON_STRING && llJsonValueType(g_sTmp, ["texture_repeat"])==JSON_STRING && llJsonValueType (g_sTmp, ["texture_offset"])==JSON_STRING && llJsonValueType(g_sTmp,["texture_rot"])==JSON_STRING){
-                                    lParam = [PRIM_TEXTURE, iFace, (key)llJsonGetValue(g_sTmp, ["texture"]), (vector)llJsonGetValue(g_sTmp, ["texture_repeat"]), (vector)llJsonGetValue(g_sTmp, ["texture_offset"]), (float)llJsonGetValue(g_sTmp, ["texture_rot"])];
+                                }
+                                if(llJsonValueType(g_sTmp,["texture"]) != JSON_INVALID && llJsonValueType(g_sTmp, ["texture_repeat"])!=JSON_INVALID && llJsonValueType (g_sTmp, ["texture_offset"])!=JSON_INVALID && llJsonValueType(g_sTmp,["texture_rot"])!=JSON_INVALID){
+                                    lParam += [PRIM_TEXTURE, iFace, (key)llJsonGetValue(g_sTmp, ["texture"]), (vector)llJsonGetValue(g_sTmp, ["texture_repeat"]), (vector)llJsonGetValue(g_sTmp, ["texture_offset"]), (float)llJsonGetValue(g_sTmp, ["texture_rot"])];
                                     g_sTmp = llJsonSetValue(g_sTmp, ["texture"], JSON_DELETE);
                                     g_sTmp = llJsonSetValue(g_sTmp, ["texture_repeat"], JSON_DELETE);
                                     g_sTmp = llJsonSetValue(g_sTmp, ["texture_offset"], JSON_DELETE);
                                     g_sTmp = llJsonSetValue(g_sTmp, ["texture_rot"], JSON_DELETE);
                                     
-                                } else if(llJsonValueType(g_sTmp,["normal"]) == JSON_STRING && llJsonValueType(g_sTmp, ["normal_repeat"])==JSON_STRING && llJsonValueType (g_sTmp, ["normal_offset"])==JSON_STRING && llJsonValueType(g_sTmp,["normal_rot"])==JSON_STRING){
-                                    lParam = [PRIM_TEXTURE, iFace, (key)llJsonGetValue(g_sTmp, ["normal"]), (vector)llJsonGetValue(g_sTmp, ["normal_repeat"]), (vector)llJsonGetValue(g_sTmp, ["normal_offset"]), (float)llJsonGetValue(g_sTmp, ["normal_rot"])];
+                                } 
+                                if(llJsonValueType(g_sTmp,["normal"]) != JSON_INVALID&& llJsonValueType(g_sTmp, ["normal_repeat"])!=JSON_INVALID  && llJsonValueType (g_sTmp, ["normal_offset"])!=JSON_INVALID && llJsonValueType(g_sTmp,["normal_rot"])!=JSON_INVALID){
+                                    lParam += [PRIM_NORMAL, iFace, (key)llJsonGetValue(g_sTmp, ["normal"]), (vector)llJsonGetValue(g_sTmp, ["normal_repeat"]), (vector)llJsonGetValue(g_sTmp, ["normal_offset"]), (float)llJsonGetValue(g_sTmp, ["normal_rot"])];
                                     g_sTmp = llJsonSetValue(g_sTmp, ["normal"], JSON_DELETE);
                                     g_sTmp = llJsonSetValue(g_sTmp, ["normal_repeat"], JSON_DELETE);
                                     g_sTmp = llJsonSetValue(g_sTmp, ["normal_offset"], JSON_DELETE);
                                     g_sTmp = llJsonSetValue(g_sTmp, ["normal_rot"], JSON_DELETE);
                                     
-                                } else if(llJsonValueType(g_sTmp,["specular"]) == JSON_STRING && llJsonValueType(g_sTmp, ["specular_repeat"])==JSON_STRING && llJsonValueType (g_sTmp, ["specular_offset"])==JSON_STRING && llJsonValueType(g_sTmp,["specular_rot"])==JSON_STRING && llJsonValueType(g_sTmp, ["specular_color"]) == JSON_STRING && llJsonValueType(g_sTmp, ["specular_glossiness"]) == JSON_STRING && llJsonValueType(g_sTmp,["specular_environment"])==JSON_STRING){
-                                    lParam = [PRIM_TEXTURE, iFace, (key)llJsonGetValue(g_sTmp, ["specular"]), (vector)llJsonGetValue(g_sTmp, ["specular_repeat"]), (vector)llJsonGetValue(g_sTmp, ["specular_offset"]), (float)llJsonGetValue(g_sTmp, ["specular_rot"]), (vector)llJsonGetValue(g_sTmp, ["specular_color"]), (integer)llJsonGetValue(g_sTmp, ["specular_glossiness"]), (integer)llJsonGetValue(g_sTmp, ["specular_environment"])];
+                                } 
+                                if(llJsonValueType(g_sTmp,["specular"]) != JSON_INVALID && llJsonValueType(g_sTmp, ["specular_repeat"])!=JSON_INVALID && llJsonValueType (g_sTmp, ["specular_offset"])!=JSON_INVALID && llJsonValueType(g_sTmp,["specular_rot"])!=JSON_INVALID && llJsonValueType(g_sTmp, ["specular_color"]) != JSON_INVALID && llJsonValueType(g_sTmp, ["specular_glossiness"]) != JSON_INVALID && llJsonValueType(g_sTmp,["specular_environment"])!=JSON_INVALID){
+                                    lParam += [PRIM_SPECULAR, iFace, (key)llJsonGetValue(g_sTmp, ["specular"]), (vector)llJsonGetValue(g_sTmp, ["specular_repeat"]), (vector)llJsonGetValue(g_sTmp, ["specular_offset"]), (float)llJsonGetValue(g_sTmp, ["specular_rot"]), (vector)llJsonGetValue(g_sTmp, ["specular_color"]), (integer)llJsonGetValue(g_sTmp, ["specular_glossiness"]), (integer)llJsonGetValue(g_sTmp, ["specular_environment"])];
                                     g_sTmp = llJsonSetValue(g_sTmp, ["specular"], JSON_DELETE);
                                     g_sTmp = llJsonSetValue(g_sTmp, ["specular_repeat"], JSON_DELETE);
                                     g_sTmp = llJsonSetValue(g_sTmp, ["specular_offset"], JSON_DELETE);
@@ -462,20 +469,24 @@ state active
                             } else {
                                 // Prim parameter
                                 if(llList2String(lProp,0)=="desc"){
-                                    lParam = [PRIM_DESC, llList2String(lProp,1)];
+                                    lParam += [PRIM_DESC, llList2String(lProp,1)];
                                 } else if(llList2String(lProp,0) == "pos"){
-                                    lParam = [PRIM_POS_LOCAL, (vector)llList2String(lProp,1)];
+                                    lParam += [PRIM_POS_LOCAL, (vector)llList2String(lProp,1)];
                                 } else if(llList2String(lProp,0) == "rot"){
-                                    lParam = [PRIM_ROT_LOCAL, (rotation)llList2String(lProp, 1)];
+                                    lParam += [PRIM_ROT_LOCAL, (rotation)llList2String(lProp, 1)];
                                 } else if(llList2String(lProp,0) == "scale"){
-                                    lParam = [PRIM_SIZE, (vector)llList2String(lProp,1)];
+                                    lParam += [PRIM_SIZE, (vector)llList2String(lProp,1)];
                                 } else if(llList2String(lProp,0)=="name"){
-                                    lParam = [PRIM_NAME, llList2String(lProp,1)];
+                                    lParam += [PRIM_NAME, llList2String(lProp,1)];
                                 }
                             }
                         }
                         
-                        if(llGetListLength(lParam)>0)llSetLinkPrimitiveParams(iPrim, lParam);
+                        if(llGetListLength(lParam)>0){
+                            //llSay(0, "Apply : "+llDumpList2String(lParam,"~"));
+                            llSetLinkPrimitiveParams(iPrim, lParam);
+                            lParam=[];
+                        }
                     }
                     @over;
                     UpdateDSRequest(kID, llGetNotecardLine(noteLabel+".theme", iLine), "read_theme:"+(string)iLine+":"+noteLabel+":"+(string)iPrim+":"+(string)iErrors);
