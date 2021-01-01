@@ -97,7 +97,6 @@ integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
 string UPMENU = "BACK";
-string g_sSettingToken = "bell_";
 integer g_iHasBellPrims;
 //string g_sGlobalToken = "global_";
 /*
@@ -147,13 +146,19 @@ BellMenu(key kID, integer iAuth) {
 }
 
 SetBellElementAlpha() {
-    if (g_iHide) return ;
     //loop through stored links, setting color if element type is bell
     integer n;
     integer iLinkElements = llGetListLength(g_lBellElements);
     for (n = 0; n < iLinkElements; n++) {
-        llSetLinkAlpha(llList2Integer(g_lBellElements,n), (float)g_iBellShow, ALL_SIDES);
-        UpdateGlow(llList2Integer(g_lBellElements,n), g_iBellShow);
+        if(!g_iHide){
+            // Collar is hidden, just hide the bell
+            llSetLinkAlpha(llList2Integer(g_lBellElements,n),0,ALL_SIDES);
+            UpdateGlow(llList2Integer(g_lBellElements,n), 0);
+        }else{
+            llSetLinkAlpha(llList2Integer(g_lBellElements,n), (float)g_iBellShow, ALL_SIDES);
+            UpdateGlow(llList2Integer(g_lBellElements,n), g_iBellShow);
+        }
+        //llOwnerSay("Set bell element ("+llList2String(g_lBellElements,n)+") = "+(string)g_iBellShow);
     }
 }
 
@@ -182,11 +187,12 @@ BuildBellElementList() {
     g_lBellElements = [];
     //root prim is 1, so start at 2
     integer i = 2;
-    for (; i <= llGetNumberOfPrims(); i++) {
+    for (i=LINK_ROOT+1; i <= llGetNumberOfPrims(); i++) {
         lParams=llParseString2List((string)llGetLinkPrimitiveParams(i,[PRIM_DESC]), ["~"], []);
         if (llList2String(lParams, 0)=="Bell") {
             g_lBellElements += [i];
             // Debug("added " + (string)n + " to elements");
+            //llOwnerSay("Added "+(string)i+" to elements");
         }
     } //Remove my menu and myself if no bell elements are found
     if (llGetListLength(g_lBellElements)) {
@@ -226,7 +232,7 @@ UserCommand(integer iNum, string sStr, key kID) { // here iNum: auth value, sStr
             if (n>10) n=10;
             g_fVolume=(float)n/10;
             llPlaySound(g_kCurrentBellSound,g_fVolume);
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "vol=" + (string)llFloor(g_fVolume*10), "");
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "bell_vol=" + (string)llFloor(g_fVolume*10), "");
             llMessageLinked(LINK_SET,NOTIFY,"1"+"Bell volume set to "+(string)n,kID);
         } else if (sToken=="show" || sToken=="hide") {
             if (sToken=="show") {
@@ -237,13 +243,13 @@ UserCommand(integer iNum, string sStr, key kID) { // here iNum: auth value, sStr
                 llMessageLinked(LINK_SET,NOTIFY,"1"+"The bell is now invisible.",kID);
             }
             SetBellElementAlpha();
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "show=" + (string)g_iBellShow, "");
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "bell_show=" + (string)g_iBellShow, "");
         } else if (sToken=="on") {
             if (iNum!=CMD_GROUP) {
                 if (g_iBellOn==0) {
                     g_iBellOn=iNum;
                     if (!g_iHasControl) llRequestPermissions(g_kWearer,PERMISSION_TAKE_CONTROLS);
-                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "on=" + (string)g_iBellOn, "");
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "bell_on=" + (string)g_iBellOn, "");
                     llMessageLinked(LINK_SET,NOTIFY,"1"+"The bell rings now.",kID);
                 }
             } else llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS% to bell",kID);
@@ -254,7 +260,7 @@ UserCommand(integer iNum, string sStr, key kID) { // here iNum: auth value, sStr
                     llReleaseControls();
                     g_iHasControl=FALSE;
                 }
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "on=" + (string)g_iBellOn, "");
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "bell_on=" + (string)g_iBellOn, "");
                 llMessageLinked(LINK_SET,NOTIFY,"1"+"The bell is now quiet.",kID);
             } else llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS% to bell",kID);
         } else if (sToken=="nextsound") {
@@ -262,7 +268,7 @@ UserCommand(integer iNum, string sStr, key kID) { // here iNum: auth value, sStr
             if (g_iCurrentBellSound>=g_iBellSoundCount) g_iCurrentBellSound=0;
             g_kCurrentBellSound=llList2Key(g_listBellSounds,g_iCurrentBellSound);
             llPlaySound(g_kCurrentBellSound,g_fVolume);
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "sound=" + (string)g_iCurrentBellSound, "");
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "bell_sound=" + (string)g_iCurrentBellSound, "");
             llMessageLinked(LINK_SET,NOTIFY,"1"+"Bell sound changed, now using "+(string)(g_iCurrentBellSound+1)+" of "+(string)g_iBellSoundCount+".",kID);
         } else if (sToken=="ring") {
             g_fNextRing=llGetTime()+1.0;
@@ -338,25 +344,25 @@ state active
                     g_fVolume+=g_fVolumeStep;
                     if (g_fVolume>1.0) g_fVolume=1.0;
                     llPlaySound(g_kCurrentBellSound,g_fVolume);
-                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "vol=" + (string)llFloor(g_fVolume*10), "");
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "bell_vol=" + (string)llFloor(g_fVolume*10), "");
                 } else if (sMessage == "Vol -") {
                     g_fVolume-=g_fVolumeStep;
                     if (g_fVolume<0.1) g_fVolume=0.1;
                     llPlaySound(g_kCurrentBellSound,g_fVolume);
-                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "vol=" + (string)llFloor(g_fVolume*10), "");
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE,  "bell_vol=" + (string)llFloor(g_fVolume*10), "");
                 } else if (sMessage == "Next Sound") {
                     g_iCurrentBellSound++;
                     if (g_iCurrentBellSound>=g_iBellSoundCount) g_iCurrentBellSound=0;
                     g_kCurrentBellSound=llList2Key(g_listBellSounds,g_iCurrentBellSound);
                     llPlaySound(g_kCurrentBellSound,g_fVolume);
-                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "sound=" + (string)g_iCurrentBellSound, "");
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "bell_sound=" + (string)g_iCurrentBellSound, "");
                 } else if (sMessage == g_sBellOff || sMessage == g_sBellOn)
                     UserCommand(iAuth,"bell "+llToLower(sMessage),kAV);
                 else if (sMessage == g_sBellShow || sMessage == g_sBellHide) {
                     if (g_iHasBellPrims) {
                         g_iBellShow = !g_iBellShow;
                         SetBellElementAlpha();
-                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "show=" + (string)g_iBellShow, "");
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "bell_show=" + (string)g_iBellShow, "");
                     } else llMessageLinked(LINK_SET, NOTIFY, "0"+"This %DEVICETYPE% has no visual bell element.", kAV);
                 } else if (sMenuType == "rmbell") {
                     if (sMessage == "Yes") {
@@ -372,27 +378,15 @@ state active
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
         
-        } else if(iNum == LM_SETTING_EMPTY){
-            
-            //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
-            //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
-            
-        } else if(iNum == LM_SETTING_DELETE){
-            
-            //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
-            //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
-            
         } else if (iNum == LM_SETTING_RESPONSE) {
             list lParam = llParseString2List(sStr,["_","="],[]);
             string sToken = llList2String(lParam,0);
             string sVar = llList2String(lParam,1);
             string sValue = llList2String(lParam,2);
             
-            //integer ind = llListFindList(g_lSettingsReqs, [sToken+"_"+sVar]);
-            //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
             
-            
-            if (sToken == g_sSettingToken) {
+            if (sToken == "bell") {
+                //llOwnerSay("Process bell settings: "+sStr);
                 if (sVar == "on") {
                     g_iBellOn=(integer)sValue;
                     if (g_iBellOn && !g_iHasControl)
@@ -402,6 +396,7 @@ state active
                         g_iHasControl = FALSE;
                     }
                 } else if (sVar == "show") {
+                    //llOwnerSay("Updating bell visibility");
                     g_iBellShow=(integer)sValue;
                     SetBellElementAlpha();
                 } else if (sVar == "sound") {
@@ -433,6 +428,7 @@ state active
 
     control( key kID, integer nHeld, integer nChange ) {
         if (!g_iBellOn) return;
+        if(!g_iBellShow)return;
         //the user is pressing a movement key
         if ((nChange & (CONTROL_LEFT|CONTROL_RIGHT|CONTROL_DOWN|CONTROL_UP|CONTROL_FWD|CONTROL_BACK)) && llGetTime()>g_fNextRing)
             llPlaySound(g_kCurrentBellSound,g_fVolume);
