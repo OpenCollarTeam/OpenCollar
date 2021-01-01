@@ -30,7 +30,7 @@ integer g_iLayout = 1; // 0 - Horisontal, 1 - Vertical
 
 
 integer AUTH_REQUEST = 600;
-integer AUTH_REPLY=601;
+//integer AUTH_REPLY=601;
 
 float g_fGap = 0.005; // This is the space between buttons
 float g_Yoff = 0.025; // space between buttons and screen top/bottom border
@@ -120,7 +120,7 @@ integer g_iSPosition; // Do not pre-allocate script memory by setting this varia
 list g_lPrimOrder ;
 integer g_iColumn = 1;  // 0 - Column, 1 - Alternate
 integer g_iRows = 3;  // nummer of Rows: 1,2,3,4... up to g_iMaxRows
-integer g_iOldRows; // used during sensor to backup the row count
+//integer g_iOldRows; // used during sensor to backup the row count
 integer g_iMaxRows = 6; // maximal Rows in Columns
 list g_lButtons ; // buttons names for Order menu
 PositionButtons() {
@@ -211,8 +211,9 @@ FindButtons() { // collect buttons names & links
 
 
 // for swapping buttons
-integer g_iNewPos;
-integer g_iOldPos;
+//integer g_iNewPos;
+//integer g_iOldPos;
+/*
 DoButtonOrder() {   // -- Set the button order and reset display
     integer iOldPos = llList2Integer(g_lPrimOrder,g_iOldPos);
     integer iNewPos = llList2Integer(g_lPrimOrder,g_iNewPos);
@@ -229,6 +230,7 @@ DoButtonOrder() {   // -- Set the button order and reset display
     g_iNewPos = -1;
     PositionButtons();
 }
+*/
 
 integer PicturePrim() {
     integer i = llGetNumberOfPrims();

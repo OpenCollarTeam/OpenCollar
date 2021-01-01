@@ -540,11 +540,11 @@ CheckTeleport() {
             SetState(iDISARMED);
             NotifyCaptiveChange(g_kCageOwnerKey, iRELEASED);
         }
-    } else if (g_iState == iARMED) {
+    } /*else if (g_iState == iARMED) {
        // if (llGetRegionName()==g_sCageRegion && llVecDist(g_vCagePos,llGetPos())<10) {
            //SetState(iCAGED);
        // }
-    }
+    }*/
 }
 
 SetState(integer iState) {

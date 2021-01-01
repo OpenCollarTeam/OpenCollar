@@ -8,26 +8,26 @@ Lysea - (December 2020)
 
 integer API_CHANNEL = 0x60b97b5e;
 
-list g_lCollars;
+//list g_lCollars;
 string g_sAddon = "Test Addon";
 
-integer CMD_ZERO            = 0;
+//integer CMD_ZERO            = 0;
 integer CMD_OWNER           = 500;
-integer CMD_TRUSTED         = 501;
-integer CMD_GROUP           = 502;
+//integer CMD_TRUSTED         = 501;
+//integer CMD_GROUP           = 502;
 integer CMD_WEARER          = 503;
 integer CMD_EVERYONE        = 504;
-integer CMD_BLOCKED         = 598; // <--- Used in auth_request, will not return on a CMD_ZERO
-integer CMD_RLV_RELAY       = 507;
-integer CMD_SAFEWORD        = 510;
-integer CMD_RELAY_SAFEWORD  = 511;
-integer CMD_NOACCESS        = 599;
+//integer CMD_BLOCKED         = 598; // <--- Used in auth_request, will not return on a CMD_ZERO
+//integer CMD_RLV_RELAY       = 507;
+//integer CMD_SAFEWORD        = 510;
+//integer CMD_RELAY_SAFEWORD  = 511;
+//integer CMD_NOACCESS        = 599;
 
-integer LM_SETTING_SAVE     = 2000; //scripts send messages on this channel to have settings saved, <string> must be in form of "token=value"
+//integer LM_SETTING_SAVE     = 2000; //scripts send messages on this channel to have settings saved, <string> must be in form of "token=value"
 integer LM_SETTING_REQUEST  = 2001; //when startup, scripts send requests for settings on this channel
 integer LM_SETTING_RESPONSE = 2002; //the settings script sends responses on this channel
-integer LM_SETTING_DELETE   = 2003; //delete token from settings
-integer LM_SETTING_EMPTY    = 2004; //sent when a token has no value
+//integer LM_SETTING_DELETE   = 2003; //delete token from settings
+//integer LM_SETTING_EMPTY    = 2004; //sent when a token has no value
 
 integer DIALOG          = -9000;
 integer DIALOG_RESPONSE = -9001;
@@ -78,10 +78,10 @@ UserCommand(integer iNum, string sStr, key kID) {
     } //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else
     {
-        integer iWSuccess   = 0; 
-        string sChangetype  = llList2String(llParseString2List(sStr, [" "], []),0);
-        string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),1);
-        string sText;
+        //integer iWSuccess   = 0; 
+        //string sChangetype  = llList2String(llParseString2List(sStr, [" "], []),0);
+        //string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),1);
+        //string sText;
     }
 }
 

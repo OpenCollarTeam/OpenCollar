@@ -39,30 +39,30 @@ Menu(key kID, integer iAuth) {
     Dialog(kID, sPrompt, lButtons, ["DISCONNECT", UPMENU], 0, iAuth, "Menu~Main");
 }
 
-integer AUTH_REQUEST = 600;
+//integer AUTH_REQUEST = 600;
 integer AUTH_REPLY=601;
-integer CMD_ZERO = 0;
+//integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
-integer CMD_TRUSTED = 501;
-integer CMD_GROUP = 502;
-integer CMD_WEARER = 503;
+//integer CMD_TRUSTED = 501;
+//integer CMD_GROUP = 502;
+//integer CMD_WEARER = 503;
 integer CMD_EVERYONE = 504;
-integer CMD_BLOCKED = 598; // <--- Used in auth_request, will not return on a CMD_ZERO
-integer CMD_RLV_RELAY = 507;
-integer CMD_SAFEWORD = 510;
-integer CMD_RELAY_SAFEWORD = 511;
+//integer CMD_BLOCKED = 598; // <--- Used in auth_request, will not return on a CMD_ZERO
+//integer CMD_RLV_RELAY = 507;
+//integer CMD_SAFEWORD = 510;
+//integer CMD_RELAY_SAFEWORD = 511;
 integer CMD_NOACCESS=599;
 
-integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved
+//integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved
 //str must be in form of "token=value"
-integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+//integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
 integer LM_SETTING_RESPONSE = 2002;//the settings script sends responses on this channel
-integer LM_SETTING_DELETE = 2003;//delete token from settings
-integer LM_SETTING_EMPTY = 2004;//sent when a token has no value
+//integer LM_SETTING_DELETE = 2003;//delete token from settings
+//integer LM_SETTING_EMPTY = 2004;//sent when a token has no value
 
 
 integer NOTIFY = 1002;
-integer REBOOT = -1000;
+//integer REBOOT = -1000;
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
@@ -82,10 +82,10 @@ UserCommand(integer iNum, string sStr, key kID) {
     if (llToLower(sStr)==llToLower(g_sAddon) || llToLower(sStr) == "menu "+llToLower(g_sAddon)) Menu(kID, iNum);
     //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else {
-        integer iWSuccess = 0; 
+        //integer iWSuccess = 0; 
         string sChangetype = llList2String(llParseString2List(sStr, [" "], []),0);
-        string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),1);
-        string sText;
+        //string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),1);
+        //string sText;
         
         if(sChangetype == "remote")
         {
@@ -141,11 +141,12 @@ default
                 string sVar = llList2String(lPar,1);
                 string sVal = llList2String(lPar,2);
                     
-                if(sToken == "auth"){
+                /*if(sToken == "auth"){
                     if(sVar == "owner"){
                         //llSay(0, "owner values is: "+sVal);
                     }
-                } else if(sToken == "global"){
+                } else */
+                if(sToken == "global"){
                     if(sVar == "checkboxes"){
                         g_lCheckboxes = llParseString2List(sVal, [","],[]);
                     }
@@ -178,36 +179,36 @@ default
                     g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
                     list lMenuParams = llParseString2List(sStr, ["|"],[]);
                     key kAv = llList2Key(lMenuParams,0);
-                    string sMsg = llList2String(lMenuParams,1);
+                    string sMsgx = llList2String(lMenuParams,1);
                     integer iPage = llList2Integer(lMenuParams,2);
                     integer iAuth = llList2Integer(lMenuParams,3);
                     
                     if(sMenu == "Menu~Main"){
-                        if(sMsg == UPMENU) LM("from_addon", iAuth, "menu Addons", kAv);
-                        else if(sMsg == "+ Favorite"){
+                        if(sMsgx == UPMENU) LM("from_addon", iAuth, "menu Addons", kAv);
+                        else if(sMsgx == "+ Favorite"){
                             LM("from_addon", NOTIFY, "1New remote favorite added", llGetOwner());
                             llMessageLinked(LINK_SET, -2, "add", "");
                         }
-                        else if(sMsg == "- Favorite"){
+                        else if(sMsgx == "- Favorite"){
                             LM("from_addon", NOTIFY, "1Remote favorite removed", llGetOwner());
                             llMessageLinked(LINK_SET, -2, "rem", "");
                         }
-                        else if(sMsg == "DISCONNECT"){
+                        else if(sMsgx == "DISCONNECT"){
                             llMessageLinked(LINK_SET, -1, "", "");
-                        } else if(sMsg == "Buttons")
+                        } else if(sMsgx == "Buttons")
                         {
                             // display button toggle menu
                             MenuButtons(kAv, iAuth,0);
                         }
                     } else if(sMenu == "Menu~Buttons")
                     {
-                        if(sMsg == UPMENU) Menu(kAv, iAuth);
-                        else if(sMsg == "APPLY"){
+                        if(sMsgx == UPMENU) Menu(kAv, iAuth);
+                        else if(sMsgx == "APPLY"){
                             llMessageLinked(LINK_SET, -5, (string)g_iBitMask, "");
                             MenuButtons(kAv,iAuth, iPage);
                         }
                         else {
-                            list lSeg = llParseString2List(sMsg, [" "],[]);
+                            list lSeg = llParseString2List(sMsgx, [" "],[]);
                             integer cBoxMode = llListFindList(g_lCheckboxes, [llList2String(lSeg, 0)]);
                             string label = llDumpList2String(llList2List(lSeg,1,-1), " ");
                             

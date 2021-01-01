@@ -22,7 +22,7 @@ integer NOTIFY_OWNERS=1003;
 
 string g_sParentMenu = ""; 
 string g_sSubMenu = "Main";
-string COLLAR_VERSION = "8.0.0200"; // Provide enough room
+string COLLAR_VERSION = "8.0.0000"; // Provide enough room
 // LEGEND: Major.Minor.Build RC Beta Alpha
 integer UPDATE_AVAILABLE=FALSE;
 string NEW_VERSION = "";
@@ -871,7 +871,7 @@ state active
                 } else {
                     // this updater is older, dont install it
                     llMessageLinked(LINK_SET, NOTIFY, "0The version you are trying to install is older than the currently installed scripts, or it is the same version. To install anyway, trigger the install a second time", g_kUpdateUser);
-                    llSay(0, "Current version is newer or the same as the updater. Trigger update a second time to confirm you want to actually do this");
+                    //llSay(0, "Current version is newer or the same as the updater. Trigger update a second time to confirm you want to actually do this");
                     g_iDoTriggerUpdate=TRUE;
                 }
             }

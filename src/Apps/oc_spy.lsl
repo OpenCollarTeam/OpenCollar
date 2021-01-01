@@ -51,14 +51,14 @@ https://github.com/OpenCollarTeam/OpenCollar
  *     1.0 - Sharie Criss: Initial Alpha Release
 */
 
-string g_sScriptVersion = "7.4";
+string g_sScriptVersion = "8.0";
 string g_sAppVersion = "1.1";
 
 string g_sParentMenu = "Apps";
 string g_sSubMenu = "Spy";
 
 string g_scmd_menu = "\nTrace: Location trace\nSub Chat: Monitor Sub's speech\nAtt Chat: Monitor Sub's Attachments\nRadar: Report Nearby Avatars\n\nUse Attachment Chat monitoring with caution as attachments can be noisy.";
-list g_lcmds = ["trace", "sub chat", "att chat", "radar"];
+//list g_lcmds = ["trace", "sub chat", "att chat", "radar"];
 list g_lSensRates = ["240","120","90","60","30"];    
 list g_lSensDist = ["20","15","10","5"];    
 
@@ -82,7 +82,7 @@ integer g_announce;
 
 
 key g_kWearer;
-string g_sWearerName;
+//string g_sWearerName;
 list g_lMenuIDs;
 integer g_iMenuStride;
 list g_lOwner=[];
@@ -91,41 +91,41 @@ integer g_iLocked=FALSE;
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
-integer CMD_TRUSTED = 501;
+//integer CMD_TRUSTED = 501;
 //integer CMD_GROUP = 502;
 integer CMD_WEARER = 503;
 //integer CMD_EVERYONE = 504;
-integer CMD_RLV_RELAY = 507;
+//integer CMD_RLV_RELAY = 507;
 //integer CMD_SAFEWORD = 510;
-integer CMD_RELAY_SAFEWORD = 511;
+//integer CMD_RELAY_SAFEWORD = 511;
 
 integer LINK_CMD_DEBUG=1999;
 
 integer NOTIFY = 1002;
-integer REBOOT = -1000;
+//integer REBOOT = -1000;
 
 integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved
 //str must be in form of "token=value"
 integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
 integer LM_SETTING_RESPONSE = 2002;//the settings script sends responses on this channel
 integer LM_SETTING_DELETE = 2003;//delete token from settings
-integer LM_SETTING_EMPTY = 2004;//sent when a token has no value
+//integer LM_SETTING_EMPTY = 2004;//sent when a token has no value
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
-integer MENUNAME_REMOVE = 3003;
+//integer MENUNAME_REMOVE = 3003;
 
-integer RLV_CMD = 6000;
-integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
+//integer RLV_CMD = 6000;
+//integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
 
-integer RLV_OFF = 6100; // send to inform plugins that RLV is disabled now, no message or key needed
-integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no message or key needed
+//integer RLV_OFF = 6100; // send to inform plugins that RLV is disabled now, no message or key needed
+//integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no message or key needed
 
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 string UPMENU = "BACK";
-string ALL = "ALL";
+//string ALL = "ALL";
 
 
 DebugOutput(key kDest, list lParams) {
@@ -244,10 +244,10 @@ UserCommand(integer iNum, string sStr, key kID) {
         Notify(kID,"%NOACCESS% to spy options");
         return;
     } else { // Authorized owner - not wearer!
-        integer iWSuccess = 0;
+        //integer iWSuccess = 0;
         string sChangetype = llToLower(llList2String(llParseString2List(sStr, [" "], []),0));
         string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),1);
-        string sText;
+        //string sText;
         // handle chat commands 
         list lChatCmds = ["spychat", "spyattach", "spyradar", "spytrace", "spyrange", "spyrate"];
         integer iVal=FALSE;
@@ -481,7 +481,7 @@ default
                         llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
                         return;
                     }
-                    string sFirst = llGetSubString(sMsg,0,0);
+                    //string sFirst = llGetSubString(sMsg,0,0);
                     if(sMsg == UPMENU) Menu(kAv,iAuth);
                     if (llListFindList(g_lSensRates,[sMsg]) != -1) {
                         g_iSensorRepeat = (integer)sMsg;
@@ -495,7 +495,7 @@ default
                         llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
                         return;
                     }
-                    string sFirst = llGetSubString(sMsg,0,0);
+                    //string sFirst = llGetSubString(sMsg,0,0);
                     if(sMsg == UPMENU) Menu(kAv,iAuth);
                     if (llListFindList(g_lSensDist,[sMsg]) != -1) {
                         g_iSensorRange = (integer)sMsg;
@@ -504,6 +504,10 @@ default
                     Menu(kAv,iAuth);
                 }
             }
+            
+        }else if (iNum == DIALOG_TIMEOUT) {
+            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
+            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
         } else if(iNum == LM_SETTING_RESPONSE) {
             // Detect here the Settings
             list lSettings = llParseString2List(sStr, ["_","="],[]);

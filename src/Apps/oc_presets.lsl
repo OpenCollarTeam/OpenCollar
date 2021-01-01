@@ -4,7 +4,7 @@
 
 string g_sScriptVersion = "7.4"; // Used to validate that a script is up to date via versions/debug command.
 integer LINK_CMD_DEBUG=1999;
-DebugOutput(key kID, list ITEMS){
+/*DebugOutput(key kID, list ITEMS){
     integer i=0;
     integer end=llGetListLength(ITEMS);
     string final;
@@ -12,7 +12,7 @@ DebugOutput(key kID, list ITEMS){
         final+=llList2String(ITEMS,i)+" ";
     }
     llInstantMessage(kID, llGetScriptName() +final);
-}
+}*/
 string g_sSubMenu = "SizePresets";
 string g_sParentMenu = "Apps";
 
@@ -204,7 +204,7 @@ state active
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
-                integer iPage = (integer)llList2String(lMenuParams, 2);
+                //integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
                 string sMenuType = llList2String(g_lMenuIDs, iMenuIndex + 1);
                 g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
