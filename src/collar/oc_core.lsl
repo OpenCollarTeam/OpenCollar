@@ -404,13 +404,6 @@ default
     }
     state_entry(){
         llMessageLinked(LINK_SET, ALIVE, llGetScriptName(),"");
-        if(llGetAttached()){
-            
-            g_iInterfaceChannel = (integer)("0x" + llGetSubString(g_kWearer,30,-1));
-            if (g_iInterfaceChannel > 0) g_iInterfaceChannel = -g_iInterfaceChannel;
-            
-            llRegionSayTo(llGetOwner(), g_iInterfaceChannel, "OpenCollar=Yes");
-        }
     }
     link_message(integer iSender, integer iNum, string sStr, key kID){
         if(iNum == REBOOT){
@@ -805,6 +798,13 @@ state active
                 
                 DoCheckUpdate();
                 
+                if(llGetAttached()){
+                    
+                    g_iInterfaceChannel = (integer)("0x" + llGetSubString(g_kWearer,30,-1));
+                    if (g_iInterfaceChannel > 0) g_iInterfaceChannel = -g_iInterfaceChannel;
+                    if(g_iInterfaceChannel!=0)
+                        llRegionSayTo(llGetOwner(), g_iInterfaceChannel, "OpenCollar=Yes");
+                }
                 llListenRemove(g_iUpdateListener);
             }
         } else if(iNum == RLV_REFRESH){

@@ -478,9 +478,10 @@ state active
         g_sPrefix = llToLower(llGetSubString(llKey2Name(llGetOwner()),0,1));
         // make the API Channel be per user
         API_CHANNEL = ((integer)("0x"+llGetSubString((string)llGetOwner(),0,8)))+0xf6eb-0xd2;
-        
-        g_iInterfaceChannel = (integer)("0x" + llGetSubString(g_kWearer,30,-1));
-        if (g_iInterfaceChannel > 0) g_iInterfaceChannel = -g_iInterfaceChannel;
+        while(g_iInterfaceChannel==0){
+            g_iInterfaceChannel = (integer)("0x" + llGetSubString(g_kWearer,30,-1));
+            if (g_iInterfaceChannel > 0) g_iInterfaceChannel = -g_iInterfaceChannel;
+        }
         DoListeners();
         
         
