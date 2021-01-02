@@ -175,7 +175,7 @@ DoListeners(){
     for(i=0;i<end;i++){
         llListenRemove(llList2Integer(g_lActiveListeners, i));
     }
-    g_lActiveListeners = [llListen(g_iChannel, "","",""), llListen(0,"","",""), llListen(API_CHANNEL, "","",""), llListen(GENERAL_API_CHANNEL, "", "", "scan")];
+    g_lActiveListeners = [llListen(g_iChannel, "","",""), llListen(0,"","",""), llListen(API_CHANNEL, "","",""), llListen(GENERAL_API_CHANNEL, "", "", "scan"), llListen(g_iInterfaceChannel, "", "", "")];
     
 }
 integer g_iRunaway=TRUE;
@@ -444,6 +444,7 @@ list g_lAddonFiltered = [];
 integer g_iWearerAddonLimited=TRUE;
 string g_sPendingAddonOptin;
 integer g_iWearerAddons=TRUE;
+integer g_iInterfaceChannel;
 default
 {
     on_rez(integer iNum){
@@ -477,6 +478,9 @@ state active
         g_sPrefix = llToLower(llGetSubString(llKey2Name(llGetOwner()),0,1));
         // make the API Channel be per user
         API_CHANNEL = ((integer)("0x"+llGetSubString((string)llGetOwner(),0,8)))+0xf6eb-0xd2;
+        
+        g_iInterfaceChannel = (integer)("0x" + llGetSubString(g_kWearer,30,-1));
+        if (g_iInterfaceChannel > 0) g_iInterfaceChannel = -g_iInterfaceChannel;
         DoListeners();
         
         
@@ -486,6 +490,8 @@ state active
         
         
         llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "ALL","");
+        
+            
         
     }
     
@@ -517,6 +523,13 @@ state active
         }
     }
     
+    
+    run_time_permissions(integer iPerm) {
+        if (iPerm & PERMISSION_ATTACH) {
+            llOwnerSay("@detach=yes");
+            llDetachFromAvatar();
+        }
+    }
     
     listen(integer c,string n,key i,string m){
         if(c==API_CHANNEL){
@@ -613,6 +626,18 @@ state active
         } else if(c == GENERAL_API_CHANNEL){
             if(m=="scan"){
                 llRegionSayTo(i,c,"ack");
+            }
+        } else if(c == g_iInterfaceChannel){
+            //do nothing if wearer isnt owner of the object
+            if (llGetOwnerKey(i) != g_kWearer) return;
+            //play ping pong with the Sub AO
+            if (m == "OpenCollar?") llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar=Yes");
+            else if (m == "OpenCollar=Yes") {
+                llOwnerSay("\n\nATTENTION: You are attempting to wear more than one OpenCollar core. This causes errors with other compatible accessories and your RLV relay. For a smooth experience, and to avoid wearing unnecessary script duplicates, please consider to take off \""+n+"\" manually if it doesn't detach automatically.\n");
+                llRegionSayTo(i,g_iInterfaceChannel,"There can be only one!");
+            } else if (m == "There can be only one!" ) {
+                llOwnerSay("/me has been detached.");
+                llRequestPermissions(g_kWearer,PERMISSION_ATTACH);
             }
         }
             

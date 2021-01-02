@@ -22,7 +22,7 @@ integer NOTIFY_OWNERS=1003;
 
 //string g_sParentMenu = ""; 
 string g_sSubMenu = "Main";
-string COLLAR_VERSION = "8.0.0000"; // Provide enough room
+string COLLAR_VERSION = "8.0.0200"; // Provide enough room
 // LEGEND: Major.Minor.Build RC Beta Alpha
 integer UPDATE_AVAILABLE=FALSE;
 string NEW_VERSION = "";
@@ -392,7 +392,7 @@ StartUpdate(){
     llRegionSayTo(g_kUpdater, g_iUpdateChan, "ready|"+(string)g_iUpdatePin);
 }
 
-
+integer g_iInterfaceChannel;
 integer g_iTouchNotify=FALSE;
 integer ALIVE = -55;
 integer READY = -56;
@@ -404,6 +404,13 @@ default
     }
     state_entry(){
         llMessageLinked(LINK_SET, ALIVE, llGetScriptName(),"");
+        if(llGetAttached()){
+            
+            g_iInterfaceChannel = (integer)("0x" + llGetSubString(g_kWearer,30,-1));
+            if (g_iInterfaceChannel > 0) g_iInterfaceChannel = -g_iInterfaceChannel;
+            
+            llRegionSayTo(llGetOwner(), g_iInterfaceChannel, "OpenCollar=Yes");
+        }
     }
     link_message(integer iSender, integer iNum, string sStr, key kID){
         if(iNum == REBOOT){
@@ -427,7 +434,14 @@ state active
         g_kWearer = llGetOwner();
         
         llMessageLinked(LINK_SET, 0, "initialize", llGetKey());
+        
     }
+    attach(key kID){
+        if(kID==NULL_KEY){
+            llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar=No");
+        }
+    }
+    
     touch_start(integer iNum){
         if(g_iTouchNotify) llMessageLinked(LINK_SET, NOTIFY, "0secondlife:///app/agent/"+(string)llDetectedKey(0)+"/about has touched your collar!", g_kWearer);
 
