@@ -162,7 +162,6 @@ UserCommand(integer iNum, string sStr, key kID) {
         string sChangetype = llList2String(lTmp,0);
         string sChangevalue = llList2String(lTmp,1);
         integer iPageNum = llList2Integer(lTmp,2);
-        integer iRespring=FALSE; //For sChangevalue == remenu, do we still want menu respring?
         
         
         if(llSubStringIndex(sStr,"remenu") != -1){
@@ -187,7 +186,6 @@ UserCommand(integer iNum, string sStr, key kID) {
             StartAnimation(g_sPose);
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, "anim_pose="+llList2String(g_lCurrentAnimations, 0),"");
         } else if(llToLower(sChangetype) == "stop" || llToLower(sChangetype)=="release"){
-            iRespring = TRUE;
             if(g_iAnimLock && kID == g_kWearer){
                 llMessageLinked(LINK_SET,NOTIFY,"0%NOACCESS% to stopping animation", g_kWearer);
                 jump checkRemenu;
@@ -201,7 +199,6 @@ UserCommand(integer iNum, string sStr, key kID) {
             // adjust current pose
             //llOwnerSay(" up or down");
             //sChangevalue="remenu";
-            iRespring=1;
             integer iUp= FALSE;
             if(sChangetype == UP_ARROW || sChangetype == "up")iUp=TRUE;
             if(g_lCurrentAnimations == []){
@@ -270,7 +267,7 @@ UserCommand(integer iNum, string sStr, key kID) {
         }
         
         @checkRemenu;
-        if(sChangevalue == "remenu" && (llGetInventoryType(sChangetype)==INVENTORY_ANIMATION || iRespring))PoseMenu(kID,iNum, iPageNum);
+        if(sChangevalue == "remenu" && (llGetInventoryType(sChangetype)==INVENTORY_ANIMATION))PoseMenu(kID,iNum, iPageNum);
 
     }
 }
@@ -582,7 +579,7 @@ state active
                 }
             } else if(sTok == "anim"){
                 if(sVar == "pose"){
-                    if (g_sPose != "" && g_sPose != sVal)StopAnimation(g_sPose);
+                    if (g_sPose != "")StopAnimation(g_sPose);
                     g_sPose = sVal;
                     StartAnimation(sVal);
                 } else if(sVar == "animlock"){
