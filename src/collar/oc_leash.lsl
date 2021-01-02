@@ -15,9 +15,9 @@ string TOK_LENGTH   = "leashlength";
 string TOK_DEST     = "leashedto"; // format: uuid,rank
 // --- channel tokens ---
 
-integer TIMEOUT_READY = 30497;
-integer TIMEOUT_REGISTER = 30498;
-integer TIMEOUT_FIRED = 30499;
+//integer TIMEOUT_READY = 30497;
+//integer TIMEOUT_REGISTER = 30498;
+//integer TIMEOUT_FIRED = 30499;
  
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
@@ -641,6 +641,7 @@ LHSearch(){
         }
     }
 }
+
 dtext(string m){
    // llSetText(m+"\n \n \n \n \n \n \n",<0,1,1>,1);
 }

@@ -41,9 +41,9 @@ integer CMD_WEARER = 503;
 //integer CMD_SAFEWORD = 510;
 //integer CMD_RELAY_SAFEWORD = 511;
 
-integer TIMEOUT_READY = 30497;
-integer TIMEOUT_REGISTER = 30498;
-integer TIMEOUT_FIRED = 30499;
+//integer TIMEOUT_READY = 30497;
+//integer TIMEOUT_REGISTER = 30498;
+//integer TIMEOUT_FIRED = 30499;
 
 
 

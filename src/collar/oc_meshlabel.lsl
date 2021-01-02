@@ -47,7 +47,7 @@ integer NOTIFY = 1002;
 //integer SAY = 1004;
 integer REBOOT              = -1000;
 integer LM_SETTING_SAVE = 2000;
-integer LM_SETTING_REQUEST = 2001;
+//integer LM_SETTING_REQUEST = 2001;
 integer LM_SETTING_RESPONSE = 2002;
 integer LM_SETTING_DELETE = 2003;
 integer LM_SETTING_EMPTY = 2004;
@@ -71,9 +71,9 @@ string g_sColorMenu = "Color";
 list g_lMenuIDs;  //three strided list of avkey, dialogid, and menuname
 integer g_iMenuStride = 3;
 
-integer TIMEOUT_READY = 30497;
-integer TIMEOUT_REGISTER = 30498;
-integer TIMEOUT_FIRED = 30499;
+//integer TIMEOUT_READY = 30497;
+//integer TIMEOUT_REGISTER = 30498;
+//integer TIMEOUT_FIRED = 30499;
 
 
 integer g_bHasError = FALSE;

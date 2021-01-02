@@ -20,9 +20,9 @@ integer CMD_EVERYONE = 504;
 integer CMD_SAFEWORD = 510;
 //integer CMD_RELAY_SAFEWORD = 511;
 
-integer TIMEOUT_READY = 30497;
-integer TIMEOUT_REGISTER = 30498;
-integer TIMEOUT_FIRED = 30499;
+//integer TIMEOUT_READY = 30497;
+//integer TIMEOUT_REGISTER = 30498;
+//integer TIMEOUT_FIRED = 30499;
 
 
 
@@ -35,10 +35,10 @@ integer LINK_CMD_RESTDATA = -2577;
 
 integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved
 //str must be in form of "token=value"
-integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+//integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
 integer LM_SETTING_RESPONSE = 2002;//the settings script sends responses on this channel
-integer LM_SETTING_DELETE = 2003;//delete token from settings
-integer LM_SETTING_EMPTY = 2004;//sent when a token has no value
+//integer LM_SETTING_DELETE = 2003;//delete token from settings
+//integer LM_SETTING_EMPTY = 2004;//sent when a token has no value
 
 //string g_sSettingToken = "rlvsuite_";
 
@@ -681,15 +681,6 @@ state active
                 if (bWasTrue) ApplyCommand("MinDistance",TRUE, NULL_KEY, 0);
             }
         
-        }else if(iNum == LM_SETTING_EMPTY){
-            
-            //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
-            //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
-            
-        } else if(iNum == LM_SETTING_DELETE){
-            
-            //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
-            //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
         }
     }
     

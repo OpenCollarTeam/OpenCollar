@@ -43,7 +43,7 @@ integer CMD_RELAY_SAFEWORD = 511;
 //integer POPUP_HELP = 1001;
 integer NOTIFY = 1002;
 integer REBOOT = -1000;
-integer LOADPIN = -1904;
+//integer LOADPIN = -1904;
 integer LM_SETTING_SAVE = 2000;
 integer LM_SETTING_REQUEST = 2001;
 integer LM_SETTING_RESPONSE = 2002;
@@ -76,14 +76,14 @@ string TURNOFF = " OFF";
 string CLEAR = "CLEAR ALL";
 
 key g_kWearer;
-integer TIMEOUT_READY = 30497;
+//integer TIMEOUT_READY = 30497;
 integer TIMEOUT_REGISTER = 30498;
 integer TIMEOUT_FIRED = 30499;
-list g_lSettingsReqs = [];
+//list g_lSettingsReqs = [];
 
 
 string g_sSettingToken = "rlvsys_";
-string g_sGlobalToken = "global_";
+//string g_sGlobalToken = "global_";
 string g_sRlvVersionString="(unknown)";
 string g_sRlvaVersionString="(unknown)";
 
@@ -333,11 +333,11 @@ UserCommand(integer iNum, string sStr, key kID) {
         llMessageLinked(LINK_SET,NOTIFY,"0"+sOut,kID);
     }
 }
-ExtractPart(){
+/*ExtractPart(){
     g_sScriptPart = llList2String(llParseString2List(llGetScriptName(), ["_"],[]),1);
-}
+}*/
 
-string g_sScriptPart; // oc_<part>
+//string g_sScriptPart; // oc_<part>
 
 integer ALIVE = -55;
 integer READY = -56;

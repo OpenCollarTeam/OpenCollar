@@ -19,23 +19,23 @@ https://github.com/OpenCollarTeam/OpenCollar
 */
 
 
-integer CMD_ZERO = 0;
+//integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
-integer CMD_TRUSTED = 501;
-integer CMD_GROUP = 502;
-integer CMD_WEARER = 503;
+//integer CMD_TRUSTED = 501;
+//integer CMD_GROUP = 502;
+//integer CMD_WEARER = 503;
 integer CMD_EVERYONE = 504;
-integer CMD_BLOCKED = 598; // <--- Used in auth_request, will not return on a CMD_ZERO
-integer CMD_RLV_RELAY = 507;
-integer CMD_SAFEWORD = 510;
-integer CMD_RELAY_SAFEWORD = 511;
-integer CMD_NOACCESS=599;
+//integer CMD_BLOCKED = 598; // <--- Used in auth_request, will not return on a CMD_ZERO
+//integer CMD_RLV_RELAY = 507;
+//integer CMD_SAFEWORD = 510;
+//integer CMD_RELAY_SAFEWORD = 511;
+//integer CMD_NOACCESS=599;
 
 integer TIMEOUT_READY = 30497;
 integer TIMEOUT_REGISTER = 30498;
 integer TIMEOUT_FIRED = 30499;
 
-list StrideOfList(list src, integer stride, integer start, integer end)
+/*list StrideOfList(list src, integer stride, integer start, integer end)
 {
     list l = [];
     integer ll = llGetListLength(src);
@@ -48,8 +48,8 @@ list StrideOfList(list src, integer stride, integer start, integer end)
         start += stride;
     }
     return l;
-}
-integer NOTIFY_OWNERS=1003;
+}*/
+//integer NOTIFY_OWNERS=1003;
 
 
 
@@ -118,23 +118,23 @@ integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have s
 integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
 integer LM_SETTING_RESPONSE = 2002;//the settings script sends responses on this channel
 integer LM_SETTING_DELETE = 2003;//delete token from settings
-integer LM_SETTING_EMPTY = 2004;//sent when a token has no value
+//integer LM_SETTING_EMPTY = 2004;//sent when a token has no value
 
-integer MENUNAME_REQUEST = 3000;
-integer MENUNAME_RESPONSE = 3001;
-integer MENUNAME_REMOVE = 3003;
+//integer MENUNAME_REQUEST = 3000;
+//integer MENUNAME_RESPONSE = 3001;
+//integer MENUNAME_REMOVE = 3003;
 
-integer RLV_CMD = 6000;
+//integer RLV_CMD = 6000;
 integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
 
-integer RLV_OFF = 6100; // send to inform plugins that RLV is disabled now, no message or key needed
-integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no message or key needed
+//integer RLV_OFF = 6100; // send to inform plugins that RLV is disabled now, no message or key needed
+//integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no message or key needed
 
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 string UPMENU = "BACK";
-string ALL = "ALL";
+//string ALL = "ALL";
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
     key kMenuID = llGenerateKey();
@@ -146,16 +146,16 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 }
 list g_lSettings;
 integer g_iLoading;
-key g_kWearer;
+//key g_kWearer;
 list g_lMenuIDs;
 integer g_iMenuStride;
-list g_lOwner;
-list g_lTrust;
+//list g_lOwner;
+//list g_lTrust;
 key g_kMenuUser;
 integer g_iLastAuth;
-list g_lBlock;
+//list g_lBlock;
 string g_sVariableView;
-integer g_iLocked=FALSE;
+//integer g_iLocked=FALSE;
 string g_sTokenView="";
 integer g_iLastStride;
 integer g_iWaitMenu;

@@ -17,9 +17,9 @@ integer CMD_EVERYONE = 504;
 //integer CMD_SAFEWORD = 510;
 //integer CMD_RELAY_SAFEWORD = 511;
 //integer CMD_BLOCKED = 520;
-integer TIMEOUT_READY = 30497;
-integer TIMEOUT_REGISTER = 30498;
-integer TIMEOUT_FIRED = 30499;
+//integer TIMEOUT_READY = 30497;
+//integer TIMEOUT_REGISTER = 30498;
+//integer TIMEOUT_FIRED = 30499;
 
 
 integer g_iLeashedToAvatar=FALSE;
@@ -30,7 +30,7 @@ integer NOTIFY              = 1002;
 integer REBOOT              = -1000;
 // -- SETTINGS
 integer LM_SETTING_SAVE     = 2000;
-integer LM_SETTING_REQUEST = 2001;
+//integer LM_SETTING_REQUEST = 2001;
 integer LM_SETTING_RESPONSE = 2002;
 integer LM_SETTING_DELETE   = 2003;
 integer LM_SETTING_EMPTY            = 2004;
@@ -104,7 +104,7 @@ string g_sSettingToken = "particle_";
 string g_sParticleTexture = "Silk";
 string g_sParticleTextureID; //we need the UUID for llLinkParticleSystem
 string g_sLeashParticleTexture;
-string g_sOccParticleTexture = "4cde01ac-4279-2742-71e1-47ff81cc3529";
+//string g_sOccParticleTexture = "4cde01ac-4279-2742-71e1-47ff81cc3529";
 string g_sLeashParticleMode;
 vector g_vLeashColor = <1.00000, 1.00000, 1.00000>;
 vector g_vLeashSize = <0.04, 0.04, 1.0>;
@@ -115,7 +115,7 @@ integer g_iParticleCount = 1;
 float g_fBurstRate = 0.0;
 //same g_lSettings but to store locally the default settings recieved from the defaultsettings note card, using direct string here to save some bits
 
-list g_lCurrentChains = [];
+//list g_lCurrentChains = [];
 
 list g_lCollarPoints = [ // oc chain name, lockmeister name, lockguard name
     "fcollar"       , "collar"  , "collarfrontloop" , // Collar Front
@@ -234,7 +234,7 @@ StopParticles(integer iEnd) {
        // llSensorRemove();
     }
 }
-
+/*
 key findPrimKey(string sDesc)
 {
     integer i;
@@ -269,7 +269,7 @@ doClearChain(string sChainCMD)
         }
     }
 }
-
+*/
 
 string Vec2String(vector vVec) {
     list lParts = [vVec.x, vVec.y, vVec.z];

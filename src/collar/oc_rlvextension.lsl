@@ -3,7 +3,7 @@
 //  Copyright (c) 2018 - 2019 Tashia Redrose, Silkie Sabra, lillith xue                            
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
-string g_sScriptVersion = "8.0";
+//string g_sScriptVersion = "8.0";
 
 string g_sParentMenu = "RLV";
 string g_sSubMenu1 = "Force Sit";
@@ -15,7 +15,7 @@ integer g_iStrictSit=FALSE; // Default - do not use strict mode
 integer CMD_OWNER = 500;
 //integer CMD_TRUSTED = 501;
 //integer CMD_GROUP = 502;
-integer CMD_WEARER = 503;
+//integer CMD_WEARER = 503;
 integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
 //integer CMD_SAFEWORD = 510;
@@ -30,7 +30,7 @@ integer LINK_CMD_RESTDATA = -2577;
 
 integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved
 //str must be in form of "token=value"
-integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+//integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
 integer LM_SETTING_RESPONSE = 2002;//the settings script sends responses on this channel
 integer LM_SETTING_DELETE = 2003;//delete token from settings
 integer LM_SETTING_EMPTY = 2004;//sent when a token has no value
@@ -91,10 +91,10 @@ integer g_iOwnerEx = 127;
 integer g_iTrustedEx = 95;
 
 list g_lMenuIDs;
-integer TIMEOUT_READY = 30497;
-integer TIMEOUT_REGISTER = 30498;
-integer TIMEOUT_FIRED = 30499;
-list g_lSettingsReqs = [];
+//integer TIMEOUT_READY = 30497;
+//integer TIMEOUT_REGISTER = 30498;
+//integer TIMEOUT_FIRED = 30499;
+//list g_lSettingsReqs = [];
 integer g_iMenuStride;
 integer g_iLocked=FALSE;
 
