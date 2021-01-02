@@ -122,7 +122,7 @@ default {
         llOwnerSay("Update will start shortly. Checking for existing settings");
         // build script list
         integer i = llGetInventoryNumber(INVENTORY_SCRIPT);
-        string sName;
+        //string sName;
         integer TotalScriptsFound=i;
         // listen on the start param channel
         llListen(g_iStartParam, "", "", "");
