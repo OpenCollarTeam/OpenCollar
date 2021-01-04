@@ -346,14 +346,15 @@ state active
         if(HasDSRequest(kID)!=-1){
             if(sData==EOF){
                 //End of file
-                if(g_sTmp != "")E(llGetOwner(), "The following data was not used as part of the theme. This can happen if part of the data was missing: "+g_sTmp);
-                g_sTmp=""; // clear any remaining temporary memory
                 string meta = GetDSMeta(kID);
                 list lTmp = llParseString2List(meta,[":"],[]);
+                if((g_sTmp != "" && g_sTmp != "{}"))E(llGetOwner(), "The following was not used for the prim : "+llList2String(lTmp,3)+"  : "+g_sTmp);
+                g_sTmp=""; // clear any remaining temporary memory
                 DeleteDSReq(kID);
                 llMessageLinked(LINK_SET,NOTIFY, "0Theme notecard read", llGetOwner());
                 if(llList2String(lTmp,4)!="0")
                     E(llGetOwner(), llList2String(lTmp,4)+" sections of this theme had errors.");
+                
             } else {
                 string sMeta = GetDSMeta(kID);
                 list lTmp = llParseString2List(sMeta,[":"],[]);
@@ -367,6 +368,11 @@ state active
                     
                     list lData = llParseString2List(sData, ["/"],["[","]"]);
                     if(llList2String(lData,0) == "[" && llList2String(lData,-1) == "]"){
+                        if(g_sTmp!="" && g_sTmp!="{}"){
+                            iErrors++;
+                            E(llGetOwner(), "Data not used for prim ("+(string)iPrim+"): "+g_sTmp);
+                        }
+                        
                         g_sTmp=""; // Clear the temporary memory
                         iPrim = (integer)llList2String(lData,1);
                         sPrim = llList2String(lData,2);
@@ -431,7 +437,7 @@ state active
                                     lParam += [PRIM_FULLBRIGHT, iFace, (integer)llList2String(lProp,3)];
                                 }
                                 //if(g_sTmp!="")
-                                    //llSay(0, "Applier Json: "+g_sTmp);
+                                //    llSay(0, "Applier Json: "+g_sTmp);
                                 
                                 
                                 if(llJsonValueType(g_sTmp, ["color"])!= JSON_INVALID && llJsonValueType(g_sTmp,["alpha"])!=JSON_INVALID){
@@ -530,6 +536,7 @@ state active
                         // Theme selection page, we now check for this theme and apply it
                         if(llGetInventoryType(sMsg+".theme")==INVENTORY_NOTECARD){
                             E(kAv, "Applying Theme to collar..");
+                            g_lDSRequests=[];
                             UpdateDSRequest(NULL, llGetNotecardLine(sMsg+".theme",0), "read_theme:0:"+sMsg+":-1:0");
                         } else {
                             E(kAv, "No theme with that name could be found. This is an error: "+(string)llGetInventoryType(sMsg+".theme"));
