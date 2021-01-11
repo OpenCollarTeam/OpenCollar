@@ -30,10 +30,13 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
     if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
     else g_lMenuIDs += [kID, kMenuID, sName];
 }
+Menu(key kID, integer iAuth){
+    llMessageLinked(LINK_SET, 6, (string)iAuth, kID);
+}
 
-Menu(key kID, integer iAuth) {
-    string sPrompt = "\n[OpenCollar Remote]";
-    list lButtons = ["+ Favorite", "- Favorite", "Buttons"];
+AMenu(key kID, integer iAuth) {
+    string sPrompt = "\n[OpenCollar Remote]\n\nRows: "+(string)g_iRows;
+    list lButtons = ["+ Favorite", "- Favorite", "Buttons", "+ Rows", "- Rows"];
     
     //llSay(0, "opening menu");
     Dialog(kID, sPrompt, lButtons, ["DISCONNECT", UPMENU], 0, iAuth, "Menu~Main");
@@ -116,6 +119,9 @@ MenuButtons(key kID, integer iAuth, integer iPage)
     
     Dialog(kID, prompt, buttons, ["APPLY", UPMENU], iPage, iAuth, "Menu~Buttons");
 }
+
+
+integer g_iRows = 3;
 default
 {
     state_entry()
@@ -199,6 +205,10 @@ default
                         {
                             // display button toggle menu
                             MenuButtons(kAv, iAuth,0);
+                        } else if(sMsgx == "+ Rows"){
+                            llMessageLinked(LINK_SET, 4, (string)iAuth, kAv);
+                        }else if(sMsgx == "- Rows"){
+                            llMessageLinked(LINK_SET, 5, (string)iAuth, kAv);
                         }
                     } else if(sMenu == "Menu~Buttons")
                     {
@@ -236,6 +246,11 @@ default
         } else if(iNums == -4)
         {
             g_lBTNS = llParseStringKeepNulls(sMsg, ["`"],[]);
+        } else if(iNums == 7){
+            // rows update
+            list lPar = llParseString2List(sMsg, ["`"],[]);
+            g_iRows = (integer)llList2String(lPar,0);
+            AMenu(kIDx, (integer)llList2String(lPar,1));
         }
     }
 }

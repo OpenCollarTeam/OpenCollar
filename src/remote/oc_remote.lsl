@@ -585,7 +585,7 @@ default
         {
             // Run a sensor sweep of those nearby within 20 meters.
             // The user will then have the option to pick from those names.
-            llMessageLinked(LINK_SET,-1,"","");
+            //llMessageLinked(LINK_SET,-1,"","");
             iImplemented=1;
             llSensor("", "", AGENT,  20, PI);
         } else if(sCmd == "@menu"){
@@ -593,10 +593,10 @@ default
             iImplemented =1;
         } else if(sCmd == "@fav"){
             iImplemented=1;
-            if(g_kCollar!=NULL_KEY){
-                llMessageLinked(LINK_SET,-1,"","");
-                llSetText("", ZERO_VECTOR,0);
-            }
+            //if(g_kCollar!=NULL_KEY){
+            //    llMessageLinked(LINK_SET,-1,"","");
+            //    llSetText("", ZERO_VECTOR,0);
+            //}
             g_lOptions=[];
             
             integer end = llGetListLength(g_lFavorites);
@@ -678,7 +678,11 @@ default
         //llWhisper(0,m);
         if(c==g_iChannel)
         {
-                
+            if(g_kCollar!=NULL_KEY){
+                llMessageLinked(LINK_SET,-1, "", "");
+                Link("offline", 0, "",llGetOwnerKey(g_kCollar));
+                llSleep(2);
+            }
             key user = (key)llList2String(g_lOptions, (integer)m);
             StopAPIs();
             StartAPI(user);
@@ -755,6 +759,16 @@ default
         {
             // request the button list
             llMessageLinked(LINK_SET, -4, llDumpList2String(BTNS, "`"), "");
+        } else if(iNum == 4){
+            g_iRows++;
+            Recalc();
+            llMessageLinked(LINK_SET, 7, (string)g_iRows+"`"+sMsg, kID);
+        } else if(iNum == 5){
+            g_iRows--;
+            Recalc();
+            llMessageLinked(LINK_SET, 7, (string)g_iRows+"`"+sMsg, kID);
+        } else if(iNum == 6){
+            llMessageLinked(LINK_SET, 7, (string)g_iRows+"`"+sMsg, kID);
         }
     }
 }
