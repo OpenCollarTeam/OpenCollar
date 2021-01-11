@@ -100,18 +100,25 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 integer g_iHide=FALSE;
 integer g_iAllowHide=TRUE;
 Settings(key kID, integer iAuth){
-    string sPrompt = "OpenCollar\n\n[Settings]\n\nEditor - Interactive Settings Editor\nWearerAddons - Allow/Disallow use of wearer owned addons\nAddonLimited - Limit whether wearer owned addons can modify the owners list or weld state (default enabled)";
+    string sPrompt = "OpenCollar\n\n[Settings]\n\nEditor - Interactive Settings Editor";
     list lButtons = ["Print", "Load", "Fix Menus"];
     if (llGetInventoryType("oc_resizer") == INVENTORY_SCRIPT) lButtons += ["Resize"];
     else lButtons += ["-"];
-    lButtons += [Checkbox(g_iHide, "Hide"), "EDITOR", Checkbox(g_iAllowHide, "AllowHiding"), Checkbox(g_iWearerAddons, "WearerAddons"), Checkbox(g_iWearerAddonLimited,"AddonLimited")];
+    lButtons += [Checkbox(g_iHide, "Hide"), "EDITOR", Checkbox(g_iAllowHide, "AllowHiding"), "Addon.."];
     Dialog(kID, sPrompt, lButtons, [UPMENU],0,iAuth, "Menu~Settings");
+}
+
+AddonSettings(key kID, integer iAuth)
+{
+    string sPrompt = "OpenCollar\n\n[Addon Settings\n\nWearerAddons - Allow/Disallow use of wearer owned addons\nAddonLimited - Limit whether wearer owned addons can modify the owners list or weld state (default enabled)";
+    list lButtons = [Checkbox(g_iWearerAddons, "WearerAddons"), Checkbox(g_iWearerAddonLimited, "AddonLimited"), Checkbox(g_iAddons, "Addons")];
+    Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "Menu~SAddons");
 }
 
 integer g_iWelded=FALSE;
 integer g_iWearerAddons=TRUE;
 // The original idea in #356, was to make this as a app, but i fail to see why we must use an extra app just to create the weld, the extra app or possibly an addon could be made to unweld should the wearer desire it.
-
+integer g_iAddons=TRUE;
 list g_lApps;
 AppsMenu(key kID, integer iAuth){
     string sPrompt = "\n[Apps]\nYou have "+(string)llGetListLength(g_lApps)+" apps installed";
@@ -607,21 +614,40 @@ state active
                     } else if(sMsg == "EDITOR"){
                         llMessageLinked(LINK_SET, 0, "settings edit", kAv);
                         iRespring=FALSE;
-                    } else if(sMsg == Checkbox(g_iWearerAddons, "WearerAddons")){
+                    } else if(sMsg == "Addon.."){
+                        iRespring=FALSE;
+                        AddonSettings(kAv,iAuth);
+                    }
+                    
+                    if(iRespring)Settings(kAv,iAuth);
+                }else if(sMenu == "Menu~SAddons"){
+                    if(sMsg == Checkbox(g_iWearerAddons, "WearerAddons")){
                         if(iAuth == CMD_OWNER || iAuth == CMD_TRUSTED){
                             g_iWearerAddons=1-g_iWearerAddons;
                             llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_weareraddon="+(string)g_iWearerAddons,"");
+                            
+                            if(!g_iWearerAddons){
+                                llMessageLinked(LINK_SET, 500, "kick_all_wearer_addons", kAv);
+                            }
                         }else llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to toggling wearer addons", kAv);
                     } else if(sMsg == Checkbox(g_iWearerAddonLimited, "AddonLimited")){
                         if(iAuth == CMD_OWNER || iAuth == CMD_TRUSTED){
                             g_iWearerAddonLimited=1-g_iWearerAddonLimited;
                             llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_addonlimit="+(string)g_iWearerAddonLimited,"");
                         }else llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to toggling wearer addon limitations", kAv);
+                    } else if(sMsg == Checkbox(g_iAddons, "Addons")){
+                        if(iAuth == CMD_OWNER){
+                            g_iAddons=1-g_iAddons;
+                            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_addons="+(string)g_iAddons, "");
+                        }else llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to toggling all addons", kAv);
+                    }else if(sMsg == UPMENU){
+                        iRespring=FALSE;
+                        Settings(kAv,iAuth);
                     }
                     
                     
                     
-                    if(iRespring)Settings(kAv,iAuth);
+                    if(iRespring)AddonSettings(kAv,iAuth);
                 } else if(sMenu == "Menu~Help"){
                     if(sMsg == UPMENU){
                         iRespring=FALSE;
@@ -697,6 +723,8 @@ state active
                     g_iWearerAddons=(integer)sVal;
                 } else if(sVar == "addonlimit"){
                     g_iWearerAddonLimited=(integer)sVal;
+                } else if(sVar == "addons"){
+                    g_iAddons = (integer)sVal;
                 }
             } else if(sToken == "auth"){
                 if(sVar == "group"){
@@ -729,11 +757,6 @@ state active
             if(sStr == "settings=sent"){
                 if(g_kGroup==(string)NULL_KEY)g_kGroup="";
             }
-        }else if(iNum == LM_SETTING_EMPTY){
-            
-            //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
-            //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
-            
         } else if(iNum == LM_SETTING_DELETE){
             list lPar = llParseString2List(sStr, ["_"],[]);
             string sToken = llList2String(lPar,0);

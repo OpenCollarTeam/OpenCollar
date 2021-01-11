@@ -177,13 +177,17 @@ PrintAccess(key kID){
 }
 
 list g_lActiveListeners;
+integer g_iAddons=TRUE;
 DoListeners(){
     integer i=0;
     integer end = llGetListLength(g_lActiveListeners);
     for(i=0;i<end;i++){
         llListenRemove(llList2Integer(g_lActiveListeners, i));
     }
-    g_lActiveListeners = [llListen(g_iChannel, "","",""), llListen(0,"","",""), llListen(API_CHANNEL, "","",""), llListen(GENERAL_API_CHANNEL, "", "", "scan"), llListen(g_iInterfaceChannel, "", "", "")];
+    
+    g_lActiveListeners = [llListen(g_iChannel, "","",""), llListen(0,"","",""),  llListen(g_iInterfaceChannel, "", "", "")];
+    if(g_iAddons)
+        g_lActiveListeners+=[llListen(API_CHANNEL, "","",""), llListen(GENERAL_API_CHANNEL, "", "", "scan")];
     
 }
 integer g_iRunaway=TRUE;
@@ -337,6 +341,20 @@ UserCommand(integer iAuth, string sCmd, key kID){
         if(sCmdx == "channel"){
             g_iChannel = (integer)llList2String(lCmd,1);
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_channel="+(string)g_iChannel, kID);
+        } else if(sCmdx == "kick_all_wearer_addons"){
+            integer X =0;
+            integer x_end = llGetListLength(g_lAddons);
+            for(X=0;X<x_end;X+=4){
+                key kAddon = (key)llList2String(g_lAddons,X);
+                if(llGetOwnerKey(kAddon)==g_kWearer){
+                    // -> Kick the addon
+                    SayToAddonX(kAddon, "dc", 0, "", llGetOwner());
+                    g_lAddons = llDeleteSubList(g_lAddons, X, X+3);
+                    X=-1;
+                    x_end = llGetListLength(g_lAddons);
+                }
+            }
+            
         } else if(sCmdx == "prefix"){
             if(llList2String(lCmd,1)==""){
                 llMessageLinked(LINK_SET,NOTIFY,"0The prefix is currently set to: "+g_sPrefix+". If you wish to change it, supply the new prefix to this same command", kID);
@@ -757,6 +775,9 @@ state active
                     g_iWearerAddons=(integer)sVal;
                 } else if(sVar == "addonlimit"){
                     g_iWearerAddonLimited=(integer)sVal;
+                } else if(sVar == "addons"){
+                    g_iAddons = (integer)sVal;
+                    DoListeners();
                 }
             }
         } else if(iNum == LM_SETTING_DELETE){
@@ -801,6 +822,8 @@ state active
                     g_iWearerAddons=1;
                 } else if(sVar == "addonlimit"){
                     g_iWearerAddonLimited=1;
+                } else if(sVar == "addons"){
+                    g_iAddons=1;
                 }
             }
         } else if(iNum == REBOOT){
