@@ -886,12 +886,15 @@ state active
                     if(sMsg == "Enable" && iAuth == CMD_OWNER){
                         g_iRunaway=TRUE;
                         llMessageLinked(LINK_SET, LM_SETTING_DELETE, "AUTH_runawaydisable","origin");
+                        llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "5", "spring_access:"+(string)kAv);
                     } else if(sMsg == "Disable"){
                         g_iRunaway=FALSE;
                         llMessageLinked(LINK_SET, LM_SETTING_SAVE, "AUTH_runawaydisable=0", "origin");
+                        llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "5", "spring_access:"+(string)kAv);
                     } else if(sMsg == "No"){
                         // return
                         g_iRunawayMode=-1;
+                        llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "spring_access:"+(string)kAv);
                         return;
                     } else if(sMsg == "Yes"){
                         // trigger runaway
@@ -901,6 +904,8 @@ state active
                             llMessageLinked(LINK_SET, CMD_OWNER, "runaway", g_kWearer);
                             llMessageLinked(LINK_SET, CMD_SAFEWORD, "safeword", "");
                             llMessageLinked(LINK_SET, CMD_OWNER, "clear", g_kWearer);
+                            
+                            llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "5", "spring_access:"+(string)kAv);
                         }
                     }
                 }
