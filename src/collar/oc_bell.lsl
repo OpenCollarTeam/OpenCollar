@@ -65,7 +65,7 @@ key g_kWearer; // key of the current wearer to reset only on owner changes
 
 integer g_iHasControl=FALSE; // dow we have control over the keyboard?
 
-integer g_iHide ; // global hide
+integer g_iHide=1 ; // global hide. Default is visible, but the bell script inverts this value.
 
 //MESSAGE MAP
 //integer CMD_ZERO = 0;

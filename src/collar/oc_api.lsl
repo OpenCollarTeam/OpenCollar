@@ -105,12 +105,12 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 string SLURL(key kID){
     return "secondlife:///app/agent/"+(string)kID+"/about";
 }
-key g_kGroup;
+key g_kGroup=NULL_KEY;
 key g_kWearer;
 key g_kTry;
 integer g_iCurrentAuth;
 key g_kMenuUser;
-integer CalcAuth(key kID){
+integer CalcAuth(key kID, integer iVerbose){
     string sID = (string)kID;
     // First check
     if(llGetListLength(g_lOwner) == 0 && kID==g_kWearer)
@@ -121,14 +121,17 @@ integer CalcAuth(key kID){
         if(llListFindList(g_lTrust,[sID])!=-1)return CMD_TRUSTED;
         if(g_kTempOwner == kID) return CMD_TRUSTED;
         if(kID==g_kWearer)return CMD_WEARER;
-        if(in_range(kID)){
-            if(g_kGroup!=""){
+        if(in_range(kID) && iVerbose){
+            if(g_kGroup!=NULL_KEY){
                 if(llSameGroup(kID))return CMD_GROUP;
             }
         
             if(g_iPublic)return CMD_EVERYONE;
-        } else {
-            llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% because you are out of range", kID);
+        } else if(!in_range(kID) && !iVerbose){
+            if(g_iPublic)return CMD_EVERYONE;
+        }else{
+            if(iVerbose)
+                llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% because you are out of range", kID);
         }
     }
         
@@ -164,6 +167,11 @@ PrintAccess(key kID){
     }
     sFinal+="\n";
     if(llGetListLength(g_lOwner)==0 || llListFindList(g_lOwner, [(string)g_kWearer])!=-1)sFinal+="\n* Wearer is unowned or owns themselves.\nThe wearer has owner access";
+    
+    sFinal += "\nPublic: "+tf(g_iPublic);
+    if(g_kGroup != NULL_KEY) sFinal+="\nGroup: secondlife:///app/group/"+(string)g_kGroup+"/about";
+    
+    if(!g_iRunaway)sFinal += "\n\n* RUNAWAY IS DISABLED *";
     llMessageLinked(LINK_SET,NOTIFY, "0"+sFinal,kID);
     //llSay(0, sFinal);
 }
@@ -197,7 +205,7 @@ RunawayMenu(key kID, integer iAuth){
         Dialog(kID, sPrompt, lButtons, [], 0, iAuth, "RunawayMenu");
     } else {
         llMessageLinked(LINK_SET,NOTIFY,"0%NOACCESS% to runaway, or the runaway settings menu", kID);
-        llMessageLinked(LINK_SET,iAuth,"menu Access", kID);
+        //llMessageLinked(LINK_SET,iAuth,"menu Access", kID);
     }
 }
 
@@ -422,10 +430,10 @@ key g_kAddonPending;
 string g_sAddonName;
 //integer g_iInterfaceChannel;
 //integer g_iLMCounter=0;
-//string tf(integer a){
-//    if(a)return "true";
-//    return "false";
-//}
+string tf(integer a){
+    if(a)return "true";
+    return "false";
+}
 
 SayToAddon(string pkt, integer iNum, string sStr, key kID){
     llRegionSay(API_CHANNEL, llList2Json(JSON_OBJECT, ["addon_name", "OpenCollar", "pkt_type", pkt, "iNum", iNum, "sMsg", sStr, "kID", kID]));
@@ -558,7 +566,7 @@ state active
                     // first- Check if a pairing was done with this addon, if not ask the user for confirmation, add it to Addons, and then move on
                     
                     if(llListFindList(g_lAddons, [i])==-1 && llGetOwnerKey(i)!=g_kWearer){
-                        integer AddonOwnerAuth = CalcAuth(llGetOwnerKey(i));
+                        integer AddonOwnerAuth = CalcAuth(llGetOwnerKey(i),FALSE);
                         if(AddonOwnerAuth == CMD_OWNER || AddonOwnerAuth == CMD_TRUSTED){
                             
                             g_lAddons += [i, llJsonGetValue(m,["addon_name"]), llGetUnixTime(), llJsonGetValue(m,["optin"])];
@@ -690,11 +698,11 @@ state active
         //if(iNum>=CMD_OWNER && iNum <= CMD_NOACCESS) llOwnerSay(llDumpList2String([iSender, iNum, sStr, kID], " ^ "));
         if(iNum == CMD_ZERO){
             if(sStr == "initialize")return;
-            integer iAuth = CalcAuth(kID);
+            integer iAuth = CalcAuth(kID, TRUE);
             //llOwnerSay( "{API} Calculate auth for "+(string)kID+"="+(string)iAuth+";"+sStr);
             llMessageLinked(LINK_SET, iAuth, sStr, kID);
         } else if(iNum == AUTH_REQUEST){
-            integer iAuth = CalcAuth(kID);
+            integer iAuth = CalcAuth(kID, TRUE);
             //llOwnerSay("{API} Calculate auth for "+(string)kID+"="+(string)iAuth+";"+sStr);
             llMessageLinked(LINK_SET, AUTH_REPLY, "AuthReply|"+(string)kID+"|"+(string)iAuth,sStr);
         } else if(iNum >= CMD_OWNER && iNum <= CMD_NOACCESS) UserCommand(iNum, sStr, kID);
@@ -725,7 +733,7 @@ state active
                     if(sVal == (string)NULL_KEY)sVal="";
                     g_kGroup = (key)sVal;
                     
-                    if(g_kGroup!="")
+                    if(g_kGroup!=NULL_KEY)
                         llOwnerSay("@setgroup:"+(string)g_kGroup+"=force,setgroup=n");
                     else llOwnerSay("@setgroup=y");
                 } else if(sVar == "limitrange"){
@@ -770,7 +778,7 @@ state active
                 } else if(sVar == "public"){
                     g_iPublic=FALSE;
                 } else if(sVar == "group"){
-                    g_kGroup = "";
+                    g_kGroup = NULL_KEY;
                     llOwnerSay("@setgroup=y");
                 } else if(sVar == "limitrange"){
                     g_iLimitRange = TRUE;
@@ -887,16 +895,18 @@ state active
                         return;
                     } else if(sMsg == "Yes"){
                         // trigger runaway
-                        g_iRunawayMode=2;
-                        llMessageLinked(LINK_SET, NOTIFY_OWNERS, "%WEARERNAME% has runaway.", "");
-                        llMessageLinked(LINK_SET, CMD_OWNER, "runaway", g_kWearer);
-                        llMessageLinked(LINK_SET, CMD_SAFEWORD, "safeword", "");
-                        llMessageLinked(LINK_SET, CMD_OWNER, "clear", g_kWearer);
+                        if((iAuth == CMD_WEARER || iAuth == CMD_OWNER ) && g_iRunaway){
+                            g_iRunawayMode=2;
+                            llMessageLinked(LINK_SET, NOTIFY_OWNERS, "%WEARERNAME% has runaway.", "");
+                            llMessageLinked(LINK_SET, CMD_OWNER, "runaway", g_kWearer);
+                            llMessageLinked(LINK_SET, CMD_SAFEWORD, "safeword", "");
+                            llMessageLinked(LINK_SET, CMD_OWNER, "clear", g_kWearer);
+                        }
                     }
                 }
             }
         } else if(iNum == RLV_REFRESH){
-            if(g_kGroup=="")llOwnerSay("@setgroup=y");
+            if(g_kGroup==NULL_KEY)llOwnerSay("@setgroup=y");
             else llOwnerSay("@setgroup:"+(string)g_kGroup+"=force;setgroup=n");
         } else if(iNum == -99999){
             if(sStr == "update_active")llResetScript();

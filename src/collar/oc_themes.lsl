@@ -267,7 +267,7 @@ PrintCurrentProperties(key kID){
         E(kID, "name = "+llList2String(lParams,4));
         integer ix=0;
         for(ix=0;ix<sides;ix++){
-            list lProperties = llGetLinkPrimitiveParams(i, [PRIM_COLOR, ix, PRIM_TEXTURE, ix, PRIM_GLOW, ix, PRIM_NORMAL,ix, PRIM_SPECULAR, ix, PRIM_FULLBRIGHT, ix]);
+            list lProperties = llGetLinkPrimitiveParams(i, [PRIM_COLOR, ix, PRIM_TEXTURE, ix, PRIM_GLOW, ix, PRIM_NORMAL,ix, PRIM_SPECULAR, ix, PRIM_FULLBRIGHT, ix, PRIM_BUMP_SHINY, ix]);
             E(kID, "!"+(string)ix+": color = "+llList2String(lProperties,0));
             E(kID, "!"+(string)ix+": alpha = "+llList2String(lProperties,1));
             E(kID, "!"+(string)ix+": texture = "+llList2String(lProperties,2));
@@ -287,7 +287,8 @@ PrintCurrentProperties(key kID){
             E(kID, "!"+(string)ix+": specular_glossiness = "+llList2String(lProperties,16));
             E(kID, "!"+(string)ix+": specular_environment = "+llList2String(lProperties,17));
             E(kID, "!"+(string)ix+": fullbright = "+llList2String(lProperties,18));
-            
+            E(kID, "!"+(string)ix+": shiny = "+llList2String(lProperties,19));
+            E(kID, "!"+(string)ix+": bump = "+llList2String(lProperties,20));
         }
         
     }
@@ -435,6 +436,10 @@ state active
                                     g_sTmp = llJsonSetValue(g_sTmp, ["specular_environment"], llList2String(lProp,3));
                                 } else if(llList2String(lProp,2) == "fullbright"){
                                     lParam += [PRIM_FULLBRIGHT, iFace, (integer)llList2String(lProp,3)];
+                                } else if(llList2String(lProp,2) == "shiny"){
+                                    g_sTmp = llJsonSetValue(g_sTmp, ["shiny"], llList2String(lProp,3));
+                                } else if(llList2String(lProp,2) == "bump"){
+                                    g_sTmp = llJsonSetValue(g_sTmp, ["bump"], llList2String(lProp,3));
                                 }
                                 //if(g_sTmp!="")
                                 //    llSay(0, "Applier Json: "+g_sTmp);
@@ -471,6 +476,12 @@ state active
                                     g_sTmp = llJsonSetValue(g_sTmp, ["specular_glossiness"], JSON_DELETE);
                                     g_sTmp = llJsonSetValue(g_sTmp, ["specular_environment"], JSON_DELETE);
                                     
+                                }
+                                
+                                if(llJsonValueType(g_sTmp,["shiny"])!=JSON_INVALID && llJsonValueType(g_sTmp,["bump"])!=JSON_INVALID){
+                                    lParam += [PRIM_BUMP_SHINY, iFace, (integer)llJsonGetValue(g_sTmp, ["shiny"]), (integer)llJsonGetValue(g_sTmp,["bump"])];
+                                    g_sTmp = llJsonSetValue(g_sTmp,["shiny"],JSON_DELETE);
+                                    g_sTmp = llJsonSetValue(g_sTmp,["bump"],JSON_DELETE);
                                 }
                             } else {
                                 // Prim parameter

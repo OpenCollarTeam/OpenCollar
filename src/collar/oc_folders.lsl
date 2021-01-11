@@ -160,6 +160,13 @@ Browser(key kID, integer iAuth, string sPath){
     llResetTime();
     llSetTimerEvent(1);
 }
+integer g_iFindChn;
+integer g_iFindLstn = -1;
+integer g_iCmdMode = 0;
+integer F_REMOVE = 1;
+integer F_RECURSIVE = 2;
+integer F_ADD = 4;
+integer F_WEAR = 8;
 
 
 UserCommand(integer iNum, string sStr, key kID) {
@@ -185,14 +192,25 @@ UserCommand(integer iNum, string sStr, key kID) {
         if(iNum == CMD_EVERYONE && !Bool((g_iAccessBitSet&2)))return R(); 
         if(iNum == CMD_GROUP && !Bool((g_iAccessBitSet&4)))return R(); 
         if(iNum == CMD_WEARER && !Bool((g_iAccessBitSet&8)))return R();
+        if(g_iFindLstn != -1)llListenRemove(g_iFindLstn);
+        
+        g_iFindChn = llRound(llFrand(99999999));
+        g_iFindLstn =llListen(g_iFindChn, "", llGetOwner(), "");
+        
         if(sChangetype == "--"){
-            llOwnerSay("@detachall:"+sChangevalue+"=force");
+            //llOwnerSay("@detachall:"+sChangevalue+"=force");
+            g_iCmdMode=F_REMOVE | F_RECURSIVE;
+            llOwnerSay("@findfolder:"+sChangevalue+"="+(string)g_iFindChn);
             return;
         } else if(sChangetype == "&&"){
-            llOwnerSay("@attachallover:"+sChangevalue+"=force");
+            g_iCmdMode = F_ADD | F_RECURSIVE;
+            //llOwnerSay("@attachallover:"+sChangevalue+"=force");
+            llOwnerSay("@findfolder:"+sChangevalue+"="+(string)g_iFindChn);
             return;
         } else if(sChangetype == "++"){
-            llOwnerSay("@attachall:"+sChangevalue+"=force");
+            g_iCmdMode = F_ADD;
+            //llOwnerSay("@attachall:"+sChangevalue+"=force");
+            llOwnerSay("@findfolder:"+sChangevalue+"="+(string)g_iFindChn);
             return;
         }
         sChangetype = llGetSubString(sStr,0,0);
@@ -200,12 +218,23 @@ UserCommand(integer iNum, string sStr, key kID) {
              
         if(sChangetype == "&"){
             // add folder path
-            llOwnerSay("@attachover:"+sChangevalue+"=force");
+            //llOwnerSay("@attachover:"+sChangevalue+"=force");
+            g_iCmdMode = F_ADD;
+            llOwnerSay("@findfolder:"+sChangevalue+"="+(string)g_iFindChn);
+            return;
         } else if(sChangetype == "-"){
-            llOwnerSay("@detach:"+sChangevalue+"=force");
+            //llOwnerSay("@detach:"+sChangevalue+"=force");
+            g_iCmdMode = F_REMOVE;
+            llOwnerSay("@findfolder:"+sChangevalue+"="+(string)g_iFindChn);
+            return;
         } else if(sChangetype == "+"){
-            llOwnerSay("@attach:"+sChangevalue+"=force");
+            //llOwnerSay("@attach:"+sChangevalue+"=force");
+            g_iCmdMode=F_WEAR;
+            llOwnerSay("@findfolder:"+sChangevalue+"="+(string)g_iFindChn);
+            return;
         }
+        llListenRemove(g_iFindLstn);
+        g_iFindLstn = -1;
     }
 }
 
@@ -326,6 +355,28 @@ state active
             }
             
             Dialog(g_kMenuUser, sPrompt, lButtons, ["+ Add Items", "- Rem Items", setor((g_sPath == ""), UPMENU, "^ UP")], 0, g_iMenuUser, "FolderBrowser~");
+        } else if(iChan == g_iFindChn)
+        {
+            if(g_iCmdMode & F_RECURSIVE){
+                if(g_iCmdMode & F_ADD){
+                    llOwnerSay("@attachallover:"+sMsg+"=force");
+                } else if(g_iCmdMode & F_WEAR){
+                    llOwnerSay("@attachall:"+sMsg+"=force");
+                }else if(g_iCmdMode & F_REMOVE){
+                    llOwnerSay("@detachall:"+sMsg+"=force");
+                }
+            } else {
+                if(g_iCmdMode & F_ADD){
+                    llOwnerSay("@attachover:"+sMsg+"=force");
+                }else if(g_iCmdMode & F_WEAR){
+                    llOwnerSay("@attach:"+sMsg+"=force");
+                }else if(g_iCmdMode & F_REMOVE){
+                    llOwnerSay("@detach:"+sMsg+"=force");
+                }
+            }
+
+            llListenRemove(g_iFindLstn);
+            g_iFindLstn=-1;
         }
     }
     
