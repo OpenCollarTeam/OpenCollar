@@ -10,6 +10,7 @@ Aria (Tashia Redrose)
     * Jan 2020      - Added BrowseCore, and added in chat commands for Outfits
     * Apr 2020      - Added chat commands, and a link message API to wear/remove
     * Dec 2020      - Fix up change commands to be more obvious
+    * Jan 2021      - Fix browse core to have a remove button
 Felkami (Caraway Ohmai)
     * Jan 2021      - #461, Made menu call case insensitive
 Lillith (Lillith Xue)
@@ -25,7 +26,7 @@ https://github.com/OpenCollarTeam/OpenCollar
 
 string g_sParentMenu = "Apps";
 string g_sSubMenu = "Outfits";
-string g_sAppVersion = "1.5";
+string g_sAppVersion = "1.6";
 //string g_sScriptVersion = "8.0";
 
 
@@ -113,8 +114,12 @@ integer g_iListenToAuth;
 
 DoBrowserPath(list Options, key kListenTo, integer iAuth){
     string sAppend;
-    if(llSubStringIndex(g_sPath, ".core")!=-1)sAppend="\n\n* You are browsing .core! This will change which items in your core folder are actively worn. This will work similarly to #Folders, to remove other core items, you will need to go to that folder and select >RemoveAll<, it will not be automatic here!";
-    Dialog(kListenTo, "[Outfit Browser]\n \nLast outfit worn: "+g_sLastOutfit+"\n \n* You are currently browsing: "+g_sPath+"\n \n*Note: >Wear< will wear the current outfit, removing any other worn outfit, Naked will remove all worn outfits. Aside from .core", Options, [">Wear<", ">Naked<", UPMENU, "^"], 0, iAuth, "Browser");
+    list lAppend = [];
+    if(llSubStringIndex(g_sPath, ".core")!=-1){
+        sAppend="\n\n* You are browsing .core! This will change which items in your core folder are actively worn. This will work similarly to #Folders, to remove other core items, you will need to go to that folder and select >RemoveAll<, it will not be automatic here!";
+        lAppend = [">REMOVE<"];
+    }
+    Dialog(kListenTo, "[Outfit Browser]\n \nLast outfit worn: "+g_sLastOutfit+"\n \n* You are currently browsing: "+g_sPath+"\n \n*Note: >Wear< will wear the current outfit, removing any other worn outfit, Naked will remove all worn outfits. Aside from .core", Options, [">Wear<", ">Naked<", UPMENU, "^"]+lAppend, 0, iAuth, "Browser");
 }
 
 
@@ -443,6 +448,11 @@ state active
                         UserCommand(iAuth, "wear "+g_sPath, kAv);
                     } else if(sMsg == ">Naked<"){
                         UserCommand(iAuth, "naked", kAv);
+                    } else if(sMsg == ">REMOVE<"){
+                        llOwnerSay("@detachallthis:.outfits/.core=y");
+                        llSleep(1);
+                        llOwnerSay("@detachall:"+g_sPath+"=force");
+                        ForceLockCore();
                     } else if(sMsg == "^"){
                         // go up a path
                         list edit = llParseString2List(g_sPath,["/"],[]);
