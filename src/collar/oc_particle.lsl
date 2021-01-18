@@ -56,12 +56,12 @@ string UPMENU       = "BACK";
 string PARENTMENU   = "Leash";
 string SUBMENU      = "Configure";
 string L_COLOR      = "color";
-string L_GRAVITY    = "gravity";
-string L_SIZE       = "size";
+string L_GRAVITY    = "Gravity";
+string L_SIZE       = "Size";
 string L_FEEL       = "feel";
-string L_GLOW       = "shine";
-string L_STRICT     = "strict";
-string L_TURN       = "turn";
+string L_GLOW       = "Shine";
+string L_STRICT     = "Strict";
+string L_TURN       = "Turn";
 string L_DEFAULTS   = "RESET";
 string L_CLASSIC_TEX= "Chain"; //texture name when using the classic particle stream
 string L_RIBBON_TEX = "Silk"; //texture name when using the ribbon_mask particle stream
@@ -656,10 +656,6 @@ state active
             string sValue = llGetSubString(sMessage, i + 1, -1);
             
             
-            //integer ind = llListFindList(g_lSettingsReqs, [sToken]);
-            //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
-            
-            
             i = llSubStringIndex(sToken, "_");
             if (sToken == "leash_leashedto") {
                 g_iLeashActive=TRUE;
@@ -694,16 +690,6 @@ state active
             // in case wearer is currently leashed
             else if (sMessage == "settings=sent" || sMessage == "theme particle sent")
                 GetSettings(TRUE);
-            
-        }else if(iNum == LM_SETTING_EMPTY){
-            
-            //integer ind = llListFindList(g_lSettingsReqs, [sMessage]);
-            //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
-            
-        } else if(iNum == LM_SETTING_DELETE){
-            
-            //integer ind = llListFindList(g_lSettingsReqs, [sMessage]);
-            //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
             
         } else if (iNum == REBOOT && sMessage == "reboot") llResetScript();
        /* else if (iNum == LM_SETTING_DELETE) {

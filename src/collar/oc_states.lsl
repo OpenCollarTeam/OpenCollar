@@ -201,7 +201,7 @@ default
                 llResetTime();
                 //llSay(0, "PASS COUNT: "+(string)g_iPasses);
                 g_iPasses++;
-            } else if(llGetTime()>=15.0 && g_iPasses>=3){
+            } else if(llGetTime()>=7.5 && g_iPasses>=3){
                 llOwnerSay("Scripts ready: "+(string)llGetListLength(g_lAlive));
                 llMessageLinked(LINK_SET,STARTUP,llDumpList2String(g_lAlive,","),"");
                 g_iExpectAlive=0;
@@ -320,7 +320,7 @@ default
                     }
                     if(sMsg == "intern" || sMsg == "auth"){
                         llMessageLinked(LINK_SET, NOTIFY, "0Editing of the "+sMsg+" token is prohibited by the security policy", kAv);
-                        SettingsMenu(1, kAv, iAuth);
+                        SettingsMenu(0, kAv, iAuth);
                     } else {
                         g_sTokenView=sMsg;
                         SettingsMenu(1, kAv,iAuth);
@@ -405,9 +405,13 @@ default
         }else if(iNum == -99999){
             if(sStr == "update_active")state inUpdate;
         } else if(iNum == ALIVE){
-            llResetTime();
             g_iExpectAlive=1;
-            if(llListFindList(g_lAlive,[sStr])==-1)g_lAlive+=[sStr];
+            llResetTime();
+            llSetTimerEvent(1);
+            if(llListFindList(g_lAlive,[sStr])==-1){
+                g_iPasses=0;
+                g_lAlive+=[sStr];
+            }
         }
     }
 }
