@@ -1,4 +1,5 @@
 /*
+oc_outfits.RLV
 This file is a part of OpenCollar.
 Copyright ©2020
 
@@ -8,6 +9,10 @@ Aria (Tashia Redrose)
     * Dec 2019      - Rewrote Capture & Reset Script Version to 1.0
     * Jan 2020      - Added BrowseCore, and added in chat commands for Outfits
     * Apr 2020      - Added chat commands, and a link message API to wear/remove
+    * Dec 2020      - Fix up change commands to be more obvious
+    * Jan 2021      - Fix browse core to have a remove button
+Felkami (Caraway Ohmai)
+    * Jan 2021      - #461, Made menu call case insensitive
 Lillith (Lillith Xue)
     * Dec 2019      - Fixed bug: Outfits not working for non-wearer as menu user due to listen typo
 
@@ -21,8 +26,8 @@ https://github.com/OpenCollarTeam/OpenCollar
 
 string g_sParentMenu = "Apps";
 string g_sSubMenu = "Outfits";
-string g_sAppVersion = "1.4";
-string g_sScriptVersion = "8.0";
+string g_sAppVersion = "1.6";
+//string g_sScriptVersion = "8.0";
 
 
 //MESSAGE MAP
@@ -32,9 +37,9 @@ integer CMD_TRUSTED = 501;
 integer CMD_GROUP = 502;
 integer CMD_WEARER = 503;
 integer CMD_EVERYONE = 504;
-integer CMD_RLV_RELAY = 507;
+//integer CMD_RLV_RELAY = 507;
 //integer CMD_SAFEWORD = 510;
-integer CMD_RELAY_SAFEWORD = 511;
+//integer CMD_RELAY_SAFEWORD = 511;
 
 integer NOTIFY = 1002;
 string g_sLastOutfit;
@@ -45,26 +50,26 @@ integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have s
 integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
 integer LM_SETTING_RESPONSE = 2002;//the settings script sends responses on this channel
 integer LM_SETTING_DELETE = 2003;//delete token from settings
-integer LM_SETTING_EMPTY = 2004;//sent when a token has no value
+//integer LM_SETTING_EMPTY = 2004;//sent when a token has no value
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
-integer MENUNAME_REMOVE = 3003;
+//integer MENUNAME_REMOVE = 3003;
 
 integer OUTFITS_ADD = -999901;
 integer OUTFITS_REM = -999902;
 
-integer RLV_CMD = 6000;
-integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
+//integer RLV_CMD = 6000;
+//integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
 
-integer RLV_OFF = 6100; // send to inform plugins that RLV is disabled now, no message or key needed
-integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no message or key needed
+//integer RLV_OFF = 6100; // send to inform plugins that RLV is disabled now, no message or key needed
+//integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no message or key needed
 
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 string UPMENU = "BACK";
-string ALL = "ALL";
+//string ALL = "ALL";
 
 integer bool(integer a){
     if(a)return TRUE;
@@ -87,7 +92,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 }
 
 Menu(key kID, integer iAuth) {
-    string sPrompt = "\n[Outfits App "+g_sAppVersion+"]";
+    string sPrompt = "\n[Outfits App "+g_sAppVersion+"]\n\nChat Commands: \n-> wear <path>\n-> naked";
     list lButtons = [TickBox(g_iLockCore, "Lock Core"), "◌ Configure", "Browse", "BrowseCore", "Help" ];
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "Menu~Main");
 }
@@ -109,8 +114,12 @@ integer g_iListenToAuth;
 
 DoBrowserPath(list Options, key kListenTo, integer iAuth){
     string sAppend;
-    if(llSubStringIndex(g_sPath, "core")!=-1)sAppend="\n\n* You are browsing core! This will change which items in yourcore folder are actively worn. This will work similarly to #Folders, to remove othercore items, you will need to go to that folder and select >RemoveAll<, it will not be automatic here!";
-    Dialog(kListenTo, "[Outfit Browser]\n \nLast outfit worn: "+g_sLastOutfit+"\n \n* You are currently browsing: "+g_sPath+"\n \n*Note: >Wear< will wear the current outfit, removing any other worn outfit, Naked will remove all worn outfits. Aside from core", Options, [">Wear<", ">Naked<", UPMENU, "^"], 0, iAuth, "Browser");
+    list lAppend = [];
+    if(llSubStringIndex(g_sPath, ".core")!=-1){
+        sAppend="\n\n* You are browsing core! This will change which items in your core folder are actively worn. This will work similarly to #Folders, to remove other core items, you will need to go to that folder and select >RemoveAll<, it will not be automatic here!";
+        lAppend = [">REMOVE<"];
+    }
+    Dialog(kListenTo, "[Outfit Browser]\n \nLast outfit worn: "+g_sLastOutfit+"\n \n* You are currently browsing: "+g_sPath+"\n \n*Note: >Wear< will wear the current outfit, removing any other worn outfit, Naked will remove all worn outfits. Aside from core", Options, [">Wear<", ">Naked<", UPMENU, "^"]+lAppend, 0, iAuth, "Browser");
 }
 
 
@@ -162,32 +171,58 @@ ConfigMenu(key kID, integer iAuth){
     string sJail = TrueOrFalse(iJail);
     string sStripAll = TrueOrFalse(iStripAll);
     
-    Dialog(kID, "\n[Outfits App "+g_sAppVersion+"]\n \nConfigure Access\n * Owner: ALWAYS\n * Trusted: "+sTrusted+"\n * Public: "+sPublic+"\n * Group: "+sGroup+"\n * Wearer: "+sWearer+"\n * Jail: "+sJail+"\n * Strip All (even not in outfits): "+sStripAll+"\n \n** WARNING: If you disable the jail, then outfits WILL be able to browse your entire #RLV folder, not just under #RLV/outfits", [TickBox(iTrusted, "Trusted"), TickBox(iPublic, "Public") ,TickBox(iGroup, "Group"), TickBox(iWearer, "Wearer"), TickBox(iJail, "Jail"), TickBox(iStripAll, "Strip All")], [UPMENU], 0, iAuth, "Menu~Configure");
+    Dialog(kID, "\n[Outfits App "+g_sAppVersion+"]\n \nConfigure Access\n * Owner: ALWAYS\n * Trusted: "+sTrusted+"\n * Public: "+sPublic+"\n * Group: "+sGroup+"\n * Wearer: "+sWearer+"\n * Jail: "+sJail+"\n * Strip All (even not in .outfits): "+sStripAll+"\n \n** WARNING: If you disable the jail, then outfits WILL be able to browse your entire #RLV folder, not just under #RLV/outfits", [TickBox(iTrusted, "Trusted"), TickBox(iPublic, "Public") ,TickBox(iGroup, "Group"), TickBox(iWearer, "Wearer"), TickBox(iJail, "Jail"), TickBox(iStripAll, "Strip All")], [UPMENU], 0, iAuth, "Menu~Configure");
+}
+
+
+/*  Guard method. Tests if the user is authorized
+    
+    Return:
+        FALSE == Allow access
+        1 == Deny
+        2 == Deny and notify
+*/
+integer AuthDenied(integer iNum) {
+    integer deny = FALSE;
+    
+    if(iNum == 599) deny = 1;//No Access
+    // Verify access rights now
+    if(iNum > CMD_EVERYONE) deny = 1;
+    if(iNum == CMD_TRUSTED && !Bool((g_iAccessBitSet&1))) deny = 2; 
+    if(iNum == CMD_EVERYONE && !Bool((g_iAccessBitSet&2))) deny = 2; 
+    if(iNum == CMD_GROUP && !Bool((g_iAccessBitSet&4))) deny = 2; 
+    if(iNum == CMD_WEARER && !Bool((g_iAccessBitSet&8))) deny = 2; 
+    if (iNum<CMD_OWNER || iNum>CMD_EVERYONE) deny = 1;
+    
+    return deny;
 }
 
 UserCommand(integer iNum, string sStr, key kID) {
-    if(iNum == 599)return;//No Access
-    // Verify access rights now
-    if(iNum > CMD_EVERYONE)return;
-    if(iNum == CMD_TRUSTED && !Bool((g_iAccessBitSet&1)))return; 
-    if(iNum == CMD_EVERYONE && !Bool((g_iAccessBitSet&2)))return; 
-    if(iNum == CMD_GROUP && !Bool((g_iAccessBitSet&4)))return; 
-    if(iNum == CMD_WEARER && !Bool((g_iAccessBitSet&8)))return; 
-    if (iNum<CMD_OWNER || iNum>CMD_EVERYONE) return;
+
+    integer deny = AuthDenied(iNum);
+    if(deny == 2) {
+        //We have to validate against known commands for Outfits, or else we'll pop denied errors every time a public user sneezes
+        string sChangetype = llToLower(llList2String(llParseString2List(sStr, [" "], []),0));
+        
+        if(sStr==g_sSubMenu || llToLower(sStr) == "menu "+ llToLower(g_sSubMenu) || sChangetype == "wear" || sChangetype == "naked")
+            llMessageLinked(LINK_SET,NOTIFY, "0%NOACCESS% to outifts", kID);
+    }
+    if(deny) return;
+    
     //if (llSubStringIndex(sStr,llToLower(g_sSubMenu)) && sStr != "menu "+g_sSubMenu) return;
     if (iNum == CMD_OWNER && sStr == "runaway") {
         g_lOwner = g_lTrust = g_lBlock = [];
         return;
     }
-    if (sStr==g_sSubMenu || sStr == "menu "+g_sSubMenu) Menu(kID, iNum);
+    if (sStr==g_sSubMenu || llToLower(sStr) == "menu "+ llToLower(g_sSubMenu)) Menu(kID, iNum);
     //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else {
-        integer iWSuccess = 0; 
+        //integer iWSuccess = 0; 
         list Params=llParseString2List(sStr, [" "], []);
         
-        string sChangetype = llList2String(Params,0);
+        string sChangetype = llToLower(llList2String(Params,0));
         string sChangevalue = llDumpList2String(llList2List(Params,1,-1)," ");
-        string sText;
+        //string sText;
         
         if(sChangetype == "wear" || sChangetype == "naked"){
             if(g_sPath!=sChangevalue){
@@ -211,13 +246,13 @@ UserCommand(integer iNum, string sStr, key kID) {
                 llOwnerSay("@remoutfit=force");
             }
             llSleep(2); // incase of lag
-            if (g_sPath == "outfits/" || g_sPath == "outfits/.") g_sLastOutfit = "NONE";
+            if (g_sPath == "outfits/" || g_sPath == "outfits/core") g_sLastOutfit = "NONE";
             else g_sLastOutfit=g_sPath;
         
             RmCorelock();
             llSleep(1);
         }
-        if(sChangetype == "wear"){
+        if(sChangetype == "wear"){ //This looks like dead code TODO: Verify for removal?
             if (g_sPath != "" && g_sPath != ".") llOwnerSay("@attachallover:"+g_sPath+"=force");
         }
     }
@@ -234,9 +269,9 @@ integer g_iAccessBitSet=25; // Default modes for outfits
 integer g_iJail;
 Commit(){
     if(g_iLockCore)
-        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "outfits_loccore="+(string)g_iLockCore, "");
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "outfits_lockcore="+(string)g_iLockCore, "");
     else
-        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "outfits_loccore","");
+        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "outfits_lockcore","");
 
     if(g_iAccessBitSet>0)
         llMessageLinked(LINK_SET, LM_SETTING_SAVE, "outfits_accessflags="+(string)g_iAccessBitSet,"");
@@ -267,14 +302,46 @@ RmCorelock(){
     llOwnerSay("@detachallthis:outfits/core=y");
 }
 
+integer ALIVE = -55;
+integer READY = -56;
+integer STARTUP = -57;
 default
 {
+    on_rez(integer iNum){
+        llResetScript();
+    }
+    state_entry(){
+        llMessageLinked(LINK_SET, ALIVE, llGetScriptName(),"");
+        llListen(999988, "", llGetOwner(), "");
+        llOwnerSay("@version=999988");
+    }
+    listen(integer iChan, string sName, key kID, string sMsg)
+    {
+        if(llSubStringIndex(sMsg, "RLVa")!=-1){
+            llOwnerSay("You are using RLVa. The RLV variant of the outfit app is now uninstalled");
+            llRemoveInventory(llGetScriptName());
+        }
+    }
+    link_message(integer iSender, integer iNum, string sStr, key kID){
+        if(iNum == REBOOT){
+            if(sStr == "reboot"){
+                llResetScript();
+            }
+        } else if(iNum == READY){
+            llMessageLinked(LINK_SET, ALIVE, llGetScriptName(), "");
+        } else if(iNum == STARTUP){
+            state active;
+        }
+    }
+}
+state active
+{
     on_rez(integer t){
-        if(llGetOwner()!=g_kWearer) llResetScript();
+        llResetScript();
     }
     state_entry()
     {
-        if(llGetStartParameter()!=0)state inUpdate;
+        if(llGetStartParameter()!=0)llResetScript();
         g_kWearer = llGetOwner();
         llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "global_locked","");
     }
@@ -283,17 +350,31 @@ default
         else if(iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu+"|"+ g_sSubMenu,"");
         else if(iNum == -99999){
-            if(sStr=="update_active")state inUpdate;
+            if(sStr=="update_active")llResetScript();
+        
+        }else if (iNum == DIALOG_TIMEOUT) {
+            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
+            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
         }
         else if(iNum == DIALOG_RESPONSE){
+        
+            list lMenuParams = llParseString2List(sStr, ["|"],[]);
+            integer iAuth = llList2Integer(lMenuParams,3);
+            
+            if(AuthDenied(iAuth)) {
+                //Test to see if this is a denied auth. If we're here and its denied, we respring. A CMD_* call is already sent out which will produce the NOTIFY
+                if(llSubStringIndex(sStr, g_sSubMenu) != -1)
+                    llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, llGetSubString(sStr, 0, 35));
+            }
+            
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if(iMenuIndex!=-1){
                 string sMenu = llList2String(g_lMenuIDs, iMenuIndex+1);
                 g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
-                list lMenuParams = llParseString2List(sStr, ["|"],[]);
+                //list lMenuParams = llParseString2List(sStr, ["|"],[]);
                 key kAv = llList2Key(lMenuParams,0);
                 string sMsg = llList2String(lMenuParams,1);
-                integer iAuth = llList2Integer(lMenuParams,3);
+                //integer iAuth = llList2Integer(lMenuParams,3);
                 
                 integer iRespring=TRUE;
                 
@@ -323,7 +404,7 @@ default
                         CoreBrowser(kAv, iAuth);
                         iRespring=FALSE;
                     } else if(sMsg == "Help"){
-                        llMessageLinked(LINK_SET,NOTIFY, "0 \n \n[Outfits Help]\n* This is the typical structure of a Outfits folder: \n#RLV\n-> outfits\n---> core\n-> My Outfit\n \nAnything placed in core will never be removed during a outfit change using this script. If you enable 'Lock Core' then yourcore folder will stay locked for any changes made outside of this script, (for example:  your relay)", kAv);
+                        llMessageLinked(LINK_SET,NOTIFY, "0 \n \n[Outfits Help]\n* This is the typical structure of a Outfits folder: \n#RLV\n-> outfits\n---> core\n-> My Outfit\n \nAnything placed in .core will never be removed during a outfit change using this script. If you enable 'Lock Core' then your core folder will stay locked for any changes made outside of this script, (for example:  your relay)", kAv);
                     }
                     if(iRespring)Menu(kAv,iAuth);
                 } else if(sMenu == "Menu~Configure"){
@@ -361,7 +442,7 @@ default
                     // Process commands!
                     
                     ForceLockCore(); // unlocks/relocks - compatible with the Lock Core option. 
-                    // The above is a workaround for a viewer bug where any newly added items to core will not be protected.
+                    // The above is a workaround for a viewer bug where any newly added items to .core will not be protected.
                     if(!g_iLocked){
                         llOwnerSay("@detach=n");
                     }
@@ -376,6 +457,11 @@ default
                         UserCommand(iAuth, "wear "+g_sPath, kAv);
                     } else if(sMsg == ">Naked<"){
                         UserCommand(iAuth, "naked", kAv);
+                    } else if(sMsg == ">REMOVE<"){
+                        llOwnerSay("@detachallthis:outfits/core=y");
+                        llSleep(1);
+                        llOwnerSay("@detachall:"+g_sPath+"=force");
+                        ForceLockCore();
                     } else if(sMsg == "^"){
                         // go up a path
                         list edit = llParseString2List(g_sPath,["/"],[]);
@@ -398,7 +484,7 @@ default
         } else if(iNum == OUTFITS_ADD){
             UserCommand(CMD_OWNER, "wear "+sStr, kID);
         } else if(iNum == OUTFITS_REM){
-            UserCommand(CMD_OWNER, "rem "+sStr, kID);
+            UserCommand(CMD_OWNER, "naked", kID);
         } else if(iNum == LM_SETTING_RESPONSE){
             // Detect here the Settings
             list lSettings = llParseString2List(sStr, ["_","="],[]);
@@ -409,7 +495,7 @@ default
                     g_lCheckboxes = llCSV2List(llList2String(lSettings,2));
                 }
             } else if(llList2String(lSettings,0) == "outfits"){
-                if(llList2String(lSettings,1) == "loccore"){
+                if(llList2String(lSettings,1) == "lockcore"){
                     g_iLockCore=llList2Integer(lSettings,2);
                 } else if(llList2String(lSettings,1) == "accessflags"){
                     //llSay(0, "ACCESS FLAGS: "+llList2String(lSettings,2));
@@ -422,7 +508,7 @@ default
             list lSettings = llParseString2List(sStr, ["_"],[]);
             if(llList2String(lSettings,0)=="global")
                 if(llList2String(lSettings,1) == "locked") g_iLocked=FALSE;
-        }
+        } else if(iNum == REBOOT)llResetScript();
     }
     
     timer(){
@@ -465,10 +551,4 @@ default
             
     }
             
-}
-
-state inUpdate{
-    link_message(integer iSender, integer iNum, string sMsg, key kID){
-        if(iNum == REBOOT)llResetScript();
-    }
 }

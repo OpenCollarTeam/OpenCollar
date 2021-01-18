@@ -312,6 +312,15 @@ default
     }
     state_entry(){
         llMessageLinked(LINK_SET, ALIVE, llGetScriptName(),"");
+        llListen(999988, "", llGetOwner(), "");
+        llOwnerSay("@version=999988");
+    }
+    listen(integer iChan, string sName, key kID, string sMsg)
+    {
+        if(llSubStringIndex(sMsg, "RLVa")==-1){
+            llOwnerSay("You are not using RLVa. The RLVa variant of the outfits app has now been uninstalled.");
+            llRemoveInventory(llGetScriptName());
+        }
     }
     link_message(integer iSender, integer iNum, string sStr, key kID){
         if(iNum == REBOOT){
