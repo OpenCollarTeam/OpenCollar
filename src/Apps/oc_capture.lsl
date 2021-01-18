@@ -28,8 +28,8 @@ string Checkbox(integer iValue, string sLabel) {
 }
 
 
-string g_sScriptVersion = "7.4";
-string g_sAppVersion = "1.0";
+string g_sScriptVersion = "8.0";
+string g_sAppVersion = "1.1";
 
 DebugOutput(key kDest, list lParams){
     llInstantMessage(kDest, llGetScriptName()+": "+llDumpList2String(lParams," "));
@@ -110,7 +110,7 @@ WearerConsent(string SLURL){
 StartCapture(key kID, integer iAuth) // This is a dialog prompt on the cmd no access
 {
     if(!g_iEnabled)return;
-    if(iAuth == CMD_NOACCESS)return;
+    if(iAuth == CMD_BLOCKED)return;
     
     Dialog(kID,  "\n[Capture]\n \nDo you want to capture secondlife:///app/agent/"+(string)g_kWearer+"/about?", ["YES", "NO"], [], 0, iAuth, "StartPrompt");
 }
@@ -260,7 +260,7 @@ Commit(){
     
     llMessageLinked(LINK_SET, LM_SETTING_SAVE, "capture_status="+(string)StatusFlags,"");
     if(g_iCaptured){
-        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_tempowner="+(string)g_kCaptor,"");
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_tempowner="+(string)g_kCaptor,"origin");
         llMessageLinked(LINK_SET, LM_SETTING_SAVE, "capture_isActive=1", ""); // <--- REMOVE AFTER NEXT RELEASE. This is here only for 7.3 compatibility
         if (g_iAutoRelease) {
             g_iReleaseTime = 0;
@@ -269,7 +269,7 @@ Commit(){
     }else{
         if (g_kExpireFor == NULL_KEY) llSetTimerEvent(0);
         llMessageLinked(LINK_SET, CMD_OWNER, "unleash", g_kCaptor);
-        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_tempowner", "");
+        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_tempowner", "origin");
         llMessageLinked(LINK_SET, LM_SETTING_DELETE, "capture_isActive", ""); // <------ REMOVE AFTER NEXT RELEASE
     }
 }
