@@ -471,6 +471,9 @@ integer g_iWearerAddonLimited=TRUE;
 string g_sPendingAddonOptin;
 integer g_iWearerAddons=TRUE;
 integer g_iInterfaceChannel;
+
+
+integer g_iStartup=TRUE;
 default
 {
     on_rez(integer iNum){
@@ -778,6 +781,23 @@ state active
                 } else if(sVar == "addons"){
                     g_iAddons = (integer)sVal;
                     DoListeners();
+                }
+            }
+            
+            if(sStr=="settings=sent"){
+                if(g_iStartup){
+                    g_iStartup=0;
+                    
+                    integer x=0;
+                    integer x_end = llGetListLength(g_lOwner);
+                    list lMsg = [];
+                    for(x=0;x<x_end;x++){
+                        key owner = (key)llList2String(g_lOwner,x);
+                        if(owner==g_kWearer)lMsg += "Yourself";
+                        else lMsg += ["secondlife:///app/agent/"+(string)owner+"/about"];
+                    }
+                    
+                    llMessageLinked(LINK_SET, NOTIFY, "0You are owned by: "+llDumpList2String(lMsg,", "), g_kWearer);
                 }
             }
         } else if(iNum == LM_SETTING_DELETE){
