@@ -87,7 +87,7 @@ string g_sLockSound="dec9fb53-0fef-29ae-a21d-b3047525d312";
 string g_sUnlockSound="82fa6d06-b494-f97c-2908-84009380c8d1";
 
 key g_kWeldBy;
-list g_lMainMenu=["Apps", "Addons", "Access", "Settings", "Help/About"];
+list g_lMainMenu=["Apps", "Access", "Settings", "Help/About"];
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
     key kMenuID = llGenerateKey();
@@ -210,7 +210,7 @@ UserCommand(integer iNum, string sStr, key kID) {
         //string sText;
         
         if(sChangetype=="fix"){
-            g_lMainMenu=["Apps", "Addons", "Access", "Settings", "Help/About"];
+            g_lMainMenu=["Apps", "Access", "Settings", "Help/About"];
             llMessageLinked(LINK_SET,NOTIFY, "0Fixed menus", kID);
             llMessageLinked(LINK_SET,0,"initialize","");
         } else if(sChangetype == "update"){
