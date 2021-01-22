@@ -30,6 +30,7 @@ integer g_iAmNewer=FALSE;
 integer g_iChannel=1;
 string g_sPrefix;
 
+
 integer g_iNotifyInfo=FALSE;
 
 string MajorMinor(){
@@ -166,7 +167,7 @@ HelpMenu(key kID, integer iAuth){
     EXTRA_VER_TXT += setor(bool((llGetSubString(COLLAR_VERSION,-2,-2)=="0")), "", " (BETA "+llGetSubString(COLLAR_VERSION,-2,-2)+") ");
     EXTRA_VER_TXT += setor(bool((llGetSubString(COLLAR_VERSION,-3,-3) == "0")), "", " (RC "+llGetSubString(COLLAR_VERSION,-3,-3)+") ");
     
-    string sPrompt = "\nOpenCollar "+COLLAR_VERSION+" "+EXTRA_VER_TXT+"\nVersion: "+setor(g_iAmNewer, "(Newer than release)", "")+" "+setor(UPDATE_AVAILABLE, "(Update Available)", "(Most current version)");
+    string sPrompt = "\nOpenCollar "+COLLAR_VERSION+" "+EXTRA_VER_TXT+"\nVersion: "+setor(g_iAmNewer, "(Newer than release)", "")+" "+setor(UPDATE_AVAILABLE, "(Update Available)", "(Most Current Version)");
     sPrompt += "\n\nDocumentation https://opencollar.cc";
     sPrompt += "\nPrefix: "+g_sPrefix+"\nChannel: "+(string)g_iChannel;
     
@@ -432,6 +433,7 @@ state active
     state_entry()
     {
         g_kWearer = llGetOwner();
+        g_sPrefix = llToLower(llGetSubString(llKey2Name(llGetOwner()),0,1));
         
         llMessageLinked(LINK_SET, 0, "initialize", llGetKey());
         
@@ -852,6 +854,7 @@ state active
         } else if(kRequest == g_kCheckDev){
             if(iStatus==200){
                 Compare(COLLAR_VERSION, sBody);
+                g_iAmNewer=TRUE;
             } else llOwnerSay("Could not check the latest development version. The file might not exist or github is not working");
         }
     }
