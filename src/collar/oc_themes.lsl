@@ -246,15 +246,25 @@ list g_lOwner;
 list g_lTrust;
 list g_lBlock;
 integer g_iLocked=FALSE;
+string sBuffer = "";
 E(key kID, string sMsg){
-    llMessageLinked(LINK_SET,NOTIFY,"0"+sMsg,kID);
-    llSleep(0.05);
+    sBuffer += "\n"+sMsg;
+    if(llStringLength(sBuffer)>=700){
+        llMessageLinked(LINK_SET,NOTIFY,"0"+sBuffer,kID);
+        llSleep(0.05);
+        sBuffer = "";
+    }
+}
+EFlush(key kID){
+    llMessageLinked(LINK_SET,NOTIFY,"0"+sBuffer,kID);
+    sBuffer="";
 }
 PrintCurrentProperties(key kID){
     // Output the current properties using the theme notecard format
     E(kID, "Simply paste the content to follow into a notecard with a name you want, for example: for a theme to be named Test, (ex. Test.theme)");
     integer i=LINK_ROOT;
     integer end = llGetNumberOfPrims();
+    
     for(i=1;i<=end;i++){
         E(kID, "["+(string)i+"/"+(string)llGetLinkName(i)+"/0]");
         E(kID, "#If you set the 0 at the end of the brackets above to a 1, then it will require that the prim's number (beginning of line), and the prims name (middle part) match. Otherwise if this is a zero, as it is by default, then the prim will only go off the prim number.");
@@ -270,6 +280,8 @@ PrintCurrentProperties(key kID){
             list lProperties = llGetLinkPrimitiveParams(i, [PRIM_COLOR, ix, PRIM_TEXTURE, ix, PRIM_GLOW, ix, PRIM_NORMAL,ix, PRIM_SPECULAR, ix, PRIM_FULLBRIGHT, ix, PRIM_BUMP_SHINY, ix]);
             E(kID, "!"+(string)ix+": color = "+llList2String(lProperties,0));
             E(kID, "!"+(string)ix+": alpha = "+llList2String(lProperties,1));
+            E(kID, "!"+(string)ix+": shiny = "+llList2String(lProperties,19));
+            E(kID, "!"+(string)ix+": bump = "+llList2String(lProperties,20));
             E(kID, "!"+(string)ix+": texture = "+llList2String(lProperties,2));
             E(kID, "!"+(string)ix+": texture_repeat = "+llList2String(lProperties,3));
             E(kID, "!"+(string)ix+": texture_offset = "+llList2String(lProperties,4));
@@ -287,13 +299,13 @@ PrintCurrentProperties(key kID){
             E(kID, "!"+(string)ix+": specular_glossiness = "+llList2String(lProperties,16));
             E(kID, "!"+(string)ix+": specular_environment = "+llList2String(lProperties,17));
             E(kID, "!"+(string)ix+": fullbright = "+llList2String(lProperties,18));
-            E(kID, "!"+(string)ix+": shiny = "+llList2String(lProperties,19));
-            E(kID, "!"+(string)ix+": bump = "+llList2String(lProperties,20));
         }
         
     }
     
-    E(kID, "NOTE: Only include the parameters you actually NEED for your theme to apply to prevent hitting the notecard line/text limit!");
+    E(kID, "#NOTE: Only include the parameters you actually NEED for your theme to apply to prevent hitting the notecard line/text limit!");
+
+    EFlush(kID);
 }
 
 integer ALIVE = -55;

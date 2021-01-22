@@ -147,7 +147,8 @@ PrintAll(key kID, string sExtra){
     integer i=0;
     integer end = llGetListLength(g_lSettings);
     llMessageLinked(LINK_SET, NOTIFY, "0OpenCollar Settings: ",kID);
-    llMessageLinked(LINK_SET, NOTIFY, "0settings=nocomma~1", kID);
+    //llMessageLinked(LINK_SET, NOTIFY, "0settings=nocomma~1", kID);
+    string sBuffer = "settings=nocomma~1";
     for(i=0;i<end;i+=2){
         list lTmp = llParseStringKeepNulls(llList2String(g_lSettings,i),["_"],[]);
         string sTok = llList2String(lTmp,0);
@@ -176,19 +177,30 @@ PrintAll(key kID, string sExtra){
                         iStart=FALSE;
                         sSym="=";
                     } else sSym="+";
-                    llMessageLinked(LINK_SET, NOTIFY, "0"+sTok+sSym+sVar+"~"+sDat, kID);
+                    sBuffer += "\n"+sTok+sSym+sVar+"~"+sDat;
+                    //llMessageLinked(LINK_SET, NOTIFY, "0"+sTok+sSym+sVar+"~"+sDat, kID);
                 } else {
                     if(iStart)
-                        llMessageLinked(LINK_SET, NOTIFY, "0"+sTok+"="+sVar+"~"+sVal, kID);
+                        sBuffer += "\n"+sTok+"="+sVar+"~"+sVal;
+                        //llMessageLinked(LINK_SET, NOTIFY, "0"+sTok+"="+sVar+"~"+sVal, kID);
                     else
-                        llMessageLinked(LINK_SET, NOTIFY, "0"+sTok+"+"+sVar+"~"+sVal,kID);
+                        sBuffer += "\n"+sTok+"+"+sVar+"~"+sVal;
+                        //llMessageLinked(LINK_SET, NOTIFY, "0"+sTok+"+"+sVar+"~"+sVal,kID);
                     iStart=FALSE;
                     sVal="";
                 }
+                if(llStringLength(sBuffer)>=700){
+                    llMessageLinked(LINK_SET, NOTIFY, "0"+sBuffer, kID);
+                    sBuffer="";
+                }
             }
+            
+            //if(llStringLength(sBuffer)>=700)llMessageLinked(LINK_SET, NOTIFY, "0"+sBuffer, kID);
                     
         }
     }
+    
+    if(llStringLength(sBuffer)>0)llMessageLinked(LINK_SET, NOTIFY, "0"+sBuffer, kID);
 }
 
 integer g_iCurrentIndex =0;

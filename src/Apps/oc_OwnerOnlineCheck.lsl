@@ -264,6 +264,7 @@ state active
                 } else if(sMenu == "Menu~Interval"){
                     g_iInterval=(integer)sMsg;
                     llSetTimerEvent(g_iEnable);
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "ownerchecks_interval="+(string)g_iInterval, "");
                     Menu(kAv,iAuth);
                 }
             }
@@ -291,6 +292,7 @@ state active
             } else if(sToken == "ownerchecks"){
                 if(sVar == "enable"){
                     g_iEnable=(integer)sVal;
+                    llSetTimerEvent(g_iEnable);
                 } else if(sVar == "interval"){
                     g_iInterval = (integer)sVal;
                 } else if(sVar == "typechat"){
