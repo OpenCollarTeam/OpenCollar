@@ -207,7 +207,7 @@ ApplyRestrictions() {
         if (g_iStrictModeOn) {
             if (g_kLeashedTo) {
                 //Debug("Setting restrictions");
-                llSay(0, "RLV_CMD issue: no fly, notp");
+                //llSay(0, "RLV_CMD issue: no fly, notp");
                 llMessageLinked(LINK_SET, RLV_CMD, "fly=n,tplm=n,tplure=n,tploc=n,tplure:" + (string) g_kLeashedTo + "=add,fartouch=n,sittp=n", "realleash");     //set all restrictions
                 return;
                 

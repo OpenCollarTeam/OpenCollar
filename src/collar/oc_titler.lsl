@@ -98,8 +98,8 @@ Menu(key kID, integer iAuth) {
 
 ColorMenu(key kAv, integer iAuth){
     string sPrompt = "\n[Titler]\nColor selection";
-    list lButtons = ["White", "Green", "Yellow", "Cyan", "Blue", "Pink", "Orange"];
-    Dialog(kAv, sPrompt, lButtons, [UPMENU, "Custom"], 0, iAuth, "Menu~Colors");
+    //list lButtons = ["White", "Green", "Yellow", "Cyan", "Blue", "Pink", "Orange"];
+    Dialog(kAv, sPrompt, ["colormenu please"], [UPMENU, "Custom"], 0, iAuth, "Menu~Colors");
 }
 
 
@@ -338,26 +338,14 @@ state active
                     
                     if(iRespring)Menu(kAv,iAuth);
                 } else if(sMenu == "Menu~Colors"){
-                    if(sMsg == "White"){
-                        g_vColor = <1,1,1>;
-                    } else if(sMsg == "Green"){
-                        g_vColor = <0,1,0>;
-                    } else if(sMsg == UPMENU){
+                    if(sMsg == UPMENU){
                         Menu(kAv, iAuth);
                         iRespring=FALSE;
-                    } else if(sMsg == "Yellow"){
-                        g_vColor = <1,1,0>;
-                    } else if(sMsg == "Cyan"){
-                        g_vColor = <0,1,1>;
-                    } else if(sMsg == "Blue"){
-                        g_vColor = <0,0,1>;
-                    } else if(sMsg == "Pink"){
-                        g_vColor = <1,0,1>;
-                    } else if(sMsg == "Orange"){
-                        g_vColor = <1,0.5,0>;
                     } else if(sMsg == "Custom"){
-                        Dialog(kAv, "What color?", ["colormenu please"], [], 0, iAuth, "Textbox~Color");
+                        Dialog(kAv, "[Titler Custom Color]", [], [], 0, iAuth, "Textbox~Color");
                         iRespring=FALSE;
+                    } else  {
+                        g_vColor = (vector)sMsg;
                     }
                     
                     if(iRespring)ColorMenu(kAv,iAuth);

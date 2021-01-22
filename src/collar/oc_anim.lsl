@@ -104,11 +104,17 @@ list g_lCheckboxes=["▢", "▣"];
 string Checkbox(integer iValue, string sLabel) {
     return llList2String(g_lCheckboxes, bool(iValue))+" "+sLabel;
 }
-
+integer g_iPosture = FALSE;
 
 Menu(key kID, integer iAuth) {
     string sPrompt = "\n[Animations]\n\nCurrent Animation: "+setor((g_lCurrentAnimations==[]), "None", llList2String(g_lCurrentAnimations, 0)+"\nCurrent Pose: "+setor((g_sPose==""), "None", g_sPose));
     list lButtons = [Checkbox(g_iAnimLock,"AnimLock"), "Pose"];
+    
+    if(llGetInventoryType("~stiff")==INVENTORY_ANIMATION){
+        lButtons += [Checkbox(g_iPosture, "Posture")];
+    }else {
+        sPrompt += "\n\n* Posture is only available if you have the ~stiff animation in inventory of the collar";
+    }
     Dialog(kID, sPrompt, lButtons+g_lAdditionalButtons, [UPMENU], 0, iAuth, "Menu~Animations");
 }
 
@@ -162,7 +168,7 @@ UserCommand(integer iNum, string sStr, key kID) {
         string sChangetype = llList2String(lTmp,0);
         string sChangevalue = llList2String(lTmp,1);
         integer iPageNum = llList2Integer(lTmp,2);
-        
+        integer iRespringPoses=FALSE;
         
         if(llSubStringIndex(sStr,"remenu") != -1){
             integer len = llGetListLength(lTmp);
@@ -170,6 +176,8 @@ UserCommand(integer iNum, string sStr, key kID) {
             sChangetype = llDumpList2String(llList2List(lTmp, 0,len), " ");
             sChangevalue = llList2String(lTmp, len+1);
             iPageNum = llList2Integer(lTmp, len+2);
+            
+            //llSay(0, "anim remenu: "+sStr+";;;; "+sChangetype+";"+sChangevalue+";"+(string)iPageNum);
         }
         //string sText;
         //llOwnerSay("usercommand: "+sStr+"; "+sChangetype+"; "+sChangevalue);
@@ -185,6 +193,7 @@ UserCommand(integer iNum, string sStr, key kID) {
             g_sPose = llGetInventoryName(INVENTORY_ANIMATION,index);
             StartAnimation(g_sPose);
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, "anim_pose="+llList2String(g_lCurrentAnimations, 0),"");
+            iRespringPoses=TRUE;
         } else if(llToLower(sChangetype) == "stop" || llToLower(sChangetype)=="release"){
             if(g_iAnimLock && kID == g_kWearer){
                 llMessageLinked(LINK_SET,NOTIFY,"0%NOACCESS% to stopping animation", g_kWearer);
@@ -195,11 +204,13 @@ UserCommand(integer iNum, string sStr, key kID) {
                 g_sPose = "";
             }
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, "anim_pose","");
+            iRespringPoses=TRUE;
         } else if(sChangetype == UP_ARROW || sChangetype == "up" || sChangetype == DOWN_ARROW || sChangetype == "down"){
             // adjust current pose
             //llOwnerSay(" up or down");
             //sChangevalue="remenu";
             integer iUp= FALSE;
+            iRespringPoses=TRUE;
             if(sChangetype == UP_ARROW || sChangetype == "up")iUp=TRUE;
             if(g_lCurrentAnimations == []){
                 // adjust standing
@@ -264,10 +275,21 @@ UserCommand(integer iNum, string sStr, key kID) {
             PoseMenu(kID, iNum,0);
         } else if(llToLower(sChangetype) == "menu" && llToLower(sChangevalue) == "pose"){
             PoseMenu(kID, iNum,0);
+        } else if(llToLower(sChangetype) == "posture"){
+            if(iNum == CMD_OWNER){
+                if(sChangevalue=="off"){
+                    llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "anim_posture=0", "");
+                    llMessageLinked(LINK_SET, LM_SETTING_DELETE, "anim_posture", "");
+                }else if(sChangevalue=="on"){
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "anim_posture=1", "");
+                }
+            } else llMessageLinked(LINK_SET,NOTIFY,"0%NOACCESS% to toggling posture", kID);
+            
         }
         
         @checkRemenu;
-        if(sChangevalue == "remenu" && (llGetInventoryType(sChangetype)==INVENTORY_ANIMATION))PoseMenu(kID,iNum, iPageNum);
+        if(sChangevalue == "remenu" && iRespringPoses)PoseMenu(kID,iNum, iPageNum);
+        //else if(sChangevalue == "remenu" && !iRespringPoses)Menu(kID, iNum);
 
     }
 }
@@ -386,6 +408,17 @@ integer g_iLeashMove=FALSE;
 integer ALIVE = -55;
 integer READY = -56;
 integer STARTUP = -57;
+
+
+RunPosture(){
+    if(g_iPosture){
+        if(llGetInventoryType("~stiff")==INVENTORY_ANIMATION)
+            llStartAnimation("~stiff");
+    }else {
+        if(llGetInventoryType("~stiff")==INVENTORY_ANIMATION)
+            llStopAnimation("~stiff");
+    }
+}
 default
 {
     on_rez(integer iNum){
@@ -531,6 +564,18 @@ state active
                     else if(sMsg == "Pose"){
                         PoseMenu(kAv,iAuth, 0);
                         iRespring=FALSE;
+                    } else if(sMsg == Checkbox(g_iPosture,"Posture")){
+                        if(iAuth == CMD_OWNER){
+                            if(g_iPosture){
+                                g_iPosture=0;
+                                llMessageLinked(LINK_SET, 0, "posture off",kAv);
+                            }
+                            else {
+                                g_iPosture=1;
+                                llMessageLinked(LINK_SET, 0, "posture on",kAv);
+                            }
+                        }
+                        
                     }else {
                         iRespring=FALSE;
                         llMessageLinked(LINK_SET, iAuth, "menu "+sMsg,kAv);
@@ -556,11 +601,6 @@ state active
         } else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
-        }else if(iNum == LM_SETTING_EMPTY){
-            
-            //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
-            //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
-            
         } else if(iNum == LM_SETTING_RESPONSE){
             // Detect here the Settings
             list lSettings = llParseString2List(sStr, ["_","="],[]);
@@ -584,6 +624,9 @@ state active
                     StartAnimation(sVal);
                 } else if(sVar == "animlock"){
                     g_iAnimLock = (integer)sVal; // <-- used incase its set in .settings to false for some reason
+                } else if(sVar == "posture"){
+                    g_iPosture=(integer)sVal;
+                    RunPosture();
                 }
             } else if(sTok == "offset"){
                 if(sVar == "hovers"){
@@ -613,6 +656,10 @@ state active
                         g_sPose = "";
                     }
                 } else if(sVar == "animlock")g_iAnimLock=FALSE;
+                else if(sVar == "posture"){
+                    g_iPosture=FALSE;
+                    RunPosture();
+                }
             } else if(sTok == "offset"){
                 if(sVar == "hovers"){
                     g_lAdjustments=[];

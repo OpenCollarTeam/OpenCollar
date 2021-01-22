@@ -115,8 +115,8 @@ integer g_iListenToAuth;
 DoBrowserPath(list Options, key kListenTo, integer iAuth){
     string sAppend;
     list lAppend = [];
-    if(llSubStringIndex(g_sPath, ".core")!=-1){
-        sAppend="\n\n* You are browsing .core! This will change which items in your core folder are actively worn. This will work similarly to #Folders, to remove other core items, you will need to go to that folder and select >RemoveAll<, it will not be automatic here!";
+    if(llSubStringIndex(g_sPath, GetFolderName(TRUE))!=-1){
+        sAppend="\n\n* You are browsing "+GetFolderName(TRUE)+"! This will change which items in your core folder are actively worn. This will work similarly to #Folders, to remove other core items, you will need to go to that folder and select >Remove<, it will not be automatic here!";
         lAppend = [">REMOVE<"];
     }
     Dialog(kListenTo, "[Outfit Browser]\n \nLast outfit worn: "+g_sLastOutfit+"\n \n* You are currently browsing: "+g_sPath+"\n \n*Note: >Wear< will wear the current outfit, removing any other worn outfit, Naked will remove all worn outfits. Aside from .core", Options, [">Wear<", ">Naked<", UPMENU, "^"]+lAppend, 0, iAuth, "Browser");
@@ -132,7 +132,7 @@ integer TimedOut(){
 }
 
 FolderBrowser (key kID, integer iAuth){
-    g_sPath = ".outfits";
+    g_sPath = GetOutfitSystem(FALSE);
     g_kListenTo = kID;
     g_iListenToAuth=iAuth;
     g_iListenChannel = llRound(llFrand(99999999));
@@ -145,7 +145,7 @@ FolderBrowser (key kID, integer iAuth){
 }
 
 CoreBrowser(key kID, integer iAuth){
-    g_sPath = ".outfits/.core";
+    g_sPath = GetOutfitSystem(TRUE);
     g_kListenTo = kID;
     g_iListenToAuth = iAuth;
     g_iListenChannel = llRound(llFrand(9999999));
@@ -226,7 +226,7 @@ UserCommand(integer iNum, string sStr, key kID) {
         
         if(sChangetype == "wear" || sChangetype == "naked"){
             if(g_sPath!=sChangevalue){
-                g_sPath=".outfits/"+sChangevalue;
+                g_sPath=GetFolderName(FALSE)+"/"+sChangevalue;
                 g_iListenTimeout=0;
             }
             
@@ -238,15 +238,17 @@ UserCommand(integer iNum, string sStr, key kID) {
             TickBrowser();
             llSetTimerEvent(1);
             if(!Bool((g_iAccessBitSet&32))){
-                if(llSubStringIndex(g_sPath, ".core")==-1)
-                    llOwnerSay("@detachall:.outfits=force");
+                if(llSubStringIndex(g_sPath, GetFolderName(TRUE))==-1)
+                    llOwnerSay("@detachall:"+GetFolderName(FALSE)+"=force");
             }
             else{
                 llOwnerSay("@detach=force");
                 llOwnerSay("@remoutfit=force");
             }
             llSleep(2); // incase of lag
-            if (g_sPath == ".outfits/" || g_sPath == ".outfits/.") g_sLastOutfit = "NONE";
+            string sAppend;
+            if(g_iRLVa)sAppend=RLVA_APPEND;
+            if (g_sPath == GetOutfitSystem(FALSE)+"/" || g_sPath == GetOutfitSystem(FALSE)+"/"+sAppend) g_sLastOutfit = "NONE";
             else g_sLastOutfit=g_sPath;
         
             RmCorelock();
@@ -284,27 +286,53 @@ Commit(){
 Process(){
     g_iJail = Bool((g_iAccessBitSet&16));
     if(g_iLockCore){
-        llOwnerSay("@detachallthis:.outfits/.core=n");
+        llOwnerSay("@detachallthis:"+GetOutfitSystem(TRUE)+"=n");
     }
     else{
-        llOwnerSay("@detachallthis:.outfits/.core=y");
+        llOwnerSay("@detachallthis:"+GetOutfitSystem(TRUE)+"=y");
     }
 }
 
 ForceLockCore(){
-    llOwnerSay("@detachallthis:.outfits/.core=y");
+    llOwnerSay("@detachallthis:"+GetOutfitSystem(TRUE)+"=y");
     llSleep(1);
-    llOwnerSay("@detachallthis:.outfits/.core=n");
+    llOwnerSay("@detachallthis:"+GetOutfitSystem(TRUE)+"=n");
     llSleep(0.5);
 }
 
 RmCorelock(){
-    llOwnerSay("@detachallthis:.outfits/.core=y");
+    llOwnerSay("@detachallthis:"+GetOutfitSystem(TRUE)+"=y");
 }
 
 integer ALIVE = -55;
 integer READY = -56;
 integer STARTUP = -57;
+
+integer g_iRLVa = 0;
+
+string RLVA_APPEND=".";
+
+string GetOutfitSystem(integer iCorePath){
+    if(g_iRLVa){
+        if(iCorePath)return ".outfits/.core";
+        else return ".outfits";
+    }else{
+        if(iCorePath)return "outfits/core";
+        else return "outfits";
+    }
+}
+
+string GetFolderName(integer iCore){
+    if(g_iRLVa){
+        if(iCore)return ".core";
+        else return ".outfits";
+    }else{
+        if(iCore)return "core";
+        else return "outfits";
+    }
+}
+
+
 default
 {
     on_rez(integer iNum){
@@ -318,9 +346,8 @@ default
     listen(integer iChan, string sName, key kID, string sMsg)
     {
         if(llSubStringIndex(sMsg, "RLVa")==-1){
-            llOwnerSay("You are not using RLVa. The RLVa variant of the outfits app has now been uninstalled.");
-            llRemoveInventory(llGetScriptName());
-        }
+            g_iRLVa=FALSE;
+        }else g_iRLVa=TRUE;
     }
     link_message(integer iSender, integer iNum, string sStr, key kID){
         if(iNum == REBOOT){
@@ -404,7 +431,7 @@ state active
                         CoreBrowser(kAv, iAuth);
                         iRespring=FALSE;
                     } else if(sMsg == "Help"){
-                        llMessageLinked(LINK_SET,NOTIFY, "0 \n \n[Outfits Help]\n* This is the typical structure of a Outfits folder: \n#RLV\n-> .outfits\n---> .core\n-> My Outfit\n \nAnything placed in .core will never be removed during a outfit change using this script. If you enable 'Lock Core' then your core folder will stay locked for any changes made outside of this script, (for example:  your relay)", kAv);
+                        llMessageLinked(LINK_SET,NOTIFY, "0 \n \n[Outfits Help]\n* This is the typical structure of a Outfits folder: \n#RLV\n-> "+GetFolderName(FALSE)+"\n---> "+GetFolderName(TRUE)+"\n-> My Outfit\n \nAnything placed in "+GetFolderName(TRUE)+" will never be removed during a outfit change using this script. If you enable 'Lock Core' then your core folder will stay locked for any changes made outside of this script, (for example:  your relay)", kAv);
                     }
                     if(iRespring)Menu(kAv,iAuth);
                 } else if(sMenu == "Menu~Configure"){
@@ -458,7 +485,7 @@ state active
                     } else if(sMsg == ">Naked<"){
                         UserCommand(iAuth, "naked", kAv);
                     } else if(sMsg == ">REMOVE<"){
-                        llOwnerSay("@detachallthis:.outfits/.core=y");
+                        llOwnerSay("@detachallthis:"+GetOutfitSystem(TRUE)+"=y");
                         llSleep(1);
                         llOwnerSay("@detachall:"+g_sPath+"=force");
                         ForceLockCore();
@@ -469,7 +496,7 @@ state active
                         if(llGetSubString(sEdit,-1,-1)=="/")sEdit = llGetSubString(sEdit,0,-2);
                         g_sPath=sEdit;
                         iRespring=FALSE;
-                        if(g_iJail && g_sPath == "")g_sPath = ".outfits";
+                        if(g_iJail && g_sPath == "")g_sPath = GetFolderName(FALSE);
                         llOwnerSay("@getinv:"+g_sPath+"="+(string)g_iListenChannel);
                     } else {
                         g_sPath+="/"+sMsg;
@@ -523,9 +550,9 @@ state active
             g_iListenChannel=0;
             g_iListenTimeout=-1;
             g_iListenToAuth=0;
-            if(!g_iLockCore)llOwnerSay("@detachallthis:.outfits/.core=y");
+            if(!g_iLockCore)llOwnerSay("@detachallthis:"+GetOutfitSystem(TRUE)+"=y");
             
-            g_sPath = ".outfits";
+            g_sPath = GetFolderName(FALSE);
             if(g_iLockCore)llSetTimerEvent(120);
             return;
         }
