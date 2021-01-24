@@ -64,7 +64,10 @@ SetStatus() {
 }
 
 
-
+list g_lChannels;
+list g_lListeners;
+list g_lItems;
+list g_lTypes;
 default
 {
     state_entry() {
@@ -122,6 +125,38 @@ default
     }
 
     listen(integer iChannel, string sName, key kID, string sMsg) {
+        integer iIndexChannels = llListFindList(g_lChannels, [iChannel]);
+        if(iIndexChannels != -1){
+            // -> //
+            integer iLstn = llList2Integer(g_lListeners,iIndexChannels);
+            string sItem = llList2String(g_lItems, iIndexChannels);
+            string sType = llList2String(g_lTypes, iIndexChannels);
+            g_lChannels = llDeleteSubList(g_lChannels, iIndexChannels, iIndexChannels);
+            g_lListeners = llDeleteSubList(g_lListeners, iIndexChannels, iIndexChannels);
+            g_lItems = llDeleteSubList(g_lItems, iIndexChannels, iIndexChannels);
+            g_lTypes = llDeleteSubList(g_lTypes, iIndexChannels, iIndexChannels);
+            
+            llListenRemove(iLstn);
+            if(sMsg == "Skip"){
+                g_iLine++;
+                g_kLineID = llGetNotecardLine(g_sCard, g_iLine);
+            } else if(sMsg == "Install"){
+                if (sType == "ITEM") {
+                    llGiveInventory(g_kRCPT, sItem);
+                } else if (sType == "SCRIPT") {
+                    llRemoteLoadScriptPin(g_kRCPT, sItem, g_iPin, TRUE, 1);
+                } else if (sType == "STOPPEDSCRIPT") {
+                    llRemoteLoadScriptPin(g_kRCPT, sItem, g_iPin, FALSE, 1);
+                }
+                g_iLine++;
+                g_kLineID = llGetNotecardLine(g_sCard, g_iLine);
+            } else if(sMsg == "Remove"){
+                llRegionSayTo(g_kRCPT, g_iTalkChannel, sType+"|"+sItem+"|"+(string)NULL_KEY+"|DEPRECATED");
+            }
+            
+            return;
+        }
+            
         // let's live on the edge and assume that we only ever listen with a uuid filter so we know it's safe
         // look for msgs in the form <type>|<name>|<cmd>
         list lParts = llParseString2List(sMsg, ["|"], []);
@@ -144,6 +179,24 @@ default
                 }
                 g_iLine++;
                 g_kLineID = llGetNotecardLine(g_sCard, g_iLine);
+            } else if(sCmd == "PROMPT_INSTALL"){
+                //Do prompt
+                g_lChannels += [llRound(llFrand(5437845))];
+                g_lListeners += [llListen(llList2Integer(g_lChannels, -1), "", llGetOwner(), "")];
+                g_lItems += [sItemName];
+                g_lTypes += [sType];
+                
+                
+                llDialog(llGetOwner(), "[OpenCollar Installer]\nCurrent Item: "+sItemName+"\n\n* Install\t\t- This optional item is not installed. If you wish to install, select this item\n* Skip\t\t- Skip and do not install this optional item", ["Install", "Skip"], llList2Integer(g_lChannels, -1));
+            } else if(sCmd == "PROMPT_REMOVE"){
+                
+                g_lChannels += [llRound(llFrand(5437845))];
+                g_lListeners += [llListen(llList2Integer(g_lChannels, -1), "", llGetOwner(), "")];
+                g_lItems += [sItemName];
+                g_lTypes += [sType];
+                
+                
+                llDialog(llGetOwner(), "[OpenCollar Installer]\nCurrent Item: "+sItemName+"\n\n* Remove\t\t- This optional item is currently installed. If you wish to uninstall, select this option\n* Skip\t\t- Skip and do not change this optional item", ["Remove", "Skip"], llList2Integer(g_lChannels, -1));
             }
         }
     }

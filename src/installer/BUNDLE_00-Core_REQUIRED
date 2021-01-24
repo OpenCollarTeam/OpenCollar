@@ -1,5 +1,8 @@
-SCRIPT|oc_com
-SCRIPT|oc_sys
+SCRIPT|oc_themes
 SCRIPT|oc_rlvextension
 SCRIPT|oc_rlvsuite
+SCRIPT|oc_addons
 SCRIPT|oc_states
+SCRIPT|oc_core
+SCRIPT|oc_auth
+SCRIPT|oc_api

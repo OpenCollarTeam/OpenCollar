@@ -97,7 +97,7 @@ ReadName() {
 }
 
 SetFloatText() {
-    llSetText(g_sObjectType+"\n\n "+g_sName+"\nBuild Version: "+g_sBuildVersion, <1,1,1>, 1.0);
+    llSetText(g_sObjectType+"\n\n "+g_sName/*+"\nBuild Version: "+g_sBuildVersion*/, <1,1,1>, 1.0);
 }
 
 Particles(key kTarget) {

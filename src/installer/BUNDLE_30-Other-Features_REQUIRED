@@ -8,9 +8,8 @@ SCRIPT|oc_detach
 SCRIPT|oc_outfits
 SCRIPT|oc_particle
 SCRIPT|oc_resizer
-SCRIPT|oc_themes
 SCRIPT|oc_relay
-ITEM|Turbo Safety RLV Relay
+SCRIPT|oc_undress
 ITEM|.license
 ITEM|OpenCollar_Help
 ITEM|s&p_leashholder

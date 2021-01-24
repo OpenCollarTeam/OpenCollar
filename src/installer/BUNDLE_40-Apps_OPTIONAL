@@ -1,4 +1,10 @@
 SCRIPT|oc_bookmarks
 SCRIPT|oc_capture
 SCRIPT|oc_presets
+SCRIPT|oc_OwnerOnlineCheck
+SCRIPT|oc_titler
 SCRIPT|oc_undress
+SCRIPT|oc_detach
+SCRIPT|oc_outfits
+SCRIPT|oc_bell
+SCRIPT|oc_folders

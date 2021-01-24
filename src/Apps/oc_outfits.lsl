@@ -204,7 +204,7 @@ UserCommand(integer iNum, string sStr, key kID) {
         //We have to validate against known commands for Outfits, or else we'll pop denied errors every time a public user sneezes
         string sChangetype = llToLower(llList2String(llParseString2List(sStr, [" "], []),0));
         
-        if(sStr==g_sSubMenu || llToLower(sStr) == "menu "+ llToLower(g_sSubMenu) || sChangetype == "wear" || sChangetype == "naked")
+        if(llToLower(sStr)==llToLower(g_sSubMenu) || llToLower(sStr) == "menu "+ llToLower(g_sSubMenu) || sChangetype == "wear" || sChangetype == "naked")
             llMessageLinked(LINK_SET,NOTIFY, "0%NOACCESS% to outifts", kID);
     }
     if(deny) return;
@@ -214,7 +214,7 @@ UserCommand(integer iNum, string sStr, key kID) {
         g_lOwner = g_lTrust = g_lBlock = [];
         return;
     }
-    if (sStr==g_sSubMenu || llToLower(sStr) == "menu "+ llToLower(g_sSubMenu)) Menu(kID, iNum);
+    if (llToLower(sStr)==llToLower(g_sSubMenu) || llToLower(sStr) == "menu "+ llToLower(g_sSubMenu)) Menu(kID, iNum);
     //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else {
         //integer iWSuccess = 0; 

@@ -5,7 +5,7 @@
 
 
 string g_sDevStage = "dev1";
-string g_sVersion = "2.0";
+string g_sVersion = "2.1";
 integer g_iUpdateAvailable;
 key g_kWebLookup;
 
@@ -505,12 +505,13 @@ PermsCheck() {
     }
 }
 
-
+integer API_CHANNEL;
 default {
     state_entry() {
         if (llGetInventoryType("oc_installer_sys")==INVENTORY_SCRIPT) return;
         g_kWearer = llGetOwner();
         PermsCheck();
+        API_CHANNEL = ((integer)("0x" + llGetSubString((string)llGetOwner(), 0, 8))) + 0xf6eb - 0xd2;
         g_iInterfaceChannel = -llAbs((integer)("0x" + llGetSubString(g_kWearer,30,-1)));
         llListen(g_iInterfaceChannel, "", "", "");
         g_iHUDChannel = -llAbs((integer)("0x"+llGetSubString((string)llGetOwner(),-7,-1)));
@@ -596,7 +597,13 @@ default {
             if (sMenuType == "AO") {
                 if (sMessage == "Cancel") return;
                 else if (sMessage == "-") MenuAO(kID);
-                else if (sMessage == "Collar Menu") llRegionSayTo(g_kWearer,g_iHUDChannel,(string)g_kWearer+":menu");
+                else if (sMessage == "Collar Menu"){
+                    llRegionSayTo(g_kWearer, API_CHANNEL, llList2Json(JSON_OBJECT, ["pkt_type", "online", "kID", g_kWearer, "addon_name", "OC_Sub_AO", "optin", ""]));
+                    llSleep(2);
+                    llRegionSayTo(g_kWearer, API_CHANNEL, llList2Json(JSON_OBJECT, ["pkt_type", "from_addon", "kID", g_kWearer, "iNum", 0, "sMsg", "menu", "addon_name", "OC_Sub_AO"]));
+                    llSleep(0.5);
+                    llRegionSayTo(g_kWearer, API_CHANNEL, llList2Json(JSON_OBJECT, ["pkt_type", "offline", "addon_name", "OC_Sub_AO", "kID", g_kWearer]));
+                }
                 else if (~llSubStringIndex(sMessage,"LOCK")) {
                     Command(kID,llToLower(sMessage));
                     MenuAO(kID);

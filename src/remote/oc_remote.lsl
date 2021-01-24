@@ -24,7 +24,43 @@ string BTN_TEXTURE = "da46036f-7f4d-59e5-3fcf-a43d692e3ea7";
 integer BTN_XS = 3;
 integer BTN_YS = 9;
 
+integer UPDATE_AVAILABLE=FALSE;
+integer g_iAmNewer=FALSE;
+string NEW_VERSION = "";
+string HUD_VERSION = "8.0.1000";
 
+key g_kUpdateCheck = NULL_KEY;
+DoCheckUpdate(){
+    g_kUpdateCheck = llHTTPRequest("https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/web/remote.txt",[],"");
+}
+
+Compare(string V1, string V2){
+    NEW_VERSION=V2;
+    
+    if(V1==V2){
+        UPDATE_AVAILABLE=FALSE;
+        return;
+    }
+    V1 = llDumpList2String(llParseString2List(V1, ["."],[]),"");
+    V2 = llDumpList2String(llParseString2List(V2, ["."],[]), "");
+    integer iV1 = (integer)V1;
+    integer iV2 = (integer)V2;
+    
+    if(iV1 < iV2){
+        UPDATE_AVAILABLE=TRUE;
+        g_iAmNewer=FALSE;
+    } else if(iV1 == iV2) return;
+    else if(iV1 > iV2){
+        UPDATE_AVAILABLE=FALSE;
+        g_iAmNewer=TRUE;
+        
+        llSetText("", <1,0,0>,1);
+    }
+}
+string MajorMinor(){
+    list lTmp = llParseString2List(HUD_VERSION,["."],[]);
+    return llList2String(lTmp,0)+"."+llList2String(lTmp,1);
+}
 integer g_iVertical = TRUE;  // can be vertical?
 integer g_iLayout = 1; // 0 - Horisontal, 1 - Vertical
 
@@ -483,12 +519,14 @@ default
         llOwnerSay("HUD is ready with "+(string)llGetFreeMemory()+"b free memory");
         g_lFavorites = [(string)llGetOwner()];
         llMessageLinked(LINK_SET,-10,"","");
+        DoCheckUpdate();
     }
     
     attach(key id){
         if(id!=NULL_KEY){
             Recalc();
             llOwnerSay("Ready");
+            DoCheckUpdate();
         }
     }
     
@@ -502,6 +540,7 @@ default
     on_rez(integer iRez){
         Recalc();
         llOwnerSay("Ready");
+        DoCheckUpdate();
     }
     
     no_sensor()
@@ -670,6 +709,19 @@ default
             }else {
                 g_kProfilePic=NULL_KEY;
                 llOwnerSay("Error when retrieving profile picture");
+            }
+        } else if(kReq == g_kUpdateCheck){
+            if(iStat==200){
+                Compare(HUD_VERSION, sBody);
+                if(g_iAmNewer){
+                    llOwnerSay("Your current remote version is newer than the release version");
+                }
+                
+                if(UPDATE_AVAILABLE){
+                    llOwnerSay("UPDATE AVAILABLE: A new remote update is available. Please obtain it from OpenCollar");
+                }
+            }else{
+                llOwnerSay("An error was detected while checking for an update. The server returned a invalid status code");
             }
         }
     }

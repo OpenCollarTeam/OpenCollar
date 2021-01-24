@@ -141,6 +141,7 @@ default {
 
     listen(integer iChannel, string sWho, key kID, string sMsg) {
         if (llGetOwnerKey(kID) != llGetOwner()) return;
+        //llSay(0, "FROM UPDATER: "+sMsg);
         
         list lParts = llParseString2List(sMsg, ["|"], []);
         if (llGetListLength(lParts) == 4) {
@@ -206,10 +207,10 @@ default {
             } else if  (sMode == "OPTIONAL") {
                 // only update if present but outdated.  skip if absent.
                 if (llGetInventoryType(sName) == INVENTORY_NONE) {
-                    sCmd = "SKIP";
+                    sCmd = "PROMPT_INSTALL";
                 } else {
                     if (llGetInventoryKey(sName) == kUUID && kUUID != NULL_KEY) {
-                        sCmd = "SKIP";
+                        sCmd = "PROMPT_REMOVE";
                     } else {
                         // we have it but it's the wrong version.  delete and get new one.
                         llRemoveInventory(sName);
