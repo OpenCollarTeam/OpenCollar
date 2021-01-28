@@ -216,6 +216,8 @@ default {
     }
 
     touch_start(integer iNumber) {
+        llWhisper(0, "Touching the updater to trigger an update is currently unsupported for 8.0! This will come back in a future update. In the meantime, please use the collar update command or the menu button inside Help/About to initiate update!");
+        return;
         if (llDetectedKey(0) != llGetOwner()) return;
         if (g_iDone) {
             g_iDone = FALSE;

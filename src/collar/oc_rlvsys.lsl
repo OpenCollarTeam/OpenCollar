@@ -348,7 +348,9 @@ default
         llResetScript();
     }
     state_entry(){
-        if(llGetStartParameter()!=0)state inUpdate;
+        if (llGetStartParameter()!=0) {
+            state inUpdate;
+        }
         llMessageLinked(LINK_SET, ALIVE, llGetScriptName(),"");
     }
     link_message(integer iSender, integer iNum, string sStr, key kID){
@@ -385,9 +387,6 @@ state active
     }
 
     state_entry() {
-        if (llGetStartParameter()!=0) {
-            llResetScript();
-        }
         //llSetMemoryLimit(65536);  //2015-05-16 (script needs memory for processing)
         setRlvState();
         //llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "on="+(string)g_iRLVOn, "");

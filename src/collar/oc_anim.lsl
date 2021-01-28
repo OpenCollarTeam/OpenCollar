@@ -425,6 +425,7 @@ default
         llResetScript();
     }
     state_entry(){
+        if(llGetStartParameter()!=0)state inUpdate;
         llMessageLinked(LINK_SET, ALIVE, llGetScriptName(),"");
     }
     link_message(integer iSender, integer iNum, string sStr, key kID){
@@ -447,7 +448,6 @@ state active
     state_entry()
     {
         g_kWearer = llGetOwner();
-        if(llGetStartParameter()!=0)state inUpdate;
 
         llRequestPermissions(g_kWearer, PERMISSION_OVERRIDE_ANIMATIONS | PERMISSION_TRIGGER_ANIMATION | PERMISSION_TAKE_CONTROLS);
     }

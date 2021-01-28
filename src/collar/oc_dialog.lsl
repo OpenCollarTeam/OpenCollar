@@ -467,6 +467,9 @@ default
         llResetScript();
     }
     state_entry(){
+        if (llGetStartParameter()!=0){
+            state inUpdate;
+        }
         llMessageLinked(LINK_SET, ALIVE, llGetScriptName(),"");
     }
     link_message(integer iSender, integer iNum, string sStr, key kID){
@@ -707,9 +710,6 @@ state active
 
     state_entry(){
         
-        if (llGetStartParameter()!=0){
-            state inUpdate;
-        }
         g_kWearer=llGetOwner();
         g_sPrefix = llToLower(llGetSubString(llKey2Name(llGetOwner()), 0,1));
         g_sWearerName = NameURI(g_kWearer);

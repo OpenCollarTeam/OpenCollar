@@ -456,7 +456,11 @@ default
     }
     state_entry()
     {
-
+        if(llGetLinkNumber()==LINK_ROOT || llGetLinkNumber()==0){}else{
+            // I didn't feel like doing a bunch of complex logic there, so we're just doing an else case. If we are not in the root prim, delete ourself
+            llOwnerSay("Moving oc_settings");
+            llRemoveInventory(llGetScriptName());
+        }
         g_kWearer = llGetOwner();
         
         FindLeashpointOrLock();
