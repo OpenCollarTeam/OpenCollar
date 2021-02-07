@@ -544,7 +544,7 @@ state active
             //llOwnerSay( "{API} Calculate auth for "+(string)kID+"="+(string)iAuth+";"+sStr);
             llMessageLinked(LINK_SET, iAuth, sStr, kID);
         } else if(iNum == AUTH_REQUEST){
-            integer iAuth = CalcAuth(kID, TRUE);
+            integer iAuth = CalcAuth(kID, FALSE);
             //llOwnerSay("{API} Calculate auth for "+(string)kID+"="+(string)iAuth+";"+sStr);
             llMessageLinked(LINK_SET, AUTH_REPLY, "AuthReply|"+(string)kID+"|"+(string)iAuth,sStr);
         } else if(iNum >= CMD_OWNER && iNum <= CMD_NOACCESS) UserCommand(iNum, sStr, kID);
