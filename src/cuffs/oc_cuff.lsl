@@ -7,7 +7,7 @@ Copyright ©2021
 : Contributors :
 
 Aria (Tashia Redrose)
-    * February 2021       -       Created oc_cuff
+    * February 2021       -       Created oc_cuffs
       
       
 et al.
@@ -17,9 +17,37 @@ https://github.com/OpenCollarTeam/OpenCollar
 */
 
 integer API_CHANNEL = 0x60b97b5e;
+string NEW_VERSION;
+integer UPDATE_AVAILABLE;
+integer g_iAmNewer;
 
+Compare(string V1, string V2){
+    NEW_VERSION=V2;
+    
+    if(V1==V2){
+        UPDATE_AVAILABLE=FALSE;
+        return;
+    }
+    V1 = llDumpList2String(llParseString2List(V1, ["."],[]),"");
+    V2 = llDumpList2String(llParseString2List(V2, ["."],[]), "");
+    integer iV1 = (integer)V1;
+    integer iV2 = (integer)V2;
+    
+    if(iV1 < iV2){
+        UPDATE_AVAILABLE=TRUE;
+        g_iAmNewer=FALSE;
+    } else if(iV1 == iV2) return;
+    else if(iV1 > iV2){
+        UPDATE_AVAILABLE=FALSE;
+        g_iAmNewer=TRUE;
+        
+        llSetText("", <1,0,0>,1);
+    }
+}
 //list g_lCollars;
 string g_sAddon = "OpenCollar Cuffs";
+
+string g_sVersion = "1.0.0001";
 
 //integer CMD_ZERO            = 0;
 integer CMD_OWNER           = 500;
@@ -185,6 +213,62 @@ default
         }
     }
     
+    attach(key kID){
+        if(kID != NULL_KEY)
+        {
+            // Process
+            g_lDSRequests=[];
+            UpdateDSRequest(NULL, llGetNotecardLine("CuffConfig",0), "read_conf:0");
+        }
+    }
+    
+    http_response(key kID, integer iStat, list lMeta, string sBody)
+    {
+        if(HasDSRequest(kID)!=-1)
+        {
+            string meta = GetDSMeta(kID);
+            DeleteDSReq(kID);
+            if(meta=="check_version"){
+                Compare(g_sVersion, sBody);
+                
+                if(UPDATE_AVAILABLE)
+                {
+                    llWhisper(0, "An update is available");
+                } else{
+                    llWhisper(0, "I am up to date, there are no newer scripts");
+                }
+                
+                llWhisper(0, "Begin connection to collar");
+                //
+                // Collar Connection Start
+                //
+                
+                API_CHANNEL = ((integer)("0x" + llGetSubString((string)llGetOwner(), 0, 8))) + 0xf6eb - 0xd2;
+                llListen(API_CHANNEL, "", "", "");
+                Link("online", 0, "", llGetOwner());
+                llResetTime();
+                g_iLMLastSent=llGetUnixTime();
+                g_iLMLastRecv=llGetUnixTime();
+                llSetTimerEvent(60);
+            }
+        }
+    }
+    
+    timer()
+    {
+        if(llGetUnixTime()>=(g_iLMLastSent+30) && g_kCollar != NULL_KEY)
+        {
+            g_iLMLastSent=llGetUnixTime();
+            Link("ping", 0, "", g_kCollar);
+        }
+        if(llGetUnixTime()>(g_iLMLastRecv+(5*60)) && g_kCollar != NULL_KEY)
+        {
+            llWhisper(0, "Lost connection to collar - resetting");
+            llResetScript();
+            // This script is always-on. Reset and try again
+        }
+    }
+    
     
     dataserver(key kID, string sData){
         if(HasDSRequest(kID)!=-1){
@@ -219,6 +303,9 @@ default
 
                     llWhisper(0, "Clearing all particle systems");
                     ClearAllParticles();
+                    llWhisper(0, "Particles stopped.");
+                    llWhisper(0, "Perform check for cuff script update");
+                    UpdateDSRequest(NULL, llHTTPRequest("https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/web/cuffs.txt",[],""), "check_version");
                 } else{
                     integer iLine = (integer)llList2String(lMeta,1);
                     string sPoses = llList2String(lMeta,2);
@@ -253,6 +340,10 @@ default
             // This signal, indicates the collar has approved the addon and that communication requests will be responded to if the requests are valid collar LMs.
             g_kCollar = id;
             Link("from_addon", LM_SETTING_REQUEST, "ALL", "");
+        } else if(sPacketType == "denied" && g_kCollar == NULL_KEY)
+        {
+            llSay(0, "Collar connection refused by collar. Please enable wearer-owned addons to use this device.");
+            llSetTimerEvent(0);
         }
         else if (sPacketType == "dc" && g_kCollar == id)
         {
