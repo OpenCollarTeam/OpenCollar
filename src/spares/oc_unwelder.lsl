@@ -9,10 +9,6 @@ Aria (Tashia Redrose)
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
-
-
-
-**** THIS IS THE UNWELDER REZZED OUT AT HQ ****
 */
 
 integer API_CHANNEL = 0x60b97b5e;
@@ -142,6 +138,7 @@ default
             API_CHANNEL = ((integer)("0x" + llGetSubString((string)g_kUser, 0, 8))) + 0xf6eb - 0xd2;
             llListen(API_CHANNEL, "", "", "");
             Link("online", 0, "", g_kUser); // This is the signal to initiate communication between the addon and the collar
+            llResetTime();
             llSetTimerEvent(60);
             
         }
@@ -149,7 +146,11 @@ default
     
     timer()
     {
-        if (llGetUnixTime() >= (g_iLMLastSent + 30))
+        if(llGetTime() >= 30.0 && g_kCollar==NULL_KEY && g_kUser!=NULL_KEY){
+            llSay(0, "Connection timed out to collar.");
+            llResetScript();
+        }
+        if (llGetUnixTime() >= (g_iLMLastSent + 30) && g_kCollar != NULL_KEY)
         {
             g_iLMLastSent = llGetUnixTime();
             Link("ping", 0, "", g_kCollar);
