@@ -1,0 +1,99 @@
+#
+# Config for Arm-Cuffs
+#
+
+PoseName:Belt Collar
+PoseAnim:[LX] Belt_Collar
+PoseChains:bluac=bbelt~bruac=bbelt~illac=lbelt~irlac=rbelt~bbelt=bcollar
+PoseRestrictions:
+PoseShow:1
+
+PoseName:Belt
+PoseAnim:cuff-belt2
+PoseChains:illac=lbelt~irlac=rbelt~iluac=bbelt~iruac=bbelt~bluac=bruac
+PoseRestrictions:
+PoseShow:1
+
+PoseName:Pinion
+PoseAnim:cuff-pinion
+PoseChains:bluac=bruac~bruac=bbelt~bbelt=bluac~fluac=fllac~fruac=frlac~bllac=lbelt~brlac=rbelt
+PoseRestrictions:
+PoseShow:1
+
+PoseName:Front 1
+PoseAnim:[LX]LockArmsFront
+PoseChains:frlac=fllac
+PoseRestrictions:
+PoseShow:1
+
+PoseName:Front 2
+PoseAnim:cuff-front
+PoseChains:frlac=fllac
+PoseRestrictions:
+PoseShow:1
+
+PoseName:Front 3
+PoseAnim:[LX] Front-Close
+PoseChains:bllac=brlac~illac=occ~irlac=occ~luac=llac~ruac=rlac
+PoseRestrictions:
+PoseShow:1
+
+PoseName:Back 1
+PoseAnim:[LX]LockArmsBehind
+PoseChains:illac=irlac~iruac=iluac
+PoseRestrictions:
+PoseShow:1
+
+PoseName:Back 2
+PoseAnim:cuff-back
+PoseChains:fllac=frlac~fruac=fluac
+PoseRestrictions:
+PoseShow:1
+
+PoseName:Back 3
+PoseAnim:cuff-back2
+PoseChains:bllac=brlac~fllac=frlac~bluac=bruac
+PoseRestrictions:
+PoseShow:1
+
+PoseName:Crossed Back 1
+PoseAnim:[LX]LockArmsBackCrossed
+PoseChains:iluac=frlac~iruac=fllac~bllac=blrac
+PoseRestrictions:
+PoseShow:1
+
+PoseName:Crossed Back 2
+PoseAnim:winter seale - u-shape2
+PoseChains:iluac=illac~iruac=irlac~bllac=bbelt~brlac=bbelt
+PoseRestrictions:
+PoseShow:1
+
+PoseName:Head 1
+PoseAnim:[LX]LockArmsBehindHead
+PoseChains:irlac=rcollar~illac=lcollar
+PoseRestrictions:
+PoseShow:1
+
+PoseName:Head 2
+PoseAnim:[LX]LockArmsBehindHead2
+PoseChains:irlac=bcollar~illac=bcollar~luac=illac~ruac=irlac
+PoseRestrictions:
+PoseShow:1
+
+PoseName:Head 3
+PoseAnim:cuff-head
+PoseChains:fllac=lcollar~frlac=rcollar
+PoseRestrictions:
+PoseShow:1
+
+PoseName:Head 4
+PoseAnim:cuff-armsup
+PoseChains:fluac=lcollar~fruac=rcollar~bllac=brlac
+PoseRestrictions:
+PoseShow:1
+
+PoseName:Pony
+PoseAnim:Cuff-PonyFront*
+PoseChains:llac=luac~rlac=ruac
+PoseRestrictions:
+PoseShow:1

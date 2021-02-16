@@ -1,0 +1,13 @@
+# This notecard is used to determine the cuff's properties
+CuffName = Right Wrist Cuff
+#
+# This assumes we are using the same naming scheme as the document specifies
+Poses = Arms
+#
+# Define the points that this cuff owns below
+MyPoint = brlac
+MyPoint = frlac
+MyPoint = irlac
+MyPoint = rlac
+LMV2Map = rcuff > rlac
+LGv2Map = rightwrist > rlac
