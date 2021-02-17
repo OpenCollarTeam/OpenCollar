@@ -143,13 +143,13 @@ Menu(key kID, integer iAuth) {
     
     if(UPDATE_AVAILABLE)sPrompt+="* An update is available!\n";
     if(g_iAmNewer)sPrompt+="** You are using a pre-release version. Some bugs may be encountered!";
-    list lButtons  = ["TEST CHAINS"];
+    list lButtons  = [];//"TEST CHAINS"];
     
     if(g_iHasPoses)lButtons+=["Pose"];
     
     if(iAuth == CMD_OWNER)
     {
-        //lButtons+=["ClearChains"];
+        lButtons+=["ClearChains"];
     }
     
     if(!g_iSyncLock){
