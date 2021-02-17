@@ -3,6 +3,8 @@ CuffName = Right Wrist Cuff
 #
 # This assumes we are using the same naming scheme as the document specifies
 Poses = Arms
+# If you do not want poses at all, uncomment the line below, and comment out the line above
+#NoPoses
 #
 # Define the points that this cuff owns below
 MyPoint = brlac
@@ -10,4 +12,4 @@ MyPoint = frlac
 MyPoint = irlac
 MyPoint = rlac
 LMV2Map = rcuff > rlac
-LGv2Map = rightwrist > rlac
+LGv2Map = rightwrist > rlac > wrists > rlac
