@@ -1,15 +1,17 @@
 # This notecard is used to determine the cuff's properties
-CuffName = Right Wrist Cuff
+CuffName = Right Ankle Cuff
 #
 # This assumes we are using the same naming scheme as the document specifies
+# Note on poses, the notecard must be named the same as the value below, but you can name this anything. This will also then become the value for the segment of settings, for instance: occuffs_armspose=Front 1
+# You can have multiple cuff cores, however it is recommended to choose ONE wrist, and ONE ankle to contain poses, and have the master configuration be there. 
 Poses = Arms
-# If you do not want poses at all, uncomment the line below, and comment out the line above
+# If you do not want poses in this cuff, for instance, if it is one of the slave cuffs, not one of the master ones, then uncomment the line below, and comment out the line above.
 #NoPoses
 #
 # Define the points that this cuff owns below
-MyPoint = brlac
-MyPoint = frlac
-MyPoint = irlac
-MyPoint = rlac
-LMV2Map = rcuff > rlac
-LGv2Map = rightwrist > rlac > wrists > rlac
+MyPoint = brllc
+MyPoint = frllc
+MyPoint = irllc
+MyPoint = rllc
+LMV2Map = rlcuff > rllc
+LGv2Map = rightankle > rllc > ankles > rllc > allfour > rllc
