@@ -1,4 +1,20 @@
 
+/*
+This file is a part of OpenCollar.
+Copyright ©2021
+
+
+: Contributors :
+
+Aria (Tashia Redrose)
+    * February 2021       -       Created oc_cuff_pose
+
+
+et al.
+Licensed under the GPLv2. See LICENSE for full details.
+https://github.com/OpenCollarTeam/OpenCollar
+
+*/
 list g_lDSRequests;
 key NULL=NULL_KEY;
 UpdateDSRequest(key orig, key new, string meta){
