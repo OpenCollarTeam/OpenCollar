@@ -7,7 +7,7 @@ Copyright ©2021
 : Contributors :
 
 Aria (Tashia Redrose)
-    * February 2021       -       Created oc_cuffs
+    * February 2021       -       Created oc_cuff
 
 
 et al.
@@ -398,6 +398,9 @@ default
             list lTmp = llParseString2List(kID, ["^"],[]);
             g_lPoses = llParseString2List(sMsg,["`"],[]);
             PosesMenu((key)llList2String(lTmp,0), (integer)llList2String(lTmp,1), 0);
+        } else if(iNum == 999)
+        {
+            Link(llJsonGetValue(sMsg, ["pkt"]), (integer)llJsonGetValue(sMsg, ["iNum"]), llJsonGetValue(sMsg, ["sMsg"]), (key)llJsonGetValue(sMsg,["kID"]));
         }
     }
 
@@ -626,7 +629,7 @@ default
                                 g_iCuffLocked=FALSE;
                                 if(!g_iSyncLock)llOwnerSay("@detach=y");
                             } else if(sVar==g_sPoseName+"pose"){
-                                g_sCurrentPose="";
+                                g_sCurrentPose="NONE";
                             }
                         } else if(sToken == "anim")
                         {
@@ -715,16 +718,19 @@ default
                             {
                                 if(sMsg == "*STOP*"){
                                     // send this command to all cuffs, this way we can ensure the animation fully stops, then clear all chains that were associated with this pose
+                                    g_sCurrentPose="NONE";
                                     Link("from_addon", STOP_CUFF_POSE, g_sCurrentPose, g_sPoseName);
                                     Link("from_addon", LM_SETTING_DELETE, "occuffs_"+g_sPoseName+"pose","");
                                     //Link("from_addon", CLEAR_ALL_CHAINS, "", "");
                                     iRespring=FALSE;
+                                    Link("from_addon", TIMEOUT_REGISTER, "2", "respring_poses:"+(string)iAuth+":"+(string)kAv+":"+(string)iPage);
                                 }else if(sMsg == "BACK"){
                                     iRespring=FALSE;
                                     Menu(kAv,iAuth);
                                 }else{
                                     // activate pose
                                     //Link("from_addon", CLEAR_ALL_CHAINS, "", "");
+                                    g_sCurrentPose=sMsg;
                                     llMessageLinked(LINK_SET, 501, sMsg, "");
                                 }
 
@@ -761,6 +767,7 @@ default
                             Link("from_addon", TIMEOUT_REGISTER, "5", "cuff_link_expire:"+(string)ident);
                         }
                     } else if(iNum == TIMEOUT_FIRED){
+                        //llSay(0, "timer fired: "+sStr);
                         list lTmp = llParseString2List(sStr, [":"],[]);
                         if(llList2String(lTmp,0) == "cuff_link_expire")
                         {
@@ -777,6 +784,8 @@ default
 
                             //StartCuffPose(lMap,TRUE);
                             llMessageLinked(LINK_SET, 500, g_sCurrentPose, "1");
+                        } else if(llList2String(lTmp,0)=="respring_poses"){
+                            PosesMenu((key)llList2String(lTmp,2), (integer)llList2String(lTmp,1), (integer)llList2String(lTmp,3));
                         }
                     } else if(iNum == CLEAR_ALL_CHAINS)
                     {

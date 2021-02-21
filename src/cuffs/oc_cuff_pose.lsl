@@ -38,6 +38,12 @@ string GetDSMeta(key id){
     }
 }
 
+///
+/// FROM SL WIKI http://wiki.secondlife.com/wiki/Combined_Library#Replace
+///
+string str_replace(string str, string search, string replace) {
+    return llDumpList2String(llParseStringKeepNulls((str = "") + str, [search], []), replace);
+}
 integer HasDSRequest(key ID){
     return llListFindList(g_lDSRequests, [ID]);
 }
@@ -107,6 +113,7 @@ StartCuffPose(list lParams, integer iSave)
 {
     if(iSave)Link("from_addon", LM_SETTING_SAVE, "occuffs_"+g_sPoseName+"pose="+llList2String(lParams,0), "");
 
+    //llSay(0, ".\nENTER StartCuffPose(list[], int)\n{\n\targ0 = "+llDumpList2String(lParams," ~ ")+"\n\targ1 = "+(string)iSave+"\n}\n\nAnimation = "+llList2String(lParams,1));
     llStartAnimation(llList2String(lParams,1));
 
     // param 2 = chain options
@@ -136,11 +143,12 @@ Summon(list opts, string age, string gravity)
         Link("from_addon", SUMMON_PARTICLES, llList2String(tmp,0)+"|"+llList2String(tmp,1)+"|"+age+"|"+gravity, "");
     }
 }
-string g_sCurrentPose = "";
+string g_sCurrentPose = "NONE";
 default
 {
     state_entry(){
-        llSay(0,llGetScriptName()+" ready ("+(string)llGetFreeMemory()+"b)");
+        llOwnerSay(llGetScriptName()+" ready ("+(string)llGetFreeMemory()+"b)");
+        llRequestPermissions(llGetOwner(), PERMISSION_TRIGGER_ANIMATION);
     }
 
 
@@ -150,9 +158,16 @@ default
             llResetScript();
         } else if(iNum == 1){
             // READ NOTECARD REQUEST
-            if(kID=="read_poses")g_lPoseMap=[];
+            if(kID=="read_poses"){
+                g_sPoseName=sMsg;
+                g_sPoseName = llToLower(str_replace(g_sPoseName, " ", ""));
+                g_sPoseName = llToLower(str_replace(g_sPoseName, "_", ""));
+                g_sPoseName = llToLower(str_replace(g_sPoseName, "=", ""));
+                g_sPoseName = llToLower(str_replace(g_sPoseName, "~", ""));
+                g_lPoseMap=[];
+            }
             if(kID=="read_collar")g_lCollarMap=[];
-            llSay(0, "sub dataserver call: "+(string)kID);
+            //llSay(0, "sub dataserver call: "+(string)kID);
             UpdateDSRequest(NULL, llGetNotecardLine(sMsg,0), (string)kID+":0:"+sMsg);
         } else if(iNum == 300)
         {
@@ -208,13 +223,15 @@ default
         } else if(iNum == 500)
         {
             integer index=llListFindList(g_lPoseMap, [sMsg]);
+            g_sCurrentPose=sMsg;
+            //llSay(0, "Pose Map scan - only start animation ("+sMsg+") = "+(string)index);
             if(index!=-1)StartCuffPose(llList2List(g_lPoseMap, index,index+5), (integer)((string)kID));
         } else if(iNum == 501)
         {
-
             integer index=llListFindList(g_lPoseMap, [sMsg]);
             list lMap = llList2List(g_lPoseMap, index,index+5);
 
+            //llSay(0, "Pose Map scan pose change ("+sMsg+"/"+g_sCurrentPose+") = "+(string)index);
             if(g_sCurrentPose!="NONE"){
                 integer indx = llListFindList(g_lPoseMap, [g_sCurrentPose]);
                 list lPoints = llParseString2List(llList2String(g_lPoseMap, indx+2),["~"],[]);
@@ -222,7 +239,7 @@ default
                 Link("from_addon", TIMEOUT_REGISTER, "2", g_sPoseName+"playback:"+llStringToBase64(llDumpList2String(lMap, "~~~")));
                 //llSay(0, "Pose selection: "+sMsg+"\nPose params dump: "+llDumpList2String(lMap, ", "));
                 string curAnim = llList2String(g_lPoseMap, llListFindList(g_lPoseMap, [g_sCurrentPose])+1);
-
+                g_sCurrentPose="NONE";
                 llStopAnimation(curAnim);
                 return;
             }
@@ -235,7 +252,7 @@ default
             list lPoints = llParseString2List(llList2String(g_lPoseMap, index+2),["~"],[]);
             Desummon(lPoints);
             string curAnim = llList2String(g_lPoseMap, index+1);
-
+            g_sCurrentPose="NONE";
             llStopAnimation(curAnim);
         }
     }
