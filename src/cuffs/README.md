@@ -1,4 +1,4 @@
- 
+
 OpenCollar Attachment Configuration
 =============
 
@@ -21,6 +21,12 @@ OpenCollar Attachment Configuration
 - Add your poses notecard (If applicable)
 - Add the cuff configuration notecard
 - Add the oc_cuff script to the object
+
+
+[oc_cuff_pose]
+======
+
+This script is necessary in any cuff that does NOT use the NoPose flag. This script is responsible for the cuff pose animations, and for sending out the collar pose chains if relevant
 
 
 [RLV]
