@@ -718,12 +718,12 @@ default
                             {
                                 if(sMsg == "*STOP*"){
                                     // send this command to all cuffs, this way we can ensure the animation fully stops, then clear all chains that were associated with this pose
-                                    g_sCurrentPose="NONE";
                                     Link("from_addon", STOP_CUFF_POSE, g_sCurrentPose, g_sPoseName);
+                                    g_sCurrentPose="NONE";
                                     Link("from_addon", LM_SETTING_DELETE, "occuffs_"+g_sPoseName+"pose","");
                                     //Link("from_addon", CLEAR_ALL_CHAINS, "", "");
                                     iRespring=FALSE;
-                                    Link("from_addon", TIMEOUT_REGISTER, "2", "respring_poses:"+(string)iAuth+":"+(string)kAv+":"+(string)iPage);
+                                    Link("from_addon", TIMEOUT_REGISTER, "2", "respring_poses:"+(string)iAuth+":"+(string)kAv+":"+(string)iPage+":"+(string)llGetKey());
                                 }else if(sMsg == "BACK"){
                                     iRespring=FALSE;
                                     Menu(kAv,iAuth);
@@ -785,7 +785,8 @@ default
                             //StartCuffPose(lMap,TRUE);
                             llMessageLinked(LINK_SET, 500, g_sCurrentPose, "1");
                         } else if(llList2String(lTmp,0)=="respring_poses"){
-                            PosesMenu((key)llList2String(lTmp,2), (integer)llList2String(lTmp,1), (integer)llList2String(lTmp,3));
+                            if(llGetKey() == (key)llList2String(lTmp,4))
+                                PosesMenu((key)llList2String(lTmp,2), (integer)llList2String(lTmp,1), (integer)llList2String(lTmp,3));
                         }
                     } else if(iNum == CLEAR_ALL_CHAINS)
                     {
