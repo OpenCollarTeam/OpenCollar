@@ -1,4 +1,4 @@
-    
+
 /*
 This file is a part of OpenCollar.
 Copyright ©2021
@@ -8,13 +8,13 @@ Copyright ©2021
 
 Aria (Tashia Redrose)
     * February 2021       -       Created oc_cuff_pose
-      
-      
+
+
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
 
-*/ 
+*/
 list g_lDSRequests;
 key NULL=NULL_KEY;
 UpdateDSRequest(key orig, key new, string meta){
@@ -38,7 +38,7 @@ string GetDSMeta(key id){
     }
 }
 
-/// 
+///
 /// FROM SL WIKI http://wiki.secondlife.com/wiki/Combined_Library#Replace
 ///
 string str_replace(string str, string search, string replace) {
@@ -88,7 +88,7 @@ string g_sActivePose="";
 list g_lCollarMap = [];
 integer SUMMON_PARTICLES = -58931; // Used only for cuffs to summon particles from one NAMED leash point to another NAMED anchor point
 // SUMMON_PARTICLES should follow this message format: <From Name>|<To Name>|<Age>|<Gravity>
-integer QUERY_POINT_KEY = -58932; 
+integer QUERY_POINT_KEY = -58932;
 // This query is automatically triggered and the REPLY signal immediately spawns in particles via the SetParticles function
 // Replies to this query are posted on the REPLY_POINT_KEY
 // Message format for QUERY is: <Name>       | kID identifier
@@ -112,10 +112,10 @@ Link(string sPkt, integer iNum, string sMsg, key kID)
 StartCuffPose(list lParams, integer iSave)
 {
     if(iSave)Link("from_addon", LM_SETTING_SAVE, "occuffs_"+g_sPoseName+"pose="+llList2String(lParams,0), "");
-    
+
     //llSay(0, ".\nENTER StartCuffPose(list[], int)\n{\n\targ0 = "+llDumpList2String(lParams," ~ ")+"\n\targ1 = "+(string)iSave+"\n}\n\nAnimation = "+llList2String(lParams,1));
     llStartAnimation(llList2String(lParams,1));
-    
+
     // param 2 = chain options
     list opts = llParseString2List(llList2String(lParams,2), ["~"],[]);
     Summon(opts, llList2String(lParams,4), llList2String(lParams,3));
@@ -134,7 +134,7 @@ Desummon(list lPoints)
 
 Summon(list opts, string age, string gravity)
 {
-    
+
     integer i=0;
     integer end = llGetListLength(opts);
     for(i=0;i<end;i++){
@@ -150,8 +150,8 @@ default
         llOwnerSay(llGetScriptName()+" ready ("+(string)llGetFreeMemory()+"b)");
         llRequestPermissions(llGetOwner(), PERMISSION_TRIGGER_ANIMATION);
     }
-    
-    
+
+
     link_message(integer iSender, integer iNum, string sMsg, key kID)
     {
         if(iNum==-1){
@@ -171,7 +171,7 @@ default
             UpdateDSRequest(NULL, llGetNotecardLine(sMsg,0), (string)kID+":0:"+sMsg);
         } else if(iNum == 300)
         {
-            
+
             integer bSummon = FALSE;
             if(g_sActivePose != "" && g_sActivePose!= sMsg)
             {
@@ -182,7 +182,7 @@ default
                     bSummon=FALSE;
                 }else bSummon=TRUE;
             }
-                                
+
             if(bSummon)
             {
                 // check if needing to desummon, then summon particles
@@ -191,7 +191,7 @@ default
                     integer index=llListFindList(g_lCollarMap,[g_sActivePose]);
                     if(index!=-1)
                     {
-                        
+
                         llMessageLinked(LINK_SET, 401, llList2String(g_lCollarMap, index+1), "");
                         //Desummon(llParseString2List(llList2String(g_lCollarMap, index+1), ["~"],[]));
                     }
@@ -208,14 +208,14 @@ default
             }
         } else if(iNum==301)
         {
-            
+
             integer index=llListFindList(g_lCollarMap, [g_sActivePose]);
             if(index!=-1){
                 //Desummon(llParseString2List(llList2String(g_lCollarMap,index+1),["~"],[]));
                 llMessageLinked(LINK_SET, 401, llList2String(g_lCollarMap, index+1), "");
             }
             g_sActivePose="";
-            
+
         } else if(iNum == 9)
         {
             // Send back pose menu button list
@@ -230,10 +230,10 @@ default
         {
             integer index=llListFindList(g_lPoseMap, [sMsg]);
             list lMap = llList2List(g_lPoseMap, index,index+5);
-                                 
+
             //llSay(0, "Pose Map scan pose change ("+sMsg+"/"+g_sCurrentPose+") = "+(string)index);
-            if(g_sCurrentPose!="NONE"){  
-                integer indx = llListFindList(g_lPoseMap, [g_sCurrentPose]); 
+            if(g_sCurrentPose!="NONE"){
+                integer indx = llListFindList(g_lPoseMap, [g_sCurrentPose]);
                 list lPoints = llParseString2List(llList2String(g_lPoseMap, indx+2),["~"],[]);
                 Desummon(lPoints);
                 Link("from_addon", TIMEOUT_REGISTER, "2", g_sPoseName+"playback:"+llStringToBase64(llDumpList2String(lMap, "~~~")));
@@ -247,7 +247,7 @@ default
             StartCuffPose(lMap,TRUE);
         } else if(iNum == 505)
         {
-            
+
             integer index=llListFindList(g_lPoseMap, [sMsg]);
             list lPoints = llParseString2List(llList2String(g_lPoseMap, index+2),["~"],[]);
             Desummon(lPoints);
@@ -263,13 +263,13 @@ default
                 g_sCurrentPose="NONE";
                 llStopAnimation(curAnim);
             }
-            
+
             if(g_sActivePose != ""){
                 g_sActivePose="";
             }
         }
     }
-    
+
     dataserver(key kID, string sData)
     {
         if(HasDSRequest(kID)!=-1)
@@ -279,10 +279,10 @@ default
             if(llList2String(lMeta,0)=="read_poses"){
                 if(sData==EOF){
                     DeleteDSReq(kID);
-                    
+
                     g_lPoseMap += [g_sPendingPose, g_sPendingAnim, g_sPendingChains, g_sPendingRLV, g_sPendingAge, g_sPendingGravity];
-                    
-                    
+
+
                     //llWhisper(0, "Pose Configuration finished reading : Poses = "+llDumpList2String( llList2ListStrided(g_lPoseMap,0,-1,5), ", ") );
 
                     //llWhisper(0, "Clearing all particle systems");
@@ -302,7 +302,7 @@ default
                         if(g_sPendingPose != ""){
                             g_lPoseMap += [g_sPendingPose, g_sPendingAnim, g_sPendingChains, g_sPendingRLV, g_sPendingAge, g_sPendingGravity];
                         }
-                        
+
                         g_sPendingPose=llList2String(lPara,1);
                     } else if(llList2String(lPara,0) == "PoseAnim"){
                         g_sPendingAnim = llList2String(lPara,1);
@@ -315,7 +315,7 @@ default
                     } else if(llList2String(lPara,0)=="PoseGravity"){
                         g_sPendingGravity = llList2String(lPara,1);
                     }
-                    
+
                     UpdateDSRequest(kID, llGetNotecardLine(sPoses, iLine), "read_poses:"+(string)iLine+":"+sPoses);
                 }
             } else if(llList2String(lMeta,0)=="read_collar")
@@ -324,8 +324,8 @@ default
                     integer iLine = (integer)llList2String(lMeta,1);
                     iLine++;
                     string note = llList2String(lMeta,2);
-                    
-                    
+
+
                     // parse the line
                     list lTmp = llParseString2List(sData,[" = "],["[","]"]);
                     if(llList2String(lTmp,0)=="[" && llList2String(lTmp,-1)=="]")
@@ -336,25 +336,26 @@ default
                             integer ix=0;
                             integer xend = llGetListLength(lTmps);
                             for(ix=0;ix<xend;ix++){
-                                //llSay(0, "Collar Pose Mapping added: "+llList2String(lTmps,ix)+" = (chains) "+g_sPendingCollarChains);
+                                //llSay(0, "Collar Pose Mapping added (S): "+llList2String(lTmps,ix)+" = (chains) "+g_sPendingCollarChains);
                                 g_lCollarMap += [llList2String(lTmps,ix), g_sPendingCollarChains];
                             }
+                            g_sPendingAnims = llList2String(lTmp,1);
                         }
                     } else if(llList2String(lTmp,0)=="Chains")
                     {
                         g_sPendingCollarChains = llList2String(lTmp,1);
                     }
-                
-                
+
+
                     UpdateDSRequest(kID, llGetNotecardLine(note, iLine), "read_collar:"+(string)iLine+":"+note);
                 }else{
                     DeleteDSReq(kID);
-                    
+
                     list lTmps = llParseString2List(g_sPendingAnims, ["|"],[]);
                     integer ix=0;
                     integer xend = llGetListLength(lTmps);
                     for(ix=0;ix<xend;ix++){
-                        //llSay(0, "Collar Pose Mapping added: "+llList2String(lTmps,ix)+" = (chains) "+g_sPendingCollarChains);
+                        //llSay(0, "Collar Pose Mapping added (EOF): "+llList2String(lTmps,ix)+" = (chains) "+g_sPendingCollarChains);
                         g_lCollarMap += [llList2String(lTmps,ix), g_sPendingCollarChains];
                     }
                 }
