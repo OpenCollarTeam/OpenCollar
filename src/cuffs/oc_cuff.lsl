@@ -71,7 +71,7 @@ string Checkbox(integer iValue, string sLabel) {
 //list g_lCollars;
 string g_sAddon = "OpenCollar Cuffs";
 
-string g_sVersion = "1.0.0002";
+string g_sVersion = "1.0.0010";
 
 //integer CMD_ZERO            = 0;
 integer CMD_OWNER           = 500;
@@ -146,7 +146,11 @@ Menu(key kID, integer iAuth) {
     if(g_iAmNewer)sPrompt+="** You are using a pre-release version. Some bugs may be encountered!";
     list lButtons  = [];//"TEST CHAINS"];
 
-    if(g_iHasPoses && llGetInventoryType("oc_cuff_pose")==INVENTORY_SCRIPT)lButtons+=["Pose"];
+    if(g_iHasPoses && llGetInventoryType("oc_cuff_pose")==INVENTORY_SCRIPT){
+        if(!g_iHidden)
+            lButtons+=["Pose"];
+        else sPrompt +="\nPoses not available while the cuffs are hidden";
+    }
 
     if(iAuth == CMD_OWNER)
     {
@@ -160,9 +164,12 @@ Menu(key kID, integer iAuth) {
     lButtons += [Checkbox(g_iSyncLock, "SyncLock")];
 
 
+
+
     //llSay(0, "opening menu");
     Dialog(kID, sPrompt, lButtons, ["DISCONNECT", UPMENU], 0, iAuth, "Menu~Main");
 }
+
 
 UserCommand(integer iNum, string sStr, key kID) {
     if (iNum<CMD_OWNER || iNum>CMD_WEARER) return;
@@ -302,6 +309,7 @@ list g_lLMV2Map;
 list g_lLGv2Map;
 
 integer g_iLGV2Listen;
+integer g_iTmpHide=0;
 
 integer TIMEOUT_REGISTER = 30498;
 integer TIMEOUT_FIRED = 30499;
@@ -346,6 +354,53 @@ Summon(list opts, string age, string gravity)
 }
 
 string g_sPoseName= "";
+integer g_iHidden=FALSE;
+
+ToggleLock(integer iLocked)
+{
+    if(g_iHidden)return;
+    integer i=LINK_ROOT;
+    integer end = llGetNumberOfPrims();
+    for(i=LINK_ROOT;i<=end;i++){
+        string desc = llList2String(llGetLinkPrimitiveParams(i, [PRIM_DESC]),0);
+        list lElements = llParseStringKeepNulls(desc,["~"],[]);
+
+        if(iLocked){
+            if(llListFindList(lElements, ["ClosedLock"])!=-1){
+                llSetLinkAlpha(i, TRUE, ALL_SIDES);
+            }
+
+            if(llListFindList(lElements, ["OpenLock"])!=-1){
+                llSetLinkAlpha(i, FALSE, ALL_SIDES);
+            }
+        }else{
+            if(llListFindList(lElements, ["ClosedLock"])!=-1){
+                llSetLinkAlpha(i, FALSE, ALL_SIDES);
+            }
+
+            if(llListFindList(lElements, ["OpenLock"])!=-1){
+                llSetLinkAlpha(i, TRUE, ALL_SIDES);
+            }
+        }
+    }
+}
+
+ToggleAlpha(integer iHidden)
+{
+    if(iHidden)ClearAllParticles();
+    integer i=0;
+    integer end = llGetNumberOfPrims();
+    for(i=LINK_ROOT;i<=end;i++){
+        // check if description says no hide
+        list lData = llParseString2List(llList2String(llGetLinkPrimitiveParams(i,[PRIM_DESC]),0),["~"],[]);
+
+        integer iOverride=FALSE;
+        if(llListFindList(lData,["ClosedLock"])!=-1)iOverride=1;
+        if(llListFindList(lData,["OpenLock"])!=-1)iOverride=1;
+
+        if(llListFindList(lData,["nohide"])==-1 || iOverride)llSetLinkAlpha(i, !iHidden, ALL_SIDES);
+    }
+}
 default
 {
     state_entry(){
@@ -432,7 +487,7 @@ default
                 g_iLMLastRecv=llGetUnixTime();
                 llSetTimerEvent(60);
 
-
+                ToggleAlpha(FALSE);
                 llOwnerSay(g_sAddon+" ready ("+(string)llGetFreeMemory()+"b)");
             }
         }
@@ -574,7 +629,8 @@ default
                             {
                                 // check pose map for this pose then perform start animation process
                                 g_sCurrentPose=sVal;
-                                llMessageLinked(LINK_SET, 500, sVal, "0");
+                                if(!g_iHidden)
+                                    llMessageLinked(LINK_SET, 500, sVal, "0");
                             }
 
                         }else if(sToken == "global"){
@@ -586,13 +642,28 @@ default
                                 }
                             } else if(sVar=="checkboxes"){
                                 g_lCheckboxes=llParseString2List(sVal,[","],[]);
+                            } else if(sVar == "hide"){
+                                if(g_iHidden!= (integer)sVal){
+                                    if((integer)sVal){
+                                        llMessageLinked(LINK_SET, 509, "", "");
+                                        ClearAllParticles();
+                                    }else {
+                                        if(g_iHasPoses) // We only need to be requesting settings from cuffs that have poses, otherwise we are spamming the link message system
+                                            Link("from_addon", LM_SETTING_REQUEST, "ALL", "");
+                                    }
+                                }
+
+                                g_iHidden=(integer)sVal;
+
+                                ToggleAlpha((integer)sVal);
                             }
                         } else if(sToken == "anim")
                         {
                             if(sVar=="pose")
                             {
                                 g_sActivePose=sVal;
-                                llMessageLinked(LINK_SET, 300, sVal,"");
+                                if(!g_iHidden)
+                                    llMessageLinked(LINK_SET, 300, sVal,"");
                             }
                         }
 
@@ -600,12 +671,26 @@ default
                         if(sStr=="settings=sent"){
                             if(g_iSyncLock){
                                 g_iCuffLocked=g_iLocked;
-                                if(g_iLocked)llOwnerSay("@detach=n");
-                                else llOwnerSay("@detach=y");
+                                if(g_iLocked){
+                                    llOwnerSay("@detach=n");
+                                    ToggleLock(TRUE);
+                                }
+                                else {
+                                    ToggleLock(FALSE);
+                                    llOwnerSay("@detach=y");
+                                }
                             }else{
-                                if(g_iCuffLocked)llOwnerSay("@detach=n");
-                                else llOwnerSay("@detach=y");
+                                if(g_iCuffLocked){
+                                    ToggleLock(TRUE);
+                                    llOwnerSay("@detach=n");
+                                }
+                                else {
+                                    ToggleLock(FALSE);
+                                    llOwnerSay("@detach=y");
+                                }
                             }
+                            if(g_sCurrentPose!="NONE")llMessageLinked(LINK_SET,500, g_sCurrentPose, "0");
+                            if(g_sActivePose!="")llMessageLinked(LINK_SET,300, g_sActivePose, "");
                         }
                     }else if(iNum == LM_SETTING_DELETE)
                     {
@@ -636,7 +721,8 @@ default
                             if(sVar == "pose")
                             {
                                 if(g_sActivePose != ""){
-                                    llMessageLinked(LINK_SET,301, "", "");
+                                    if(!g_iHidden)
+                                        llMessageLinked(LINK_SET,301, "", "");
                                 }
                                 g_sActivePose="";
                             }
@@ -731,7 +817,8 @@ default
                                     // activate pose
                                     //Link("from_addon", CLEAR_ALL_CHAINS, "", "");
                                     g_sCurrentPose=sMsg;
-                                    llMessageLinked(LINK_SET, 501, sMsg, "");
+                                    if(!g_iHidden)
+                                        llMessageLinked(LINK_SET, 501, sMsg, "");
                                 }
 
                                 if(iRespring)PosesMenu(kAv,iAuth,iPage);
