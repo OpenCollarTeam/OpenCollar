@@ -158,7 +158,15 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 }
 
 AddonsMenu(key kID, integer iAuth){
-    Dialog(kID, "[Addons]\n\nThese are addons you have worn, or rezzed that are compatible with OpenCollar and have requested collar access", StrideOfList(g_lAddons,4,1,llGetListLength(g_lAddons)), [UPMENU],0,iAuth,"addons");
+    integer i=0;
+    integer end = llGetListLength(g_lAddons);
+    list lOpts = [];
+    for(i=0;i<end;i+=5){
+        if(!llList2Integer(g_lAddons,i+4)){
+            lOpts += llList2String( g_lAddons, i+1 );
+        }
+    }
+    Dialog(kID, "[Addons]\n\nThese are addons you have worn, or rezzed that are compatible with OpenCollar and have requested collar access", lOpts, [UPMENU],0,iAuth,"addons");
 }
 
 UserCommand(integer iNum, string sStr, key kID) {
@@ -179,7 +187,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                 if(llGetOwnerKey(kAddon)==g_kWearer){
                     // -> Kick the addon
                     SayToAddonX(kAddon, "dc", 0, "", llGetOwner());
-                    g_lAddons = llDeleteSubList(g_lAddons, X, X+3);
+                    g_lAddons = llDeleteSubList(g_lAddons, X, X+4);
                     X=-1;
                     x_end = llGetListLength(g_lAddons);
                 }
@@ -192,6 +200,7 @@ list g_lAddonFiltered = [];
 integer MENUNAME_REMOVE = 3003;
 
 integer g_iWearerAddonLimited=TRUE;
+integer g_iPendingNoMenu;
 string g_sPendingAddonOptin;
 integer g_iWearerAddons=TRUE;
 SayToAddon(string pkt, integer iNum, string sStr, key kID){
@@ -262,12 +271,12 @@ state active
 
             integer i=0;
             integer end = llGetListLength(g_lAddons);
-            for(i=0;i<end;i+=4){
+            for(i=0;i<end;i+=5){
                 integer lastSeen = (integer)llList2String(g_lAddons, i+2);
                 if(llGetUnixTime()>lastSeen+deadStamp){
                     SayToAddonX((key)llList2String(g_lAddons,i), "dc", 0, "", llGetOwner());
                     llMessageLinked(LINK_SET, NOTIFY, "0Addon: "+llList2String(g_lAddons,i+1)+" has been removed because it has not been seen for 5 minutes or more.", g_kWearer);
-                    g_lAddons = llDeleteSubList(g_lAddons, i, i+3);
+                    g_lAddons = llDeleteSubList(g_lAddons, i, i+4);
                     i=-4; // if we change the stride of the list this must be updated
                     end=llGetListLength(g_lAddons);
                 }
@@ -299,12 +308,14 @@ state active
 
                     // begin to pass stuff to link messages!
                     // first- Check if a pairing was done with this addon, if not ask the user for confirmation, add it to Addons, and then move on
+                    integer noMenu = (integer)llJsonGetValue(m,["noMenu"]);
+                    if(noMenu!= 1)noMenu=0;
 
                     if(llListFindList(g_lAddons, [i])==-1 && llGetOwnerKey(i)!=g_kWearer){
                         integer AddonOwnerAuth = CalcAuth(llGetOwnerKey(i),FALSE);
                         if(AddonOwnerAuth == CMD_OWNER || AddonOwnerAuth == CMD_TRUSTED){
 
-                            g_lAddons += [i, llJsonGetValue(m,["addon_name"]), llGetUnixTime(), llJsonGetValue(m,["optin"])];
+                            g_lAddons += [i, llJsonGetValue(m,["addon_name"]), llGetUnixTime(), llJsonGetValue(m,["optin"]), noMenu];
                             SayToAddonX(i, "approved", 0, "", "");
                             llMessageLinked(LINK_SET, NOTIFY, "0Addon connected successfully: "+llJsonGetValue(m,["addon_name"]), g_kWearer);
                         }
@@ -312,6 +323,7 @@ state active
                             g_kAddonPending = i;
                             g_sPendingAddonOptin = llJsonGetValue(m,["optin"]);
                             g_sAddonName = llJsonGetValue(m,["addon_name"]);
+                            g_iPendingNoMenu=noMenu;
                             Dialog(g_kWearer, "[ADDON]\n\nAn object named: "+n+"\nAddon Name: "+g_sAddonName+"\nOwned by: secondlife:///app/agent/"+(string)llGetOwnerKey(i)+"/about\n\nHas requested internal collar access. Grant it?", ["Yes", "No"],[],0,CMD_WEARER,"addon~add");
                             return;
                         }
@@ -322,7 +334,7 @@ state active
                             llMessageLinked(LINK_SET, NOTIFY, "0Addon ("+llJsonGetValue(m,["addon_name"])+") denied because wearer owned addons is disallowed by settings", g_kWearer);
                             return;
                         }
-                        g_lAddons += [i, llJsonGetValue(m,["addon_name"]), llGetUnixTime(), llJsonGetValue(m,["optin"])];
+                        g_lAddons += [i, llJsonGetValue(m,["addon_name"]), llGetUnixTime(), llJsonGetValue(m,["optin"]), noMenu];
                         SayToAddonX(i, "approved", 0, "", "");
                         llMessageLinked(LINK_SET, NOTIFY, "0Addon connected successfully: "+llJsonGetValue(m,["addon_name"]), g_kWearer);
                     } else if(llListFindList(g_lAddons,[i])!=-1){
@@ -335,7 +347,7 @@ state active
                     integer iPos = llListFindList(g_lAddons, [i]);
                     if(iPos==-1)return;
                     else{
-                        g_lAddons = llDeleteSubList(g_lAddons, iPos, iPos+3);
+                        g_lAddons = llDeleteSubList(g_lAddons, iPos, iPos+4);
                     }
                 }
             }
@@ -427,7 +439,7 @@ state active
                     }else {
                         // Yes
                         SayToAddonX(g_kAddonPending, "approved", 0, "", "");
-                        g_lAddons += [g_kAddonPending, g_sAddonName, llGetUnixTime(), g_sPendingAddonOptin];
+                        g_lAddons += [g_kAddonPending, g_sAddonName, llGetUnixTime(), g_sPendingAddonOptin, g_iPendingNoMenu];
                     }
                 }
             }
