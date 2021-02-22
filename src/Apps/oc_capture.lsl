@@ -34,6 +34,8 @@ string g_sAppVersion = "1.1";
 DebugOutput(key kDest, list lParams){
     llInstantMessage(kDest, llGetScriptName()+": "+llDumpList2String(lParams," "));
 }
+
+integer g_iLimitRange = TRUE;
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
@@ -58,6 +60,15 @@ integer g_iRisky=FALSE;
 integer g_iAutoRelease=FALSE;
 
 
+integer in_range(key kID){
+    if(!g_iLimitRange)return TRUE;
+    if(kID == g_kWearer)return TRUE;
+    else{
+        vector pos = llList2Vector(llGetObjectDetails(kID, [OBJECT_POS]),0);
+        if(llVecDist(llGetPos(),pos) <=20.0)return TRUE;
+        else return FALSE;
+    }
+}
 integer NOTIFY = 1002;
 integer LINK_CMD_DEBUG=1999;
 integer REBOOT = -1000;
@@ -111,7 +122,7 @@ StartCapture(key kID, integer iAuth) // This is a dialog prompt on the cmd no ac
 {
     if(!g_iEnabled)return;
     if(iAuth == CMD_BLOCKED)return;
-    
+
     Dialog(kID,  "\n[Capture]\n \nDo you want to capture secondlife:///app/agent/"+(string)g_kWearer+"/about?", ["YES", "NO"], [], 0, iAuth, "StartPrompt");
 }
 
@@ -136,15 +147,15 @@ UserCommand(integer iNum, string sStr, key kID) {
     }
     //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else {
-        //integer iWSuccess = 0; 
+        //integer iWSuccess = 0;
         string sChangetype = llList2String(llParseString2List(sStr, [" "], []),0);
         string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),1);
         //string sText;
         //llSay(0, sChangetype+": [changetype]");
         //llSay(0, sChangevalue+": [changevalue]");
         //llSay(0, (string)iNum+": [iAuth]");
-        
-        
+
+
         if(sChangetype == "capture"){
             if(sChangevalue == "dump"){
                 if(iNum != CMD_OWNER && iNum != CMD_WEARER)return;
@@ -208,7 +219,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                             g_kExpireFor=g_kWearer;
                             g_iExpireMode=1;
                             g_iExpire=llGetUnixTime()+30;
-                            
+
                             llMessageLinked(LINK_SET, AUTH_REQUEST, "capture", kID);
 //                            WearerConsent("secondlife:///app/agent/"+(string)kID+"/about");
 //                            llSay(0, "=> Ask for consent from wearer <=\n* Not yet implemented");
@@ -230,10 +241,10 @@ UserCommand(integer iNum, string sStr, key kID) {
                         jump Retry;
                     }
                 }
-                            
+
             }
         }
-        
+
     }
 }
 
@@ -257,7 +268,7 @@ Commit(){
     if(g_iCaptured)StatusFlags+=4; // Used in oc_auth mainly to set the captureIsActive flag
     if(g_iAutoRelease)StatusFlags+=8;
     g_iFlagAtLoad=StatusFlags;
-    
+
     llMessageLinked(LINK_SET, LM_SETTING_SAVE, "capture_status="+(string)StatusFlags,"");
     if(g_iCaptured){
         llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_tempowner="+(string)g_kCaptor,"origin");
@@ -309,15 +320,15 @@ state active
         llSleep(2);
         llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "capture_status", ""); // Needed to get the EMPTY reply
     }
-    
+
     link_message(integer iSender,integer iNum,string sStr,key kID){
-        if(iNum == CMD_NOACCESS && sStr == "menu" && g_iEnabled && !g_iCaptured) StartCapture(kID, iNum); // When the collar is touched by someone without permission and capture is enabled show the Capture dialog.
+        if(iNum == CMD_NOACCESS && sStr == "menu" && g_iEnabled && !g_iCaptured && in_range(kID)) StartCapture(kID, iNum); // When the collar is touched by someone without permission and capture is enabled show the Capture dialog.
         if(iNum >= CMD_OWNER && iNum <= CMD_NOACCESS) UserCommand(iNum, sStr, kID);
         if(iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu+"|"+ g_sSubMenu,"");
         else if(iNum == -99999){
             if(sStr == "update_active")llResetScript();
-        
+
         } else if(iNum == AUTH_REPLY){
             list lTmp = llParseString2List(sStr, ["|"],[]);
             if(llList2String(lTmp,0)=="AuthReply"){
@@ -325,13 +336,13 @@ state active
                     // check auth
                     integer iAuth = (integer)llList2String(lTmp,2);
                     key kAv = (key)llList2String(lTmp,1);
-                    
+
                     if(iAuth == CMD_BLOCKED){
                         g_kExpireFor="";
                         g_iExpireMode=0;
                         g_kCaptor=NULL_KEY;
                         g_iExpire=0;
-                        
+
                         llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to capture because you have been blocked on this collar", kAv);
                         return;
                     }
@@ -360,21 +371,21 @@ state active
                         iRespring=FALSE;
                         llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
                     }
-                    
+
                     if(sMsg == Checkbox(g_iEnabled, "Enabled")){
                         g_iEnabled=1-g_iEnabled;
                     }
-                    
+
                     if(sMsg == Checkbox(g_iRisky, "Risky")){
                         g_iRisky=1-g_iRisky;
                     }
-                    
+
                     if (sMsg == Checkbox(g_iAutoRelease,"AutoRelease")){
                         g_iAutoRelease=1-g_iAutoRelease;
                     }
-                    
+
                     Commit();
-                    
+
                     if(iRespring) Menu(kAv, iAuth);
                 } else if(sMenu == "ConsentPrompt"){
                     if(sMsg == "NO"){
@@ -401,7 +412,7 @@ state active
                         g_kCaptor=NULL_KEY;
                         Commit();
                     }
-                    
+
                     g_iExpire=0;
                     g_kExpireFor=NULL_KEY;
                     if (!g_iCaptured) llSetTimerEvent(0);
@@ -426,13 +437,16 @@ state active
                     if(Flag&2)g_iRisky=TRUE;
                     if(Flag&4)g_iCaptured=TRUE;
                     if(Flag&8)g_iAutoRelease=TRUE;
-                    
-                    
+
+
                     g_iFlagAtLoad=Flag;
                 }
             } else if(llList2String(lSettings,0) == "auth"){
                 if(llList2String(lSettings,1) == "tempowner"){
                     g_kCaptor = (key)llList2String(lSettings,2);
+                } else if(llList2String(lSettings,1) == "limitrange")
+                {
+                    g_iLimitRange = (integer)llList2String(lSettings,2);
                 }
             }
         } else if(iNum == LM_SETTING_DELETE){
@@ -460,7 +474,7 @@ state active
             DebugOutput(kID, ["CAPTOR", g_kCaptor]);
             DebugOutput(kID, ["MISC", g_iEnabled, g_iRisky, g_iCaptured, g_iExpire, g_kExpireFor, g_iExpireMode]);
         }
-            
+
        // llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
     }
     timer(){
@@ -474,7 +488,7 @@ state active
                 g_iExpireMode=0;
             }
         }
-        
+
         if (g_iCaptured && g_iAutoRelease && llGetAgentSize(g_kCaptor) == ZERO_VECTOR){
             if (g_iReleaseTime == 0) {
                 g_iReleaseTime = llGetUnixTime() + 600;
@@ -493,6 +507,6 @@ state active
             g_iReleaseTime = 0;
         }
     }
-    
-            
+
+
 }
