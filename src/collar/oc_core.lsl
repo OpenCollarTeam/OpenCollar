@@ -1,4 +1,4 @@
-  
+
 /*
 This file is a part of OpenCollar.
 Copyright ©2020
@@ -10,8 +10,8 @@ Aria (Tashia Redrose)
     *June 2020       -       Created oc_core
       * This combines oc_com, oc_auth, and oc_sys
     * July 2020     -       Maintenance fixes, feature implementations
-    
-    
+
+
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
@@ -20,9 +20,9 @@ https://github.com/OpenCollarTeam/OpenCollar
 
 integer NOTIFY_OWNERS=1003;
 
-//string g_sParentMenu = ""; 
+//string g_sParentMenu = "";
 string g_sSubMenu = "Main";
-string COLLAR_VERSION = "8.0.2000"; // Provide enough room
+string COLLAR_VERSION = "8.0.3000"; // Provide enough room
 // LEGEND: Major.Minor.Build RC Beta Alpha
 integer UPDATE_AVAILABLE=FALSE;
 string NEW_VERSION = "";
@@ -129,20 +129,20 @@ AppsMenu(key kID, integer iAuth){
 Menu(key kID, integer iAuth) {
     string sPrompt = "\nOpenCollar "+COLLAR_VERSION;
     list lButtons = [Checkbox(g_iLocked, "Lock")];
-    
+
     if(!g_iWelded)lButtons+=g_lMainMenu;
     else lButtons=g_lMainMenu;
-    
+
     if(UPDATE_AVAILABLE ) sPrompt += "\n\nUPDATE AVAILABLE: Your version is: "+COLLAR_VERSION+", The current release version is: "+NEW_VERSION;
     if(g_iAmNewer)sPrompt+="\n\nYour collar version is newer than the public release. This may happen if you are using a beta or pre-release copy.\nNote: Pre-Releases may have bugs. Ensure you report any bugs to [https://github.com/OpenCollarTeam/OpenCollar Github]";
 
     if(g_iWelded)sPrompt+="\n\n* The Collar is Welded by secondlife:///app/agent/"+(string)g_kWeldBy+"/about *";
     if(iAuth==CMD_OWNER && g_iLocked && !g_iWelded)lButtons+=["Weld"];
-    
-    
+
+
     list lUtility;
     //if(g_iAmNewer)lUtility += ["FEEDBACK", "BUG"];
-    
+
     Dialog(kID, sPrompt, lButtons, lUtility, 0, iAuth, "Menu~Main");
 }
 key g_kGroup = "";
@@ -166,11 +166,11 @@ HelpMenu(key kID, integer iAuth){
     string EXTRA_VER_TXT = setor(bool((llGetSubString(COLLAR_VERSION,-1,-1)=="0")), "", " (ALPHA "+llGetSubString(COLLAR_VERSION,-1,-1)+") ");
     EXTRA_VER_TXT += setor(bool((llGetSubString(COLLAR_VERSION,-2,-2)=="0")), "", " (BETA "+llGetSubString(COLLAR_VERSION,-2,-2)+") ");
     EXTRA_VER_TXT += setor(bool((llGetSubString(COLLAR_VERSION,-3,-3) == "0")), "", " (RC "+llGetSubString(COLLAR_VERSION,-3,-3)+") ");
-    
+
     string sPrompt = "\nOpenCollar "+COLLAR_VERSION+" "+EXTRA_VER_TXT+"\nVersion: "+setor(g_iAmNewer, "(Newer than release)", "")+" "+setor(UPDATE_AVAILABLE, "(Update Available)", "(Most Current Version)");
     sPrompt += "\n\nDocumentation https://opencollar.cc";
     sPrompt += "\nPrefix: "+g_sPrefix+"\nChannel: "+(string)g_iChannel;
-    
+
     if(g_iNotifyInfo){
         g_iNotifyInfo=FALSE;
         llMessageLinked(LINK_SET, NOTIFY, sPrompt, kID);
@@ -204,12 +204,12 @@ UserCommand(integer iNum, string sStr, key kID) {
     if (sStr==g_sSubMenu || sStr == "menu "+g_sSubMenu || sStr == "menu") Menu(kID, iNum);
     //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else {
-        //integer iWSuccess = 0; 
+        //integer iWSuccess = 0;
         list lParameters = llParseString2List(sStr, [" "], []);
         string sChangetype = llList2String(lParameters,0);
         string sChangevalue = llList2String(lParameters,1);
         //string sText;
-        
+
         if(sChangetype=="fix"){
             g_lMainMenu=["Apps", "Access", "Settings", "Help/About"];
             llMessageLinked(LINK_SET,NOTIFY, "0Fixed menus", kID);
@@ -218,7 +218,7 @@ UserCommand(integer iNum, string sStr, key kID) {
             if(iNum == CMD_OWNER || iNum == CMD_WEARER){
                 g_iUpdatePin = llRound(llFrand(0x7FFFFFFF))+1; // Maximum integer size
                 llSetRemoteScriptAccessPin(g_iUpdatePin);
-                
+
                 // Now that a pin is set, scan for a updater and chainload
                 g_iDiscoveredUpdaters=0;
                 g_kUpdater=NULL_KEY;
@@ -236,11 +236,11 @@ UserCommand(integer iNum, string sStr, key kID) {
                 if(iNum == CMD_OWNER){
                     llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_safeword="+sChangevalue, "");
                     llMessageLinked(LINK_SET,NOTIFY,"1Safeword is now set to '"+sChangevalue,kID);
-                    
+
                     if(sChangevalue == "RED"){
                         llMessageLinked(LINK_SET, LM_SETTING_DELETE, "global_safeword","");
                     }
-                    
+
                     if(llToLower(sChangevalue) == "off"){
                         llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_safeworddisable=1", "");
                     } else {
@@ -276,7 +276,7 @@ UserCommand(integer iNum, string sStr, key kID) {
         } else if(llToLower(sChangetype) == "touchnotify"){
             if(g_iTouchNotify) llMessageLinked(LINK_SET,NOTIFY,"1The wearer will no longer be notified when someone touches their collar", kID);
             else llMessageLinked(LINK_SET, NOTIFY, "1The wearer will now be notified whenever someone touches their collar", kID);
-            
+
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_touchnotify="+(string)(!g_iTouchNotify), "");
         } else if(llToLower(sChangetype) == "name" && iNum==CMD_OWNER){
             // set wearer name
@@ -344,7 +344,7 @@ integer g_iMenuStride;
 integer g_iLocked=FALSE;
 Compare(string V1, string V2){
     NEW_VERSION=V2;
-    
+
     if(V1==V2){
         UPDATE_AVAILABLE=FALSE;
         return;
@@ -353,7 +353,7 @@ Compare(string V1, string V2){
     V2 = llDumpList2String(llParseString2List(V2, ["."],[]), "");
     integer iV1 = (integer)V1;
     integer iV2 = (integer)V2;
-    
+
     if(iV1 < iV2){
         UPDATE_AVAILABLE=TRUE;
         g_iAmNewer=FALSE;
@@ -361,7 +361,7 @@ Compare(string V1, string V2){
     else if(iV1 > iV2){
         UPDATE_AVAILABLE=FALSE;
         g_iAmNewer=TRUE;
-        
+
         llSetText("", <1,0,0>,1);
     }
 }
@@ -378,7 +378,7 @@ DoCheckDevUpdate()
     g_kCheckDev = llHTTPRequest("https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/web/dev_version.txt",[],"");
 }
 
-///The setor method is derived from a similar PHP proposed function, though it was denied, 
+///The setor method is derived from a similar PHP proposed function, though it was denied,
 ///https://wiki.php.net/rfc/ifsetor
 ///The concept is roughly the same though we're not dealing with lists in this method, so is just modified
 ///The ifsetor proposal would give a function which would be more like
@@ -434,16 +434,16 @@ state active
     {
         g_kWearer = llGetOwner();
         g_sPrefix = llToLower(llGetSubString(llKey2Name(llGetOwner()),0,1));
-        
+
         llMessageLinked(LINK_SET, 0, "initialize", llGetKey());
-        
+
     }
     attach(key kID){
         if(kID==NULL_KEY){
             llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar=No");
         }
     }
-    
+
     touch_start(integer iNum){
         if(g_iTouchNotify) llMessageLinked(LINK_SET, NOTIFY, "0secondlife:///app/agent/"+(string)llDetectedKey(0)+"/about has touched your collar!", g_kWearer);
 
@@ -464,7 +464,7 @@ state active
             }
         } else if(iNum == MENUNAME_REMOVE){
             // This is not really used much if at all in 7.x
-            
+
             list lPara = llParseString2List(sStr, ["|"],[]);
             string sName = llList2String(lPara,0);
             string sMenu = llList2String(lPara,1);
@@ -477,7 +477,7 @@ state active
                 integer loc = llListFindList(g_lApps,[sMenu]);
                 if(loc!=-1)g_lApps = llDeleteSubList(g_lApps, loc,loc);
             }
-            
+
         }
         else if(iNum == DIALOG_RESPONSE){
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
@@ -512,8 +512,8 @@ state active
                         // don't recaculate while developing
                         llMessageLinked(LINK_SET, iAuth,"menu "+ sMsg, kAv); // Recalculate
                     }
-                     
-                    
+
+
                     if(iRespring)Menu(kAv,iAuth);
                 } else if(sMenu == "weld~consent"){
                     if(sMsg == "No"){
@@ -556,19 +556,19 @@ state active
                         }
                     } else if(sMsg == Checkbox(g_iPublic, "Public")){
                         if(iAuth >=CMD_OWNER && iAuth <= CMD_TRUSTED){
-                            
+
                             g_iPublic=1-g_iPublic;
-                            
+
                             if(g_iPublic)llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_public=1", "origin");
                             else llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_public","origin");
-                            
+
                         } else {
                             llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to changing public", kAv);
                         }
                     } else if(sMsg == Checkbox(g_iLimitRange, "Limit Range")){
                         if(iAuth >=CMD_OWNER && iAuth <= CMD_TRUSTED){
                             g_iLimitRange=1-g_iLimitRange;
-                        
+
                             if(!g_iLimitRange)llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_limitrange=0","origin");
                             else llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_limitrange", "origin");
                         } else {
@@ -578,8 +578,8 @@ state active
                         llMessageLinked(LINK_SET,0,"menu runaway", kAv);
                         iRespring=FALSE;
                     }
-                    
-                    
+
+
                     if(iRespring)AccessMenu(kAv,iAuth);
                 } else if(sMenu == "Menu~Settings"){
                     if(sMsg == UPMENU){
@@ -591,7 +591,7 @@ state active
                         llMessageLinked(LINK_SET, iAuth, "fix", kAv);
                         llMessageLinked(LINK_SET, NOTIFY, "0Menus have been fixed", kAv);
                     } else if(sMsg == Checkbox(g_iHide,"Hide")){
-                        
+
                         if(!g_iAllowHide && iAuth == CMD_WEARER){
                             llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to hiding the collar", kAv);
                             return;
@@ -600,7 +600,7 @@ state active
                             llMessageLinked(LINK_SET,NOTIFY, "0%NOACCESS% to hiding the collar", kAv);
                             return;
                         }
-                        
+
                         g_iHide=1-g_iHide;
                         llMessageLinked(LINK_SET, iAuth, setor(g_iHide, "hide", "show"), kAv);
                         llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_hide="+(string)g_iHide, "");
@@ -620,14 +620,14 @@ state active
                         iRespring=FALSE;
                         AddonSettings(kAv,iAuth);
                     }
-                    
+
                     if(iRespring)Settings(kAv,iAuth);
                 }else if(sMenu == "Menu~SAddons"){
                     if(sMsg == Checkbox(g_iWearerAddons, "WearerAddons")){
                         if(iAuth == CMD_OWNER || iAuth == CMD_TRUSTED){
                             g_iWearerAddons=1-g_iWearerAddons;
                             llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_weareraddon="+(string)g_iWearerAddons,"");
-                            
+
                             if(!g_iWearerAddons){
                                 llMessageLinked(LINK_SET, 500, "kick_all_wearer_addons", kAv);
                             }
@@ -646,9 +646,9 @@ state active
                         iRespring=FALSE;
                         Settings(kAv,iAuth);
                     }
-                    
-                    
-                    
+
+
+
                     if(iRespring)AddonSettings(kAv,iAuth);
                 } else if(sMenu == "Menu~Help"){
                     if(sMsg == UPMENU){
@@ -661,7 +661,7 @@ state active
                     } else if(sMsg == "Update"){
                         UserCommand(iAuth, "update", kAv);
                     }
-                    
+
                     if(iRespring)HelpMenu(kAv,iAuth);
                 } else if(sMenu == "Menu~Apps"){
                     if(sMsg == UPMENU){
@@ -679,7 +679,7 @@ state active
                     for(iStart=0;iStart<iEnd;iStart++){
                         llInstantMessage((key)llList2String(g_lTestReports, iStart), "T:"+sMenu+":"+COLLAR_VERSION+"\nFROM: "+llKey2Name(kAv)+"\nAUTH LEVEL: "+(string)iAuth+"\nBODY: "+sMsg);
                     }
-                    
+
                     llMessageLinked(LINK_SET, NOTIFY, "0Thank you. Your report has been sent. Please do not abuse this tool, it is intended to send feedback or bug reports during a testing period", kAv);
                     Menu(kAv,iAuth);
                 }
@@ -692,16 +692,16 @@ state active
             string sToken = llList2String(lPar,0);
             string sVar = llList2String(lPar,1);
             string sVal = llList2String(lPar,2);
-            
-            
+
+
             //integer ind = llListFindList(g_lSettingsReqs, [sToken+"_"+sVar]);
             //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
-            
-            
+
+
             if(sToken=="global"){
                 if(sVar=="locked"){
                     g_iLocked=(integer)sVal;
-                    
+
                     if(g_iLocked){
                         llOwnerSay("@detach=n");
                     }else{
@@ -740,7 +740,7 @@ state active
             } else if(sToken == "intern"){
                 if(sVar == "weld"){
                     g_iWelded=(integer)sVal;
-                    
+
                     if(!g_iLocked)llMessageLinked(LINK_SET,LM_SETTING_SAVE, "global_locked=1","");
                 } else if(sVar == "weldby"){
                     g_kWeldBy = (key)sVal;
@@ -755,7 +755,7 @@ state active
                     }
                 }
             }
-            
+
             if(sStr == "settings=sent"){
                 if(g_kGroup==(string)NULL_KEY)g_kGroup="";
             }
@@ -763,10 +763,10 @@ state active
             list lPar = llParseString2List(sStr, ["_"],[]);
             string sToken = llList2String(lPar,0);
             string sVar = llList2String(lPar,1);
-            
+
             //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
             //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
-            
+
             if(sToken=="global"){
                 if(sVar == "locked") {
                     g_iLocked=FALSE;
@@ -809,22 +809,22 @@ state active
                 llMessageLinked(LINK_SET, NOTIFY_OWNERS, "%WEARERNAME%'s collar has been welded", g_kWelder);
                 llMessageLinked(LINK_SET, NOTIFY, "1Weld completed", g_kWearer); //We shouldn't have to send this to the welder. Welder should always be an owner.
             }
-        
+
         } else if(iNum == REBOOT){
             if(sStr=="reboot"){
                 llResetScript();
             }
-        
+
         } else if(iNum == 0){
             // Auth request!
             if(sStr=="initialize"){
                 llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, "");
                 llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Apps", "");
-                
+
                 DoCheckUpdate();
-                
+
                 if(llGetAttached()){
-                    
+
                     g_iInterfaceChannel = (integer)("0x" + llGetSubString(g_kWearer,30,-1));
                     if (g_iInterfaceChannel > 0) g_iInterfaceChannel = -g_iInterfaceChannel;
                     if(g_iInterfaceChannel!=0)
@@ -858,7 +858,7 @@ state active
             } else llOwnerSay("Could not check the latest development version. The file might not exist or github is not working");
         }
     }
-    
+
     timer(){
         if(g_iWaitUpdate){
             g_iWaitUpdate=FALSE;
@@ -873,13 +873,13 @@ state active
                 // Trigger update
                 StartUpdate();
             }
-            
-            
+
+
         }else {
             llSetTimerEvent(0);
         }
     }
-    
+
     listen(integer iChan, string sName, key kID, string sMsg){
         if(iChan == g_iUpdateChan){
             // dont check object owner. But do check if it is using v8 protocol for updates
@@ -887,7 +887,7 @@ state active
             string Cmd = llList2String(lTemp,0);
             string sOpt = llList2String(lTemp,1);
             string sImpl = "";
-            
+
             if(llGetListLength(lTemp)>=3){
                 sImpl = llList2String(lTemp,2);
                 if(sImpl=="8000"){ // v8.0.00
@@ -900,7 +900,7 @@ state active
                     }
                 }
             }
-            
+
             if(Cmd == "-.. ---" && sImpl == ""){ //Seriously why the fuck are we using morse code?
                 // sOpt is strictly going to be the version string now
                 Compare(COLLAR_VERSION, sOpt);
@@ -918,4 +918,3 @@ state active
         }
     }
 }
-

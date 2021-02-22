@@ -1,4 +1,4 @@
-    
+
 /*
 This file is a part of OpenCollar.
 Copyright ©2021
@@ -8,8 +8,8 @@ Copyright ©2021
 
 Aria (Tashia Redrose)
     *January 2021       -       Created oc_addons
-      
-      
+
+
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
@@ -19,6 +19,7 @@ https://github.com/OpenCollarTeam/OpenCollar
 string g_sParentMenu = "Main";
 string g_sSubMenu = "Addons";
 
+string COLLAR_VERSION = "8.0.3000";
 
 string Auth2Str(integer iAuth){
     if(iAuth == CMD_OWNER)return "Owner";
@@ -56,7 +57,7 @@ integer CalcAuth(key kID, integer iVerbose){
             if(g_kGroup!=NULL_KEY){
                 if(llSameGroup(kID))return CMD_GROUP;
             }
-        
+
             if(g_iPublic)return CMD_EVERYONE;
         } else if(!in_range(kID) && !iVerbose){
             if(g_iPublic)return CMD_EVERYONE;
@@ -65,8 +66,8 @@ integer CalcAuth(key kID, integer iVerbose){
                 llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% because you are out of range", kID);
         }
     }
-        
-    
+
+
     return CMD_NOACCESS;
 }
 key g_kGroup=NULL_KEY;
@@ -84,13 +85,13 @@ integer GENERAL_API_CHANNEL = 0x60b97b5e;
 //MESSAGE MAP
 list g_lActiveListeners;
 DoListeners(){
-    
+
     integer i=0;
     integer end = llGetListLength(g_lActiveListeners);
     for(i=0;i<end;i++){
         llListenRemove(llList2Integer(g_lActiveListeners, i));
     }
-    
+
     if(g_iAddons)
         g_lActiveListeners+=[llListen(API_CHANNEL, "","",""), llListen(GENERAL_API_CHANNEL, "", "", "scan")];
 }
@@ -165,7 +166,7 @@ UserCommand(integer iNum, string sStr, key kID) {
     if (llToLower(sStr)==llToLower(g_sSubMenu) || llToLower(sStr) == "menu "+llToLower(g_sSubMenu)) AddonsMenu(kID, iNum);
     //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else {
-        //integer iWSuccess = 0; 
+        //integer iWSuccess = 0;
         //string sChangetype = llList2String(llParseString2List(sStr, [" "], []),0);
         //string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),1);
         //string sText;
@@ -244,21 +245,21 @@ state active
         g_kWearer = llGetOwner();
         API_CHANNEL = ((integer)("0x"+llGetSubString((string)llGetOwner(),0,8)))+0xf6eb-0xd2;
         DoListeners();
-        
+
         SayToAddon("dc", 0, "", llGetOwner());
         SayToAddon("online", 0, "", llGetOwner());
         llSetTimerEvent(15);
-        
+
     }
-    
+
     timer(){
-        
-        
+
+
         if(llGetTime()>=60){
             // flush the alive addons and ping all addons
             llResetTime();
             integer deadStamp = (5*60);
-            
+
             integer i=0;
             integer end = llGetListLength(g_lAddons);
             for(i=0;i<end;i+=4){
@@ -273,14 +274,14 @@ state active
             }
         }
     }
-    
+
     listen(integer c, string n,key i,string m){
         if(c==API_CHANNEL){
             //llWhisper(0, m);
             // All addons as of 8.0.00004 must include a ping and pong. This lets the collar know an addon is alive and not to automatically remove it.
             // Addon key will be placed in a temporary list that will be cleared once the timer checks over all the information.
             string PacketType = llJsonGetValue(m,["pkt_type"]);
-            
+
             if(PacketType=="ping" && llJsonGetValue(m,["kID"])==(string)llGetKey()){
                 //llSay(0, "Alive signal seen from addon: "+(string)i);
                 integer index = llListFindList(g_lAddons, [i]);
@@ -295,14 +296,14 @@ state active
             else if(PacketType == "online"){
                 // this is a initial handshake
                 if(llJsonGetValue(m,["kID"])==(string)llGetOwner()){
-                    
+
                     // begin to pass stuff to link messages!
                     // first- Check if a pairing was done with this addon, if not ask the user for confirmation, add it to Addons, and then move on
-                    
+
                     if(llListFindList(g_lAddons, [i])==-1 && llGetOwnerKey(i)!=g_kWearer){
                         integer AddonOwnerAuth = CalcAuth(llGetOwnerKey(i),FALSE);
                         if(AddonOwnerAuth == CMD_OWNER || AddonOwnerAuth == CMD_TRUSTED){
-                            
+
                             g_lAddons += [i, llJsonGetValue(m,["addon_name"]), llGetUnixTime(), llJsonGetValue(m,["optin"])];
                             SayToAddonX(i, "approved", 0, "", "");
                             llMessageLinked(LINK_SET, NOTIFY, "0Addon connected successfully: "+llJsonGetValue(m,["addon_name"]), g_kWearer);
@@ -341,40 +342,40 @@ state active
             else if(PacketType == "from_addon"){
                 // begin to pass stuff to link messages!
                 // first- Check if a pairing was done with this addon, if not ask the user for confirmation, add it to Addons, and then move on
-                
+
                 if(llListFindList(g_lAddons, [i])==-1)return; //<--- deny further action. Addon not registered
-                
+
                 integer iNum = (integer)llJsonGetValue(m,["iNum"]);
                 string sMsg = llJsonGetValue(m,["sMsg"]);
                 key kID = llJsonGetValue(m,["kID"]);
-                
+
                 if((iNum == LM_SETTING_DELETE || iNum == LM_SETTING_SAVE)&& llGetOwnerKey(i)==g_kWearer && g_iWearerAddonLimited){
                     //string sTest = llToLower(sMsg);
                     if(llSubStringIndex(sMsg, "auth_")!=-1)return;
                     if(llSubStringIndex(sMsg,"intern_")!=-1)return;
                 }
-                
+
                 llMessageLinked(LINK_SET, iNum, sMsg,kID);
-                
-                
-                
+
+
+
                 return;
             } else if(PacketType == "update"){
                 if(llListFindList(g_lAddons, [i])==-1)return;
-                
+
                 string updateNums = llJsonGetValue(m,["optin"]);
                 integer index = llListFindList(g_lAddons, [i]);
                 g_lAddons = llListReplaceList(g_lAddons, [ updateNums], index+3, index+3);
             }
         } else if(c == GENERAL_API_CHANNEL){
             if(m=="scan"){
-                llRegionSayTo(i,c,"ack");
+                llRegionSayTo(i,c,"ack|"+COLLAR_VERSION);
             }
         }
     }
-    
+
     link_message(integer iSender,integer iNum,string sStr,key kID){
-        
+
         if(llGetListLength(g_lAddons)>0){
             if(llListFindList(g_lAddonFiltered, [iNum])!=-1){
                 // check if any addons want this link number
@@ -395,8 +396,8 @@ state active
                 SayToAddon("from_collar", iNum, sStr, kID);
 //                llRegionSay(API_CHANNEL, llList2Json(JSON_OBJECT, ["addon_name", "OpenCollar", "iNum", iNum, "sMsg", sStr, "kID", kID, "pkt_type", "from_collar"]));
         }
-        
-        
+
+
         if(iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
         else if(iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu+"|"+ g_sSubMenu,"");
@@ -439,7 +440,7 @@ state active
             string sToken = llList2String(lSettings,0);
             string sVar = llList2String(lSettings,1);
             string sVal = llList2String(lSettings,2);
-            
+
             if(sToken=="global"){
                 if(sVar=="locked"){
                     g_iLocked=(integer)sVal;
@@ -476,7 +477,7 @@ state active
             if(sToken=="global"){
                 if(sVar == "locked") {
                     g_iLocked=FALSE;
-                
+
                 } else if(sVar == "weareraddon"){
                     g_iWearerAddons=1;
                 } else if(sVar == "addonlimit"){
@@ -502,7 +503,7 @@ state active
                 }
             }
         } else if(iNum == REBOOT){
-            
+
             SayToAddon("dc",0,"",llGetOwner());
             llResetScript();
         }

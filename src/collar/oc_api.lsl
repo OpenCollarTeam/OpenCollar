@@ -1,4 +1,4 @@
-    
+
 /*
 This file is a part of OpenCollar.
 Copyright ©2020
@@ -11,8 +11,8 @@ Aria (Tashia Redrose)
       * This implements some auth features, and acts as a API Bridge for addons and plugins
 Felkami (Caraway Ohmai)
     *Dec 2020        -       Fix: 457Switched optin from searching by string to list
-    
-    
+
+
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
@@ -122,7 +122,7 @@ integer CalcAuth(key kID, integer iVerbose){
             if(g_kGroup!=NULL_KEY){
                 if(llSameGroup(kID))return CMD_GROUP;
             }
-        
+
             if(g_iPublic)return CMD_EVERYONE;
         } else if(!in_range(kID) && !iVerbose){
             if(g_iPublic)return CMD_EVERYONE;
@@ -131,8 +131,8 @@ integer CalcAuth(key kID, integer iVerbose){
                 llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% because you are out of range", kID);
         }
     }
-        
-    
+
+
     return CMD_NOACCESS;
 }
 
@@ -164,10 +164,10 @@ PrintAccess(key kID){
     }
     sFinal+="\n";
     if(llGetListLength(g_lOwner)==0 || llListFindList(g_lOwner, [(string)g_kWearer])!=-1)sFinal+="\n* Wearer is unowned or owns themselves.\nThe wearer has owner access";
-    
+
     sFinal += "\nPublic: "+tf(g_iPublic);
     if(g_kGroup != NULL_KEY) sFinal+="\nGroup: secondlife:///app/group/"+(string)g_kGroup+"/about";
-    
+
     if(!g_iRunaway)sFinal += "\n\n* RUNAWAY IS DISABLED *";
     llMessageLinked(LINK_SET,NOTIFY, "0"+sFinal,kID);
     //llSay(0, sFinal);
@@ -180,16 +180,16 @@ DoListeners(){
     for(i=0;i<end;i++){
         llListenRemove(llList2Integer(g_lActiveListeners, i));
     }
-    
+
     g_lActiveListeners = [llListen(g_iChannel, "","",""), llListen(0,"","",""),  llListen(g_iInterfaceChannel, "", "", "")];
-    
+
 }
 integer g_iRunaway=TRUE;
 RunawayMenu(key kID, integer iAuth){
     if(iAuth == CMD_OWNER || iAuth==CMD_WEARER){
         string sPrompt = "\n[Runaway]\n\nAre you sure you want to runaway from all owners?\n\n* This action will reset your owners list, trusted list, and your blocked avatars list.";
         list lButtons = ["Yes", "No"];
-        
+
         if(iAuth == CMD_OWNER){
             sPrompt+="\n\nAs the owner you have the abliity to disable or enable runaway.";
             if(g_iRunaway)lButtons+=["Disable"];
@@ -270,7 +270,7 @@ UpdateLists(key kID, key kIssuer){
                     WearerConfirmListUpdate(kIssuer, "Removal of self ownership");
                 }
             }
-        } 
+        }
         if(iMode&ACTION_TRUST){
             if(llListFindList(g_lTrust, [(string)kID])!=-1){
                 if(kID != g_kWearer || g_iGrantedConsent || kIssuer==g_kWearer){
@@ -324,18 +324,18 @@ UserCommand(integer iAuth, string sCmd, key kID){
         g_iRunawayMode=0;
         RunawayMenu(kID,iAuth);
     }
-    
+
     if(iAuth == CMD_OWNER){
         if(sCmd == "safeword-disable")g_iSafewordDisable=TRUE;
         else if(sCmd == "safeword-enable")g_iSafewordDisable=FALSE;
-            
+
         list lCmd = llParseString2List(sCmd, [" "],[]);
         string sCmdx = llToLower(llList2String(lCmd,0));
-                
+
         if(sCmdx == "channel"){
             g_iChannel = (integer)llList2String(lCmd,1);
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_channel="+(string)g_iChannel, kID);
-        
+
         } else if(sCmdx == "prefix"){
             if(llList2String(lCmd,1)==""){
                 llMessageLinked(LINK_SET,NOTIFY,"0The prefix is currently set to: "+g_sPrefix+". If you wish to change it, supply the new prefix to this same command", kID);
@@ -347,7 +347,7 @@ UserCommand(integer iAuth, string sCmd, key kID){
             string sType = llToLower(llList2String(lCmd,1));
             string sID;
             if(llGetListLength(lCmd)==3) sID = llList2String(lCmd,2);
-                    
+
             g_kMenuUser=kID;
             g_iCurrentAuth = iAuth;
             if(sCmdx=="add")
@@ -357,7 +357,7 @@ UserCommand(integer iAuth, string sCmd, key kID){
             else if(sType == "trust")g_iMode = g_iMode|ACTION_TRUST;
             else if(sType == "block")g_iMode=g_iMode|ACTION_BLOCK;
             else return; // Invalid, don't continue
-                    
+
             if(sID == ""){
                 // Open Scanner Menu to add
                 if(g_iMode&ACTION_ADD){
@@ -368,13 +368,13 @@ UserCommand(integer iAuth, string sCmd, key kID){
                     if(sType == "owner")lOpts=g_lOwner;
                     else if(sType == "trust")lOpts=g_lTrust;
                     else if(sType == "block")lOpts=g_lBlock;
-                    
+
                     Dialog(kID, "OpenCollar\n\nRemove "+sType, lOpts, [UPMENU],0,iAuth,"removeUser");
                 }
             }else {
                 UpdateLists((key)sID, kID);
             }
-        } 
+        }
     }
     if (iAuth <CMD_OWNER || iAuth>CMD_EVERYONE) return;
     if (iAuth == CMD_OWNER && sCmd == "runaway") {
@@ -388,9 +388,9 @@ UserCommand(integer iAuth, string sCmd, key kID){
             llMessageLinked(LINK_SET, NOTIFY, "0Runaway complete", g_kWearer);
             return;
         }
-            
+
     }
-    
+
      if(sCmd == "print auth"){
          if(iAuth == CMD_OWNER || iAuth == CMD_TRUSTED || iAuth == CMD_WEARER)
             PrintAccess(kID);
@@ -398,7 +398,7 @@ UserCommand(integer iAuth, string sCmd, key kID){
             llMessageLinked(LINK_SET,NOTIFY, "0%NOACCESS% to printing access lists!", kID);
     }
 }
- 
+
 list StrideOfList(list src, integer stride, integer start, integer end)
 {
     list l = [];
@@ -460,7 +460,7 @@ state active
     on_rez(integer iNum){
         llResetScript();
     }
-    
+
     state_entry(){
         if(llGetStartParameter()!=0)llResetScript();
         g_kWearer = llGetOwner();
@@ -471,15 +471,15 @@ state active
             if (g_iInterfaceChannel > 0) g_iInterfaceChannel = -g_iInterfaceChannel;
         }
         DoListeners();
-        
+
         llSetTimerEvent(15);
-        
+
         llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "ALL","");
-        
-            
-        
+
+
+
     }
-    
+
     timer(){
         if(llGetInventoryType("oc_states")==INVENTORY_NONE)llSetTimerEvent(0); // The state manager is not installed.
         if(llGetScriptState("oc_states")==FALSE){
@@ -488,15 +488,15 @@ state active
             llSetScriptState("oc_states",TRUE);
         }
     }
-    
-    
+
+
     run_time_permissions(integer iPerm) {
         if (iPerm & PERMISSION_ATTACH) {
             llOwnerSay("@detach=yes");
             llDetachFromAvatar();
         }
     }
-    
+
     listen(integer c,string n,key i,string m){
         if(c == g_iInterfaceChannel){
             //do nothing if wearer isnt owner of the object
@@ -511,9 +511,9 @@ state active
                 llRequestPermissions(g_kWearer,PERMISSION_ATTACH);
             }
         }
-            
-        
-        
+
+
+
         if(llToLower(llGetSubString(m,0,llStringLength(g_sPrefix)-1))==llToLower(g_sPrefix)){
             string CMD=llGetSubString(m,llStringLength(g_sPrefix),-1);
             if(llGetSubString(CMD,0,0)==" ")CMD=llDumpList2String(llParseString2List(CMD,[" "],[]), " ");
@@ -525,18 +525,18 @@ state active
         } else {
             list lTmp = llParseString2List(m,[" ","(",")"],[]);
             string sDump = llToLower(llDumpList2String(lTmp, ""));
-            
+
             if(sDump == llToLower(g_sSafeword) && !g_iSafewordDisable && i == g_kWearer){
                 llMessageLinked(LINK_SET, CMD_SAFEWORD, "","");
                 SW();
             }
         }
     }
-    
+
     link_message(integer iSender, integer iNum, string sStr, key kID){
-        
-        
-        
+
+
+
         //if(iNum>=CMD_OWNER && iNum <= CMD_NOACCESS) llOwnerSay(llDumpList2String([iSender, iNum, sStr, kID], " ^ "));
         if(iNum == CMD_ZERO){
             if(sStr == "initialize")return;
@@ -548,7 +548,7 @@ state active
             //llOwnerSay("{API} Calculate auth for "+(string)kID+"="+(string)iAuth+";"+sStr);
             llMessageLinked(LINK_SET, AUTH_REPLY, "AuthReply|"+(string)kID+"|"+(string)iAuth,sStr);
         } else if(iNum >= CMD_OWNER && iNum <= CMD_NOACCESS) UserCommand(iNum, sStr, kID);
-            
+
         else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
@@ -558,10 +558,10 @@ state active
             string sToken = llList2String(lPar,0);
             string sVar = llList2String(lPar,1);
             string sVal = llList2String(lPar,2);
-            
+
             //integer ind = llListFindList(g_lSettingsReqs, [sToken+"_"+sVar]);
             //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
-            
+
             if(sToken == "auth"){
                 if(sVar == "owner"){
                     g_lOwner=llParseString2List(sVal, [","],[]);
@@ -574,7 +574,7 @@ state active
                 } else if(sVar == "group"){
                     if(sVal == (string)NULL_KEY)sVal="";
                     g_kGroup = (key)sVal;
-                    
+
                     if(g_kGroup!=NULL_KEY)
                         llOwnerSay("@setgroup:"+(string)g_kGroup+"=force,setgroup=n");
                     else llOwnerSay("@setgroup=y");
@@ -597,7 +597,7 @@ state active
                     g_iSafewordDisable=1;
                 }
             }
-            
+
             if(sStr=="settings=sent"){
                 if(g_iStartup){
                     g_iStartup=0;
@@ -610,20 +610,20 @@ state active
                             if(owner==g_kWearer)lMsg += "Yourself";
                             else lMsg += ["secondlife:///app/agent/"+(string)owner+"/about"];
                         }
-                        
+
                         llMessageLinked(LINK_SET, NOTIFY, "0You are owned by: "+llDumpList2String(lMsg,", "), g_kWearer);
                     }
                 }
             }
         } else if(iNum == LM_SETTING_DELETE){
-            
+
             list lPar = llParseString2List(sStr, ["_"],[]);
             string sToken = llList2String(lPar,0);
             string sVar = llList2String(lPar,1);
-            
+
             //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
             //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
-            
+
             if(sToken == "auth"){
                 if(sVar == "owner"){
                     g_lOwner=[];
@@ -657,7 +657,7 @@ state active
             if(sStr=="reboot"){
                 llResetScript();
             }
-        } 
+        }
         else if(iNum == DIALOG_RESPONSE){
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if(iMenuIndex!=-1){
@@ -668,7 +668,7 @@ state active
                 string sMsg = llList2String(lMenuParams,1);
                 integer iAuth = llList2Integer(lMenuParams,3);
                 //integer iRespring=TRUE;
-                
+
                 if(sMenu == "scan~add"){
                     if(sMsg == UPMENU){
                         llMessageLinked(LINK_SET, iAuth, "menu Access", kAv);
@@ -736,7 +736,7 @@ state active
                             llMessageLinked(LINK_SET, CMD_OWNER, "runaway", g_kWearer);
                             llMessageLinked(LINK_SET, CMD_SAFEWORD, "safeword", "");
                             llMessageLinked(LINK_SET, CMD_OWNER, "clear", g_kWearer);
-                            
+
                             llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "5", "spring_access:"+(string)kAv);
                         }
                     }
@@ -764,18 +764,18 @@ state active
                 //llSay(0, "scan: "+(string)i+";"+(string)llGetListLength(lPeople)+";"+(string)g_iMode);
                 if(llDetectedKey(i)!=llGetOwner())
                     lPeople += llDetectedKey(i);
-                
+
             } else {
                 //llSay(0, "scan: invalid list length: "+(string)llGetListLength(lPeople)+";"+(string)g_iMode);
             }
         }
-        
+
         Dialog(g_kMenuUser, "OpenCollar\nAdd Menu", lPeople, [">Wearer<",UPMENU], 0, g_iCurrentAuth, "scan~add");
     }
-    
+
     no_sensor(){
         if(!(g_iMode&ACTION_SCANNER))return;
-        
+
         Dialog(g_kMenuUser, "OpenCollar\nAdd Menu", [], [">Wearer<", UPMENU], 0, g_iCurrentAuth, "scan~add");
     }
 }
