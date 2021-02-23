@@ -1,9 +1,9 @@
 // This file is part of OpenCollar.
-// Copyright (c) 2011 - 2016 Nandana Singh, Satomi Ahn, DrakeSystem,    
-// Wendy Starfall, littlemousy, Romka Swallowtail, Garvin Twine et al.   
-// Licensed under the GPLv2.  See LICENSE for full details. 
+// Copyright (c) 2011 - 2016 Nandana Singh, Satomi Ahn, DrakeSystem,
+// Wendy Starfall, littlemousy, Romka Swallowtail, Garvin Twine et al.
+// Licensed under the GPLv2.  See LICENSE for full details.
 
-// Medea added fancy new rainbow particles! 
+// Medea added fancy new rainbow particles!
 
 // This is the master updater script.  It complies with the update handshake
 // protocol that OC has been using for quite some time, and should therefore be
@@ -106,7 +106,7 @@ Particles(key kTarget) {
     vector b=llList2Vector(l_ParticleColours,g_iRainbowCycle+1);
     g_iRainbowCycle++;
     if(g_iRainbowCycle>6) g_iRainbowCycle=0;
-    llParticleSystem([            
+    llParticleSystem([
             PSYS_SRC_PATTERN,PSYS_SRC_PATTERN_EXPLODE,
             PSYS_SRC_BURST_RADIUS,0,
             PSYS_SRC_ANGLE_BEGIN,0.1,
@@ -180,10 +180,12 @@ PermsCheck() {
 
 default {
     state_entry() {
-       // llPreloadSound("6b4092ce-5e5a-ff2e-42e0-3d4c1a069b2f");
-       // llPreloadSound("d023339f-9a9d-75cf-4232-93957c6f620c");
+        // llPreloadSound("6b4092ce-5e5a-ff2e-42e0-3d4c1a069b2f");
+        // llPreloadSound("d023339f-9a9d-75cf-4232-93957c6f620c");
         //llPreloadSound("3409e593-20ab-fd34-82b3-6ecfdefc0207"); // ao
-       // llPreloadSound("95d3f6c5-6a27-da1c-d75c-a57cb29c883b"); //remote hud
+        // llPreloadSound("95d3f6c5-6a27-da1c-d75c-a57cb29c883b"); //remote hud
+        string sPrefix = llToLower(llGetSubString(llKey2Name(llGetOwner()),0,1));
+        llSay(0, "Thank you for rezzing me.  Next:  In the Collar menu, go to Help/About and press Update. Or, use the chat command '"+sPrefix+" update'.");
         llSetTimerEvent(1200.0);
         PermsCheck();
         ReadName();
@@ -233,14 +235,14 @@ default {
             list lParts = llParseStringKeepNulls(sMsg, ["|"], []);
             string sCmd = llList2String(lParts, 0);
             if (sCmd == "UPDATE") {
-                llRegionSayTo(kID, g_iLegacyChannel, "get ready");     
-                llRegionSayTo(kID, g_iLegacyChannel, "items"); // 3.2 and earlier 
+                llRegionSayTo(kID, g_iLegacyChannel, "get ready");
+                llRegionSayTo(kID, g_iLegacyChannel, "items"); // 3.2 and earlier
             } else if (sCmd == "ready") {
                 integer iPin = llList2Integer(lParts, 1);
                 llGiveInventory(kID, "leashpoint");
                 llRemoteLoadScriptPin(kID, "oc_transform_shim", iPin, TRUE, 1);
             }
-                    
+
         } else if (iChannel == g_initChannel) {
             // everything heard on the init channel is stuff that has to
             // comply with the existing update kickoff protocol.  New stuff
