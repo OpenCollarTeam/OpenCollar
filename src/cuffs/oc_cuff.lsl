@@ -110,7 +110,7 @@ integer CLEAR_ALL_CHAINS = -58934;
 integer STOP_CUFF_POSE = -58935; // <-- stops all active animations originating from this cuff
 integer DESUMMON_PARTICLES = -58936; // Message only includes the From point name
 
-
+integer g_iFirstInit=TRUE;
 
 /*
  * Since Release Candidate 1, Addons will not receive all link messages without prior opt-in.
@@ -654,8 +654,6 @@ default
                                 }
 
                                 g_iHidden=(integer)sVal;
-
-                                ToggleAlpha((integer)sVal);
                             }
                         } else if(sToken == "anim")
                         {
@@ -691,6 +689,12 @@ default
                             }
                             if(g_sCurrentPose!="NONE")llMessageLinked(LINK_SET,500, g_sCurrentPose, "0");
                             if(g_sActivePose!="")llMessageLinked(LINK_SET,300, g_sActivePose, "");
+
+                            if(!g_iHidden && g_iFirstInit){
+                                g_iFirstInit=FALSE;
+
+                                ToggleAlpha(FALSE);
+                            }
                         }
                     }else if(iNum == LM_SETTING_DELETE)
                     {
