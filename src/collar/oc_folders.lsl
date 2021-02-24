@@ -51,6 +51,12 @@ integer MENUNAME_RESPONSE = 3001;
 //integer RLV_OFF = 6100; // send to inform plugins that RLV is disabled now, no message or key needed
 //integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no message or key needed
 
+integer QUERY_FOLDER_LOCKS = -9100;
+integer REPLY_FOLDER_LOCKS = -9101;
+integer SET_FOLDER_LOCK = -9102;
+integer CLEAR_FOLDER_LOCKS = -9103;
+
+
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
@@ -71,7 +77,7 @@ integer g_iTmpLstn;
 string CONFIG = "◌ Configure";
 Menu(key kID, integer iAuth) {
     string sPrompt = "\n[Folders]";
-    list lButtons = ["Browse", CONFIG];
+    list lButtons = ["Browse", CONFIG, "Clear Locks"];
 
     Dialog(kID,sPrompt,lButtons, [UPMENU], 0, iAuth, "Menu~Folders");
     //Browser(kID, iAuth, "");
@@ -276,6 +282,24 @@ string setor(integer iTest, string sTrue, string sFalse){
 integer ALIVE = -55;
 integer READY = -56;
 integer STARTUP = -57;
+
+integer g_iMenuAuth;
+
+LocksMenu(key kAv, integer iAuth, integer iMask)
+{
+    string sPrompt = "[Folders]\n> Locks\n\nPath: "+g_sPath+"\n\n* The subfolder options will lock/unlock this folder and all subfolders contained. It only affects your current path. To unlock every folder and clear all locks, see the main menu";
+    list lButtons = [];
+    if(iMask & 1)lButtons += [Checkbox(TRUE, "det. subfolder")];
+    else lButtons += Checkbox(FALSE, "det. subfolder");
+    if(iMask & 2)lButtons += [Checkbox(TRUE, "att. subfolder")];
+    else lButtons += Checkbox(FALSE, "att. subfolder");
+    if(iMask & 4)lButtons += [Checkbox(TRUE, "det. this")];
+    else lButtons += [Checkbox(FALSE, "det. this")];
+    if(iMask & 8)lButtons += [Checkbox(TRUE, "att. this")];
+    else lButtons += [Checkbox(FALSE, "att. this")];
+
+    Dialog(kAv, sPrompt, lButtons, [UPMENU], 0, iAuth, "Folders~Locks");
+}
 default
 {
     on_rez(integer iNum){
@@ -354,8 +378,9 @@ state active
 
                 lButtons += [Checkbox(iState, llList2String(lTmp1,0))];
             }
-
-            Dialog(g_kMenuUser, sPrompt, lButtons, ["+ Add Items", "- Rem Items", setor((g_sPath == ""), UPMENU, "^ UP")], 0, g_iMenuUser, "FolderBrowser~");
+            list lLockOption=[];
+            if(llGetInventoryType("oc_folders_locks")==INVENTORY_SCRIPT)lLockOption += ["Locks.."];
+            Dialog(g_kMenuUser, sPrompt, lButtons, ["+ Add Items", "- Rem Items", setor((g_sPath == ""), UPMENU, "^ UP")]+lLockOption, 0, g_iMenuUser, "FolderBrowser~");
         } else if(iChan == g_iFindChn)
         {
             if(g_iCmdMode & F_RECURSIVE){
@@ -408,6 +433,13 @@ state active
                     } else if(sMsg == "- Rem Items"){
                         llOwnerSay("@detachall:"+g_sPath+"=force");
                         llSleep(2.0);
+                    } else if(sMsg == "Locks..")
+                    {
+                        iRespring=FALSE;
+                        //LocksMenu(kAv, iAuth);
+                        g_kMenuUser=kAv;
+                        g_iMenuAuth = iAuth;
+                        llMessageLinked(LINK_SET, QUERY_FOLDER_LOCKS, g_sPath, "");
                     } else if(sMsg == "^ UP"){
                         iRespring=FALSE;
                         Browser(kAv,iAuth, GoBackOneFolder(g_sPath));
@@ -420,6 +452,22 @@ state active
 
 
                     if(iRespring)Browser(kAv,iAuth, g_sPath);
+                } else if(sMenu == "Folders~Locks"){
+                    if(sMsg == UPMENU){
+                        iRespring=FALSE;
+                        Browser(kAv,iAuth, g_sPath);
+                    }else if(sMsg == Checkbox(TRUE, "det. this") || sMsg==Checkbox(FALSE, "det. this")){
+                        llMessageLinked(LINK_SET, SET_FOLDER_LOCK, "detachthis", g_sPath);
+                    } else if(sMsg == Checkbox(TRUE, "att. this") || sMsg == Checkbox(FALSE, "att. this"))
+                    {
+                        llMessageLinked(LINK_SET, SET_FOLDER_LOCK, "attachthis", g_sPath);
+                    } else if(sMsg == Checkbox(TRUE, "det. subfolder") || sMsg == Checkbox(FALSE, "det. subfolder")){
+                        llMessageLinked(LINK_SET, SET_FOLDER_LOCK, "detachallthis", g_sPath);
+                    } else if(sMsg == Checkbox(TRUE, "att. subfolder") || sMsg == Checkbox(FALSE, "att. subfolder")){
+                        llMessageLinked(LINK_SET, SET_FOLDER_LOCK, "attachallthis", g_sPath);
+                    }
+
+                    if(iRespring)llMessageLinked(LINK_SET, QUERY_FOLDER_LOCKS, g_sPath, "");
                 } else if(sMenu == "Menu~Folders"){
                     if(sMsg == "Browse"){
                         Browser(kAv,iAuth,"");
@@ -427,6 +475,8 @@ state active
                     } else if(sMsg == CONFIG){
                         ConfigureMenu(kAv,iAuth);
                         iRespring=FALSE;
+                    } else if(sMsg == "Clear Locks"){
+                        llMessageLinked(LINK_SET, CLEAR_FOLDER_LOCKS, "", "");
                     } else if(sMsg == UPMENU){
                         iRespring=FALSE;
 
@@ -489,6 +539,10 @@ state active
                     g_iAccessBitSet=(integer)llList2String(lSettings,2);
                 }
             }
+        } else if(iNum == REPLY_FOLDER_LOCKS)
+        {
+            integer iMask = (integer)((string)kID);
+            LocksMenu(g_kMenuUser, g_iMenuAuth, iMask);
         }
         //llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
     }

@@ -419,6 +419,7 @@ default
                 llResetScript();
             }
         } else if(iNum == READY){
+            llOwnerSay("@detach=n");
             llMessageLinked(LINK_SET, ALIVE, llGetScriptName(), "");
         } else if(iNum == STARTUP){
             state active;
