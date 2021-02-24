@@ -130,6 +130,7 @@ integer MENUNAME_RESPONSE = 3001;
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
+integer DIALOG_RENDER = -9003;
 string UPMENU = "BACK";
 //string ALL = "ALL";
 
@@ -229,7 +230,7 @@ default
         llResetScript();
     }
     state_entry(){
-        g_lAddonFiltered = [ALIVE, READY, STARTUP, CMD_ZERO, MENUNAME_REQUEST, MENUNAME_RESPONSE, MENUNAME_REMOVE, SAY, NOTIFY, DIALOG, SENSORDIALOG];
+        g_lAddonFiltered = [ALIVE, READY, STARTUP, CMD_ZERO, MENUNAME_REQUEST, MENUNAME_RESPONSE, MENUNAME_REMOVE, SAY, NOTIFY, DIALOG, SENSORDIALOG, DIALOG_RENDER];
         llMessageLinked(LINK_SET, ALIVE, llGetScriptName(),"");
     }
     link_message(integer iSender, integer iNum, string sStr, key kID){
