@@ -96,7 +96,7 @@ DoListeners(){
         g_lActiveListeners+=[llListen(API_CHANNEL, "","",""), llListen(GENERAL_API_CHANNEL, "", "", "scan")];
 }
 
-
+integer g_iVerbosityLevel = 1;
 integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
 integer CMD_TRUSTED = 501;
@@ -287,6 +287,9 @@ state active
 
     listen(integer c, string n,key i,string m){
         if(c==API_CHANNEL){
+            if(g_iVerbosityLevel>=3){
+                llOwnerSay("Addons Packet\n\n"+m);
+            }
             //llWhisper(0, m);
             // All addons as of 8.0.00004 must include a ping and pong. This lets the collar know an addon is alive and not to automatically remove it.
             // Addon key will be placed in a temporary list that will be cleared once the timer checks over all the information.
@@ -464,6 +467,8 @@ state active
                 } else if(sVar == "addons"){
                     g_iAddons = (integer)sVal;
                     DoListeners();
+                } else if(sVar == "verbosity"){
+                    g_iVerbosityLevel=(integer)sVal;
                 }
             }else if(sToken == "auth"){
                 if(sVar == "owner"){

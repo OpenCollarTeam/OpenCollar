@@ -30,7 +30,7 @@ integer DIALOG_RENDER = -9003;
 //integer TIMEOUT_FIRED = 30499;
 
 
-
+integer g_iVerbosityLevel=1;
 
 integer g_iPagesize = 12;
 string MORE = "►";
@@ -85,6 +85,7 @@ string SubstituteVars(string sMsg) {
         return sMsg;
 }
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
+    if(g_iVerbosityLevel<1)return;
     if ((key)kID){
         sMsg = SubstituteVars(sMsg);
         string sObjectName = llGetObjectName();
@@ -130,6 +131,7 @@ integer IsLikelyAvatar(key kID){
 }
 
 Say(string sMsg, integer iWhisper) {
+    if(g_iVerbosityLevel<1)return;
     sMsg = SubstituteVars(sMsg);
     string sObjectName = llGetObjectName();
     llSetObjectName("");
@@ -504,6 +506,11 @@ state active
     }
 
     listen(integer iChan, string sName, key kID, string sMessage) {
+        if(g_iVerbosityLevel>=3){
+            llOwnerSay("Dialog Response\n\n[iChan = "+(string)iChan+", sName = "+sName+", kID = "+(string)kID+", sMessage = "+sMessage+"]");
+        }
+
+
         integer iMenuIndex = llListFindList(g_lMenus, [iChan]);
         if (~iMenuIndex) {
             key kMenuID = llList2Key(g_lMenus, iMenuIndex + 1);
@@ -693,18 +700,11 @@ state active
                 for(iPos=0;iPos<iEnd;iPos++){
                     ClearUser((key)llList2String(lBlock, iPos));
                 }
+            } else if(sToken == g_sGlobalToken+"verbosity"){
+                g_iVerbosityLevel=(integer)sValue;
             }
-        }else if(iNum == LM_SETTING_EMPTY){
-
-            //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
-            //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
-
-        } else if(iNum == LM_SETTING_DELETE){
-            //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
-            //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
-
-        } else if (iNum == NOTIFY)    Notify(kID,llGetSubString(sStr,1,-1),(integer)llGetSubString(sStr,0,0));
-        else if (iNum == SAY)         Say(llGetSubString(sStr,1,-1),(integer)llGetSubString(sStr,0,0));
+        } else if (iNum == NOTIFY )    Notify(kID,llGetSubString(sStr,1,-1),(integer)llGetSubString(sStr,0,0));
+        else if (iNum == SAY )         Say(llGetSubString(sStr,1,-1),(integer)llGetSubString(sStr,0,0));
         else if (iNum==NOTIFY_OWNERS) NotifyOwners(sStr,(string)kID);
         else if (iNum == REBOOT && sStr == "reboot") llResetScript();
 

@@ -30,6 +30,7 @@ integer g_iAmNewer=FALSE;
 integer g_iChannel=1;
 string g_sPrefix;
 
+integer g_iVerbosityLevel=1;
 
 integer g_iNotifyInfo=FALSE;
 
@@ -268,6 +269,11 @@ UserCommand(integer iNum, string sStr, key kID) {
                 llMessageLinked(LINK_SET, NOTIFY, "1secondlife:///app/agent/"+(string)kID+"/about is attempting to weld the collar. Consent is required", kID);
                 Dialog(g_kWearer, "[WELD CONSENT REQUIRED]\n\nsecondlife:///app/agent/"+(string)kID+"/about wants to weld your collar. If you agree, you may not be able to unweld it without the use of a plugin or a addon designed to break the weld. If you disagree with this action, press no.", ["Yes", "No"], [], 0, iNum, "weld~consent");
             } else llMessageLinked(LINK_SET,NOTIFY,"0%NOACCESS% to welding", kID);
+        } else if(llToLower(sChangetype)=="verbosity"){
+            if(iNum == CMD_WEARER || kID == g_kWearer)
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_verbosity="+sChangevalue, "");
+            else
+                llMessageLinked(LINK_SET, NOTIFY, "%NOACCESS% to changing verbosity levels", kID);
         } else if(llToLower(sChangetype) == "info"){
             if(iNum >= CMD_OWNER && iNum <= CMD_EVERYONE){
                 g_iNotifyInfo = TRUE;
@@ -451,6 +457,11 @@ state active
         llMessageLinked(LINK_SET, 0, "menu", llDetectedKey(0)); // Temporary until API v8's implementation is done, use v7 in the meantime
     }
     link_message(integer iSender,integer iNum,string sStr,key kID){
+
+        if(g_iVerbosityLevel>=2){
+            llOwnerSay("Link Message\n["+llDumpList2String(["iSender = "+(string)iSender, "iNum = "+(string)iNum, "sStr = "+sStr, "kID = "+(string)kID], ", ")+"]");
+        }
+
         if(iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID);
         else if(iNum == MENUNAME_RESPONSE){
             list lPara = llParseString2List(sStr, ["|"],[]);
@@ -728,6 +739,8 @@ state active
                     g_iWearerAddonLimited=(integer)sVal;
                 } else if(sVar == "addons"){
                     g_iAddons = (integer)sVal;
+                } else if(sVar=="verbosity"){
+                    g_iVerbosityLevel=(integer)sVal;
                 }
             } else if(sToken == "auth"){
                 if(sVar == "group"){
