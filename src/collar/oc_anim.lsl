@@ -1,12 +1,13 @@
 /*
 This file is a part of OpenCollar.
-Copyright 2019
+Copyright 2021
 
 : Contributors :
 
 Aria (Tashia Redrose)
     * July 2020         - Rewrote oc_anim
     * Dec 2020          - Fix bug where animations were not treated case insensitive, and where animations with a space in the name could not be played by chat command or menu button
+    * Feb 2021          - Fix Public Access
     
 Felkami (Caraway Ohmai)
     * Dec 2020          - Fixed #456, #462, #461, added LockMeister AO suppress
@@ -155,7 +156,6 @@ list GetPoseList(integer iType)
 
 UserCommand(integer iNum, string sStr, key kID) {
     string ssStr = llToLower(sStr);
-    if (iNum<CMD_OWNER || iNum>CMD_WEARER) return;
     if (iNum == CMD_OWNER && ssStr == "runaway") {
         g_lOwner = g_lTrust = g_lBlock = [];
         return;
@@ -206,57 +206,60 @@ UserCommand(integer iNum, string sStr, key kID) {
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, "anim_pose","");
             iRespringPoses=TRUE;
         } else if(sChangetype == UP_ARROW || sChangetype == "up" || sChangetype == DOWN_ARROW || sChangetype == "down"){
-            // adjust current pose
-            //llOwnerSay(" up or down");
-            //sChangevalue="remenu";
-            integer iUp= FALSE;
-            iRespringPoses=TRUE;
-            if(sChangetype == UP_ARROW || sChangetype == "up")iUp=TRUE;
-            if(g_lCurrentAnimations == []){
-                // adjust standing
-                //llOwnerSay("up: "+(string)iUp+"; anims list blank");
-                if(iUp)g_fStandHover += g_fAdjustment;
-                else g_fStandHover-=g_fAdjustment;
-                if(g_fStandHover==0)llMessageLinked(LINK_SET,LM_SETTING_DELETE,"offset_standhover","");
-                else llMessageLinked(LINK_SET, LM_SETTING_SAVE, "offset_standhover="+(string)g_fStandHover,"");
-                llMessageLinked(LINK_SET, NOTIFY, "0The hover height for 'Standing' is now "+(string)g_fStandHover, g_kWearer);
-            } else {
-                integer iPos=llListFindList(g_lAdjustments,llList2List(g_lCurrentAnimations, 0, 0));
-                if(iPos==-1){
-                   // llOwnerSay("up:"+(string)iUp+"; anim not found in adjustments");
-                    // OK now we make a new entry
-                    
-                    if(iUp)
-                        g_lAdjustments+=[llList2String(g_lCurrentAnimations, 0), g_fAdjustment];
-                    else
-                        g_lAdjustments+=[llList2String(g_lCurrentAnimations, 0),-g_fAdjustment];
-                        
-                    
-                    llMessageLinked(LINK_SET, NOTIFY, "0The hover height for '"+llList2String(g_lCurrentAnimations, 0)+"' is now "+(string)g_fAdjustment, g_kWearer);
+            // only owner or wearer
+            if(iNum == CMD_OWNER || iNum == CMD_WEARER){
+                // adjust current pose
+                //llOwnerSay(" up or down");
+                //sChangevalue="remenu";
+                integer iUp= FALSE;
+                iRespringPoses=TRUE;
+                if(sChangetype == UP_ARROW || sChangetype == "up")iUp=TRUE;
+                if(g_lCurrentAnimations == []){
+                    // adjust standing
+                    //llOwnerSay("up: "+(string)iUp+"; anims list blank");
+                    if(iUp)g_fStandHover += g_fAdjustment;
+                    else g_fStandHover-=g_fAdjustment;
+                    if(g_fStandHover==0)llMessageLinked(LINK_SET,LM_SETTING_DELETE,"offset_standhover","");
+                    else llMessageLinked(LINK_SET, LM_SETTING_SAVE, "offset_standhover="+(string)g_fStandHover,"");
+                    llMessageLinked(LINK_SET, NOTIFY, "0The hover height for 'Standing' is now "+(string)g_fStandHover, g_kWearer);
                 } else {
+                    integer iPos=llListFindList(g_lAdjustments,llList2List(g_lCurrentAnimations, 0, 0));
+                    if(iPos==-1){
+                       // llOwnerSay("up:"+(string)iUp+"; anim not found in adjustments");
+                        // OK now we make a new entry
+                        
+                        if(iUp)
+                            g_lAdjustments+=[llList2String(g_lCurrentAnimations, 0), g_fAdjustment];
+                        else
+                            g_lAdjustments+=[llList2String(g_lCurrentAnimations, 0),-g_fAdjustment];
+                            
+                        
+                        llMessageLinked(LINK_SET, NOTIFY, "0The hover height for '"+llList2String(g_lCurrentAnimations, 0)+"' is now "+(string)g_fAdjustment, g_kWearer);
+                    } else {
+                        
+                        //llOwnerSay("up:"+(string)iUp+"; anim update");
+                        float fCurrent = (float)llList2String(g_lAdjustments, iPos+1);
+                        if(iUp)
+                            fCurrent+=g_fAdjustment;
+                        else
+                            fCurrent -= g_fAdjustment;
+                        
+                        
+                        llMessageLinked(LINK_SET, NOTIFY, "0The hover height for '"+llList2String(g_lCurrentAnimations, 0)+"' is now "+(string)fCurrent, g_kWearer);
+                        if(fCurrent!=0)
+                            g_lAdjustments = llListReplaceList(g_lAdjustments, [fCurrent],iPos+1,iPos+1);
+                        else
+                            g_lAdjustments = llDeleteSubList(g_lAdjustments,iPos,iPos+1);
+                    }
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "offset_hovers="+llDumpList2String(g_lAdjustments,","),"");
                     
-                    //llOwnerSay("up:"+(string)iUp+"; anim update");
-                    float fCurrent = (float)llList2String(g_lAdjustments, iPos+1);
-                    if(iUp)
-                        fCurrent+=g_fAdjustment;
-                    else
-                        fCurrent -= g_fAdjustment;
+                    //llOwnerSay("up:"+(string)iUp+"; saved hover list");
+                    if(llGetListLength(g_lCurrentAnimations)!=0)
+                        PlayAnimation();
                     
                     
-                    llMessageLinked(LINK_SET, NOTIFY, "0The hover height for '"+llList2String(g_lCurrentAnimations, 0)+"' is now "+(string)fCurrent, g_kWearer);
-                    if(fCurrent!=0)
-                        g_lAdjustments = llListReplaceList(g_lAdjustments, [fCurrent],iPos+1,iPos+1);
-                    else
-                        g_lAdjustments = llDeleteSubList(g_lAdjustments,iPos,iPos+1);
                 }
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "offset_hovers="+llDumpList2String(g_lAdjustments,","),"");
-                
-                //llOwnerSay("up:"+(string)iUp+"; saved hover list");
-                if(llGetListLength(g_lCurrentAnimations)!=0)
-                    PlayAnimation();
-                
-                
-            }
+            }else llMessageLinked(LINK_SET, NOTIFY, "%NOACCESS% to changing height", kID);
         } else if(sChangetype == "animlock"){
             string text;
             if(iNum == CMD_OWNER){
@@ -516,11 +519,8 @@ state active
     }
     
     link_message(integer iSender,integer iNum,string sStr,key kID){
-        if(iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
-        else if(iNum == CMD_EVERYONE && (llToLower(sStr)==llToLower(g_sSubMenu) || llToLower(sStr) == "menu "+llToLower(g_sSubMenu)) ){
-            //Test if this is a denied auth
-            llMessageLinked(LINK_SET,NOTIFY,"0%NOACCESS% to animations.", kID);
-        }else if(iNum == MENUNAME_REQUEST && sStr == g_sParentMenu){
+        if(iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID);
+        else if(iNum == MENUNAME_REQUEST && sStr == g_sParentMenu){
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu+"|"+ g_sSubMenu,"");
             llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, "");
         }else if(iNum == MENUNAME_RESPONSE){
