@@ -22,7 +22,7 @@ integer LM_SETTING_EMPTY = 2004;//sent when a token has no value
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
-integer DIALOG_RENDER = -9003;
+integer DIALOG_RENDER = -9013;
 
 
 //integer TIMEOUT_READY = 30497;

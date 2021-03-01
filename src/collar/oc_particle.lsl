@@ -402,7 +402,7 @@ string Checkbox(integer iValue, string sLabel) {
 
 ConfigureMenu(key kIn, integer iAuth) {
     list lButtons;
-    lButtons += [Checkbox(g_iParticleGlow, "Shine"), Checkbox(g_iTurnMode, "Turn"), Checkbox(g_iStrictMode, "Strict")];
+    lButtons += [Checkbox(g_iParticleGlow, L_GLOW), Checkbox(g_iTurnMode, L_TURN), Checkbox(g_iStrictMode, L_STRICT)];
 
 
     if (g_sLeashParticleMode == "Ribbon") lButtons += [Checkbox(FALSE,L_CLASSIC_TEX),Checkbox(TRUE,L_RIBBON_TEX),Checkbox(FALSE, "Invisible")];
@@ -696,17 +696,6 @@ state active
        /* else if (iNum == LM_SETTING_DELETE) {
             if (sMessage == "leash_leashedto") StopParticles(TRUE);
         }*/
-        else if(iNum == LINK_CMD_DEBUG){
-            integer onlyver=0;
-            if(sMessage == "ver")onlyver=1;
-            llInstantMessage(kMessageID, llGetScriptName() +" SCRIPT VERSION: "+g_sScriptVersion);
-            if(onlyver)return; // basically this command was: <prefix> versions
-            DebugOutput(kMessageID, [" SETTINGS:"]+g_lSettings);
-            DebugOutput(kMessageID, [" LEASHED TO:", g_kLeashedTo, g_kLeashToPoint]);
-            DebugOutput(kMessageID, [" LEASH ACTIVE:", g_iLeashActive]);
-            DebugOutput(kMessageID, [" STRICT MODE:", g_iStrictMode]);
-            DebugOutput(kMessageID, [" LEASH PRIMS:"]+g_lLeashPrims);
-        }
     }
 
     timer() {

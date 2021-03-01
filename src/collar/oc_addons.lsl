@@ -19,7 +19,7 @@ https://github.com/OpenCollarTeam/OpenCollar
 string g_sParentMenu = "Main";
 string g_sSubMenu = "Addons";
 
-string COLLAR_VERSION = "8.0.3000";
+string COLLAR_VERSION = "8.0.4000";
 
 string Auth2Str(integer iAuth){
     if(iAuth == CMD_OWNER)return "Owner";
@@ -130,7 +130,7 @@ integer MENUNAME_RESPONSE = 3001;
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
-integer DIALOG_RENDER = -9003;
+integer DIALOG_RENDER = -9013;
 string UPMENU = "BACK";
 //string ALL = "ALL";
 

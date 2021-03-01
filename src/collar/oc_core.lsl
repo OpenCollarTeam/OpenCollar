@@ -1,7 +1,7 @@
 
 /*
 This file is a part of OpenCollar.
-Copyright ©2020
+Copyright ©2021
 
 
 : Contributors :
@@ -22,7 +22,7 @@ integer NOTIFY_OWNERS=1003;
 
 //string g_sParentMenu = "";
 string g_sSubMenu = "Main";
-string COLLAR_VERSION = "8.0.3000"; // Provide enough room
+string COLLAR_VERSION = "8.0.4000"; // Provide enough room
 // LEGEND: Major.Minor.Build RC Beta Alpha
 integer UPDATE_AVAILABLE=FALSE;
 string NEW_VERSION = "";
