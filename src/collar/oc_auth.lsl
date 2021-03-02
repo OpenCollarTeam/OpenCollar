@@ -23,9 +23,9 @@ state update{
         if(iNum == REBOOT)llResetScript();
         else if(iNum == 0){
             if(sMsg == "do_move" && !g_iIsMoving){
-                
+
                 if(llGetLinkNumber()==LINK_ROOT || llGetLinkNumber() == 0)return;
-                
+
                 g_iIsMoving=TRUE;
                 llOwnerSay("Moving oc_auth!");
                 integer i=0;
@@ -45,7 +45,7 @@ state update{
                         }
                     }
                 }
-                
+
                 llRemoveInventory(llGetScriptName());
             }
         }

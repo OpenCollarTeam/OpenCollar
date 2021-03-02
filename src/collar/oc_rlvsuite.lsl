@@ -150,7 +150,7 @@ list g_lRLVList = [   // ButtonText, CategoryIndex, RLVCMD
     "Blur View"     , 7 , "setdebug_renderresolutiondivisor"    ,    // 56
     "MaxDistance"   , 7 , "setcam_avdistmax"                    ,    // 57
     "MinDistance"   , 7 , "setcam_avdistmin"                    ,    // 58
-    "Send Emote"    , 0 , "rediremote:-99999"
+    "Send Emote"    , 0 , "rediremote"
 //  "Idle"          , 3 , "allowidle"                           , 268435456 , 0         , CMD_EVERYONE ,   // 59  // Everything down here was ignored. There seem to be a Limit how
 //  "Set Debug"     , 3 , "setdebug"                            , 536870912 , 0         , CMD_OWNER    ,   // 60  // big a lsl-list can go
 //  "Environment"   , 3 , "setenv"                              , 1073741824, 0         , CMD_EVERYONE ,   // 61
@@ -277,6 +277,9 @@ string FormatCommand(string sCommand,integer bEnable)
     } else if (sCommand == "camdistmax:0"){
         if (bEnable) g_bForceMouselook = TRUE;
         else g_bForceMouselook = FALSE;
+    } else if(sCommand == "rediremote")
+    {
+        sMod = ":38322"+sMod;
     }
 
     //llOwnerSay("Restriction '"+sCommand+"' has changed, sending message");
