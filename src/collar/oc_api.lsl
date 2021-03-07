@@ -1,7 +1,7 @@
 
 /*
 This file is a part of OpenCollar.
-Copyright ©2020
+Copyright ©2021
 
 
 : Contributors :

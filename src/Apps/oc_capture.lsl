@@ -1,6 +1,6 @@
 /*
 This file is a part of OpenCollar.
-Copyright 2019
+Copyright 2021
 
 : Contributors :
 

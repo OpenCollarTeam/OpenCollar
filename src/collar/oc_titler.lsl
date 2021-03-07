@@ -1,6 +1,6 @@
 /*
 This file is a part of OpenCollar.
-Copyright 2020
+Copyright 2021
 
 : Contributors :
 Aria (Tashia Redrose)
@@ -113,18 +113,18 @@ UserCommand(integer iNum, string sStr, key kID) {
     if (llToLower(sStr)==llToLower(g_sSubMenu) || llToLower(sStr) == "menu "+llToLower(g_sSubMenu)) Menu(kID, iNum);
     //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else {
-        //integer iWSuccess = 0; 
+        //integer iWSuccess = 0;
         string sChangetype = llList2String(llParseString2List(sStr, [" "], []),0);
         string sChangevalue = llToLower(llList2String(llParseString2List(sStr, [" "], []),1));
         string sParam = llList2String(llParseString2List(sStr, [" "], []),2);
         //string sText;
         if(iNum !=CMD_OWNER)return;
-        
+
         if(sChangetype == "title"){
             g_sTitle = llDumpList2String(llList2List(llParseString2List(sStr,[" "],[]), 1,-1)," ");
             if(g_sTitle == ""){
                 Dialog(kID, "What should the title say?", [], [], 0, iNum, "Textbox~Title");
-                
+
             }
             Save();
         } else if(sChangetype == "titler"){
@@ -147,9 +147,9 @@ UserCommand(integer iNum, string sStr, key kID) {
             }else if(sChangevalue == "plain"){
                 g_iNoB64 = ! g_iNoB64;
                 Save();
-                        
+
                 string ToggleMsg = "0Titler plain text mode is now set to ";
-                
+
                 if(g_iNoB64) {
                     llMessageLinked(LINK_SET, LM_SETTING_SAVE, "titler_plain=1", "");
                     ToggleMsg += "PLAIN";
@@ -169,24 +169,24 @@ integer g_iShow=FALSE;
 Save(){
     if(g_iShow)llMessageLinked(LINK_SET, LM_SETTING_SAVE, "titler_show=1","");
     else llMessageLinked(LINK_SET, LM_SETTING_DELETE, "titler_show","");
-    
+
     llMessageLinked(LINK_SET, LM_SETTING_SAVE, "titler_offset="+(string)g_iOffset, "");
-    
+
     if(!g_iNoB64)
         llMessageLinked(LINK_SET, LM_SETTING_SAVE, "titler_title="+llStringToBase64(g_sTitle), "");
     else
         llMessageLinked(LINK_SET, LM_SETTING_SAVE, "titler_title="+g_sTitle, "");
-    
+
     llMessageLinked(LINK_SET, LM_SETTING_SAVE, "titler_color="+(string)g_vColor,"");
-    
-    
+
+
     Titler();
 }
 
 Titler(){
     llSetTimerEvent(2.5);
     // Show the title if applicable after 5 seconds
-    
+
 }
 key g_kWearer;
 integer g_iOffset=8;
@@ -203,14 +203,14 @@ integer g_iTextPrim;
 ScanFloatText(){
     integer i=LINK_ROOT;
     integer end = llGetNumberOfPrims();
-    
+
     for(i=0;i<=end;i++){
         list Params = llGetLinkPrimitiveParams(i, [PRIM_NAME,PRIM_DESC]);
         if(llSubStringIndex(llList2String(Params,0), "FloatText")!=-1){
             g_iTextPrim = i;
             return;
         }
-        
+
         if(llSubStringIndex(llList2String(Params,1), "FloatText")!=-1){
             g_iTextPrim=i;
             return;
@@ -259,7 +259,7 @@ state active
         if(llGetStartParameter()!=0)llResetScript();
         llSetMemoryLimit(40000);
         g_kWearer = llGetOwner();
-        
+
         NukeOtherText();
         //llOwnerSay((string)llGetUsedMemory());
     }
@@ -275,17 +275,17 @@ state active
         }else llSetLinkPrimitiveParams(g_iTextPrim, [PRIM_TEXT, "", ZERO_VECTOR, 0]);
         llSetTimerEvent(0);
     }
-    
+
     changed(integer iChange){
         if(iChange&CHANGED_LINK){
             integer iCur = g_iTextPrim;
             ScanFloatText();
             if(g_iTextPrim!=iCur)NukeOtherText();
             Titler();
-            
+
         }
     }
-    
+
     link_message(integer iSender,integer iNum,string sStr,key kID){
         if(iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
         else if(iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
@@ -299,8 +299,8 @@ state active
                 key kAv = llList2Key(lMenuParams,0);
                 string sMsg = llList2String(lMenuParams,1);
                 integer iAuth = llList2Integer(lMenuParams,3);
-                integer iRespring=TRUE;                
-                
+                integer iRespring=TRUE;
+
                 // There's really nothing that non-owner could change down here, so..
                 if(iAuth != CMD_OWNER){
                     llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to titler options", kAv);
@@ -308,14 +308,14 @@ state active
                     return;
                 }
                 if(sMenu == "Menu~Titler"){
-                    
+
                     if(sMsg == UPMENU){
                         iRespring=FALSE;
                         llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
                     }
                     else if(sMsg == "UP"){
                         g_iOffset++;
-                        
+
                         Save();
                     } else if(sMsg == "DOWN"){
                         g_iOffset--;
@@ -324,18 +324,18 @@ state active
                     } else if(sMsg == Checkbox(g_iShow,"Show")){
                         g_iShow=!g_iShow;
                         Save();
-                        
+
                     } else if(sMsg == "Set Title"){
                         iRespring=FALSE;
                         Dialog(kAv, "What should the title say?", [], [], 0, iAuth, "Textbox~Title");
-                        
+
                     } else if(sMsg == "Color")
                     {
                         // Open default colors menu
                         ColorMenu(kAv,iAuth);
                         iRespring=FALSE;
                     }
-                    
+
                     if(iRespring)Menu(kAv,iAuth);
                 } else if(sMenu == "Menu~Colors"){
                     if(sMsg == UPMENU){
@@ -347,19 +347,19 @@ state active
                     } else  {
                         g_vColor = (vector)sMsg;
                     }
-                    
+
                     if(iRespring)ColorMenu(kAv,iAuth);
-                    
+
                     Save();
                 } else if(sMenu == "Textbox~Title"){
                     g_sTitle = sMsg;
-                    
+
                     // pop menu back up
                     Menu(kAv, iAuth);
                     Save();
                 } else if(sMenu == "Textbox~Color"){
                     g_vColor = (vector)sMsg;
-                    
+
                     ColorMenu(kAv,iAuth);
                     Save();
                 }
@@ -370,12 +370,12 @@ state active
         } else if(iNum == LM_SETTING_RESPONSE){
             // Detect here the Settings
             list lSettings = llParseString2List(sStr, ["_","="],[]);
-            
-            
+
+
             //integer ind = llListFindList(g_lSettingsReqs, [llList2String(lSettings,0)+"_"+llList2String(lSettings,1)]);
             //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
-            
-            
+
+
             if(llList2String(lSettings,0)=="global"){
                 if(llList2String(lSettings,1)=="locked"){
                     g_iLocked=llList2Integer(lSettings,2);
@@ -385,9 +385,9 @@ state active
             } else if(llList2String(lSettings,0) == "titler"){
                 integer curPrim=g_iTextPrim;
                 ScanFloatText();
-                
+
                 if(g_iTextPrim!=curPrim)NukeOtherText(); // permit changing the float text prim
-                
+
                 if(llList2String(lSettings,1) == "show"){
                     g_iShow=TRUE;
                 }else if(llList2String(lSettings,1) == "offset"){
@@ -397,7 +397,7 @@ state active
                         g_sTitle = llBase64ToString(llList2String(lSettings,2)); // We can't really check if this is a base64 string
                     else
                         g_sTitle = llList2String(lSettings,2);
-                        
+
                     if(g_iWasUpgraded) {
                         g_sTitle = llList2String(lSettings,2);
                         if(!g_iNoB64)
@@ -412,7 +412,7 @@ state active
                     // this was definitely a upgrade. Re-request!
                     g_iWasUpgraded=TRUE;
                     llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "ALL", "");
-                    
+
                     llMessageLinked(LINK_SET, LM_SETTING_DELETE, "titler_auth", "");
                     llMessageLinked(LINK_SET, LM_SETTING_DELETE, "titler_on", "");
                     llMessageLinked(LINK_SET, LM_SETTING_DELETE, "titler_height", "");
@@ -425,20 +425,20 @@ state active
                 }
                 Titler();
             }
-        
+
         }else if(iNum == LM_SETTING_EMPTY){
-            
+
             //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
             //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
-            
+
         } else if(iNum == LM_SETTING_DELETE){
             list lPar = llParseString2List(sStr, ["_"],[]);
             string sToken = llList2String(lPar,0);
             string sVar = llList2String(lPar,1);
-            
+
             //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
             //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
-            
+
             if(sToken=="global")
                 if(sVar == "locked") g_iLocked=FALSE;
         } else if(iNum == LINK_CMD_DEBUG){
@@ -448,7 +448,7 @@ state active
                 DebugOutput(kID, ["VERSION:",g_sVersion]);
                 return;
             }
-            
+
             DebugOutput(kID, ["SHOW",g_iShow]);
             DebugOutput(kID, ["TITLE:",g_sTitle]);
             DebugOutput(kID, ["COLOR:",g_vColor]);

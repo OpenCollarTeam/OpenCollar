@@ -1,12 +1,12 @@
-  
+
 /*
 This file is a part of OpenCollar.
-Copyright ©2020
+Copyright ©2021
 
 
 : Contributors :
 All contributors of previous revision of oc_settings
-    
+
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
@@ -158,12 +158,12 @@ PrintAll(key kID, string sExtra){
         if(llToLower(sExtra) != "debug" && llToLower(sTok) == "intern"){
             iProcess=FALSE;
         }
-        
+
         if(iProcess){
             integer iStart=TRUE;
             // Start calculating output
             string sVal = GetSetting(sTok+"_"+sVar);
-            
+
             while(sVal!="" && sVal != "NOT_FOUND"){
                 llSleep(0.25);
                 if(llStringLength(sTok+"="+sVar+"~"+sVal)>254){
@@ -194,12 +194,12 @@ PrintAll(key kID, string sExtra){
                     sBuffer="";
                 }
             }
-            
+
             //if(llStringLength(sBuffer)>=700)llMessageLinked(LINK_SET, NOTIFY, "0"+sBuffer, kID);
-                    
+
         }
     }
-    
+
     if(llStringLength(sBuffer)>0)llMessageLinked(LINK_SET, NOTIFY, "0"+sBuffer, kID);
 }
 
@@ -302,26 +302,26 @@ ProcessSettingLine(string sLine)
     // = = sets a setting
     // + = appends a setting (if nocomma = 1, then dont append comma
     if(llGetSubString(sLine,0,0)=="#")return;
-    
+
     list lTmp = llParseString2List(
-            llGetSubString(sLine, 0, 
+            llGetSubString(sLine, 0,
                     iSetor(
                         (uSubStringLastIndex(sLine,"#")
                         >uSubStringLastIndex(sLine,"\"")
-                        ), 
+                        ),
                     uSubStringLastIndex(sLine,"#"), -1)
                 )
             ,[],["=","+"]);
     list l2 = llParseString2List(llDumpList2String(llList2List(lTmp,2,-1),""), ["~"],[]);
     integer iAppendMode = iSetor((llList2String(lTmp,1)=="+"),TRUE,FALSE);
-    
+
     integer iWeldSetting=FALSE;
     if(~llSubStringIndex(sLine, "weld"))iWeldSetting=TRUE;
     if(!iAppendMode){
         // start setting!
         integer i=0;
         integer end = llGetListLength(l2);
-        
+
         for(i=0;i<end;i+=2){ // start on first index because l2 is initialized off of the 0 element
             //llOwnerSay(llList2String(lTmp,0)+"_"+llList2String(l2,i)+"="+llList2String(l2,i+1));
             if(llList2String(lTmp,0)=="settings" && llList2String(l2,i)=="nocomma"){
@@ -339,11 +339,11 @@ ProcessSettingLine(string sLine)
             if(sValCur == "NOT_FOUND")sValCur="";
             if(g_iNoComma)sValCur+= llList2String(l2,i+1);
             else sValCur+=","+llList2String(l2,i+1);
-            
+
             //llOwnerSay(llList2String(lTmp,0)+"+"+llList2String(l2,i)+"="+llList2String(l2,i+1));
             g_lSettings = SetSetting(sToken,sValCur);
         }
-        
+
     }
     if(iWeldSetting) llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "5", "check_weld");
 }
@@ -369,13 +369,13 @@ CheckForAndSaveWeld(){
     if(g_iWeldStorage == LINK_ROOT)return;
     if(SettingExists("intern_weld") || SettingExists("intern_weldby")){
         integer Welded = (integer)GetSetting("intern_weld");
-        
+
         // begin
         string sDesc = llList2String(llGetLinkPrimitiveParams(g_iWeldStorage, [PRIM_DESC]),0);
-        
-        
+
+
         list lPara = llParseString2List(sDesc, ["~"],[]);
-        
+
         //llSay(0, "Parameters: "+llList2CSV(lPara));
         if(llListFindList(lPara, ["weld"])==-1){
             if(Welded){
@@ -392,10 +392,10 @@ CheckForAndSaveWeld(){
                 lPara=llListReplaceList(lPara,[GetSetting("intern_weldby")],index+1,index+1);
             }
         }
-        
+
         llSetLinkPrimitiveParams(g_iWeldStorage, [PRIM_DESC, llDumpList2String(lPara,"~")]);
         //llSay(0, "saved weld state as: "+llDumpList2String(lPara,"~") + "("+(string)llStringLength(llDumpList2String(lPara,"~"))+") to prim "+(string)g_iWeldStorage + "("+llGetLinkName(g_iWeldStorage)+")");
-        
+
     }
 }
 
@@ -403,15 +403,15 @@ RestoreWeldState(){
     FindLeashpointOrLock();
     if(g_iWeldStorage==-99)return;
     if(g_iWeldStorage == LINK_ROOT)return;
-    
-    
+
+
     // get welded
     list lPara = llParseString2List(llList2String(llGetLinkPrimitiveParams(g_iWeldStorage,[PRIM_DESC]),0),["~"],[]);
     if(llListFindList(lPara,["weld"])!=-1){
         integer index = llListFindList(lPara,["weld"]);
         g_lSettings = SetSetting("intern_weldby", llList2String(lPara, index+1));
         g_lSettings = SetSetting("intern_weld","1");
-        
+
         llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "intern_weld","");
         llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "intern_weldby","");
     }
@@ -422,15 +422,15 @@ DeleteWeldFlag()
     FindLeashpointOrLock();
     if(g_iWeldStorage == -99)return;
     if(g_iWeldStorage == LINK_ROOT)return;
-    
+
     list lPara = llParseString2List(llList2String(llGetLinkPrimitiveParams(g_iWeldStorage, [PRIM_DESC]) , 0), ["~"], []);
     integer iIndex = llListFindList(lPara,["weld"]);
-    
+
 
     if(iIndex==-1)return;
-    
+
     lPara = llDeleteSubList(lPara,iIndex,iIndex+1);
-    
+
     llSetLinkPrimitiveParams(g_iWeldStorage, [PRIM_DESC, llDumpList2String(lPara,"~")]);
 }
 integer g_iBootup;
@@ -462,19 +462,19 @@ default
             llRemoveInventory(llGetScriptName());
         }
         g_kWearer = llGetOwner();
-        
+
         FindLeashpointOrLock();
         RestoreWeldState();
-        
+
         if (!SettingExists("global_checkboxes")) g_lSettings = SetSetting("global_checkboxes", "▢,▣");
-        
+
         if(llGetInventoryType(g_sSettings)!=INVENTORY_NONE){
             g_iSettingsRead=0;
             g_kSettingsCard = llGetInventoryKey(g_sSettings);
             g_kSettingsRead = llGetNotecardLine(g_sSettings, 0);
         }
     }
-    
+
     changed(integer iChange){
         if(iChange&CHANGED_INVENTORY){
             if(llGetInventoryType(g_sSettings)!=INVENTORY_NONE){
@@ -486,7 +486,7 @@ default
             }
         }
     }
-    
+
     dataserver(key kID, string sData){
         if(kID == g_kSettingsRead){
             if(sData==EOF){
@@ -495,13 +495,13 @@ default
                 llMessageLinked(LINK_SET, NOTIFY, "0Settings notecard loaded successfully", g_kWearer);
             } else {
                 ProcessSettingLine(sData);
-            
+
                 g_iSettingsRead++;
                 g_kSettingsRead = llGetNotecardLine(g_sSettings,g_iSettingsRead);
             }
         }
     }
-    
+
     timer(){
         if(!SendAValue()){
             if(g_iBootup){
@@ -511,8 +511,8 @@ default
             llSetTimerEvent(0);
         }else llSetTimerEvent(0.25); // send 1 setting per quarter second
     }
-    
-    
+
+
     link_message(integer iSender,integer iNum,string sStr,key kID){
         if(iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID);
         //else if(iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
@@ -527,7 +527,7 @@ default
                 string sMsg = llList2String(lMenuParams,1);
                 integer iAuth = llList2Integer(lMenuParams,3);
                 //integer iRespring=TRUE;
-                
+
                 if(sMenu == "Reboot"){
                     if(sMsg=="No")return;
                     else if(sMsg=="Yes"){
@@ -545,7 +545,7 @@ default
                         g_kLoadURL = llHTTPRequest(g_sLoadURL, [], "");
                     }
                 }
-                
+
             }
         } else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
@@ -562,7 +562,7 @@ default
             string sTok = llList2String(lTmp,0);
             string sVar = llList2String(lTmp,1);
             string sVal = llList2String(lTmp,2);
-            
+
             if(sTok == "settings"){
                 if(sVar=="nocomma"){
                     g_iNoComma = (integer)sVal;
@@ -573,18 +573,18 @@ default
             list lTmp = llParseString2List(sStr,["="],[]);
             string sTok = llList2String(lTmp,0);
             string sVal = llList2String(lTmp,1);
-            
+
             if(sTok == "intern_weld" || sTok == "intern_weldby") llMessageLinked(LINK_SET,TIMEOUT_REGISTER, "10", "check_weld");
-            
+
             if(sTok == "intern_weld") {
                 if(kID) { //arrow code because X && KiD throws error
                     g_lSettings = SetSetting("intern_weldby", (string)kID); //Setting the welder so CheckForAndSaveWeld() can set the WeldStorage desc
                     llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "intern_weldby=" + (string)kID, ""); //We need to tell oc_core who is the welder
                 }
             }
-            
+
             g_lSettings = SetSetting(sTok,sVal);
-            
+
             llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, sStr, "");
         } else if(iNum == LM_SETTING_REQUEST)
         {
@@ -603,13 +603,13 @@ default
         }
         //llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
     }
-    
+
     http_response(key kID, integer iStatus, list lMeta, string sBody)
     {
         if(kID == g_kLoadURL)
         {
             g_kLoadURL = NULL_KEY;
-            
+
             list lSettings = llParseString2List(sBody, ["\n"],[]);
             integer i=0;
             integer iErrorLevel=0;
@@ -620,12 +620,12 @@ default
                         ProcessSettingLine(llList2String(lSettings,0));
                     } else
                         iErrorLevel++;
-                    
+
                     lSettings = llDeleteSubList(lSettings,0,0);
                     i=llGetListLength(lSettings);
                 } while(i);
             }else llMessageLinked(LINK_SET, NOTIFY, "0Empty URL loaded. No settings changes have been made", g_kLoadURLBy);
-            
+
             if(g_iLoadURLConsented)g_iLoadURLConsented=FALSE;
             if(iErrorLevel > 0){
                 llMessageLinked(LINK_SET, NOTIFY, "1Some settings were not loaded due to the security policy. The wearer has been asked to review the URL and give consent", g_kLoadURLBy);
@@ -634,7 +634,7 @@ default
             }
             g_iCurrentIndex=0;
             llSetTimerEvent(2);
-            
+
             llMessageLinked(LINK_SET, NOTIFY, "1Settings have been loaded", g_kLoadURLBy);
         }
     }

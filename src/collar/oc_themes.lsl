@@ -1,14 +1,14 @@
 /*
 This file is a part of OpenCollar.
-Copyright ©2020
+Copyright ©2021
 
 
 : Contributors :
 
 Aria (Tashia Redrose)
     * Oct 2020       -       Created oc_themes
-    
-    
+
+
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
@@ -88,9 +88,9 @@ string gp(integer perm)
     integer copyModPerms = PERM_COPY | PERM_MODIFY;
     integer copyTransPerms = PERM_COPY | PERM_TRANSFER;
     integer modTransPerms = PERM_MODIFY | PERM_TRANSFER;
- 
+
     string output = "";
- 
+
     if ((perm & fullPerms) == fullPerms)
         output += "full";
     else if ((perm & copyModPerms) == copyModPerms)
@@ -105,11 +105,11 @@ string gp(integer perm)
         output += "transfer";
     else
         output += "none";
- 
+
     //  Remember, items in Second Life must have either
     //  PERM_COPY or PERM_TRANSFER when "talking about"
     //  owner perms or perms for next owner.
- 
+
     return  output;
 }
 
@@ -124,12 +124,12 @@ UserCommand(integer iNum, string sStr, key kID) {
     if (llToLower(sStr)==llToLower(g_sSubMenu) || llToLower(sStr) == "menu "+llToLower(g_sSubMenu)) Menu(kID, iNum);
     //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else {
-        //integer iWSuccess = 0; 
+        //integer iWSuccess = 0;
         string sChangetype = llList2String(llParseString2List(sStr, [" "], []),0);
         //string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),1);
         //string sText;
         /// [prefix] g_sSubMenu sChangetype sChangevalue
-        
+
         if(sChangetype == "newtheme"){
             if(gp(llGetObjectPermMask(MASK_OWNER))=="full"){
                 PrintCurrentProperties(kID);
@@ -156,7 +156,7 @@ UserCommand(integer iNum, string sStr, key kID) {
 }
 integer g_iAllowHide = 1;
 //integer g_iHidden;
-ToggleCollarAlpha(integer iHide){ // iHide is inverted for the alpha masking. 
+ToggleCollarAlpha(integer iHide){ // iHide is inverted for the alpha masking.
     integer i=0;
     integer end = llGetNumberOfPrims();
     for(i=1;i<=end;i++){
@@ -222,7 +222,7 @@ DeleteDSReq(key ID){
 list g_lThemes;
 ScanThemes(){
     g_lThemes = [];
-    
+
     integer i=0;
     integer end = llGetInventoryNumber(INVENTORY_NOTECARD);
     for(i=0;i<end;i++){
@@ -232,7 +232,7 @@ ScanThemes(){
             if(llListFindList(g_lThemes,[llList2String(lNameParts,0)])==-1)g_lThemes+=[llList2String(lNameParts,0)];
         }
     }
-    
+
     llMessageLinked(LINK_SET,NOTIFY,"0Found "+(string)llGetListLength(g_lThemes)+" themes", llGetOwner());
 }
 
@@ -264,7 +264,7 @@ PrintCurrentProperties(key kID){
     E(kID, "Simply paste the content to follow into a notecard with a name you want, for example: for a theme to be named Test, (ex. Test.theme)");
     integer i=LINK_ROOT;
     integer end = llGetNumberOfPrims();
-    
+
     for(i=1;i<=end;i++){
         E(kID, "["+(string)i+"/"+(string)llGetLinkName(i)+"/0]");
         E(kID, "#If you set the 0 at the end of the brackets above to a 1, then it will require that the prim's number (beginning of line), and the prims name (middle part) match. Otherwise if this is a zero, as it is by default, then the prim will only go off the prim number.");
@@ -300,9 +300,9 @@ PrintCurrentProperties(key kID){
             E(kID, "!"+(string)ix+": specular_environment = "+llList2String(lProperties,17));
             E(kID, "!"+(string)ix+": fullbright = "+llList2String(lProperties,18));
         }
-        
+
     }
-    
+
     E(kID, "#NOTE: Only include the parameters you actually NEED for your theme to apply to prevent hitting the notecard line/text limit!");
 
     EFlush(kID);
@@ -342,19 +342,19 @@ state active
     state_entry()
     {
         g_kWearer = llGetOwner();
-        
+
         // Scan the inventory for theme notecards
         ScanThemes();
-        
+
         //llOwnerSay("Free Memory: "+(string)llGetFreeMemory());
     }
-    
+
     changed(integer iChange){
         if(iChange&CHANGED_INVENTORY){
             ScanThemes();
         }
     }
-    
+
     dataserver(key kID, string sData){
         if(HasDSRequest(kID)!=-1){
             if(sData==EOF){
@@ -367,7 +367,7 @@ state active
                 llMessageLinked(LINK_SET,NOTIFY, "0Theme notecard read", llGetOwner());
                 if(llList2String(lTmp,4)!="0")
                     E(llGetOwner(), llList2String(lTmp,4)+" sections of this theme had errors.");
-                
+
             } else {
                 string sMeta = GetDSMeta(kID);
                 list lTmp = llParseString2List(sMeta,[":"],[]);
@@ -378,14 +378,14 @@ state active
                     string sPrim;
                     integer iErrors = (integer)llList2String(lTmp,4);
                     iLine++;
-                    
+
                     list lData = llParseString2List(sData, ["/"],["[","]"]);
                     if(llList2String(lData,0) == "[" && llList2String(lData,-1) == "]"){
                         if(g_sTmp!="" && g_sTmp!="{}"){
                             iErrors++;
                             E(llGetOwner(), "Data not used for prim ("+(string)iPrim+"): "+g_sTmp);
                         }
-                        
+
                         g_sTmp=""; // Clear the temporary memory
                         iPrim = (integer)llList2String(lData,1);
                         sPrim = llList2String(lData,2);
@@ -404,12 +404,12 @@ state active
                         }else {
                             list lProp = llParseStringKeepNulls(sData, [": ", " = "],["!"]);
                             if(llList2String(lProp,0)=="")lProp=llDeleteSubList(lProp,0,0);
-                            
-                            
+
+
                             if(llList2String(lProp,0)=="!"){
                                 // Face parameter line
                                 integer iFace = (integer)llList2String(lProp,1);
-                                
+
                                 if(llList2String(lProp,2) == "color"){
                                     g_sTmp = llJsonSetValue(g_sTmp,["color"], llList2String(lProp,3));
                                 } else if(llList2String(lProp,2) == "alpha"){
@@ -455,8 +455,8 @@ state active
                                 }
                                 //if(g_sTmp!="")
                                 //    llSay(0, "Applier Json: "+g_sTmp);
-                                
-                                
+
+
                                 if(llJsonValueType(g_sTmp, ["color"])!= JSON_INVALID && llJsonValueType(g_sTmp,["alpha"])!=JSON_INVALID){
                                     lParam += [PRIM_COLOR, iFace, (vector)llJsonGetValue(g_sTmp, ["color"]), (float)llJsonGetValue(g_sTmp,["alpha"])];
                                     g_sTmp = llJsonSetValue(g_sTmp, ["color"], JSON_DELETE);
@@ -468,16 +468,16 @@ state active
                                     g_sTmp = llJsonSetValue(g_sTmp, ["texture_repeat"], JSON_DELETE);
                                     g_sTmp = llJsonSetValue(g_sTmp, ["texture_offset"], JSON_DELETE);
                                     g_sTmp = llJsonSetValue(g_sTmp, ["texture_rot"], JSON_DELETE);
-                                    
-                                } 
+
+                                }
                                 if(llJsonValueType(g_sTmp,["normal"]) != JSON_INVALID&& llJsonValueType(g_sTmp, ["normal_repeat"])!=JSON_INVALID  && llJsonValueType (g_sTmp, ["normal_offset"])!=JSON_INVALID && llJsonValueType(g_sTmp,["normal_rot"])!=JSON_INVALID){
                                     lParam += [PRIM_NORMAL, iFace, (key)llJsonGetValue(g_sTmp, ["normal"]), (vector)llJsonGetValue(g_sTmp, ["normal_repeat"]), (vector)llJsonGetValue(g_sTmp, ["normal_offset"]), (float)llJsonGetValue(g_sTmp, ["normal_rot"])];
                                     g_sTmp = llJsonSetValue(g_sTmp, ["normal"], JSON_DELETE);
                                     g_sTmp = llJsonSetValue(g_sTmp, ["normal_repeat"], JSON_DELETE);
                                     g_sTmp = llJsonSetValue(g_sTmp, ["normal_offset"], JSON_DELETE);
                                     g_sTmp = llJsonSetValue(g_sTmp, ["normal_rot"], JSON_DELETE);
-                                    
-                                } 
+
+                                }
                                 if(llJsonValueType(g_sTmp,["specular"]) != JSON_INVALID && llJsonValueType(g_sTmp, ["specular_repeat"])!=JSON_INVALID && llJsonValueType (g_sTmp, ["specular_offset"])!=JSON_INVALID && llJsonValueType(g_sTmp,["specular_rot"])!=JSON_INVALID && llJsonValueType(g_sTmp, ["specular_color"]) != JSON_INVALID && llJsonValueType(g_sTmp, ["specular_glossiness"]) != JSON_INVALID && llJsonValueType(g_sTmp,["specular_environment"])!=JSON_INVALID){
                                     lParam += [PRIM_SPECULAR, iFace, (key)llJsonGetValue(g_sTmp, ["specular"]), (vector)llJsonGetValue(g_sTmp, ["specular_repeat"]), (vector)llJsonGetValue(g_sTmp, ["specular_offset"]), (float)llJsonGetValue(g_sTmp, ["specular_rot"]), (vector)llJsonGetValue(g_sTmp, ["specular_color"]), (integer)llJsonGetValue(g_sTmp, ["specular_glossiness"]), (integer)llJsonGetValue(g_sTmp, ["specular_environment"])];
                                     g_sTmp = llJsonSetValue(g_sTmp, ["specular"], JSON_DELETE);
@@ -487,9 +487,9 @@ state active
                                     g_sTmp = llJsonSetValue(g_sTmp, ["specular_color"], JSON_DELETE);
                                     g_sTmp = llJsonSetValue(g_sTmp, ["specular_glossiness"], JSON_DELETE);
                                     g_sTmp = llJsonSetValue(g_sTmp, ["specular_environment"], JSON_DELETE);
-                                    
+
                                 }
-                                
+
                                 if(llJsonValueType(g_sTmp,["shiny"])!=JSON_INVALID && llJsonValueType(g_sTmp,["bump"])!=JSON_INVALID){
                                     lParam += [PRIM_BUMP_SHINY, iFace, (integer)llJsonGetValue(g_sTmp, ["shiny"]), (integer)llJsonGetValue(g_sTmp,["bump"])];
                                     g_sTmp = llJsonSetValue(g_sTmp,["shiny"],JSON_DELETE);
@@ -510,7 +510,7 @@ state active
                                 }
                             }
                         }
-                        
+
                         if(llGetListLength(lParam)>0){
                             //llSay(0, "Apply : "+llDumpList2String(lParam,"~"));
                             llSetLinkPrimitiveParams(iPrim, lParam);
@@ -547,10 +547,10 @@ state active
                         iRespring=FALSE;
                         ThemeSelect(kAv,iAuth);
                     }
-                    
-                    
+
+
                     if(iRespring)Menu(kAv,iAuth);
-                    
+
                 } else if(sMenu == "Menu~Theme"){
                     if(sMsg == UPMENU){
                         iRespring=FALSE;
@@ -565,8 +565,8 @@ state active
                             E(kAv, "No theme with that name could be found. This is an error: "+(string)llGetInventoryType(sMsg+".theme"));
                         }
                     }
-                    
-                    
+
+
                     if(iRespring)ThemeSelect(kAv,iAuth);
                 }
             }
@@ -579,7 +579,7 @@ state active
             string sToken = llList2String(lSettings,0);
             string sVar = llList2String(lSettings,1);
             string sVal = llList2String(lSettings,2);
-            
+
             if(sToken=="global"){
                 if(sVar=="allowhide"){
                     g_iAllowHide=(integer)sVal;

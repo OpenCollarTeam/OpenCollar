@@ -1,5 +1,5 @@
 // This file is part of OpenCollar.
-// Copyright (c) 2008 - 2016 Nandana Singh, Lulu Pink, Garvin Twine,
+// Copyright (c) 2008 - 2021 Nandana Singh, Lulu Pink, Garvin Twine,
 // Cleo Collins, Master Starship, Joy Stipe, Wendy Starfall, littlemousy,
 // Romka Swallowtail et al.
 // Licensed under the GPLv2.  See LICENSE for full details.
@@ -107,9 +107,9 @@ Scale(integer iScale, integer iRezSize, key kAV) {
     if (iRezSize) vDestSize = g_vStartScale;
     float fScale = vDestSize.x / vSize.x ;
     g_iSizedByScript = TRUE;
-    // use new scale function integer llScaleByFactor( float scaling_factor ); 
+    // use new scale function integer llScaleByFactor( float scaling_factor );
     // http://wiki.secondlife.com/wiki/LlScaleByFactor
-    if (llScaleByFactor(fScale)==TRUE) { 
+    if (llScaleByFactor(fScale)==TRUE) {
         g_iScaleFactor = iScale;
         llMessageLinked(LINK_SET,NOTIFY,"1"+"Scaling finished, the %DEVICETYPE% is now on "+ (string)g_iScaleFactor +"% of the rez size.",kAV);
     } else llMessageLinked(LINK_SET,NOTIFY,"1"+ "The object cannot be scaled as you requested; prims would surpass minimum or maximum size.",kAV);

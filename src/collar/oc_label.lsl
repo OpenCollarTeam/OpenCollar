@@ -1,10 +1,10 @@
 // This file is part of OpenCollar.
-// Copyright (c) 2006 - 2016 Xylor Baysklef, Kermitt Quirk,        
-// Thraxis Epsilon, Gigs Taggart, Strife Onizuka, Huney Jewell,      
-// Salahzar Stenvaag, Lulu Pink, Nandana Singh, Cleo Collins, Satomi Ahn, 
-// Joy Stipe, Wendy Starfall, Romka Swallowtail, littlemousy,       
-// Garvin Twine et al.  
-// Licensed under the GPLv2.  See LICENSE for full details. 
+// Copyright (c) 2006 - 2021 Xylor Baysklef, Kermitt Quirk,
+// Thraxis Epsilon, Gigs Taggart, Strife Onizuka, Huney Jewell,
+// Salahzar Stenvaag, Lulu Pink, Nandana Singh, Cleo Collins, Satomi Ahn,
+// Joy Stipe, Wendy Starfall, Romka Swallowtail, littlemousy,
+// Garvin Twine et al.
+// Licensed under the GPLv2.  See LICENSE for full details.
 string g_sScriptVersion = "8.0";
 integer LINK_CMD_DEBUG=1999;
 DebugOutput(key kID, list ITEMS){
@@ -341,7 +341,7 @@ string Checkbox(integer iValue, string sLabel) {
 MainMenu(key kID, integer iAuth) {
     list lButtons= [g_sTextMenu, g_sColorMenu, g_sFontMenu];
     lButtons += [Checkbox(g_iShow, "Show"), Checkbox(g_iScroll, "Scroll")];
-    
+
 
     string sPrompt = "\n[Label]\t"+g_sAppVersion+"\n\nCustomize the %DEVICETYPE%'s label!";
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth,"main");
@@ -477,11 +477,11 @@ state active
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
             integer i = llSubStringIndex(sToken, "_");
-            
+
             //integer ind = llListFindList(g_lSettingsReqs, [sToken]);
             //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
-            
-            
+
+
             if (llGetSubString(sToken, 0, i) == g_sSettingToken) {
                 sToken = llGetSubString(sToken, i + 1, -1);
                 if (sToken == "text") g_sLabelText = sValue;
@@ -498,12 +498,12 @@ state active
                 }
             }
         }else if(iNum == LM_SETTING_EMPTY){
-            
+
             //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
             //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
-            
+
         } else if(iNum == LM_SETTING_DELETE){
-            
+
             //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
             //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
         }

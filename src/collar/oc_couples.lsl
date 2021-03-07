@@ -1,5 +1,5 @@
 // This file is part of OpenCollar.
-// Copyright (c) 2004 - 2017 Francis Chung, Ilse Mannonen, Nandana Singh,
+// Copyright (c) 2004 - 2021 Francis Chung, Ilse Mannonen, Nandana Singh,
 // Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, Garvin Twine,
 // littlemousy, Romka Swallowtail, Sumi Perl et al.
 // Licensed under the GPLv2.  See LICENSE for full details.

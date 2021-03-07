@@ -1,6 +1,6 @@
 /*
 This file is a part of OpenCollar.
-Copyright 2020
+Copyright 2021
 
 : Contributors :
 Aria (Tashia Redrose)
@@ -80,7 +80,7 @@ UserCommand(integer iNum, string sStr, key kID) {
     if (llToLower(sStr)==llToLower(g_sSubMenu) || llToLower(sStr) == "menu "+llToLower(g_sSubMenu)) Menu(kID, iNum);
     //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else {
-        //integer iWSuccess = 0; 
+        //integer iWSuccess = 0;
         //string sChangetype = llList2String(llParseString2List(sStr, [" "], []),0);
         //string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),1);
         //string sText;
@@ -124,7 +124,7 @@ ApplyMask(){
 CLock(key kAv, integer iAuth){
     string sPrompt = "[Undress - Clothing Locks]\n\nThis menu will allow you to lock or unlock clothing layers";
     list lButtons = [];
-    
+
     // Create checkboxes
     integer i = 0;
     integer end = llGetListLength(g_lLayers);
@@ -134,7 +134,7 @@ CLock(key kAv, integer iAuth){
         else
             lButtons += Checkbox(FALSE,llList2String(g_lLayers,i));
     }
-    
+
     Dialog(kAv, sPrompt, lButtons, [UPMENU], 0, iAuth, "undress~locks");
 }
 
@@ -221,7 +221,7 @@ state active
                         CLock(kAv,iAuth);
                         iRespring=FALSE;
                     }
-                    
+
                     if(iRespring)
                         Menu(kAv,iAuth);
                 } else if(sMenu == "undress~select"){
@@ -231,7 +231,7 @@ state active
                     } else {
                         llOwnerSay("@remoutfit:"+sMsg+"=force");
                     }
-                    
+
                     if(iRespring){
                         g_iOutfitScan = llRound(llFrand(58439875));
                         llListenRemove(g_iOutfitLstn);
@@ -252,11 +252,11 @@ state active
                         }else {
                             if(index==-1)g_lMasks+=llList2String(lLabel,1);
                         }
-                        
+
                         llMessageLinked(LINK_SET, LM_SETTING_SAVE, "undress_mask="+llDumpList2String(g_lMasks,"|"),"");
                     }
-                    
-                    
+
+
                     if(iRespring)CLock(kAv,iAuth);
                 }
             }
@@ -269,11 +269,11 @@ state active
             string sToken = llList2String(lSettings,0);
             string sVar = llList2String(lSettings,1);
             string sVal = llList2String(lSettings,2);
-            
-            
+
+
             //integer ind = llListFindList(g_lSettingsReqs, [sToken+"_"+sVar]);
             //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
-            
+
             if(sToken=="global"){
                 if(sVar=="locked"){
                     g_iLocked=(integer)sVal;
@@ -289,7 +289,7 @@ state active
         } else if(iNum == LM_SETTING_EMPTY){
             //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
             //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
-            
+
             if(sStr == "undress_mask"){
                 g_lMasks = [];
                 ApplyMask();
@@ -299,21 +299,21 @@ state active
             // This is recieved back from settings when a setting is deleted
             //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
             //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
-            
+
             list lSettings = llParseString2List(sStr, ["_"],[]);
             if(llList2String(lSettings,0)=="global")
                 if(llList2String(lSettings,1) == "locked") g_iLocked=FALSE;
         }
         //llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
     }
-    
-    
+
+
     listen(integer c,string n,key i,string m){
         if(c == g_iOutfitScan){
             //llWhisper(0, "outfit worn reply: "+m);
             list iBits = ["gloves","jacket","pants","shirt","shoes","skirt","socks","underpants","undershirt","skin","eyes","hair","shape"];
             llListenRemove(g_iOutfitLstn);
-            
+
             list lButtons;
             integer iEnd = llStringLength(m);
             list lSystem = ["skin", "eyes", "hair", "shape"];
@@ -321,12 +321,12 @@ state active
                 string sBit = llGetSubString(m,0,0);
                 string sLabel = llList2String(iBits,0);
                 iBits = llDeleteSubList(iBits,0,0);
-                
+
                 if(sBit=="1"){
                     if(llListFindList(lSystem,[sLabel])==-1)
                         lButtons += sLabel;
                 }
-                
+
                 iEnd--;
                 m = llDeleteSubString(m,0,0);
             }
