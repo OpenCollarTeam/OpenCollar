@@ -517,11 +517,11 @@ state active
         if(llToLower(llGetSubString(m,0,llStringLength(g_sPrefix)-1))==llToLower(g_sPrefix)){
             string CMD=llGetSubString(m,llStringLength(g_sPrefix),-1);
             if(llGetSubString(CMD,0,0)==" ")CMD=llDumpList2String(llParseString2List(CMD,[" "],[]), " ");
-            llMessageLinked(LINK_SET, CMD_ZERO, CMD, i);
+            llMessageLinked(LINK_SET, CMD_ZERO, CMD, llGetOwnerKey(i));
         } else if(llGetSubString(m,0,0) == "*"){
             string CMD = llGetSubString(m,1,-1);
             if(llGetSubString(CMD,0,0)==" ")CMD=llDumpList2String(llParseString2List(CMD,[" "],[])," ");
-            llMessageLinked(LINK_SET, CMD_ZERO, CMD, i);
+            llMessageLinked(LINK_SET, CMD_ZERO, CMD, llGetOwnerKey(i));
         } else {
             list lTmp = llParseString2List(m,[" ","(",")"],[]);
             string sDump = llToLower(llDumpList2String(lTmp, ""));
