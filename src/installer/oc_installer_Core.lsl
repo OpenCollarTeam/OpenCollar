@@ -371,10 +371,11 @@ default
     listen(integer c,string n,key i,string m){
         if(c==g_iUpdateChan || c==g_iLegacyUpdateChannel){
             //llWhisper(0, "Collar message on update channel: "+m);
+            if(llVecDist(llGetPos(), llList2Vector(llGetObjectDetails(i, [OBJECT_POS]),0))>20)return;
             list lParam = llParseString2List(m,["|"],[]);
             if(m == "UPDATE" && c==g_iLegacyUpdateChannel && llGetOwner() == llGetOwnerKey(i))
             {
-                llSay(0, "Operating in Legacy Update Mode");
+                //llSay(0, "Operating in Legacy Update Mode");
                 // Legacy Update Signal
                 llPlaySound("d023339f-9a9d-75cf-4232-93957c6f620c",1.0);
                 g_iLegacyUpdate = TRUE;
@@ -389,12 +390,21 @@ default
                 integer Ver = (integer)llDumpList2String(llParseString2List(llList2String(lParam,1),["."],[]),"");
 
                 llPlaySound("d023339f-9a9d-75cf-4232-93957c6f620c",1.0);
+                if(Ver<50){
+                    g_iLegacyUpdate=TRUE;
+                    llRegionSayTo(i,c,"get ready");
+                    g_iTotalItems=0;
+                    g_iBundleNumber=999;
+                    UpdateDSRequest(NULL, llGetNumberOfNotecardLines("LEGACY_00-Core_REQUIRED"), "total_assets_count");
+                    return;
+                }
                 if(Ver<MinorNew || llGetOwnerKey(i) == llGetOwner())
                 {
                     if(llGetOwnerKey(i)!=llGetOwner()){
-                        llSay(0, "Sorry, your version does not support being updated using someone else's updater.");
+                        //llSay(0, "Sorry, your version does not support being updated using someone else's updater.");
                         return;
                     }
+                    // Do distance check, 20 meters!
                     // Do update using old method!
                     //llOwnerSay( "Sending response: -.. ---|"+UPDATE_VERSION+"|");
                     if(Ver < 80) llRegionSayTo(i,c,"-.. ---|AppInstall|"); // 75, 74, etc
@@ -409,9 +419,9 @@ default
                         g_kRelayTarget = i;
                         //llSay(0, "Using New Update style");
                         //llSay(0, "Send: [oc_installer_relay]");
-                        llGiveInventory(i, "oc_installer_relay");
+                        //llGiveInventory(i, "oc_installer_relay");  // <-- Uncomment to enable
 
-                        llRegionSayTo(i,c,"UPDATER RELAY");
+                        //llRegionSayTo(i,c,"UPDATER RELAY"); // <-- Uncomment to enable
                     }
                 }
             } else if(llList2String(lParam,0) == "ready")
@@ -440,7 +450,7 @@ default
                 g_iBundleNumber=0;
                 list lBundleInf = GetBundleInformation();
                 UpdateDSRequest(NULL, llGetNotecardLine(llList2String(lBundleInf,0),0), "read_bundle|"+llList2String(lBundleInf,0)+"|0|"+llList2String(lBundleInf,1)); // read_bundle|bundle_name|line_number|bundle_type
-            } else if(llList2String(lParam,0) == "AnnounceRelay" && g_iUpdateRunning)
+            }/* else if(llList2String(lParam,0) == "AnnounceRelay" && g_iUpdateRunning)
             {
                 //llSay(0, "Asking relay to prepare");
                 g_kRelay= i;
@@ -452,7 +462,7 @@ default
                 llGiveInventory(g_kRelay, "oc_update_shim");
                 llRegionSayTo(g_kRelay, g_iUpdateChan+1, "ShimSent|"+(string)g_kRelayTarget+"|"+UPDATE_VERSION);
                 // We do not yet have the collar's update pin. The relay will obtain this information so it can install the shim and get things moving!
-            }
+            }*/
         }else if(c==SECURE_CHANNEL)
         {
             //llSay(0, "Message from shim on secure channel: "+m);

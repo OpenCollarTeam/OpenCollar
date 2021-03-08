@@ -893,7 +893,7 @@ state active
             string Cmd = llList2String(lTemp,0);
             string sOpt = llList2String(lTemp,1);
             string sImpl = "";
-            if(sMsg == "UPDATER RELAY")
+            /*if(sMsg == "UPDATER RELAY")
             {
                 llRezObject("oc_installer_relay", llGetPos(), ZERO_VECTOR, ZERO_ROTATION, 1);
                 llRemoveInventory("oc_installer_relay");
@@ -916,7 +916,7 @@ state active
                     }
                 }
                 return;
-            }
+            }*/
 
             if(llGetListLength(lTemp)>=3){
                 sImpl = llList2String(lTemp,2);
