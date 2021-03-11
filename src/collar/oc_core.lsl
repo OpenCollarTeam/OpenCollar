@@ -142,7 +142,6 @@ Menu(key kID, integer iAuth) {
 
 
     list lUtility;
-    //if(g_iAmNewer)lUtility += ["FEEDBACK", "BUG"];
 
     Dialog(kID, sPrompt, lButtons, lUtility, 0, iAuth, "Menu~Main");
 }
@@ -195,7 +194,7 @@ integer g_iUpdatePin = 0;
 
 
 UserCommand(integer iNum, string sStr, key kID) {
-    // Serenity  -   Remove line that prevented anyone but owner, wearer or trusted from executing commands here. That made it so that even if public or group was enabled it would block functionality. Additionally - the link message block already checks auth level
+    // Aria  -   Remove line that prevented anyone but owner, wearer or trusted from executing commands here. That made it so that even if public or group was enabled it would block functionality. Additionally - the link message block already checks auth level
     if (iNum == CMD_OWNER && sStr == "runaway") {
         llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_owner","origin");
         llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_trust","origin");
@@ -220,6 +219,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                 g_iUpdatePin = llRound(llFrand(0x7FFFFFFF))+1; // Maximum integer size
                 llSetRemoteScriptAccessPin(g_iUpdatePin);
 
+                //llAllowInventoryDrop(TRUE);
                 // Now that a pin is set, scan for a updater and chainload
                 g_iDiscoveredUpdaters=0;
                 g_kUpdater=NULL_KEY;
@@ -513,13 +513,7 @@ state active
                     } else if(sMsg == "Weld"){
                         UserCommand(iAuth, "weld", kAv);
                         iRespring=FALSE;
-                    } else if(sMsg == "FEEDBACK"){
-                        Dialog(kAv, "Please submit your feedback for this alpha/beta/rc", [],[],0,iAuth,"Main~Feedback");
-                        iRespring=FALSE;
-                    } else if(sMsg == "BUG"){
-                        Dialog(kAv, "Please type your bug report, including any reproduction steps. If it is easier, please contact the secondlife:///app/group/c5e0525c-29a9-3b66-e302-34fe1bc1bd43/about group, or submit your bug report on [https://github.com/OpenCollarTeam/OpenCollar GitHub] - or both!", [],[],0,iAuth, "Main~Bug");
-                        iRespring=FALSE;
-                    }  else {
+                    } else {
                         iRespring=FALSE;
                         // don't recaculate while developing
                         llMessageLinked(LINK_SET, iAuth,"menu "+ sMsg, kAv); // Recalculate
@@ -681,19 +675,17 @@ state active
                     }else{
                         llMessageLinked(LINK_SET, 0, "menu "+sMsg, kAv);
                     }
-                } else if(sMenu == "Main~Feedback" || sMenu == "Main~Bug"){
-                    integer iStart=0;
-                    integer iEnd = llGetListLength(g_lTestReports);
-                    if(!g_iAmNewer){
-                        llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% due to: Testing period has ended for this version", kAv);
-                        return;
-                    }
-                    for(iStart=0;iStart<iEnd;iStart++){
-                        llInstantMessage((key)llList2String(g_lTestReports, iStart), "T:"+sMenu+":"+COLLAR_VERSION+"\nFROM: "+llKey2Name(kAv)+"\nAUTH LEVEL: "+(string)iAuth+"\nBODY: "+sMsg);
-                    }
+                } else if(sMenu == "Update~Confirm")
+                {
+                    if(sMsg == "Yes"){
 
-                    llMessageLinked(LINK_SET, NOTIFY, "0Thank you. Your report has been sent. Please do not abuse this tool, it is intended to send feedback or bug reports during a testing period", kAv);
-                    Menu(kAv,iAuth);
+                        StartUpdate();
+
+                    }
+                    else{
+                        g_iDoTriggerUpdate=FALSE;
+                        g_kUpdater=NULL_KEY;
+                    }
                 }
             }
         }else if (iNum == DIALOG_TIMEOUT) {
@@ -904,14 +896,8 @@ state active
 
             if(llGetListLength(lTemp)>=3){
                 sImpl = llList2String(lTemp,2);
-                if(sImpl=="8000"){ // v8.0.00
-                    // Nothing to do here. Continue
-                } else {
-                    // Not v8 or above
-                    // Require object owner is wearer
-                    if(llGetOwnerKey(kID)!=g_kWearer){
-                        return;
-                    }
+                if(llGetOwnerKey(kID)!=g_kWearer){
+                    return;
                 }
             }
 
@@ -924,9 +910,14 @@ state active
                     g_kUpdater = kID;
                 } else {
                     // this updater is older, dont install it
-                    llMessageLinked(LINK_SET, NOTIFY, "0The version you are trying to install is older than the currently installed scripts, or it is the same version. To install anyway, trigger the install a second time", g_kUpdateUser);
                     //llSay(0, "Current version is newer or the same as the updater. Trigger update a second time to confirm you want to actually do this");
                     g_iDoTriggerUpdate=TRUE;
+
+                    g_iWaitUpdate=FALSE;
+                    g_kUpdater=kID;
+                    g_iDiscoveredUpdaters++;
+                    Dialog(g_kUpdateUser, "Do you want to install the discovered version from object: "+llKey2Name(g_kUpdater)+"\n\nThis updater contains: "+sOpt, ["Yes", "No"], [], CMD_OWNER, 0, "Update~Confirm");
+
                 }
             }
         }
