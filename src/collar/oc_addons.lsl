@@ -275,11 +275,19 @@ state active
             for(i=0;i<end;i+=5){
                 integer lastSeen = (integer)llList2String(g_lAddons, i+2);
                 if(llGetUnixTime()>lastSeen+deadStamp){
+                    if(g_iVerbosityLevel>=4)
+                    {
+                        llOwnerSay("Pre-Addon Deletion List: "+llDumpList2String(g_lAddons,"~"));
+                    }
                     SayToAddonX((key)llList2String(g_lAddons,i), "dc", 0, "", llGetOwner());
                     llMessageLinked(LINK_SET, NOTIFY, "0Addon: "+llList2String(g_lAddons,i+1)+" has been removed because it has not been seen for 5 minutes or more.", g_kWearer);
                     g_lAddons = llDeleteSubList(g_lAddons, i, i+5);
                     i=-5; // if we change the stride of the list this must be updated
                     end=llGetListLength(g_lAddons);
+                    if(g_iVerbosityLevel>=4)
+                    {
+                        llOwnerSay("Post-Addon Deletion List: "+llDumpList2String(g_lAddons,"~"));
+                    }
                 }
             }
         }
@@ -351,7 +359,15 @@ state active
                     integer iPos = llListFindList(g_lAddons, [i]);
                     if(iPos==-1)return;
                     else{
-                        g_lAddons = llDeleteSubList(g_lAddons, iPos, iPos+4);
+                        if(g_iVerbosityLevel>=4)
+                        {
+                            llOwnerSay("Pre-Addon Deletion List: "+llDumpList2String(g_lAddons,"~"));
+                        }
+                        g_lAddons = llDeleteSubList(g_lAddons, iPos, iPos+5);
+                        if(g_iVerbosityLevel>=4)
+                        {
+                            llOwnerSay("Post-Addon Deletion List: "+llDumpList2String(g_lAddons,"~"));
+                        }
                     }
                 }
             }
