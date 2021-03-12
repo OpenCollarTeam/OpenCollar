@@ -582,7 +582,7 @@ state active
                     g_iLimitRange = (integer)sVal;
                 } else if(sVar == "tempowner"){
                     g_kTempOwner = (key)sVal;
-                } else if(sVar == "runawaydisable"){
+                } else if(sVar == "runaway"){
                     g_iRunaway=(integer)sVal;
                 }
             } else if(sToken == "global"){
@@ -640,7 +640,7 @@ state active
                     g_iLimitRange = TRUE;
                 } else if(sVar == "tempowner"){
                     g_kTempOwner = "";
-                } else if(sVar == "runawaydisable"){
+                } else if(sVar == "runaway"){
                     g_iRunaway=TRUE;
                 }
             } else if(sToken == "global"){
@@ -717,11 +717,11 @@ state active
                 } else if(sMenu == "RunawayMenu"){
                     if(sMsg == "Enable" && iAuth == CMD_OWNER){
                         g_iRunaway=TRUE;
-                        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "AUTH_runawaydisable","origin");
+                        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "AUTH_runaway","origin");
                         llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "5", "spring_access:"+(string)kAv);
                     } else if(sMsg == "Disable"){
                         g_iRunaway=FALSE;
-                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "AUTH_runawaydisable=0", "origin");
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "AUTH_runaway=0", "origin");
                         llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "5", "spring_access:"+(string)kAv);
                     } else if(sMsg == "No"){
                         // return
