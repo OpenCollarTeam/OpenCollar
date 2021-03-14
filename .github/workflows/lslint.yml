@@ -1,0 +1,25 @@
+name: LSLint
+
+on: [push, pull_request,workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      LSLINT_VER: v1.2.6
+      LSLINT_ENV: linux
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: "Download prerequisite: Makopo/lslint"
+        run: |
+          wget -O lslint.zip "https://github.com/Makopo/lslint/releases/download/${LSLINT_VER}/lslint_${LSLINT_VER}_${LSLINT_ENV}.zip"
+          unzip -j lslint.zip "lslint" -d "${{ github.workspace }}"
+
+      - name: Run Linting Script
+        run: |
+          chmod +x ${{github.workspace}}/run_lslint.sh
+          chmod +x ${{github.workspace}}/lslint
+          ${{github.workspace}}/run_lslint.sh ${{github.workspace}}/lslint
