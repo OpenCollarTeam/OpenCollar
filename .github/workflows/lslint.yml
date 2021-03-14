@@ -22,5 +22,4 @@ jobs:
       - name: Run Linting Script
         run: |
           chmod +x ${{github.workspace}}/run_lslint.sh
-          chmod +x ${{github.workspace}}/lslint
-          ${{github.workspace}}/run_lslint.sh ${{github.workspace}}/lslint
+          ${{github.workspace}}/run_lslint.sh ${{github.workspace}}/linter/lslint
