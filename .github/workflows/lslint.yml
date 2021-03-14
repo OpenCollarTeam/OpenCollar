@@ -6,17 +6,18 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    env:
-      LSLINT_VER: v1.2.6
-      LSLINT_ENV: linux
-
     steps:
       - uses: actions/checkout@v2
 
       - name: "Download prerequisite: Makopo/lslint"
+        uses: actions/checkout@v2
+        with:
+          repository: "Makopo/lslint"
+          path: "linter"
+      - name: "Compile Linter"
         run: |
-          wget -O lslint.zip "https://github.com/Makopo/lslint/releases/download/${LSLINT_VER}/lslint_${LSLINT_VER}_${LSLINT_ENV}.zip"
-          unzip -j lslint.zip "lslint" -d "${{ github.workspace }}"
+          cd linter
+          make
 
       - name: Run Linting Script
         run: |
