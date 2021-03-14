@@ -5,7 +5,7 @@ set -o pipefail
 LSLINT_PATH=$1
 FAILED=.
 
-for file in **/*.lsl; do
+for file in src/**/*.lsl; do
     echo "[>>] Linting $file..." | tee -a ./test.run.txt
     $1 "$file" 2>&1 | tee -a ./test.run.txt
     
