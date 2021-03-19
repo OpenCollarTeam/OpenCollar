@@ -110,7 +110,7 @@ key g_kMenuUser;
 integer CalcAuth(key kID, integer iVerbose){
     string sID = (string)kID;
     // First check
-    if(llGetListLength(g_lOwner) == 0 && kID==g_kWearer && llListFindList(g_lBlock,[sID])==-1)
+    if(llGetListLength(g_lOwner) == 0 && kID==g_kWearer)
         return CMD_OWNER;
     else{
         if(llListFindList(g_lBlock,[sID])!=-1)return CMD_BLOCKED;
@@ -122,17 +122,21 @@ integer CalcAuth(key kID, integer iVerbose){
             if(g_kGroup!=NULL_KEY){
                 if(llSameGroup(kID))return CMD_GROUP;
             }
-        
+
             if(g_iPublic)return CMD_EVERYONE;
-        } else if(!in_range(kID) && !iVerbose){
+        } else if(!iVerbose){
+            if (in_range(kID) && g_kGroup!= NULL_KEY)
+            {
+                if(llSameGroup(kID))return CMD_GROUP;
+            }
             if(g_iPublic)return CMD_EVERYONE;
         }else{
             if(iVerbose)
                 llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% because you are out of range", kID);
         }
     }
-        
-    
+
+
     return CMD_NOACCESS;
 }
 
