@@ -204,20 +204,23 @@ UserCommand(integer iNum, string sStr, key kID) {
         g_iFindChn = llRound(llFrand(99999999));
         g_iFindLstn =llListen(g_iFindChn, "", llGetOwner(), "");
 
+        g_kMenuUser = kID;
+        g_iMenuUser = iNum;
+
         if(sChangetype == "--"){
             //llOwnerSay("@detachall:"+sChangevalue+"=force");
             g_iCmdMode=F_REMOVE | F_RECURSIVE;
-            llOwnerSay("@findfolder:"+sChangevalue+"="+(string)g_iFindChn);
+            llOwnerSay("@findfolders:"+sChangevalue+"="+(string)g_iFindChn);
             return;
         } else if(sChangetype == "&&"){
             g_iCmdMode = F_ADD | F_RECURSIVE;
             //llOwnerSay("@attachallover:"+sChangevalue+"=force");
-            llOwnerSay("@findfolder:"+sChangevalue+"="+(string)g_iFindChn);
+            llOwnerSay("@findfolders:"+sChangevalue+"="+(string)g_iFindChn);
             return;
         } else if(sChangetype == "++"){
             g_iCmdMode = F_ADD;
             //llOwnerSay("@attachall:"+sChangevalue+"=force");
-            llOwnerSay("@findfolder:"+sChangevalue+"="+(string)g_iFindChn);
+            llOwnerSay("@findfolders:"+sChangevalue+"="+(string)g_iFindChn);
             return;
         }
         sChangetype = llGetSubString(sStr,0,0);
@@ -227,17 +230,17 @@ UserCommand(integer iNum, string sStr, key kID) {
             // add folder path
             //llOwnerSay("@attachover:"+sChangevalue+"=force");
             g_iCmdMode = F_ADD;
-            llOwnerSay("@findfolder:"+sChangevalue+"="+(string)g_iFindChn);
+            llOwnerSay("@findfolders:"+sChangevalue+"="+(string)g_iFindChn);
             return;
         } else if(sChangetype == "-"){
             //llOwnerSay("@detach:"+sChangevalue+"=force");
             g_iCmdMode = F_REMOVE;
-            llOwnerSay("@findfolder:"+sChangevalue+"="+(string)g_iFindChn);
+            llOwnerSay("@findfolders:"+sChangevalue+"="+(string)g_iFindChn);
             return;
         } else if(sChangetype == "+"){
             //llOwnerSay("@attach:"+sChangevalue+"=force");
             g_iCmdMode=F_WEAR;
-            llOwnerSay("@findfolder:"+sChangevalue+"="+(string)g_iFindChn);
+            llOwnerSay("@findfolders:"+sChangevalue+"="+(string)g_iFindChn);
             return;
         }
         llListenRemove(g_iFindLstn);
@@ -299,6 +302,30 @@ LocksMenu(key kAv, integer iAuth, integer iMask)
     else lButtons += [Checkbox(FALSE, "att. this")];
 
     Dialog(kAv, sPrompt, lButtons, [UPMENU], 0, iAuth, "Folders~Locks");
+}
+
+// Function to handle de-duplication of code for the findfolders menu & response
+// - Aria
+ApplyFolderActions(string sMsg)
+{
+
+    if(g_iCmdMode & F_RECURSIVE){
+        if(g_iCmdMode & F_ADD){
+            llOwnerSay("@attachallover:"+sMsg+"=force");
+        } else if(g_iCmdMode & F_WEAR){
+            llOwnerSay("@attachall:"+sMsg+"=force");
+        }else if(g_iCmdMode & F_REMOVE){
+            llOwnerSay("@detachall:"+sMsg+"=force");
+        }
+    } else {
+        if(g_iCmdMode & F_ADD){
+            llOwnerSay("@attachover:"+sMsg+"=force");
+        }else if(g_iCmdMode & F_WEAR){
+            llOwnerSay("@attach:"+sMsg+"=force");
+        }else if(g_iCmdMode & F_REMOVE){
+            llOwnerSay("@detach:"+sMsg+"=force");
+        }
+    }
 }
 default
 {
@@ -383,22 +410,23 @@ state active
             Dialog(g_kMenuUser, sPrompt, lButtons, ["+ Add Items", "- Rem Items", setor((g_sPath == ""), UPMENU, "^ UP")]+lLockOption, 0, g_iMenuUser, "FolderBrowser~");
         } else if(iChan == g_iFindChn)
         {
-            if(g_iCmdMode & F_RECURSIVE){
-                if(g_iCmdMode & F_ADD){
-                    llOwnerSay("@attachallover:"+sMsg+"=force");
-                } else if(g_iCmdMode & F_WEAR){
-                    llOwnerSay("@attachall:"+sMsg+"=force");
-                }else if(g_iCmdMode & F_REMOVE){
-                    llOwnerSay("@detachall:"+sMsg+"=force");
+            list lParam = llParseStringKeepNulls(sMsg, [","],[]);
+            if(llGetListLength(lParam) > 1)
+            {
+                integer x = 0;
+                integer end = llGetListLength(lParam);
+
+                string sAppend = "";
+                for(x=0;x<end;x++)
+                {
+                    sAppend += "\n"+llList2String(lParam,x);
                 }
-            } else {
-                if(g_iCmdMode & F_ADD){
-                    llOwnerSay("@attachover:"+sMsg+"=force");
-                }else if(g_iCmdMode & F_WEAR){
-                    llOwnerSay("@attach:"+sMsg+"=force");
-                }else if(g_iCmdMode & F_REMOVE){
-                    llOwnerSay("@detach:"+sMsg+"=force");
-                }
+                Dialog(kID, "There were multiple results found, please select one.\nOptions: \n\n"+sAppend, lParam, [], 0, g_iMenuUser, "FolderSearch");
+            } else if(llGetListLength(lParam) == 1){
+                ApplyFolderActions(sMsg);
+            } else if(llGetListLength(lParam) == 0)
+            {
+                llMessageLinked(LINK_SET, NOTIFY, "0No results were found", g_kMenuUser);
             }
 
             llListenRemove(g_iFindLstn);
@@ -515,6 +543,9 @@ state active
                     }
 
                     if(iRespring) ConfigureMenu(kAv,iAuth);
+                } else if(sMenu == "FolderSearch")
+                {
+                    ApplyFolderActions(sMsg);
                 }
             }
         } else if (iNum == DIALOG_TIMEOUT) {

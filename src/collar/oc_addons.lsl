@@ -59,7 +59,11 @@ integer CalcAuth(key kID, integer iVerbose){
             }
 
             if(g_iPublic)return CMD_EVERYONE;
-        } else if(!in_range(kID) && !iVerbose){
+        } else if(!iVerbose){
+            if (in_range(kID) && g_kGroup!= NULL_KEY)
+            {
+                if(llSameGroup(kID))return CMD_GROUP;
+            }
             if(g_iPublic)return CMD_EVERYONE;
         }else{
             if(iVerbose)
