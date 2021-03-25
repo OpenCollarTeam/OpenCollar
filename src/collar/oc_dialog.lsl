@@ -42,13 +42,12 @@ string BLANK = " ";
 integer g_iTimeOut = 300;
 integer g_iReapeat = 5;//how often the timer will go off, in seconds
 
-list g_lMenus;//12-strided list in form listenChan, dialogid, listener, starttime, recipient, prompt, list buttons, utility buttons, currentpage, button digits, auth level, sorted
+list g_lMenus;//13-strided list in form listenChan, dialogid, listener, starttime, recipient, prompt, list buttons, utility buttons, currentpage, button digits, auth level,extra info, sorted
 //where "list buttons" means the big list of choices presented to the user
 //and "page buttons" means utility buttons that will appear on every page, such as one saying "go up one level"
 //and "currentpage" is an integer meaning which page of the menu the user is currently viewing
-integer g_iStrideLength = 12;
+integer g_iStrideLength = 13;
 integer SENSORDIALOG = -9003;
-integer LOCALDIALOG = -9004;
 
 string NameURI(key kID){
     return "secondlife:///app/agent/"+(string)kID+"/about";
@@ -67,8 +66,6 @@ list g_lOwners;
 list g_lSensorDetails;
 integer g_bSensorLock;
 integer g_iSensorTimeout;
-integer g_iSelectAviMenu; //added to show URIs in menus june 2015 Otto(garvin.twine)
-integer g_iColorMenu;
 
 string SubstituteVars(string sMsg) {
         if (~llSubStringIndex(sMsg, "%NOACCESS"))
@@ -163,13 +160,13 @@ list g_lColors = [
             "Midnight",<0.00000, 0.10588, 0.21176>
 ];
 
-Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, integer iPage, key kID, integer iWithNums, integer iAuth, integer iSorted)
+Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, integer iPage, key kID, integer iWithNums, integer iAuth,string extraInfo, integer iSorted)
 {
     //calculate page start and end
     integer iNumitems = llGetListLength(lMenuItems);
     integer iStart = 0;
     integer iMyPageSize = g_iPagesize - llGetListLength(lUtilityButtons);
-    if (g_iSelectAviMenu) { //we have to reduce buttons due to text length limitations we reach with URI
+    if (extraInfo == "avimenu") { //we have to reduce buttons due to text length limitations we reach with URI
         iMyPageSize = iMyPageSize-3; // june 2015 Otto(garvin.twine)
         if (iNumitems == 8) iMyPageSize = iMyPageSize-1;
         //special cases again are 7 or 8 avis where we have to reduce "active" buttons again
@@ -295,7 +292,7 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
     integer ts = llGetUnixTime() + g_iTimeOut;
 
     //write entry in tracking list
-    g_lMenus += [iChan, kID, iListener, ts, kRecipient, sPrompt, llDumpList2String(lMenuItems, "|"), llDumpList2String(lUtilityButtons, "|"), iPage, iWithNums, iAuth, iSorted];
+    g_lMenus += [iChan, kID, iListener, ts, kRecipient, sPrompt, llDumpList2String(lMenuItems, "|"), llDumpList2String(lUtilityButtons, "|"), iPage, iWithNums, iAuth,extraInfo, iSorted];
     //Debug("Made Dialog");
 }
 
@@ -454,8 +451,6 @@ dequeueSensor() {
         (string)llList2Float(lSensorInfo,4)
     );*/
 
-    if (llList2Integer(lSensorInfo,2) == (integer)AGENT) g_iSelectAviMenu = TRUE;
-    else g_iSelectAviMenu = FALSE;
     llSensor(llList2String(lSensorInfo,0),(key)llList2String(lSensorInfo,1),llList2Integer(lSensorInfo,2),llList2Float(lSensorInfo,3),llList2Float(lSensorInfo,4));
     g_iSensorTimeout=llGetUnixTime()+10;
     llSetTimerEvent(g_iReapeat);
@@ -502,7 +497,6 @@ state active
         //if list is empty after that, then stop timer
         if (!llGetListLength(g_lMenus) && !llGetListLength(g_lSensorDetails)) {
             //Debug("no active dialogs, stopping timer");
-            g_iSelectAviMenu = FALSE;
             llSetTimerEvent(0.0);
         }
     }
@@ -524,25 +518,24 @@ state active
             integer iPage = llList2Integer(g_lMenus, iMenuIndex + 8);
             integer iDigits = llList2Integer(g_lMenus, iMenuIndex + 9);
             integer iAuth = llList2Integer(g_lMenus, iMenuIndex + 10);
-            integer iSorted = llList2Integer(g_lMenus, iMenuIndex+11);
+            string sExtraInfo = llList2String(g_lMenus, iMenuIndex + 11);
+            integer iSorted = llList2Integer(g_lMenus, iMenuIndex+12);
 
             RemoveMenuStride(iMenuIndex);
 
-            if (sMessage == MORE) Dialog(kID, sPrompt, items, ubuttons, ++iPage, kMenuID, iDigits, iAuth, iSorted);
-            else if (sMessage == PREV) Dialog(kID, sPrompt, items, ubuttons, --iPage, kMenuID, iDigits, iAuth, iSorted);
-            else if (sMessage == BLANK) Dialog(kID, sPrompt, items, ubuttons, iPage, kMenuID, iDigits, iAuth, iSorted);
+            if (sMessage == MORE) Dialog(kID, sPrompt, items, ubuttons, ++iPage, kMenuID, iDigits, iAuth, sExtraInfo, iSorted);
+            else if (sMessage == PREV) Dialog(kID, sPrompt, items, ubuttons, --iPage, kMenuID, iDigits, iAuth, sExtraInfo, iSorted);
+            else if (sMessage == BLANK) Dialog(kID, sPrompt, items, ubuttons, iPage, kMenuID, iDigits, iAuth, sExtraInfo, iSorted);
             else {
-                g_iSelectAviMenu = FALSE;
                 string sAnswer;
                 integer iIndex = llListFindList(ubuttons, [sMessage]);
                 if (iDigits && !~iIndex) {
                     integer iBIndex = (integer) llGetSubString(sMessage, 0, iDigits);
                     sAnswer = llList2String(items, iBIndex);
-                } else if (g_iColorMenu) {
+                } else if (sExtraInfo == "colormenu") {
                     integer iColorIndex  =llListFindList(llList2ListStrided(g_lColors,0,-1,2),[sMessage]);
                     if (~iColorIndex) sAnswer = llList2String(llList2ListStrided(llDeleteSubList(g_lColors,0,0),0,-1,2),iColorIndex);
                     else sAnswer = sMessage;
-                    g_iColorMenu = FALSE;
                 } else sAnswer = sMessage;
                 if (sAnswer == "") sAnswer = " "; //to have an answer to deal with send " "
 
@@ -562,12 +555,14 @@ state active
         g_lSensorDetails=llDeleteSubList(g_lSensorDetails,0,1);
 
         list lButtons = llParseStringKeepNulls(llList2String(lParams, 3), ["`"], []);
+        if (llList2Integer(lButtons,2)==(integer)AGENT) lParams += [TRUE,"avimenu"]; // sorted
         //sensor information is encoded in the first 5 fields of the lButtons list, we've run the sensor so we don't need that now.
         //6th field is "find" information
         //7th is boolean, 0 for return a dialog, 1 for return the first matching name
         string sFind=llList2String(lButtons,5);
        //Debug(sFind);
         integer bReturnFirstMatch=llList2Integer(lButtons,6);
+
         lButtons=[];
         integer i;
         for (; i<num_detected;i++){
@@ -584,7 +579,6 @@ state active
                     if (llGetListLength(g_lSensorDetails) > 0)
                         dequeueSensor();
                     else g_bSensorLock=FALSE;
-                    g_iSelectAviMenu = FALSE;
                     return;
                 }
 
@@ -595,7 +589,7 @@ state active
         string sButtons=llDumpList2String(lButtons,"`");
         lParams=llListReplaceList(lParams,[sButtons],3,3);
         //fake fresh dialog call with our new buttons in place, using the rest of the information we were sent
-        llMessageLinked(LINK_THIS,LOCALDIALOG,llDumpList2String(lParams,"|"),kID);
+        llMessageLinked(LINK_THIS,DIALOG,llDumpList2String(lParams,"|"),kID);
         //if we have more sensors to run, run another one now, else unlock subsys and quite
         if (llGetListLength(g_lSensorDetails) > 0)
             dequeueSensor();
@@ -608,14 +602,11 @@ state active
         g_lSensorDetails=llDeleteSubList(g_lSensorDetails,0,1);
         lParams=llListReplaceList(lParams,[""],3,3);
         //fake fresh dialog call with our new buttons in place, using the rest of the information we were sent
-        llMessageLinked(LINK_THIS,LOCALDIALOG,llDumpList2String(lParams,"|"),kID);
+        llMessageLinked(LINK_THIS,DIALOG,llDumpList2String(lParams,"|"),kID);
         //if we have more sensors to run, run another one now, else unlock subsys and quit
         if (llGetListLength(g_lSensorDetails) > 0)
             dequeueSensor();
-        else {
-            g_iSelectAviMenu = FALSE;
-            g_bSensorLock=FALSE;
-        }
+        else g_bSensorLock=FALSE;
     }
 
 
@@ -632,23 +623,23 @@ state active
                 g_bSensorLock=TRUE;
                 dequeueSensor();
             }
-        } else if (iNum == DIALOG || iNum == LOCALDIALOG) {
+        } else if (iNum == DIALOG) {
         //give a dialog with the options on the button labels
             //str will be pipe-delimited list with rcpt|prompt|page|backtick-delimited-list-buttons|backtick-delimited-utility-buttons|auth|sorted
             //Debug("DIALOG:"+sStr);
-            if (iNum == DIALOG) g_iSelectAviMenu = FALSE;
+            string extraInfo = "";
             list lParams = llParseStringKeepNulls(sStr, ["|"], []);
             key kRCPT = llGetOwnerKey((key)llList2String(lParams, 0));
             string sPrompt = llList2String(lParams, 1);
             integer iPage = (integer)llList2String(lParams, 2);
             if (iPage < 0 ) {
-                g_iSelectAviMenu = TRUE;
+                extraInfo = "avimenu";
                 iPage = 0;
             }
             list lButtons = llParseString2List(llList2String(lParams, 3), ["`"], []);
             if (llList2String(lButtons,0) == "colormenu please") {
                 lButtons = llList2ListStrided(g_lColors,0,-1,2);
-                g_iColorMenu = TRUE;
+                extraInfo = "colormenu";
             }
             integer iDigits=-1;   //iDigits==-1 means Dialog should run idigits on the buttons
             list ubuttons = llParseString2List(llList2String(lParams, 4), ["`"], []);
@@ -660,8 +651,9 @@ state active
             if(iSorted && IsUUIDList(lButtons))lButtons = SortUUIDList(lButtons);
             else if(iSorted && !IsUUIDList(lButtons))lButtons = llListSort(lButtons, 1, TRUE);
 
+            if (llGetListLength(lParams)>=8) extraInfo = llList2String(lParams, 7);
             ClearUser(kRCPT);
-            Dialog(kRCPT, sPrompt, lButtons, ubuttons, iPage, kID, iDigits, iAuth, iSorted);
+            Dialog(kRCPT, sPrompt, lButtons, ubuttons, iPage, kID, iDigits, iAuth,extraInfo, iSorted);
         }
 
         else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) return;
