@@ -160,7 +160,7 @@ list g_lColors = [
             "Midnight",<0.00000, 0.10588, 0.21176>
 ];
 
-Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, integer iPage, key kID, integer iWithNums, integer iAuth,string extraInfo, integer iSorted)
+Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, integer iPage, key kID, integer iWithNums, integer iAuth, string extraInfo, integer iSorted)
 {
     //calculate page start and end
     integer iNumitems = llGetListLength(lMenuItems);
