@@ -213,16 +213,16 @@ default {
     }
 
     state_entry() {
-        g_kWearer = llGetOwner();        
+        g_kWearer = llGetOwner();
         g_sShockSound = DEFAULT ;
-        if (llGetInventoryType("~shock") == INVENTORY_ANIMATION) g_iDefaultAnim = TRUE;
+        if (llGetInventoryType(g_sDefaultAnim) == INVENTORY_ANIMATION) g_iDefaultAnim = TRUE;
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
         if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID, FALSE);
         else if (iNum == LM_SETTING_RESPONSE) {
             if (sStr == "settings=sent") {
-                if (llGetInventoryType("~shock") == INVENTORY_ANIMATION) g_iDefaultAnim = TRUE;
+                if (llGetInventoryType(g_sDefaultAnim) == INVENTORY_ANIMATION) g_iDefaultAnim = TRUE;
                 else g_iDefaultAnim = FALSE;
                 if (g_sShockAnim == "" || g_sShockAnim == DEFAULT) {
                     if (g_iDefaultAnim == TRUE) g_sShockAnim = DEFAULT;
