@@ -270,7 +270,7 @@ SetParticles(integer link, key kID,key kTexture, float fMaxAge, float fGravity){
 
     if(kTexture=="" || kTexture=="def")kTexture="4cde01ac-4279-2742-71e1-47ff81cc3529";
     if(fMaxAge==0)fMaxAge=7.3;
-    if(llRound(fGravity) == -1) fGravity = -0.076;
+    if(llRound(fGravity) == -1) fGravity = -0.01;
     llLinkParticleSystem(link, [
 PSYS_SRC_PATTERN,PSYS_SRC_PATTERN_DROP,
 PSYS_PART_START_ALPHA,1,
@@ -278,7 +278,7 @@ PSYS_PART_START_SCALE,<0.075, 0.075, 0>,
 PSYS_PART_END_SCALE,<0.075,0.075,0>,
 PSYS_PART_MAX_AGE,fMaxAge,
 PSYS_SRC_BURST_PART_COUNT,1,
-PSYS_SRC_ACCEL,<0, 0, -0.076>,
+PSYS_SRC_ACCEL,<0, 0, -0.01>,
 PSYS_SRC_TEXTURE,kTexture,
 PSYS_SRC_TARGET_KEY,kID,
 PSYS_PART_FLAGS,PSYS_PART_FOLLOW_SRC_MASK|
