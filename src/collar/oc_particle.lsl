@@ -118,7 +118,7 @@ float g_fBurstRate = 0.0;
 //list g_lCurrentChains = [];
 
 list g_lCollarPoints = [ // oc chain name, lockmeister name, lockguard name
-    "fcollar"       , "collar"  , "collarfrontloop" , // Collar Front
+    "fcollar"   , "collar"  , "collarfrontloop" , // Collar Front
     "lcollar"   , "lcollar" , "collarleftloop"  , // Collar Left
     "rcollar"   , "rcollar" , "collarrightloop" , // Collar Right
     "bcollar"   , "bcollar" , "collarbackloop"    // Collar Back
@@ -155,7 +155,7 @@ FindLinkedPrims() {
 
     for (i=-1; i<=linkcount;++i) {
         string sPrimName = llToLower(llStringTrim(llList2String(llGetLinkPrimitiveParams(i,[PRIM_NAME]),0),STRING_TRIM));
-        if (llToLower(sPrimName) == "leashpoint" || llToLower(sPrimName) == "ooc") {
+        if (sPrimName == "leashpoint" || sPrimName == "ooc") {
             g_lLeashPrims += ["fcollar", i];
             sPrimName = "fcollar";
         }
