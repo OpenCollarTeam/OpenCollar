@@ -333,9 +333,6 @@ DoLeash(key kTarget, integer iAuth, list lPoints, integer bSave) {
     llTargetRemove(g_iTargetHandle);
     llStopMoveToTarget();
     g_iTargetHandle = llTarget(g_vPos, (float)g_iLength);
-    if (g_vPos != ZERO_VECTOR) {
-        llMoveToTarget(g_vPos, 0.7);
-    }
     if(bSave){
         g_sLeashedToName = llList2String(llGetObjectDetails(kTarget, [OBJECT_NAME]),0);
         llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + TOK_DEST + "name=" + g_sLeashedToName , "");
