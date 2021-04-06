@@ -967,4 +967,4 @@ state active
             g_kWearer = llGetOwner();
         }
     }
-}
+} 
