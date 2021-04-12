@@ -84,7 +84,7 @@ integer g_announce;
 key g_kWearer;
 //string g_sWearerName;
 list g_lMenuIDs;
-integer g_iMenuStride;
+integer g_iMenuStride=3;
 list g_lOwner=[];
 integer g_iLocked=FALSE;
 

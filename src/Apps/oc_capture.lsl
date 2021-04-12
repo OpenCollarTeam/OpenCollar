@@ -250,7 +250,7 @@ UserCommand(integer iNum, string sStr, key kID) {
 
 key g_kWearer;
 list g_lMenuIDs;
-integer g_iMenuStride;
+integer g_iMenuStride = 3;
 list g_lOwner;
 list g_lTrust;
 list g_lBlock;

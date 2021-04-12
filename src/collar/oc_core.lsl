@@ -346,7 +346,7 @@ integer g_iWaitUpdate;
 integer g_iUpdateChan = -7483213;
 key g_kWearer;
 list g_lMenuIDs;
-integer g_iMenuStride;
+integer g_iMenuStride=3;
 integer g_iLocked=FALSE;
 Compare(string V1, string V2){
     NEW_VERSION=V2;

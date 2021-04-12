@@ -43,7 +43,7 @@ integer DIALOG_TIMEOUT  = -9002;
 list g_lOptedLM     = [];
 
 list g_lMenuIDs;
-integer g_iMenuStride;
+integer g_iMenuStride=3;
 
 string UPMENU = "BACK";
 

@@ -124,7 +124,7 @@ list g_lPoses = [];
 
 
 list g_lMenuIDs;
-integer g_iMenuStride;
+integer g_iMenuStride = 3;
 
 string UPMENU = "BACK";
 

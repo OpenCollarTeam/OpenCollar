@@ -150,7 +150,7 @@ list g_lSettings;
 integer g_iLoading;
 //key g_kWearer;
 list g_lMenuIDs;
-integer g_iMenuStride;
+integer g_iMenuStride=3;
 //list g_lOwner;
 //list g_lTrust;
 key g_kMenuUser;

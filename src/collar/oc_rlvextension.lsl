@@ -95,7 +95,7 @@ list g_lMenuIDs;
 //integer TIMEOUT_REGISTER = 30498;
 //integer TIMEOUT_FIRED = 30499;
 //list g_lSettingsReqs = [];
-integer g_iMenuStride;
+integer g_iMenuStride=3;
 integer g_iLocked=FALSE;
 
 //list g_lStrangerEx = [];

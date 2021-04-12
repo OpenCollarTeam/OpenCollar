@@ -193,7 +193,7 @@ integer g_iOffset=8;
 vector g_vColor = <1,1,1>;
 string g_sTitle;
 list g_lMenuIDs;
-integer g_iMenuStride;
+integer g_iMenuStride=3;
 list g_lOwner;
 list g_lTrust;
 list g_lBlock;

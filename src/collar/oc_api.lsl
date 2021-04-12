@@ -137,7 +137,7 @@ integer CalcAuth(key kID, integer iVerbose){
 }
 
 list g_lMenuIDs;
-integer g_iMenuStride;
+integer g_iMenuStride=3;
 
 integer NOTIFY = 1002;
 integer NOTIFY_OWNERS=1003;

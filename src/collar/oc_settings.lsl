@@ -281,7 +281,7 @@ UserCommand(integer iNum, string sStr, key kID) {
 integer g_iRebootConfirmed=FALSE;
 key g_kWearer;
 list g_lMenuIDs;
-integer g_iMenuStride;
+integer g_iMenuStride=3;
 //integer g_iLocked=FALSE;
 
 key g_kSettingsRead;

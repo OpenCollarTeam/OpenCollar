@@ -165,7 +165,7 @@ integer g_bForceMouselook = FALSE;
 integer g_iRLV = FALSE;
 
 list g_lMenuIDs;
-integer g_iMenuStride;
+integer g_iMenuStride = 3;
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
     key kMenuID = llGenerateKey();
