@@ -17,7 +17,7 @@ https://github.com/OpenCollarTeam/OpenCollar
 */
 
 list g_lMenuIDs;
-integer g_iMenuStride;
+integer g_iMenuStride=3;
 
 string UPMENU="BACK";
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
