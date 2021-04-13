@@ -173,16 +173,13 @@ PrintAccess(key kID){
     //llSay(0, sFinal);
 }
 
-list g_lActiveListeners;
+integer g_iListener;
+integer g_iChatListener;
 DoListeners(){
-    integer i=0;
-    integer end = llGetListLength(g_lActiveListeners);
-    for(i=0;i<end;i++){
-        llListenRemove(llList2Integer(g_lActiveListeners, i));
-    }
-    
-    g_lActiveListeners = [llListen(g_iChannel, "","",""), llListen(0,"","",""),  llListen(g_iInterfaceChannel, "", "", "")];
-    
+    if (g_iListener) llListenRemove(g_iListener);
+    if (g_iChatListener) llListenRemove(g_iChatListener);
+    g_iListener = llListen(llAbs(g_iChannel), "","","");
+    if (g_iChannel > 0) g_iChatListener = llListen(0,"","","");
 }
 integer g_iRunaway=TRUE;
 RunawayMenu(key kID, integer iAuth){
@@ -333,7 +330,10 @@ UserCommand(integer iAuth, string sCmd, key kID){
         string sCmdx = llToLower(llList2String(lCmd,0));
                 
         if(sCmdx == "channel"){
-            g_iChannel = (integer)llList2String(lCmd,1);
+            integer chan = (integer)llList2String(lCmd,1);
+            if (chan == -1) g_iChannel = -llAbs(g_iChannel);
+            else if (chan == 0) g_iChannel = llAbs(g_iChannel);
+            else if (chan > 0) g_iChannel = chan;
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_channel="+(string)g_iChannel, kID);
         
         } else if(sCmdx == "prefix"){
@@ -470,6 +470,7 @@ state active
             g_iInterfaceChannel = (integer)("0x" + llGetSubString(g_kWearer,30,-1));
             if (g_iInterfaceChannel > 0) g_iInterfaceChannel = -g_iInterfaceChannel;
         }
+        llListen(g_iInterfaceChannel, "", "", "");
         DoListeners();
         
         llSetTimerEvent(15);
