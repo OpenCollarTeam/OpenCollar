@@ -333,7 +333,10 @@ UserCommand(integer iAuth, string sCmd, key kID){
             integer chan = (integer)llList2String(lCmd,1);
             if (chan == -1) g_iChannel = -llAbs(g_iChannel);
             else if (chan == 0) g_iChannel = llAbs(g_iChannel);
-            else if (chan > 0) g_iChannel = chan;
+            else if (chan > 0) {
+                if (g_iChannel < 0) g_iChannel = -chan;
+                else g_iChannel = chan;
+            }
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_channel="+(string)g_iChannel, kID);
         
         } else if(sCmdx == "prefix"){
