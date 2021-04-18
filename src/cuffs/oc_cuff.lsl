@@ -194,10 +194,11 @@ UserCommand(integer iNum, string sStr, key kID) {
 Link(string packet, integer iNum, string sStr, key kID){
     list packet_data = [ "pkt_type", packet, "iNum", iNum, "addon_name", g_sAddon, "bridge", FALSE, "sMsg", sStr, "kID", kID ];
 
-    if(!g_iHasPoses)packet_data += ["noMenu", 1];
+    if(!g_iHasPoses) packet_data += ["noMenu", 1];
+
     if (packet == "online" || packet == "update") // only add optin if packet type is online or update
     {
-        packet_data+= [ "optin", llDumpList2String(g_lOptedLM, "~") ];
+        packet_data += [ "optin", llDumpList2String(g_lOptedLM, "~") ];
     }
 
     string pkt = llList2Json(JSON_OBJECT, packet_data);
