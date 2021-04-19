@@ -537,11 +537,11 @@ state active
         //if(iNum>=CMD_OWNER && iNum <= CMD_NOACCESS) llOwnerSay(llDumpList2String([iSender, iNum, sStr, kID], " ^ "));
         if(iNum == CMD_ZERO){
             if(sStr == "initialize")return;
-            integer iAuth = CalcAuth(kID, TRUE);
+            integer iAuth = CalcAuth(kID);
             //llOwnerSay( "{API} Calculate auth for "+(string)kID+"="+(string)iAuth+";"+sStr);
             llMessageLinked(LINK_SET, iAuth, sStr, kID);
         } else if(iNum == AUTH_REQUEST){
-            integer iAuth = CalcAuth(kID, FALSE);
+            integer iAuth = CalcAuth(kID);
             //llOwnerSay("{API} Calculate auth for "+(string)kID+"="+(string)iAuth+";"+sStr);
             llMessageLinked(LINK_SET, AUTH_REPLY, "AuthReply|"+(string)kID+"|"+(string)iAuth,sStr);
         } else if(iNum >= CMD_OWNER && iNum <= CMD_NOACCESS) UserCommand(iNum, sStr, kID);
