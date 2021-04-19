@@ -107,7 +107,7 @@ key g_kWearer;
 key g_kTry;
 integer g_iCurrentAuth;
 key g_kMenuUser;
-integer CalcAuth(key kID, integer iVerbose){
+integer CalcAuth(key kID) {
     string sID = (string)kID;
     // First check
     if(llGetListLength(g_lOwner) == 0 && kID==g_kWearer && llListFindList(g_lBlock,[sID])==-1)
@@ -118,20 +118,18 @@ integer CalcAuth(key kID, integer iVerbose){
         if(llListFindList(g_lTrust,[sID])!=-1)return CMD_TRUSTED;
         if(g_kTempOwner == kID) return CMD_TRUSTED;
         if(kID==g_kWearer)return CMD_WEARER;
-        if(in_range(kID) && iVerbose){
-            if(g_kGroup!=NULL_KEY){
+
+        // group access and public access only apply to nearby avs/objects.
+        if(in_range(kID)){
+            if(g_kGroup!=NULL_KEY) {
                 if(llSameGroup(kID))return CMD_GROUP;
             }
         
-            if(g_iPublic)return CMD_EVERYONE;
-        } else if(!in_range(kID) && !iVerbose){
-            if(g_iPublic)return CMD_EVERYONE;
-        }else{
-            if(iVerbose)
-                llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% because you are out of range", kID);
+            if(g_iPublic) {
+              return CMD_EVERYONE;
+            }
         }
     }
-        
     
     return CMD_NOACCESS;
 }
@@ -302,8 +300,7 @@ integer in_range(key kID){
     if(kID == g_kWearer)return TRUE;
     else{
         vector pos = llList2Vector(llGetObjectDetails(kID, [OBJECT_POS]),0);
-        if(llVecDist(llGetPos(),pos) <=20.0)return TRUE;
-        else return FALSE;
+        return llVecDist(llGetPos(),pos) <= 20.0;
     }
 }
 
@@ -540,11 +537,11 @@ state active
         //if(iNum>=CMD_OWNER && iNum <= CMD_NOACCESS) llOwnerSay(llDumpList2String([iSender, iNum, sStr, kID], " ^ "));
         if(iNum == CMD_ZERO){
             if(sStr == "initialize")return;
-            integer iAuth = CalcAuth(kID, TRUE);
+            integer iAuth = CalcAuth(kID);
             //llOwnerSay( "{API} Calculate auth for "+(string)kID+"="+(string)iAuth+";"+sStr);
             llMessageLinked(LINK_SET, iAuth, sStr, kID);
         } else if(iNum == AUTH_REQUEST){
-            integer iAuth = CalcAuth(kID, FALSE);
+            integer iAuth = CalcAuth(kID);
             //llOwnerSay("{API} Calculate auth for "+(string)kID+"="+(string)iAuth+";"+sStr);
             llMessageLinked(LINK_SET, AUTH_REPLY, "AuthReply|"+(string)kID+"|"+(string)iAuth,sStr);
         } else if(iNum >= CMD_OWNER && iNum <= CMD_NOACCESS) UserCommand(iNum, sStr, kID);
