@@ -119,15 +119,15 @@ integer CalcAuth(key kID) {
         if(g_kTempOwner == kID) return CMD_TRUSTED;
         if(kID==g_kWearer)return CMD_WEARER;
 
-				// group access and public access only apply to nearby avs/objects.
+        // group access and public access only apply to nearby avs/objects.
         if(in_range(kID)){
             if(g_kGroup!=NULL_KEY) {
                 if(llSameGroup(kID))return CMD_GROUP;
             }
         
             if(g_iPublic) {
-							return CMD_EVERYONE;
-						}
+              return CMD_EVERYONE;
+            }
         }
     }
     
