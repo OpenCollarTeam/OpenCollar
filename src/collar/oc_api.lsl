@@ -178,7 +178,7 @@ integer g_iChatListener;
 DoListeners(){
     if (g_iListener) llListenRemove(g_iListener);
     if (g_iChatListener) llListenRemove(g_iChatListener);
-    g_iListener = llListen(llAbs(g_iChannel), "","","");
+    g_iListener = llListen(g_iChannel, "","","");
     if (g_iChannel > 0) g_iChatListener = llListen(0,"","","");
 }
 integer g_iRunaway=TRUE;
@@ -330,13 +330,7 @@ UserCommand(integer iAuth, string sCmd, key kID){
         string sCmdx = llToLower(llList2String(lCmd,0));
                 
         if(sCmdx == "channel"){
-            integer chan = (integer)llList2String(lCmd,1);
-            if (chan == -1) g_iChannel = -llAbs(g_iChannel);
-            else if (chan == 0) g_iChannel = llAbs(g_iChannel);
-            else if (chan > 0) {
-                if (g_iChannel < 0) g_iChannel = -chan;
-                else g_iChannel = chan;
-            }
+            g_iChannel = (integer)llList2String(lCmd,1);
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_channel="+(string)g_iChannel, kID);
         
         } else if(sCmdx == "prefix"){
