@@ -142,6 +142,7 @@ integer NOTIFY_OWNERS=1003;
 integer g_iPublic;
 string g_sPrefix;
 integer g_iChannel=1;
+integer g_iLocalOff;
 
 PrintAccess(key kID){
     string sFinal = "\n \nAccess List:\nOwners:";
@@ -171,17 +172,15 @@ PrintAccess(key kID){
     //llSay(0, sFinal);
 }
 
-list g_lActiveListeners;
+integer g_iListener;
+integer g_iChatListen;
 DoListeners(){
-    integer i=0;
-    integer end = llGetListLength(g_lActiveListeners);
-    for(i=0;i<end;i++){
-        llListenRemove(llList2Integer(g_lActiveListeners, i));
-    }
-    
-    g_lActiveListeners = [llListen(g_iChannel, "","",""), llListen(0,"","",""),  llListen(g_iInterfaceChannel, "", "", "")];
-    
+    if (g_iListener) llListenRemove(g_iListener);
+    if (g_iChatListen) llListenRemove(g_iChatListen);
+    g_iListener = llListen(g_iChannel, "","","");
+    if (!g_iLocalOff) g_iChatListen = llListen(0,"","","");
 }
+
 integer g_iRunaway=TRUE;
 RunawayMenu(key kID, integer iAuth){
     if(iAuth == CMD_OWNER || iAuth==CMD_WEARER){
@@ -330,9 +329,16 @@ UserCommand(integer iAuth, string sCmd, key kID){
         string sCmdx = llToLower(llList2String(lCmd,0));
                 
         if(sCmdx == "channel"){
-            g_iChannel = (integer)llList2String(lCmd,1);
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_channel="+(string)g_iChannel, kID);
-        
+            if(llList2String(lCmd,1) == "off"){ // disable listening local chat (channel 0)
+                g_iLocalOff = 1;
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_localoff=1", kID);
+            } else if(llList2String(lCmd,1)=="0"||llList2String(lCmd,1)=="on"){ // enable listening local chat (channel 0)
+                g_iLocalOff = 0;
+                llMessageLinked(LINK_SET, LM_SETTING_DELETE, "global_localoff", kID);
+            } else { //set channel number
+                g_iChannel = (integer)llList2String(lCmd,1);
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_channel="+(string)g_iChannel, kID);
+            }
         } else if(sCmdx == "prefix"){
             if(llList2String(lCmd,1)==""){
                 llMessageLinked(LINK_SET,NOTIFY,"0The prefix is currently set to: "+g_sPrefix+". If you wish to change it, supply the new prefix to this same command", kID);
@@ -467,6 +473,7 @@ state active
             g_iInterfaceChannel = (integer)("0x" + llGetSubString(g_kWearer,30,-1));
             if (g_iInterfaceChannel > 0) g_iInterfaceChannel = -g_iInterfaceChannel;
         }
+        llListen(g_iInterfaceChannel, "", "", "");
         DoListeners();
         
         llSetTimerEvent(15);
@@ -592,6 +599,9 @@ state active
                     g_sSafeword = sVal;
                 } else if(sVar == "safeworddisable"){
                     g_iSafewordDisable=1;
+                } else if(sVar == "localoff"){
+                    g_iLocalOff = (integer)sVal;
+                    DoListeners();
                 }
             }
             
@@ -648,6 +658,9 @@ state active
                     g_sPrefix = llToLower(llGetSubString(llKey2Name(llGetOwner()),0,1));
                 } else if(sVar == "safeword"){
                     g_sSafeword = "RED";
+                } else if(sVar == "localoff"){
+                    g_iLocalOff = 0;
+                    DoListeners();
                 }
             }
         } else if(iNum == REBOOT){
