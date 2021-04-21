@@ -4,21 +4,21 @@
 
 PoseName:Belt Collar
 PoseAnim:[LX] Belt_Collar
-PoseChains:bluac=bbelt~bruac=bbelt~illac=lbelt~irlac=rbelt~bbelt=bcollar
+PoseChains:bluac=bb~bruac=bb~illac=lb~irlac=rb~bb=bcollar
 PoseRestrictions:touchall=n,fly=n
 PoseAge:5
 PoseGravity:0
 
 PoseName:Belt
 PoseAnim:cuff-belt2
-PoseChains:illac=lbelt~irlac=rbelt~iluac=bbelt~iruac=bbelt~bluac=bruac
+PoseChains:illac=lb~irlac=rb~iluac=bb~iruac=bb~bluac=bruac
 PoseRestrictions:
 PoseAge:5
 PoseGravity:0
 
 PoseName:Pinion
 PoseAnim:cuff-pinion
-PoseChains:bluac=bruac~bruac=bbelt~bbelt=bluac~fluac=fllac~fruac=frlac~bllac=lbelt~brlac=rbelt
+PoseChains:bluac=bruac~bruac=bb~bb=bluac~fluac=fllac~fruac=frlac~illac=lb~irlac=rb
 PoseRestrictions:
 PoseAge:5
 PoseGravity:0
@@ -74,7 +74,7 @@ PoseGravity:0
 
 PoseName:Crossed Back 2
 PoseAnim:winter seale - u-shape2
-PoseChains:iluac=illac~iruac=irlac~bllac=bbelt~brlac=bbelt
+PoseChains:iluac=illac~iruac=irlac~bllac=bb~brlac=bb
 PoseRestrictions:
 PoseAge:5
 PoseGravity:0
