@@ -648,7 +648,7 @@ state active
             }
         } else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kMessageID]);
-            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
+            if (~iMenuIndex) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
         } else if (iNum == LM_SETTING_RESPONSE) {
            // Debug ("LocalSettingsResponse: " + sMessage);
             integer i = llSubStringIndex(sMessage, "=");

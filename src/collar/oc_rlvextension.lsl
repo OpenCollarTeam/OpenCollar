@@ -48,7 +48,7 @@ integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no mes
 
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
-//integer DIALOG_TIMEOUT = -9002;
+integer DIALOG_TIMEOUT = -9002;
 integer DIALOG_SENSOR = -9003;
 string UPMENU = "BACK";
 //string ALL = "ALL";
@@ -554,7 +554,10 @@ state active
                     }
                 }
             }
-        }else if(iNum == LM_SETTING_EMPTY){
+        } else if (iNum == DIALOG_TIMEOUT) {
+            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
+            if (~iMenuIndex) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
+        } else if(iNum == LM_SETTING_EMPTY){
             
             //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
             //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);

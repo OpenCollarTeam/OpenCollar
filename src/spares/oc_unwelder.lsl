@@ -246,7 +246,7 @@ default
                 else if (iNum == DIALOG_TIMEOUT)
                 {
                     integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-                    g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex + 3);  //remove stride from g_lMenuIDs
+                    if (~iMenuIndex) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
                 }
                 else if (iNum == DIALOG_RESPONSE)
                 {

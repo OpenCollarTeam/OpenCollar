@@ -620,6 +620,9 @@ state active
                     }
                 }
             }
+        } else if (iNum == DIALOG_TIMEOUT) {
+            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
+            if (~iMenuIndex) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
         } else if(iNum == -99999){
             if(sStr == "update_active")llResetScript();
         } else if (iNum == LM_SETTING_RESPONSE) {

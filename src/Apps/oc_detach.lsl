@@ -147,7 +147,7 @@ state active
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu+"|"+ g_sSubMenu,"");
         else if(iNum == DIALOG_RESPONSE){
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            if(iMenuIndex!=-1){
+            if(~iMenuIndex){
                 string sMenu = llList2String(g_lMenuIDs, iMenuIndex+1);
                 g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
                 list lMenuParams = llParseString2List(sStr, ["|"],[]);
@@ -166,7 +166,7 @@ state active
             }
         }else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
+            if (~iMenuIndex) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
         } else if(iNum == REBOOT)llResetScript();
         //llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
     }
