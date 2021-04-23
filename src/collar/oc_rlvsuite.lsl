@@ -55,7 +55,7 @@ integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no mes
 
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
-//integer DIALOG_TIMEOUT = -9002;
+integer DIALOG_TIMEOUT = -9002;
 
 integer g_iRestrictions1 = 0;
 integer g_iRestrictions2 = 0;
