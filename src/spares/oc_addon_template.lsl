@@ -115,8 +115,23 @@ default
         API_CHANNEL = ((integer)("0x" + llGetSubString((string)llGetOwner(), 0, 8))) + 0xf6eb - 0xd2;
         llListen(API_CHANNEL, "", "", "");
         Link("online", 0, "", llGetOwner()); // This is the signal to initiate communication between the addon and the collar
+        g_iLMLastRecv = llGetUnixTime(); //assume recived to fix the reset loop time out.
         llSetTimerEvent(60);
     }
+    
+    attach(key id)
+    {
+        // if attached make a connectin when detached disconnect.
+        if(id)
+        {
+            Link("online", 0, "", llGetOwner());
+        }
+        else
+        {
+            Link("offline", 0, "", llGetOwnerKey(g_kCollar));
+        }
+    }
+
     
     timer()
     {
