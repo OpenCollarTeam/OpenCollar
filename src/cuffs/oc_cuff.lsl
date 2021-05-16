@@ -2,18 +2,12 @@
 /*
 This file is a part of OpenCollar.
 Copyright ©2021
-
-
 : Contributors :
-
 Aria (Tashia Redrose)
     * February 2021       -       Created oc_cuff
-
-
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
-
 */
 list StrideOfList(list src, integer stride, integer start, integer end)
 {
@@ -622,9 +616,18 @@ default
                                 g_iSyncLock=(integer)sVal;
                             } else if(sVar == "locked"){
                                 g_iCuffLocked=(integer)sVal;
-                                if(!g_iSyncLock){
-                                    if(g_iCuffLocked)llOwnerSay("@detach=n");
-                                    else llOwnerSay("@detach=y");
+                                if(!g_iSyncLock)
+                                {
+                                    if(g_iCuffLocked)
+                                    {
+                                    llOwnerSay("@detach=n");
+                                    ToggleLock(TRUE);
+                                    }
+                                    else
+                                    {
+                                    llOwnerSay("@detach=y");
+                                    ToggleLock(FALSE);
+                                    }
                                 }
                             } else if(sVar == g_sPoseName+"pose")
                             {
