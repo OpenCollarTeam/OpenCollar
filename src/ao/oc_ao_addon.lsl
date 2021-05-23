@@ -117,6 +117,7 @@ default
         llListen(API_CHANNEL, "", "", "");
         Link("online", 0, "", llGetOwner()); // This is the signal to initiate communication between the addon and the collar
         llSetTimerEvent(60);
+        g_iLMLastRecv = llGetUnixTime();
     }
     attach(key id)
     {
@@ -143,8 +144,8 @@ default
         if (llGetUnixTime() > (g_iLMLastRecv + (5 * 60)) && g_kCollar != NULL_KEY)
         {
             g_kCollar = NULL_KEY;
-            Link("online", 0, "", llGetOwner()); // stay connected by refreshing the connection without this the addon disapears from the menu and resetting script all the time can break things.
-            //llResetScript(); // perform our action on disconnect
+            //Link("online", 0, "", llGetOwner()); // stay connected by refreshing the connection without this the addon disapears from the menu and resetting script all the time can break things.
+            llResetScript(); // perform our action on disconnect
         }
 
         if (g_kCollar == NULL_KEY) Link("online", 0, "", llGetOwner());
@@ -156,13 +157,14 @@ default
         {
             // This signal, indicates the collar has approved the addon and that communication requests will be responded to if the requests are valid collar LMs.
             g_kCollar = id;
+            g_iLMLastRecv = llGetUnixTime();
             Link("from_addon", LM_SETTING_REQUEST, "ALL", "");
         }
         else if (sPacketType == "dc" && g_kCollar == id)
         {
             g_kCollar = NULL_KEY;
-            Link("online", 0, "", llGetOwner()); // stay connected by refreshing the connection without this the addon disapears from the menu and resetting script all the time can break things.
-            //llResetScript(); // This addon is designed to always be connected because it is a test
+            //Link("online", 0, "", llGetOwner()); // stay connected by refreshing the connection without this the addon disapears from the menu and resetting script all the time can break things.
+            llResetScript(); // This addon is designed to always be connected because it is a test
         }
         else if (sPacketType == "pong" && g_kCollar == id)
         {
