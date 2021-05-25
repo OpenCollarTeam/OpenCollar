@@ -1,19 +1,12 @@
-
 /*
 This file is a part of OpenCollar.
 Copyright ©2021
-
-
 : Contributors :
-
 Aria (Tashia Redrose)
     * February 2021       -       Created oc_cuff
-
-
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
-
 */
 list StrideOfList(list src, integer stride, integer start, integer end)
 {
@@ -270,7 +263,7 @@ SetParticles(integer link, key kID,key kTexture, float fMaxAge, float fGravity){
 
     if(kTexture=="" || kTexture=="def")kTexture="4cde01ac-4279-2742-71e1-47ff81cc3529";
     if(fMaxAge==0)fMaxAge=7.3;
-    if(llRound(fGravity) == -1) fGravity = -0.076;
+    if(llRound(fGravity) == -1) fGravity = -0.01;
     llLinkParticleSystem(link, [
 PSYS_SRC_PATTERN,PSYS_SRC_PATTERN_DROP,
 PSYS_PART_START_ALPHA,1,
@@ -278,7 +271,7 @@ PSYS_PART_START_SCALE,<0.075, 0.075, 0>,
 PSYS_PART_END_SCALE,<0.075,0.075,0>,
 PSYS_PART_MAX_AGE,fMaxAge,
 PSYS_SRC_BURST_PART_COUNT,1,
-PSYS_SRC_ACCEL,<0, 0, -0.076>,
+PSYS_SRC_ACCEL,<0, 0, -0.01>,
 PSYS_SRC_TEXTURE,kTexture,
 PSYS_SRC_TARGET_KEY,kID,
 PSYS_PART_FLAGS,PSYS_PART_FOLLOW_SRC_MASK|
@@ -619,11 +612,22 @@ default
                             if (sVar == "synclock")
                             {
                                 g_iSyncLock=(integer)sVal;
-                            } else if(sVar == "locked"){
+                            }
+                            else if(sVar == "locked")
+                                {
                                 g_iCuffLocked=(integer)sVal;
-                                if(!g_iSyncLock){
-                                    if(g_iCuffLocked)llOwnerSay("@detach=n");
-                                    else llOwnerSay("@detach=y");
+                                if(!g_iSyncLock)
+                                {
+                                    if(g_iCuffLocked)
+                                    {
+                                    llOwnerSay("@detach=n");
+                                    ToggleLock(TRUE);
+                                    }
+                                    else
+                                    {
+                                    llOwnerSay("@detach=y");
+                                    ToggleLock(FALSE);
+                                    }
                                 }
                             } else if(sVar == g_sPoseName+"pose")
                             {
@@ -637,8 +641,16 @@ default
                             if(sVar=="locked"){
                                 g_iLocked=(integer)sVal;
                                 if(g_iSyncLock){
-                                    if(g_iLocked)llOwnerSay("@detach=n");
-                                    else llOwnerSay("@detach=y");
+                                    if(g_iLocked)
+                                    {
+                                    llOwnerSay("@detach=n");
+                                    ToggleLock(TRUE);
+                                    }
+                                    else
+                                    {
+                                    llOwnerSay("@detach=y");
+                                    ToggleLock(FALSE);
+                                    }
                                 }
                             } else if(sVar=="checkboxes"){
                                 g_lCheckboxes=llParseString2List(sVal,[","],[]);
@@ -707,16 +719,31 @@ default
                         //llSay(0, "DELETE "+sToken+"_"+sVar);
                         if(sToken == "global"){
                             if(sVar == "locked"){
-                                if(g_iSyncLock)llOwnerSay("@detach=y");
+                                if(g_iSyncLock)
+                                {
+                                    llOwnerSay("@detach=y");
+                                    ToggleLock(FALSE);
+                                    }
                             }
-                        } else if(sToken == "occuffs"){
-                            if(sVar == "synclock"){
+                        } else if(sToken == "occuffs")
+                        {
+                            if(sVar == "synclock")
+                            {
                                 g_iSyncLock=FALSE;
-                                if(!g_iCuffLocked)llOwnerSay("@detach=y");
+                                if(!g_iCuffLocked)
+                                {
+                                    llOwnerSay("@detach=y");
+                                    ToggleLock(FALSE);
+                                    }
                             }
-                            else if(sVar == "locked"){
+                            else if(sVar == "locked")
+                                {
                                 g_iCuffLocked=FALSE;
-                                if(!g_iSyncLock)llOwnerSay("@detach=y");
+                                if(!g_iSyncLock)
+                                {
+                                    llOwnerSay("@detach=y");
+                                    ToggleLock(FALSE);
+                                    };
                             } else if(sVar==g_sPoseName+"pose"){
                                 g_sCurrentPose="NONE";
                             }
