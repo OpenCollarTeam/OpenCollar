@@ -2,10 +2,7 @@
 /*
 This file is a part of OpenCollar.
 Copyright ©2021
-
-
 : Contributors :
-
 Aria (Tashia Redrose)
     *June 2020       -       Created oc_api
       * This implements some auth features, and acts as a API Bridge for addons and plugins
@@ -16,7 +13,6 @@ Felkami (Caraway Ohmai)
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
-
 */
 list g_lOwner;
 list g_lTrust;
@@ -173,16 +169,13 @@ PrintAccess(key kID){
     //llSay(0, sFinal);
 }
 
-list g_lActiveListeners;
+integer g_iListener;
+integer g_iChatListener;
 DoListeners(){
-    integer i=0;
-    integer end = llGetListLength(g_lActiveListeners);
-    for(i=0;i<end;i++){
-        llListenRemove(llList2Integer(g_lActiveListeners, i));
-    }
-    
-    g_lActiveListeners = [llListen(g_iChannel, "","",""), llListen(0,"","",""),  llListen(g_iInterfaceChannel, "", "", "")];
-    
+    if (g_iListener) llListenRemove(g_iListener);
+    if (g_iChatListener) llListenRemove(g_iChatListener);
+    g_iListener = llListen(g_iChannel, "","","");
+    if (g_iChannel > 0) g_iChatListener = llListen(0,"","","");
 }
 integer g_iRunaway=TRUE;
 RunawayMenu(key kID, integer iAuth){
@@ -470,6 +463,7 @@ state active
             g_iInterfaceChannel = (integer)("0x" + llGetSubString(g_kWearer,30,-1));
             if (g_iInterfaceChannel > 0) g_iInterfaceChannel = -g_iInterfaceChannel;
         }
+        llListen(g_iInterfaceChannel, "", "", "");
         DoListeners();
         
         llSetTimerEvent(15);
