@@ -2,20 +2,14 @@
 /*
 This file is a part of OpenCollar.
 Copyright ©2021
-
-
 : Contributors :
-
 Aria (Tashia Redrose)
     *June 2020       -       Created oc_core
       * This combines oc_com, oc_auth, and oc_sys
     * July 2020     -       Maintenance fixes, feature implementations
-
-
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
-
 */
 
 integer NOTIFY_OWNERS=1003;
@@ -547,7 +541,8 @@ state active
                             llMessageLinked(LINK_SET, iAuth, "rem "+llToLower(llGetSubString(sMsg,2,-1)), kAv);
                         } else llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to removing a person", kAv);
                     } else if(sMsg == "Access List"){
-                        llMessageLinked(LINK_SET, iAuth, "print auth", kAv);
+                        if(iAuth == CMD_OWNER || iAuth == CMD_WEARER ){
+                        llMessageLinked(LINK_SET, iAuth, "print auth", kAv);}
                     } else if(sMsg == Checkbox(bool((g_kGroup!="")), "Group")){
                         if(iAuth >=CMD_OWNER && iAuth <= CMD_TRUSTED){
                             if(g_kGroup!=""){
