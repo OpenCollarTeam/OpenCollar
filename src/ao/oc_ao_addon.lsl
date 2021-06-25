@@ -108,16 +108,21 @@ Link(string packet, integer iNum, string sStr, key kID){
 key g_kCollar=NULL_KEY;
 integer g_iLMLastRecv;
 integer g_iLMLastSent;
-
+key g_kWearer;
 default
 {
     state_entry()
     {
+        g_kWearer = llGetOwner();
         API_CHANNEL = ((integer)("0x" + llGetSubString((string)llGetOwner(), 0, 8))) + 0xf6eb - 0xd2;
         llListen(API_CHANNEL, "", "", "");
         Link("online", 0, "", llGetOwner()); // This is the signal to initiate communication between the addon and the collar
         llSetTimerEvent(60);
         g_iLMLastRecv = llGetUnixTime();
+    }
+    on_rez(integer start_param)
+    {
+        if (g_kWearer != llGetOwner()) llResetScript();
     }
     attach(key id)
     {
