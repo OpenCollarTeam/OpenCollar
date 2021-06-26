@@ -1,4 +1,5 @@
     
+    
 /*
 This file is a part of OpenCollar.
 Copyright ©2021
@@ -170,18 +171,16 @@ PrintAccess(key kID){
     llMessageLinked(LINK_SET,NOTIFY, "0"+sFinal,kID);
     //llSay(0, sFinal);
 }
-
-list g_lActiveListeners;
+//Begin Romka's fix
+integer g_iListener;
+integer g_iChatListener;
 DoListeners(){
-    integer i=0;
-    integer end = llGetListLength(g_lActiveListeners);
-    for(i=0;i<end;i++){
-        llListenRemove(llList2Integer(g_lActiveListeners, i));
-    }
-    
-    g_lActiveListeners = [llListen(g_iChannel, "","",""), llListen(0,"","",""),  llListen(g_iInterfaceChannel, "", "", "")];
-    
+    if (g_iListener) llListenRemove(g_iListener);
+    if (g_iChatListener) llListenRemove(g_iChatListener);
+    g_iListener = llListen(g_iChannel, "","","");
+    if (g_iChannel > 0) g_iChatListener = llListen(0,"","","");
 }
+//End Romka's Channel 0 fix setting Negative channel to turn off channel 0 commands
 integer g_iRunaway=TRUE;
 RunawayMenu(key kID, integer iAuth){
     if(iAuth == CMD_OWNER || iAuth==CMD_WEARER){
