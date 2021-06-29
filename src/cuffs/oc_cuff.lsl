@@ -71,11 +71,11 @@ string g_sVersion = "1.0.0010";
 
 //integer CMD_ZERO            = 0;
 integer CMD_OWNER           = 500;
-integer CMD_TRUSTED         = 501;  //Included by Safra for Pose Priority
-integer CMD_GROUP           = 502;  //Included by Safra for Pose Priority
+integer CMD_TRUSTED         = 501;
+integer CMD_GROUP           = 502;
 integer CMD_WEARER          = 503;
 integer CMD_EVERYONE        = 504;
-integer CMD_LEVEL           = 504;  //Included by Safra for Pose Priority
+integer CMD_LEVEL           = 504;
 //integer CMD_BLOCKED         = 598; // <--- Used in auth_request, will not return on a CMD_ZERO
 //integer CMD_RLV_RELAY       = 507;
 //integer CMD_SAFEWORD        = 510;
@@ -136,7 +136,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 }
 
 Menu(key kID, integer iAuth) {
-    string sPrompt = "\n[OpenCollar Cuffs]\nMemory: "+(string)llGetFreeMemory()+"b\nVersion: "+g_sVersion+"\n" +"Current command level =" +(string)CMD_LEVEL +"\nYour command level =" +(string)iAuth;   //Included by Safra for Pose Priority
+    string sPrompt = "\n[OpenCollar Cuffs]\nMemory: "+(string)llGetFreeMemory()+"b\nVersion: "+g_sVersion+"\n" +"Current command level =" +(string)CMD_LEVEL +"\nYour command level =" +(string)iAuth;
     sPrompt += "\nCuff Name: "+g_sAddon+"\n";
 
     if(UPDATE_AVAILABLE)sPrompt+="* An update is available!\n";
@@ -790,9 +790,9 @@ default
                                     //PosesMenu(kAv,iAuth,0);
                                     //llSay(0, "This is an example addon.");
                                 } else if(sMsg == "TEST CHAINS"){
-                                    llSay(0, "Chain Test Program");
-                                    llSay(0, "Chaining frlac > fllac | bllac > brlac");
-                                    llSay(0, "Activate pose | nadu");
+                                    //llSay(0, "Chain Test Program");
+                                    //llSay(0, "Chaining frlac > fllac | bllac > brlac");
+                                    //llSay(0, "Activate pose | nadu");
 
                                     Link("from_addon", SUMMON_PARTICLES, "frlac|fllac|2", "");
                                     Link("from_addon", SUMMON_PARTICLES, "bllac|brlac|2", "");
@@ -865,8 +865,8 @@ default
                             list lTmp = llParseString2List(meta, ["|"],[]);
                             list mine = GetKey(llList2String(lTmp,0));
                             SetParticles((integer)llList2String(mine,0), kID, (key)llList2String(lTmp,1), (float)llList2String(lTmp,2), (float)llList2String(lTmp,4));
-//                            if(llStringLength(llList2String(lTmp,3))>0)
-//                                llOwnerSay("@"+llList2String(lTmp,3));
+                            if(llStringLength(llList2String(lTmp,3))>0)
+                                llOwnerSay("@"+llList2String(lTmp,3));
                         }
                     } else if(iNum == SUMMON_PARTICLES)
                     {
