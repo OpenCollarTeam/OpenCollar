@@ -6,7 +6,7 @@ Copyright ©2021
 Aria (Tashia Redrose)
     * February 2021       -       Created oc_cuff
 Safra (Safra Nitely)
-    * June 2021           -   add priority for animations, fix visual lock/unlock
+    * June 2021           -       add priority for animations, fix visual lock/unlock
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
@@ -135,8 +135,23 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
     else g_lMenuIDs += [kID, kMenuID, sName];
 }
 
+string lvl_msg =" ";
+string cmd_msg =" ";
+
 Menu(key kID, integer iAuth) {
-    string sPrompt = "\n[OpenCollar Cuffs]\nMemory: "+(string)llGetFreeMemory()+"b\nVersion: "+g_sVersion+"\n" +"Current command level =" +(string)CMD_LEVEL +"\nYour command level =" +(string)iAuth;
+
+    if (iAuth == 500)lvl_msg = "OWNER ONLY";
+    if (iAuth == 501)lvl_msg = "TRUSTED & OWNER";
+    if (iAuth == 502)lvl_msg = "GROUP ACCESS";
+    if (iAuth == 503)lvl_msg = "WEARER, GROUP & OWNERS";
+    if (iAuth == 504)lvl_msg = "EVERYONE";
+    if (CMD_LEVEL == 500)cmd_msg = "OWNER";
+    if (CMD_LEVEL == 501)cmd_msg = "TRUSTED";
+    if (CMD_LEVEL == 502)cmd_msg = "GROUP ACCESS";
+    if (CMD_LEVEL == 503)cmd_msg = "WEARER";
+    if (CMD_LEVEL == 504)cmd_msg = "EVERYONE";
+
+    string sPrompt = "\n[OpenCollar Cuffs]\nMemory: "+(string)llGetFreeMemory()+"b\nVersion: "+g_sVersion+"\n" +"Current command level =" +cmd_msg +"\nYour command level =" +lvl_msg;
     sPrompt += "\nCuff Name: "+g_sAddon+"\n";
 
     if(UPDATE_AVAILABLE)sPrompt+="* An update is available!\n";
@@ -843,6 +858,8 @@ default
                                     // activate pose
                                     //Link("from_addon", CLEAR_ALL_CHAINS, "", "");
                                     g_sCurrentPose=sMsg;
+                                    CMD_LEVEL=iAuth;
+                                    Link("from_addon", LM_SETTING_SAVE, "occuffs_cmdlevel="+(string)iAuth,"");
                                     if(!g_iHidden)
                                         llMessageLinked(LINK_SET, 501, sMsg, "");
                                 }
