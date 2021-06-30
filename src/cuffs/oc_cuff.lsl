@@ -5,6 +5,8 @@ Copyright ©2021
 : Contributors :
 Aria (Tashia Redrose)
     * February 2021       -       Created oc_cuff
+Safra (Safra Nitely)
+    * June 2021           -       add priority for animations, fix visual lock/unlock
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
@@ -69,10 +71,11 @@ string g_sVersion = "1.0.0010";
 
 //integer CMD_ZERO            = 0;
 integer CMD_OWNER           = 500;
-//integer CMD_TRUSTED         = 501;
-//integer CMD_GROUP           = 502;
+integer CMD_TRUSTED         = 501;
+integer CMD_GROUP           = 502;
 integer CMD_WEARER          = 503;
 integer CMD_EVERYONE        = 504;
+integer CMD_LEVEL           = 504;
 //integer CMD_BLOCKED         = 598; // <--- Used in auth_request, will not return on a CMD_ZERO
 //integer CMD_RLV_RELAY       = 507;
 //integer CMD_SAFEWORD        = 510;
@@ -132,8 +135,23 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
     else g_lMenuIDs += [kID, kMenuID, sName];
 }
 
+string lvl_msg =" ";
+string cmd_msg =" ";
+
 Menu(key kID, integer iAuth) {
-    string sPrompt = "\n[OpenCollar Cuffs]\nMemory: "+(string)llGetFreeMemory()+"b\nVersion: "+g_sVersion+"\n";
+
+    if (iAuth == 500)lvl_msg = "OWNER ONLY";
+    if (iAuth == 501)lvl_msg = "TRUSTED & OWNER";
+    if (iAuth == 502)lvl_msg = "GROUP ACCESS";
+    if (iAuth == 503)lvl_msg = "WEARER, GROUP & OWNERS";
+    if (iAuth == 504)lvl_msg = "EVERYONE";
+    if (CMD_LEVEL == 500)cmd_msg = "OWNER";
+    if (CMD_LEVEL == 501)cmd_msg = "TRUSTED";
+    if (CMD_LEVEL == 502)cmd_msg = "GROUP ACCESS";
+    if (CMD_LEVEL == 503)cmd_msg = "WEARER";
+    if (CMD_LEVEL == 504)cmd_msg = "EVERYONE";
+
+    string sPrompt = "\n[OpenCollar Cuffs]\nMemory: "+(string)llGetFreeMemory()+"b\nVersion: "+g_sVersion+"\n" +"Current command level =" +cmd_msg +"\nYour command level =" +lvl_msg;
     sPrompt += "\nCuff Name: "+g_sAddon+"\n";
 
     if(UPDATE_AVAILABLE)sPrompt+="* An update is available!\n";
@@ -188,11 +206,10 @@ UserCommand(integer iNum, string sStr, key kID) {
 Link(string packet, integer iNum, string sStr, key kID){
     list packet_data = [ "pkt_type", packet, "iNum", iNum, "addon_name", g_sAddon, "bridge", FALSE, "sMsg", sStr, "kID", kID ];
 
-    if(!g_iHasPoses) packet_data += ["noMenu", 1];
-
+    if(!g_iHasPoses)packet_data += ["noMenu", 1];
     if (packet == "online" || packet == "update") // only add optin if packet type is online or update
     {
-        packet_data += [ "optin", llDumpList2String(g_lOptedLM, "~") ];
+        packet_data+= [ "optin", llDumpList2String(g_lOptedLM, "~") ];
     }
 
     string pkt = llList2Json(JSON_OBJECT, packet_data);
@@ -316,13 +333,17 @@ string g_sCurrentPose="NONE";
 
 PosesMenu (key kAv, integer iAuth, integer iPage)
 {
+    if (iAuth <= CMD_LEVEL)
+    {
     string sPrompt = "\n[OpenCollar Cuffs]\n> Poses selection\n\n* Current Pose: ";
-
     sPrompt += g_sCurrentPose;
-
     list lButtons = g_lPoses;
-
     Dialog(kAv, sPrompt, lButtons, ["*STOP*", "BACK"], iPage, iAuth, "Cuffs~Poses");
+    }
+    else
+    {
+    string sPrompt = "\n[OpenCollar Cuffs]\n> Poses selection\n\n* Only your owner can access this menu! ";
+    }
 }
 
 
@@ -611,12 +632,21 @@ default
 
                         if (sToken == "occuffs")
                         {
+                           if (sVar == "cmdlevel") //set the level of the last user of the cuffs pose menu
+                             {
+                                if ((integer)sVal  == 500) CMD_LEVEL =500;  //set menu access level to only owner
+                                if ((integer)sVal  == 501) CMD_LEVEL =501;  //set menu access level to owner or trusted
+                                if ((integer)sVal  == 502) CMD_LEVEL =502;  //set menu access level to group
+                                if ((integer)sVal  == 503) CMD_LEVEL =503;  //set menu access level to  self
+                                if ((integer)sVal  == 504) CMD_LEVEL =504;  //set menu access level to  public
+                            }
+
                             if (sVar == "synclock")
                             {
                                 g_iSyncLock=(integer)sVal;
                             } else if(sVar == "locked"){
                                 g_iCuffLocked=(integer)sVal;
-                                if(!g_iSyncLock)
+                                if(!g_iSyncLock)            //Changes by Safra to Display Visual Lock/Unlock
                                 {
                                     if(g_iCuffLocked)
                                     {
@@ -775,9 +805,9 @@ default
                                     //PosesMenu(kAv,iAuth,0);
                                     //llSay(0, "This is an example addon.");
                                 } else if(sMsg == "TEST CHAINS"){
-                                    llSay(0, "Chain Test Program");
-                                    llSay(0, "Chaining frlac > fllac | bllac > brlac");
-                                    llSay(0, "Activate pose | nadu");
+                                    //llSay(0, "Chain Test Program");
+                                    //llSay(0, "Chaining frlac > fllac | bllac > brlac");
+                                    //llSay(0, "Activate pose | nadu");
 
                                     Link("from_addon", SUMMON_PARTICLES, "frlac|fllac|2", "");
                                     Link("from_addon", SUMMON_PARTICLES, "bllac|brlac|2", "");
@@ -794,6 +824,7 @@ default
                                 } else if(sMsg == Checkbox(g_iCuffLocked, "Lock")){
                                     if(iAuth==CMD_OWNER){
                                         g_iCuffLocked=1-g_iCuffLocked;
+                                       // ToggleLock();
                                         Link("from_addon", LM_SETTING_SAVE, "occuffs_locked="+(string)g_iCuffLocked, "");
                                     }else Link("from_addon", NOTIFY, "0%NOACCESS% to toggling cuffs lock", kAv);
 
@@ -812,6 +843,8 @@ default
                             {
                                 if(sMsg == "*STOP*"){
                                     // send this command to all cuffs, this way we can ensure the animation fully stops, then clear all chains that were associated with this pose
+                                    Link("from_addon", LM_SETTING_SAVE, "occuffs_cmdlevel="+"504","");
+                                    CMD_LEVEL=504;
                                     Link("from_addon", STOP_CUFF_POSE, g_sCurrentPose, g_sPoseName);
                                     g_sCurrentPose="NONE";
                                     Link("from_addon", LM_SETTING_DELETE, "occuffs_"+g_sPoseName+"pose","");
@@ -825,6 +858,8 @@ default
                                     // activate pose
                                     //Link("from_addon", CLEAR_ALL_CHAINS, "", "");
                                     g_sCurrentPose=sMsg;
+                                    CMD_LEVEL=iAuth;
+                                    Link("from_addon", LM_SETTING_SAVE, "occuffs_cmdlevel="+(string)iAuth,"");
                                     if(!g_iHidden)
                                         llMessageLinked(LINK_SET, 501, sMsg, "");
                                 }
