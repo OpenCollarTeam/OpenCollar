@@ -10,6 +10,10 @@ Safra (Safra Nitely)
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
+
+Visual locking system fix by Safra Nitely (based on togglelock by Aria)
+Cuff locking levels system fix by Safra Nitely (using OC standard levles of locking)
+
 */
 list StrideOfList(list src, integer stride, integer start, integer end)
 {
@@ -644,9 +648,11 @@ default
                             if (sVar == "synclock")
                             {
                                 g_iSyncLock=(integer)sVal;
-                            } else if(sVar == "locked"){
+                            }
+                            else if(sVar == "locked")
+                                {
                                 g_iCuffLocked=(integer)sVal;
-                                if(!g_iSyncLock)            //Changes by Safra to Display Visual Lock/Unlock
+                                if(!g_iSyncLock)
                                 {
                                     if(g_iCuffLocked)
                                     {
@@ -671,8 +677,17 @@ default
                             if(sVar=="locked"){
                                 g_iLocked=(integer)sVal;
                                 if(g_iSyncLock){
-                                    if(g_iLocked)llOwnerSay("@detach=n");
-                                    else llOwnerSay("@detach=y");
+                                    if(g_iLocked)
+                                    {
+                                        llOwnerSay("@detach=n");
+                                        ToggleLock(TRUE);
+                                    }
+                                    else
+                                    {
+                                        llOwnerSay("@detach=y");
+                                        ToggleLock(FALSE);
+                                    }
+
                                 }
                             } else if(sVar=="checkboxes"){
                                 g_lCheckboxes=llParseString2List(sVal,[","],[]);
@@ -741,16 +756,31 @@ default
                         //llSay(0, "DELETE "+sToken+"_"+sVar);
                         if(sToken == "global"){
                             if(sVar == "locked"){
-                                if(g_iSyncLock)llOwnerSay("@detach=y");
+                                if(g_iSyncLock)
+                                {
+                                    llOwnerSay("@detach=y");
+                                    ToggleLock(FALSE);
+                                    }
                             }
-                        } else if(sToken == "occuffs"){
-                            if(sVar == "synclock"){
+                        } else if(sToken == "occuffs")
+                        {
+                            if(sVar == "synclock")
+                            {
                                 g_iSyncLock=FALSE;
-                                if(!g_iCuffLocked)llOwnerSay("@detach=y");
+                                if(!g_iCuffLocked)
+                                {
+                                    llOwnerSay("@detach=y");
+                                    ToggleLock(FALSE);
+                                    }
                             }
-                            else if(sVar == "locked"){
+                            else if(sVar == "locked")
+                                {
                                 g_iCuffLocked=FALSE;
-                                if(!g_iSyncLock)llOwnerSay("@detach=y");
+                                if(!g_iSyncLock)
+                                {
+                                    llOwnerSay("@detach=y");
+                                    ToggleLock(FALSE);
+                                    };
                             } else if(sVar==g_sPoseName+"pose"){
                                 g_sCurrentPose="NONE";
                             }
@@ -926,6 +956,8 @@ default
                             llOwnerSay("@clear");
                             llSleep(0.5);
                             llOwnerSay("@detach=n");
+                            ToggleLock(TRUE);
+
                         }
                     } else if(iNum == STOP_CUFF_POSE && kID == g_sPoseName){
                         if(sStr!="NONE"){
