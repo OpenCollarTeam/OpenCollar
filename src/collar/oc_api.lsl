@@ -334,26 +334,10 @@ UserCommand(integer iAuth, string sCmd, key kID){
           
         list lCmd = llParseString2List(sCmd, [" "],[]);
         string sCmdx = llToLower(llList2String(lCmd,0));
-        if(iAuth==CMD_OWNER){
-            if(sCmd == "safeword-disable")g_iSafewordDisable=TRUE;
-            else if(sCmd == "safeword-enable")g_iSafewordDisable=FALSE;        
-            if(sCmdx == "channel"){
-                g_iChannel = (integer)llList2String(lCmd,1);
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_channel="+(string)g_iChannel, kID);
-        
-            } else if(sCmdx == "prefix"){
-                if(llList2String(lCmd,1)==""){
-                    llMessageLinked(LINK_SET,NOTIFY,"0The prefix is currently set to: "+g_sPrefix+". If you wish to change it, supply the new prefix to this same command", kID);
-                    return;
-                }
-                g_sPrefix = llList2String(lCmd,1);
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_prefix="+g_sPrefix,kID);
-            }
-        } else if(sCmdx == "add" || sCmdx == "rem" ){
+        if(sCmdx == "add" || sCmdx == "rem" ) {
             string sType = llToLower(llList2String(lCmd,1));
             string sID;
-            if(llGetListLength(lCmd)==3) sID = llList2String(lCmd,2);
-                    
+            if(llGetListLength(lCmd)==3) sID = llList2String(lCmd,2);      
             g_kMenuUser=kID;
             g_iCurrentAuth = iAuth;
             if(sCmdx=="add")
@@ -380,6 +364,22 @@ UserCommand(integer iAuth, string sCmd, key kID){
             }else {
                 UpdateLists((key)sID, kID);
             }
+        }
+        else if(iAuth==CMD_OWNER) {
+            if(sCmd == "safeword-disable")g_iSafewordDisable=TRUE;
+            else if(sCmd == "safeword-enable")g_iSafewordDisable=FALSE;        
+            if(sCmdx == "channel"){
+                g_iChannel = (integer)llList2String(lCmd,1);
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_channel="+(string)g_iChannel, kID);
+        
+            } else if(sCmdx == "prefix"){
+                if(llList2String(lCmd,1)==""){
+                    llMessageLinked(LINK_SET,NOTIFY,"0The prefix is currently set to: "+g_sPrefix+". If you wish to change it, supply the new prefix to this same command", kID);
+                    return;
+                }
+                g_sPrefix = llList2String(lCmd,1);
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_prefix="+g_sPrefix,kID);
+            } 
         } 
     }
     if (iAuth <CMD_OWNER || iAuth>CMD_EVERYONE) return;
@@ -476,7 +476,7 @@ state active
             g_iInterfaceChannel = (integer)("0x" + llGetSubString(g_kWearer,30,-1));
             if (g_iInterfaceChannel > 0) g_iInterfaceChannel = -g_iInterfaceChannel;
         }
-        llListen(g_iInterfaceChannel, "","","");
+        llListen(g_iChannel, "","","");
         llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar=Yes");
         DoListeners();
         
@@ -768,7 +768,7 @@ state active
                         llMessageLinked(LINK_SET, LM_SETTING_SAVE, "AUTH_runaway=0", "origin"); 
                         llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "spring_access:"+(string)g_kDenyRunawayRequester);
                     } else if (sMsg=="Deny"){
-                        llMessageLinked(LINK_SET, NOTIFY, "_Wearer has DENIED switching off runaway.",g_kDenyRunawayRequester);
+                        llMessageLinked(LINK_SET, NOTIFY, "Wearer has DENIED switching off runaway.",g_kDenyRunawayRequester);
                         llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "spring_access:"+(string)g_kDenyRunawayRequester);
                     }             
                 }
