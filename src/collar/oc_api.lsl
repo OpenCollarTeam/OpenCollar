@@ -768,7 +768,7 @@ state active
                         llMessageLinked(LINK_SET, LM_SETTING_SAVE, "AUTH_runaway=0", "origin"); 
                         llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "spring_access:"+(string)g_kDenyRunawayRequester);
                     } else if (sMsg=="Deny"){
-                        llMessageLinked(LINK_SET, NOTIFY, "Wearer has DENIED switching off runaway.",g_kDenyRunawayRequester);
+                        llMessageLinked(LINK_SET, NOTIFY, "_Wearer has DENIED switching off runaway.",g_kDenyRunawayRequester);
                         llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "spring_access:"+(string)g_kDenyRunawayRequester);
                     }             
                 }
