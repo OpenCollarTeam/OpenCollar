@@ -115,6 +115,7 @@ default
         API_CHANNEL = ((integer)("0x" + llGetSubString((string)llGetOwner(), 0, 8))) + 0xf6eb - 0xd2;
         llListen(API_CHANNEL, "", "", "");
         Link("online", 0, "", llGetOwner()); // This is the signal to initiate communication between the addon and the collar
+        g_iLMLastRecv = llGetUnixTime(); // Need to initialize this here in order to prevent resetting before we can receive our first pong
         llSetTimerEvent(60);
     }
     
@@ -141,6 +142,7 @@ default
         {
             // This signal, indicates the collar has approved the addon and that communication requests will be responded to if the requests are valid collar LMs.
             g_kCollar = id;
+            g_iLMLastRecv = llGetUnixTime(); // Initial message should also count as a pong for timing reasons
             Link("from_addon", LM_SETTING_REQUEST, "ALL", "");
         }
         else if (sPacketType == "dc" && g_kCollar == id)

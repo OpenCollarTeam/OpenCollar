@@ -597,6 +597,7 @@ default
             {
                 // This signal, indicates the collar has approved the addon and that communication requests will be responded to if the requests are valid collar LMs.
                 g_kCollar = id;
+                g_iLMLastRecv = llGetUnixTime(); // Initial message should also probably count as a pong for timing reasons
                 Link("from_addon", LM_SETTING_REQUEST, "ALL", "");
             } else if(sPacketType == "denied" && g_kCollar == NULL_KEY)
             {
