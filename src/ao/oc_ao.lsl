@@ -1,8 +1,24 @@
 // This file is part of OpenCollar.
 // Copyright (c) 2008 - 2017 Nandana Singh, Jessenia Mocha, Alexei Maven.  Wendy Starfall,
-// littlemousy, Romka Swallowtail, Garvin Twine et al. 
-// Licensed under the GPLv2.  See LICENSE for full details. 
+// littlemousy, Romka Swallowtail, Garvin Twine et al.
+// Licensed under the GPLv2.  See LICENSE for full details.
+/*-Authors Attribution-
+Taya Maruti - (May 2021)
+*/
 
+
+//integer CMD_ZERO            = 0;
+integer CMD_OWNER           = 500;
+//integer CMD_TRUSTED         = 501;
+//integer CMD_GROUP           = 502;
+integer CMD_WEARER          = 503;
+integer CMD_EVERYONE        = 504;
+//integer CMD_BLOCKED         = 598; // <--- Used in auth_request, will not return on a CMD_ZERO
+//integer CMD_RLV_RELAY       = 507;
+//integer CMD_SAFEWORD        = 510;
+//integer CMD_RELAY_SAFEWORD  = 511;
+//integer CMD_NOACCESS        = 599;
+integer CMD_USER;
 
 string g_sDevStage = "dev1";
 string g_sVersion = "2.1";
@@ -110,7 +126,7 @@ SetButtonTexture(integer link, string name) {
     integer y = idx / BTN_XS;
     vector scale = <1.0 / BTN_XS, 1.0 / BTN_YS, 0>;
     vector offset = <
-        scale.x * (x - (BTN_XS / 2.0 - 0.5)), 
+        scale.x * (x - (BTN_XS / 2.0 - 0.5)),
         scale.y * -1 * (y - (BTN_YS / 2.0 - 0.5)),
     0>;
     llSetLinkPrimitiveParamsFast(link, [
@@ -119,8 +135,8 @@ SetButtonTexture(integer link, string name) {
             BTN_TEXTURE,
             scale,
             offset,
-            0 
-    ]);   
+            0
+    ]);
 }
 
 TextureButtons() {
@@ -135,7 +151,7 @@ TextureButtons() {
                 name = "Minimize";
             }
         }
-        
+
         SetButtonTexture(i, name);
         i--;
     }
@@ -540,6 +556,7 @@ default {
     }
 
     touch_start(integer total_number) {
+        CMD_USER=CMD_WEARER; // create an authroized user call incase the one touching the script tries to access the collar.
         if(llGetAttached()) {
             if (!g_iReady) {
                 MenuLoad(g_kWearer,0);
@@ -598,11 +615,13 @@ default {
                 if (sMessage == "Cancel") return;
                 else if (sMessage == "-") MenuAO(kID);
                 else if (sMessage == "Collar Menu"){
-                    llRegionSayTo(g_kWearer, API_CHANNEL, llList2Json(JSON_OBJECT, ["pkt_type", "online", "kID", g_kWearer, "addon_name", "OC_Sub_AO", "optin", ""]));
-                    llSleep(2);
-                    llRegionSayTo(g_kWearer, API_CHANNEL, llList2Json(JSON_OBJECT, ["pkt_type", "from_addon", "kID", g_kWearer, "iNum", 0, "sMsg", "menu", "addon_name", "OC_Sub_AO"]));
-                    llSleep(0.5);
-                    llRegionSayTo(g_kWearer, API_CHANNEL, llList2Json(JSON_OBJECT, ["pkt_type", "offline", "addon_name", "OC_Sub_AO", "kID", g_kWearer]));
+                    // use the authorized user to return to the collar menu, using the addon script to prevent breaking it.
+                    llMessageLinked(LINK_THIS,CMD_USER,"CollarMenu",kID);
+                    //llRegionSayTo(g_kWearer, API_CHANNEL, llList2Json(JSON_OBJECT, ["pkt_type", "online", "kID", g_kWearer, "addon_name", "OC_Sub_AO", "optin", ""]));
+                    //llSleep(2);
+                    //llRegionSayTo(g_kWearer, API_CHANNEL, llList2Json(JSON_OBJECT, ["pkt_type", "from_addon", "kID", g_kWearer, "iNum", 0, "sMsg", "menu", "addon_name", "OC_Sub_AO"]));
+                    //llSleep(0.5);
+                    //llRegionSayTo(g_kWearer, API_CHANNEL, llList2Json(JSON_OBJECT, ["pkt_type", "offline", "addon_name", "OC_Sub_AO", "kID", g_kWearer]));
                 }
                 else if (~llSubStringIndex(sMessage,"LOCK")) {
                     Command(kID,llToLower(sMessage));
@@ -717,6 +736,16 @@ default {
                     Dialog(kID, sPrompt, lButtons, ["BACK"],"ordermenu");
                 }
             }
+        }
+    }
+
+    link_message(integer sNum, integer iAuth, string sStr, key kID)
+    {
+       if( sStr == "MenuAO" )
+       {
+            // create an authroized user and open the ao menu for that user.
+            CMD_USER=iAuth;
+            MenuAO(kID);
         }
     }
 
