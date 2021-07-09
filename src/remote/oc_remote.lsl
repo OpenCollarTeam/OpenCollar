@@ -520,6 +520,7 @@ default
         llOwnerSay("HUD is ready with "+(string)llGetFreeMemory()+"b free memory");
         g_lFavorites = [(string)llGetOwner()];
         llMessageLinked(LINK_SET,-10,"","");
+        g_iLMLastRecv = llGetUnixTime();
         DoCheckUpdate();
     }
     
@@ -754,6 +755,7 @@ default
             g_kCollar = i;
             GetProfilePic(llGetOwnerKey(i));
             llOwnerSay("Connected!");
+            g_iLMLastRecv = llGetUnixTime();
             llMessageLinked(LINK_SET, 2, "", g_kCollar);
             Link("from_addon", LM_SETTING_REQUEST, "ALL","");
             Link("from_addon", AUTH_REQUEST, "check_auth_remote", llGetOwner());
