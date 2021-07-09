@@ -98,63 +98,30 @@ General Commands:
     ((RED))
 
     prefix safeword [newsafeword]
+    
+--------- 
+Access:
+---------
 
---------------
-Bookmarks:
---------------
+    access
 
-    bookmarks
-    tp
+    add owner [UUID or name]
+    rm owner [name]
 
-    tp [name of bookmark]
+    add trust [UUID or name]
+    rm trust [name]
 
-    tp save
-    tp print
-    tp remove
+    add block [UUID or name]
+    rm block [name]
 
--------
-Titler:
--------
+    public on
+    public off
 
-    menu titler
+    ownself on (to add wearer)
+    ownself off
 
-    title [a fancy title]
-
-    title on
-    title off
-
-    title color <x, y, z>
-
-------
-Bell:
-------
-
-    menu bell
-
-    bell on
-    bell off
-
-    bell show
-    bell hide
-
-----------------------------------
-Label (selected models only):
-----------------------------------
-
-    menu label
-
-    label box
-
-    label [a fancy label]
-
-    label on
-    label off
-
-    label scroll on
-    label scroll off
-
-    label font
-
+    runaway
+    
 --------------
 Animations:
 --------------
@@ -214,7 +181,33 @@ Couple Animations (stock selection):
     catch
 
     stop couples
+    
+------
+Bell:
+------
 
+    menu bell
+
+    bell on
+    bell off
+
+    bell show
+    bell hide
+    
+
+--------------
+Bookmarks:
+--------------
+
+    bookmarks
+    tp
+
+    tp [name of bookmark]
+
+    tp save
+    tp print
+    tp remove
+    
 ----------
 Capture:
 ----------
@@ -231,6 +224,38 @@ Capture:
     capture info off
 
     capture release
+    
+--------------
+Help/About:
+--------------
+
+    about
+
+    help
+    
+    info
+
+    update
+
+    reboot
+
+----------------------------------
+Label (selected models only):
+----------------------------------
+
+    menu label
+
+    label box
+
+    label [a fancy label]
+
+    label on
+    label off
+
+    label scroll on
+    label scroll off
+
+    label font
 
 -------
 Leash:
@@ -258,6 +283,15 @@ Leash:
     length
 
     leash configure
+    
+---------
+Outfits:
+---------
+
+    outfits
+
+    wear [name of the outfit]
+
 
 -----
 RLV:
@@ -282,13 +316,6 @@ Force Sit:
     forbid stand
     allow stand
 
----------
-Outfits:
----------
-
-    outfits
-
-    wear [name of the outfit]
 
 ---------------
 Restrictions:
@@ -359,28 +386,7 @@ Relay:
 
     relay safeword
 
----------
-Access:
----------
 
-    access
-
-    add owner [UUID or name]
-    rm owner [name]
-
-    add trust [UUID or name]
-    rm trust [name]
-
-    add block [UUID or name]
-    rm block [name]
-
-    public on
-    public off
-
-    ownself on (to add wearer)
-    ownself off
-
-    runaway
 
 ----------
 Settings:
@@ -397,19 +403,19 @@ Settings:
     hide / show 
 
     themes
-
---------------
-Help/About:
---------------
-
-    about
-
-    help
     
-    info
+-------
+Titler:
+-------
 
-    update
+    menu titler
 
-    reboot
+    title [a fancy title]
+
+    title on
+    title off
+
+    title color <x, y, z>
+
 
 ==================================
