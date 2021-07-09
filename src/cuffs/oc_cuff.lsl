@@ -652,7 +652,7 @@ default
                             else if(sVar == "locked")
                                 {
                                 g_iCuffLocked=(integer)sVal;
-                                if(!g_iSyncLock)
+                                if(!g_iSyncLock)            //Changes by Safra to Display Visual Lock/Unlock
                                 {
                                     if(g_iCuffLocked)
                                     {
