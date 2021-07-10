@@ -351,8 +351,6 @@ state active
     
     listen(integer c,string n,key i,string m){
         if(c == g_iOutfitScan){
-            //llWhisper(0, "outfit worn reply: "+m);
-            list iBits = ["gloves","jacket","pants","shirt","shoes","skirt","socks","underpants","undershirt","skin","eyes","hair","shape"];
             llListenRemove(g_iOutfitLstn);
             
             list lButtons;
