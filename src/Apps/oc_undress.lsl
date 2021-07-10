@@ -111,7 +111,7 @@ integer g_iOutfitLstn=-1;
 key g_kMenuUser;
 integer g_iMenuUser;
 
-list g_lLayers = ["gloves","jacket","pants","shirt","shoes","skirt","socks","underpants","undershirt","skin","eyes","hair","shape", "universal"];
+list g_lLayers = ["gloves","jacket","pants","shirt","shoes","skirt","socks","underpants","undershirt","skin","eyes","hair","shape","tattoo","alpha","universal"];
 
 //integer g_iBitMask;
 list g_lMasks;
@@ -320,7 +320,7 @@ state active
     listen(integer c,string n,key i,string m){
         if(c == g_iOutfitScan){
             //llWhisper(0, "outfit worn reply: "+m);
-            list iBits = ["gloves","jacket","pants","shirt","shoes","skirt","socks","underpants","undershirt","skin","eyes","hair","shape"];
+            list iBits = ["gloves","jacket","pants","shirt","shoes","skirt","socks","underpants","undershirt","skin","eyes","hair","shape","tattoo","alpha","universal"];
             llListenRemove(g_iOutfitLstn);
             
             list lButtons;
