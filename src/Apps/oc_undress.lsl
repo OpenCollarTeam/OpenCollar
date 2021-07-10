@@ -8,8 +8,19 @@ Aria (Tashia Redrose)
 Medea (Medea Destiny)
     * Jun 2021      -       Quick despam: stores mask values as they are set in g_lLastMask to only release restrictions
                             that have actually been set.
-
-
+    * Jul 2021      -       * issue #528: Handling layers: As of RLVa 2.3.0: Tattoos, alphas and universal layers show up 
+                            in getoutfit unless the layer is locked and the Hide Locked Layers setting is on. They can 
+                            be locked or removed. The physics layer layer can be locked, but cannot be removed and does
+                            not show up in getoutfit. I'm not certain of the current status of Marine's RLV, but I last
+                            I knew neither physics nor universal layers can be accessed. We need to extend the 
+                            functionality to cover the extra layers, but this is problematic. This fix ignores the physics
+                            layer in locks due to current broken-ness, warns about locked layers not showing up, and will 
+                            not require refactoring for updates that increase the number of layers handled. 
+                            * Added chat handling: (prefix)undress (layer) removes layers. (prefix)undress lock (layer)
+                            and (prefix)undress unlock (layer) set layer locks. Some rejigging of usercommand filtering
+                            to handle this cleanly.
+                            * Added short llSleep before remenuing after detaching a clothing layer to ensure the viewer 
+                            removes the layer before replying to the getoutfit command.
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
@@ -31,7 +42,7 @@ integer CMD_WEARER = 503;
 //integer CMD_SAFEWORD = 510;
 //integer CMD_RELAY_SAFEWORD = 511;
 
-//integer NOTIFY = 1002;
+integer NOTIFY = 1002;
 integer REBOOT = -1000;
 
 integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved
@@ -74,30 +85,49 @@ Menu(key kID, integer iAuth) {
 
 UserCommand(integer iNum, string sStr, key kID) {
     if (iNum<CMD_OWNER || iNum>CMD_WEARER) return;
-    if (llSubStringIndex(llToLower(sStr),llToLower(g_sSubMenu)) && llToLower(sStr) != "menu "+llToLower(g_sSubMenu)) return;
-    if (iNum == CMD_OWNER && llToLower(sStr) == "runaway") {
-        g_lOwner=[];
-        g_lTrust=[];
-        g_lBlock=[];
+    if (llToLower(sStr)==llToLower(g_sSubMenu) || llToLower(sStr) == "menu "+llToLower(g_sSubMenu)){
+        Menu(kID, iNum);
         return;
     }
-    if (llToLower(sStr)==llToLower(g_sSubMenu) || llToLower(sStr) == "menu "+llToLower(g_sSubMenu)) Menu(kID, iNum);
-    //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
-    else {
-        //integer iWSuccess = 0; 
-        //string sChangetype = llList2String(llParseString2List(sStr, [" "], []),0);
-        //string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),1);
-        //string sText;
-        /// [prefix] g_sSubMenu sChangetype sChangevalue
+    if(llSubStringIndex(llToLower(sStr),llToLower(g_sSubMenu))!=0) return;
+    else{
+        sStr=llToLower(sStr);
+        string sCmd = llList2String(llParseString2List(sStr, [" "], []),1);
+        if(sCmd=="lock" || sCmd=="unlock"){
+            integer iSuccess;
+            string sVal = llList2String(llParseString2List(sStr, [" "], []),2);
+            if(llListFindList(g_lLayers,[sVal])==-1) return;
+            if(sCmd=="lock"){
+                if(llListFindList(g_lMasks,[sVal])!=-1) llMessageLinked(LINK_SET,NOTIFY,"0Layer already locked!",kID);
+                else{
+                    iSuccess=TRUE;
+                    g_lMasks+=[sVal];
+                }
+            }else{
+                integer idx=llListFindList(g_lMasks,[sVal]);
+                if(idx==-1) llMessageLinked(LINK_SET,NOTIFY,"0Layer is already unlocked!",kID);
+                else{
+                    iSuccess=TRUE;
+                    g_lMasks=llDeleteSubList(g_lMasks,idx,idx);
+                }
+            }
+            if(iSuccess)
+            {
+                ApplyMask();
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "undress_mask="+llDumpList2String(g_lMasks,"|"),"");
+            }
+        }else if(llListFindList(g_lLayers,[sCmd])!=-1){
+            if(llListFindList(["skin","hair","eyes","shape","physics"],[sCmd])==-1) llOwnerSay("@remoutfit:"+sCmd+"=force"); 
+            }      
     }
 }
 
 key g_kWearer;
 list g_lMenuIDs;
 integer g_iMenuStride;
-list g_lOwner;
-list g_lTrust;
-list g_lBlock;
+//list g_lOwner;
+//list g_lTrust;
+//list g_lBlock;
 integer g_iLocked=FALSE;
 integer g_iOutfitScan;
 integer g_iOutfitLstn=-1;
@@ -111,7 +141,7 @@ integer g_iOutfitLstn=-1;
 key g_kMenuUser;
 integer g_iMenuUser;
 
-list g_lLayers = ["gloves","jacket","pants","shirt","shoes","skirt","socks","underpants","undershirt","skin","eyes","hair","shape", "universal"];
+list g_lLayers = ["gloves","jacket","pants","shirt","shoes","skirt","socks","underpants","undershirt","skin","eyes","hair","shape","alpha","tattoo","physics","universal"];
 
 //integer g_iBitMask;
 list g_lMasks;
@@ -131,13 +161,14 @@ ApplyMask(){
     g_lLastMask=g_lMasks;
 }
 CLock(key kAv, integer iAuth){
-    string sPrompt = "[Undress - Clothing Locks]\n\nThis menu will allow you to lock or unlock clothing layers";
+    string sPrompt = "[Undress - Clothing Locks]\n\nThis menu will allow you to lock or unlock clothing layers.\nNote that Physics and Universal layer locking may not work on a viewer using RLV rather than RLVa.";
     list lButtons = [];
     
     // Create checkboxes
     integer i = 0;
     integer end = llGetListLength(g_lLayers);
     for(i=0;i<end;i++){
+        if(i==15) i=16; //skip physics layer for now due to brokenness.
         if(llListFindList(g_lMasks,[llList2String(g_lLayers,i)])!=-1)
             lButtons += Checkbox(TRUE,llList2String(g_lLayers, i));
         else
@@ -242,6 +273,7 @@ state active
                     }
                     
                     if(iRespring){
+                        llSleep(1); //Give the viewer a moment to remove layer before remenuing.
                         g_iOutfitScan = llRound(llFrand(58439875));
                         llListenRemove(g_iOutfitLstn);
                         g_iOutfitLstn = llListen(g_iOutfitScan, "", g_kWearer, "");
@@ -319,27 +351,19 @@ state active
     
     listen(integer c,string n,key i,string m){
         if(c == g_iOutfitScan){
-            //llWhisper(0, "outfit worn reply: "+m);
-            list iBits = ["gloves","jacket","pants","shirt","shoes","skirt","socks","underpants","undershirt","skin","eyes","hair","shape"];
             llListenRemove(g_iOutfitLstn);
             
             list lButtons;
-            integer iEnd = llStringLength(m);
-            list lSystem = ["skin", "eyes", "hair", "shape"];
-            while(iEnd>0){
-                string sBit = llGetSubString(m,0,0);
-                string sLabel = llList2String(iBits,0);
-                iBits = llDeleteSubList(iBits,0,0);
-                
-                if(sBit=="1"){
-                    if(llListFindList(lSystem,[sLabel])==-1)
-                        lButtons += sLabel;
-                }
-                
-                iEnd--;
-                m = llDeleteSubString(m,0,0);
+            integer iEnd = llStringLength(m)-1;
+            integer i=-1;
+            while(i<iEnd)
+            {
+                ++i;
+                if(i==9) i=13; //skip eyes,hair,skin and shape;
+                if(i==15) i=16; //skip physics due to brokenness;
+                if(llGetSubString(m,i,i)=="1") lButtons+=llList2String(g_lLayers,i);
             }
-            string sPrompt = "[Undress - Rm. Clothes]\nSelect a layer to remove";
+            string sPrompt = "[Undress - Rm. Clothes]\nSelect a layer to remove.\nPlease note, locked layers will not show up in this menu if locked layers are hidden in viewer settings.";
             Dialog(g_kMenuUser, sPrompt,lButtons, [UPMENU],0,g_iMenuUser, "undress~select");
         }
     }
