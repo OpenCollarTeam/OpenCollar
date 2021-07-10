@@ -476,7 +476,8 @@ state active
             g_iInterfaceChannel = (integer)("0x" + llGetSubString(g_kWearer,30,-1));
             if (g_iInterfaceChannel > 0) g_iInterfaceChannel = -g_iInterfaceChannel;
         }
-        llListen(g_iChannel, "","","");
+        llListen(g_iInterfaceChannel, "","","");
+        llSleep(0.5);
         llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar=Yes");
         DoListeners();
         
