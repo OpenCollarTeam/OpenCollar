@@ -561,7 +561,7 @@ state active
                         if(iAuth == CMD_OWNER || iAuth == CMD_WEARER ){
                         llMessageLinked(LINK_SET, iAuth, "print auth", kAv);}
                     } else if(sMsg == Checkbox(bool((g_kGroup!="")), "Group")){
-                        if(iAuth >=CMD_OWNER && iAuth <= CMD_TRUSTED){
+                        if(iAuth ==CMD_OWNER){
                             if(g_kGroup!=""){
                                 g_kGroup="";
                                 llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_group", "origin");
@@ -579,7 +579,7 @@ state active
                             llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to changing group access", kAv);
                         }
                     } else if(sMsg == Checkbox(g_iPublic, "Public")){
-                        if(iAuth >=CMD_OWNER && iAuth <= CMD_TRUSTED){
+                        if(iAuth ==CMD_OWNER){
 
                             g_iPublic=1-g_iPublic;
 
