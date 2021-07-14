@@ -1,3 +1,82 @@
-[ ThemeName ]
-ElementName~<texture_id>~<color_vector>~<shiny_type>~<glow_level>
-Ring~89556747-24cb-43ed-920b-47caed15465f~<1,1,1>~none/low/medium/high/specular~none/low/medium/high/veryHigh
+#This is an example [Name].theme notecard, from the Version 8.x OpenCollar Stock collar. I have labeled the faces for clarity
+#
+# Face 0 is metal clasp
+# Face 1 is lock
+# Face 2 is inside
+# Face 3 is outside
+# Face 4 is bottom
+# Face 5 is top
+# Face 7 is ring
+[1/OpenCollar Stainless/0]
+desc = (No Description)
+name = OpenCollar Stainless
+!0: color = <1.000000, 1.000000, 1.000000>
+!0: alpha = 1.0000
+!0: texture = 3cb9b0d6-febc-2c6f-94f0-fb2ad88ec973
+!0: texture_repeat = <1.000000, 1.000000, 0.000000>
+!0: texture_offset = <0.000000, 0.000000, 0.000000>
+!0: texture_rot = 0.000000
+!0: glow = 0.100000
+!0: fullbright = 0
+!0: shiny = 3
+!0: bump = 0
+!1: color = <1.000000, 1.000000, 1.000000>
+!1: alpha = 0.80
+!1: texture = 3cb9b0d6-febc-2c6f-94f0-fb2ad88ec973
+!1: texture_repeat = <1.000000, 1.000000, 0.000000>
+!1: texture_offset = <0.000000, 0.000000, 0.000000>
+!1: texture_rot = 0.000000
+!1: glow = 0.100000
+!1: fullbright = 0
+!1: shiny = 3
+!1: bump = 0
+!2: color = <.44,.27,.7>
+!2: alpha = 0.70
+!2: texture = 3cb9b0d6-febc-2c6f-94f0-fb2ad88ec973
+!2: texture_repeat = <1.000000, 1.000000, 0.000000>
+!2: texture_offset = <0.000000, 0.000000, 0.000000>
+!2: texture_rot = 0.000000
+!2: glow = 0.150000
+!2: fullbright = 0
+!2: shiny = 3
+!2: bump = 0
+!3: color = <.44,.27,.7>
+!3: alpha = 0.70
+!3: texture = 3cb9b0d6-febc-2c6f-94f0-fb2ad88ec973
+!3: texture_repeat = <1.000000, 1.000000, 0.000000>
+!3: texture_offset = <0.000000, 0.000000, 0.000000>
+!3: texture_rot = 0.000000
+!3: glow = 0.150000
+!3: fullbright = 0
+!3: shiny = 3
+!3: bump = 0
+!4: color = <.44,.27,.7>
+!4: alpha = 0.70
+!4: texture = 3cb9b0d6-febc-2c6f-94f0-fb2ad88ec973
+!4: texture_repeat = <1.000000, 1.000000, 0.000000>
+!4: texture_offset = <0.000000, 0.000000, 0.000000>
+!4: texture_rot = 0.000000
+!4: glow = 0.150000
+!4: fullbright = 0
+!4: shiny = 3
+!4: bump = 0
+!5: color = <.44,.27,.7>
+!5: alpha = 0.70
+!5: texture = 3cb9b0d6-febc-2c6f-94f0-fb2ad88ec973
+!5: texture_repeat = <1.000000, 1.000000, 0.000000>
+!5: texture_offset = <0.000000, 0.000000, 0.000000>
+!5: texture_rot = 0.000000
+!5: glow = 0.150000
+!5: fullbright = 0
+!5: shiny = 3
+!5: bump = 0
+!7: color = <0.301961, 0.301961, 0.301961>
+!7: alpha = 1.000000
+!7: texture = 3cb9b0d6-febc-2c6f-94f0-fb2ad88ec973
+!7: texture_repeat = <1.000000, 1.000000, 0.000000>
+!7: texture_offset = <0.000000, 0.000000, 0.000000>
+!7: texture_rot = 0.000000
+!7: glow = 0.100000
+!7: fullbright = 0
+!7: shiny = 3
+!7: bump = 0

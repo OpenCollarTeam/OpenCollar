@@ -1,10 +1,10 @@
 # This notecard is used to determine the cuff's properties
-CuffName = Right Ankle Cuff
+CuffName = Leg Chains
 #
 # This assumes we are using the same naming scheme as the document specifies
 # Note on poses, the notecard must be named the same as the value below, but you can name this anything. This will also then become the value for the segment of settings, for instance: occuffs_armspose=Front 1
 # You can have multiple cuff cores, however it is recommended to choose ONE wrist, and ONE ankle to contain poses, and have the master configuration be there.
-Poses = Arms
+Poses = Legs
 # If you do not want poses in this cuff, for instance, if it is one of the slave cuffs, not one of the master ones, then uncomment the line below, and comment out the line above.
 #NoPoses
 # If this cuff defines the collar pose map, set the line below to trigger reading the collar pose notecard.
