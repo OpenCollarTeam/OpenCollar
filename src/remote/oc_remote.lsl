@@ -435,12 +435,13 @@ StartAPI(key ID){
 list g_lOptedLM = [];
 string g_sAddon = "OC_Remote";
 Link(string packet, integer iNum, string sStr, key kID){
-    if(llGetListLength(g_lAPIListeners)==0)return;
+    if (llGetListLength(g_lAPIListeners)==0) return;
+
     list packet_data = [ "pkt_type", packet, "iNum", iNum, "addon_name", g_sAddon, "bridge", FALSE, "sMsg", sStr, "kID", kID ];
 
     if (packet == "online" || packet == "update") // only add optin if packet type is online or update
     {
-        llListInsertList(packet_data, [ "optin", llDumpList2String(g_lOptedLM, "~") ], -1);
+        packet_data += [ "optin", llDumpList2String(g_lOptedLM, "~") ];
     }
 
     string pkt = llList2Json(JSON_OBJECT, packet_data);
@@ -519,6 +520,7 @@ default
         llOwnerSay("HUD is ready with "+(string)llGetFreeMemory()+"b free memory");
         g_lFavorites = [(string)llGetOwner()];
         llMessageLinked(LINK_SET,-10,"","");
+        g_iLMLastRecv = llGetUnixTime();
         DoCheckUpdate();
     }
     
@@ -753,6 +755,7 @@ default
             g_kCollar = i;
             GetProfilePic(llGetOwnerKey(i));
             llOwnerSay("Connected!");
+            g_iLMLastRecv = llGetUnixTime();
             llMessageLinked(LINK_SET, 2, "", g_kCollar);
             Link("from_addon", LM_SETTING_REQUEST, "ALL","");
             Link("from_addon", AUTH_REQUEST, "check_auth_remote", llGetOwner());

@@ -2,7 +2,7 @@
 // Copyright (c) 2019 Romka Swallowtail
 // Licensed under the GPLv2.  See LICENSE for full details.
 
-string g_sScriptVersion = "7.4"; // Used to validate that a script is up to date via versions/debug command.
+string g_sScriptVersion = "8.1"; // Used to validate that a script is up to date via versions/debug command.
 integer LINK_CMD_DEBUG=1999;
 /*DebugOutput(key kID, list ITEMS){
     integer i=0;

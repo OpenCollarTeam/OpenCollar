@@ -4,7 +4,7 @@
 // Sumi Perl et al.
 // Licensed under the GPLv2.  See LICENSE for full details.
 
-string g_sScriptVersion = "8.0";
+string g_sScriptVersion = "8.1";
 integer g_iRLVOn = TRUE;
 integer g_iRLVOff = FALSE;
 integer g_iViewerCheck = FALSE;

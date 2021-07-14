@@ -1,4 +1,3 @@
-
 /*
 This file is a part of OpenCollar.
 Copyright ©2021
@@ -19,7 +18,7 @@ https://github.com/OpenCollarTeam/OpenCollar
 string g_sParentMenu = "Main";
 string g_sSubMenu = "Addons";
 
-string COLLAR_VERSION = "8.0.5000";
+string COLLAR_VERSION = "8.1.0000";
 
 string Auth2Str(integer iAuth){
     if(iAuth == CMD_OWNER)return "Owner";
@@ -215,7 +214,7 @@ key g_kAddonPending;
 string g_sAddonName;
 key g_kWearer;
 list g_lMenuIDs;
-integer g_iMenuStride;
+integer g_iMenuStride = 3;
 integer g_iLocked=FALSE;
 
 integer ALIVE = -55;

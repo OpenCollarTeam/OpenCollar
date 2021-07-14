@@ -296,7 +296,7 @@ Process(string msg, key id, integer iWillPrompt){
                 }
                 @skipSection;
             }
-            else if (command=="!pong" && id == forcesitter && sitid != NULL_KEY) g_iResit_status = 1;
+            else if (command=="!pong" && id == Source ) g_iResit_status = 1;
             else if (command=="!version") llRegionSayTo(id, RLV_RELAY_CHANNEL, ident+","+(string)id+",!version,1100");
             else if (command=="!implversion") llRegionSayTo(id, RLV_RELAY_CHANNEL, ident+","+(string)id+",!implversion,ORG=805000/Satomi's Damn Fast Relay v4:OPENCOLLAR");
             else if (command=="!x-orgversions") llRegionSayTo(id, RLV_RELAY_CHANNEL, ident+","+(string)id+",!x-orgversions,ORG=805000");
@@ -375,12 +375,19 @@ state active
     timer() {
         if (g_iResit_status == 1) {
             g_iResit_status = 2;
-            llSetTimerEvent(15);
-            llOwnerSay("@sit:"+(string)sitid+"=force");
+            llSetTimerEvent(20);   //this must be long enough to happen AFTER oc_rlvsys is initialised or restrictions get cleared again
+			//only do the force-sit if the wearer was indeed locked sitting on something
+            if( Source == forcesitter && sitid != NULL_KEY ) {
+                llOwnerSay("@sit:"+(string)sitid+"=force");
+            }
         } else if (g_iResit_status == 2) {
             llSetTimerEvent(0);
-            llOwnerSay("@"+llDumpList2String(Restrictions, "=n,")+"=n");
-        } else Release(); // The source is no longer active. Let's forget everything.
+			// this must also restore detach=n as oc_rlvsys may have cleared it
+            llOwnerSay("@"+llDumpList2String(Restrictions, "=n,")+"=n,detach=n");
+        } else {
+            llSetTimerEvent(0);
+            Release(); // The source is no longer active. Let's forget everything.
+        }
     }
     link_message(integer iSender,integer iNum,string sStr,key kID){
         if(iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
