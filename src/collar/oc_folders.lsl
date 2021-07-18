@@ -7,7 +7,11 @@ Copyright 2020
 Aria (Tashia Redrose)
     * Aug 2020      -           Rewrote oc_folders for 8.0 Alpha 5
 
-
+Medea (Medea Destiny)
+    * June 2021     -   *Fix issue #570, Allow hiding folders starting with ~ via HideTilde option, defaults to ON. 
+                        *Fix issue  #581, filtering input to UserCommand to only folder-auth check actual folder
+                        commands rather than folder-authing and processing EVERYTHING THE COLLAR DOES BY ANY USER 
+                         
 et al.
 
 
@@ -72,6 +76,9 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
     else g_lMenuIDs += [kID, kMenuID, sName];
 }
 
+
+integer g_iHideTilde=TRUE;
+
 integer g_iTmpLstnChn;
 integer g_iTmpLstn;
 string CONFIG = "◌ Configure";
@@ -109,7 +116,7 @@ ConfigureMenu(key kID, integer iAuth){
         string sPublic = TrueOrFalse(iPublic);
         string sGroup = TrueOrFalse(iGroup);
         string sWearer = TrueOrFalse(iWearer);
-        Dialog(kID, sPrompt+"\n* Owner: ALWAYS\n * Trusted: "+sTrusted+"\n * Public: "+sPublic+"\n * Group: "+sGroup+"\n * Wearer: "+sWearer+"\n", [Checkbox(iTrusted, "Trusted"), Checkbox(iPublic, "Public") ,Checkbox(iGroup, "Group"), Checkbox(iWearer, "Wearer")], [UPMENU], 0, iAuth, "Folders~Configure");
+        Dialog(kID, sPrompt+"\n * Hide folders that start with '~': "+TrueOrFalse(g_iHideTilde)+"\n * Owner: ALWAYS\n * Trusted: "+sTrusted+"\n * Public: "+sPublic+"\n * Group: "+sGroup+"\n * Wearer: "+sWearer+"\n", [Checkbox(g_iHideTilde,"Hide ~"),Checkbox(iTrusted, "Trusted"), Checkbox(iPublic, "Public") ,Checkbox(iGroup, "Group"), Checkbox(iWearer, "Wearer")], [UPMENU], 0, iAuth, "Folders~Configure");
 
 
     }else {
@@ -138,7 +145,7 @@ integer g_iMenuUser;
 string g_sPath;
 
 R(){
-    llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to browsing #RLV", g_kMenuUser);
+    llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to browsing #RLV folders", g_kMenuUser);
     Menu(g_kMenuUser, g_iMenuUser);
 }
 Browser(key kID, integer iAuth, string sPath){
@@ -191,7 +198,9 @@ UserCommand(integer iNum, string sStr, key kID) {
     //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else {
         //integer iWSuccess = 0;
-        string sChangetype = llGetSubString(sStr, 0, 1);
+        string sChangetype = llGetSubString(sStr,0,0);
+        if(llListFindList(["&","-","+"],[sChangetype])==-1) return;
+        sChangetype = llGetSubString(sStr, 0, 1);
         string sChangevalue = llStringTrim(llGetSubString(sStr, 2, -1), STRING_TRIM);
         //string sText;
 
@@ -375,8 +384,8 @@ state active
                 if(iSub1 == 3 || iSub2 == 3) iState=1;
                 else if(iSub1 == 2 || iSub2 == 2)iState = 2;
                 else if(iSub1 == 1 || iSub2 == 1)iState=0;
-
-                lButtons += [Checkbox(iState, llList2String(lTmp1,0))];
+                if(g_iHideTilde==FALSE ||llGetSubString(llList2String(lTmp1,0),0,0)!="~")
+                    lButtons += [Checkbox(iState, llList2String(lTmp1,0))];
             }
             list lLockOption=[];
             if(llGetInventoryType("oc_folders_locks")==INVENTORY_SCRIPT)lLockOption += ["Locks.."];
@@ -496,8 +505,12 @@ state active
                         list ButtonFlags = llParseString2List(sMsg,[" "],[]);
                         string ButtonLabel = llDumpList2String(llList2List(ButtonFlags,1,-1), " ");
                         integer Enabled = llListFindList(g_lFolderCheckboxes, [llList2String(ButtonFlags,0)]);
-
-                        if(Enabled){
+                        if(ButtonLabel=="Hide ~")
+                        {
+                            g_iHideTilde=!g_iHideTilde;
+                            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "folders_hidetilde="+(string)g_iHideTilde,"");
+                        }
+                        else if(Enabled){
                             // Disable flag
                             if(ButtonLabel == "Trusted")g_iAccessBitSet -=1;
                             else if(ButtonLabel == "Public")g_iAccessBitSet-=2;
@@ -537,7 +550,10 @@ state active
             } else if(llList2String(lSettings,0)=="folders"){
                 if(llList2String(lSettings,1) == "accessflags"){
                     g_iAccessBitSet=(integer)llList2String(lSettings,2);
+                } else if(llList2String(lSettings,1) =="hidetilde"){
+                    g_iHideTilde=(integer)llList2String(lSettings,2);
                 }
+                
             }
         } else if(iNum == REPLY_FOLDER_LOCKS)
         {

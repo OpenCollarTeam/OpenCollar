@@ -3,8 +3,6 @@
 //  Copyright (c) 2018 - 2019 Tashia Redrose, Silkie Sabra, lillith xue                            
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
-//string g_sScriptVersion = "8.0";
-
 string g_sParentMenu = "RLV";
 string g_sSubMenu1 = "Force Sit";
 string g_sSubMenu3 = "RLV Settings";

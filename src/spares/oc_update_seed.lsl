@@ -2,11 +2,11 @@
 // Copyright (c) 2017 nirea Resident.
 // Licensed under the GPLv2.  See LICENSE for full details.
 
-// This script can be used to upgrade a 6.6/6.7 collar to the official release from the OpenCollar group.
+// This script can be used to update a collar that does not contain an update shim; or create a collar from scratch if it already has the required prims (including leashpoint and floattext).
 // To use, do the following:
 // 1. Rez the OpenCollar Updater nearby.
-// 2. Wear your 6.6/6.7 collar.
-// 3. Edit your 6.6/6.7 collar and drop this script inside it.
+// 2. Wear or rez your collar.
+// 3. Edit your collar and drop this script inside it.
 // The update will begin immediately.
 
 integer g_iUpdateChan = -7483213;
