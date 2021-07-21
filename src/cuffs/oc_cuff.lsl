@@ -5,14 +5,13 @@ Copyright ©2021
 : Contributors :
 Aria (Tashia Redrose)
     * February 2021       -       Created oc_cuff
-Safra (Safra Nitely)
-    * June 2021           -       add priority for animations, fix visual lock/unlock
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
 
 Visual locking system fix by Safra Nitely (based on togglelock by Aria)
 Cuff locking levels system fix by Safra Nitely (using OC standard levles of locking)
+Cuff textureiser fix by safra nitely (uses op-collar leash texture and colour to control)
 
 */
 list StrideOfList(list src, integer stride, integer start, integer end)
@@ -112,7 +111,8 @@ integer STOP_CUFF_POSE = -58935; // <-- stops all active animations originating 
 integer DESUMMON_PARTICLES = -58936; // Message only includes the From point name
 
 integer g_iFirstInit=TRUE;
-
+string cHain_color = "<1.0,1.0,1.0>";
+key kTexture = "";
 /*
  * Since Release Candidate 1, Addons will not receive all link messages without prior opt-in.
  * To opt in, add the needed link messages to g_lOptedLM = [], they'll be transmitted on
@@ -282,25 +282,39 @@ ClearAllParticles(){
     }
 }
 
-SetParticles(integer link, key kID,key kTexture, float fMaxAge, float fGravity){
+SetParticles(integer link, key kID, float fMaxAge, float fGravity){
 
-    if(kTexture=="" || kTexture=="def")kTexture="4cde01ac-4279-2742-71e1-47ff81cc3529";
+    //if(kTexture=="" || kTexture=="def")kTexture="4cde01ac-4279-2742-71e1-47ff81cc3529";
     if(fMaxAge==0)fMaxAge=7.3;
     if(llRound(fGravity) == -1) fGravity = -0.01;
     llLinkParticleSystem(link, [
-PSYS_SRC_PATTERN,PSYS_SRC_PATTERN_DROP,
-PSYS_PART_START_ALPHA,1,
-PSYS_PART_START_SCALE,<0.075, 0.075, 0>,
-PSYS_PART_END_SCALE,<0.075,0.075,0>,
-PSYS_PART_MAX_AGE,fMaxAge,
-PSYS_SRC_BURST_PART_COUNT,1,
-PSYS_SRC_ACCEL,<0, 0, -0.01>,
-PSYS_SRC_TEXTURE,kTexture,
-PSYS_SRC_TARGET_KEY,kID,
-PSYS_PART_FLAGS,PSYS_PART_FOLLOW_SRC_MASK|
-PSYS_PART_FOLLOW_VELOCITY_MASK|
-PSYS_PART_INTERP_SCALE_MASK|
-PSYS_PART_TARGET_POS_MASK
+
+            PSYS_SRC_PATTERN, PSYS_SRC_PATTERN_DROP,
+            PSYS_SRC_BURST_RADIUS, 0,
+            PSYS_SRC_TARGET_KEY,kID,
+            PSYS_PART_START_SCALE,<0.032,0.032,0>,  // 0.6 0.4
+            PSYS_SRC_TEXTURE, kTexture,
+            PSYS_PART_START_COLOR, (vector)cHain_color,
+            PSYS_PART_MAX_AGE, 10,
+            PSYS_SRC_BURST_RATE, 2,
+            PSYS_SRC_ACCEL,<0, 0, 10>,
+            PSYS_PART_FLAGS, PSYS_PART_TARGET_LINEAR_MASK | PSYS_PART_RIBBON_MASK
+//PSYS_SRC_PATTERN,PSYS_SRC_PATTERN_DROP,
+//PSYS_PART_START_ALPHA,1,
+//PSYS_PART_START_SCALE,<0.032,0.032,0>,
+//PSYS_PART_END_SCALE,<0.032,0.032,0>,
+//PSYS_PART_MAX_AGE,fMaxAge,
+//PSYS_SRC_BURST_RATE,1.2,
+//PSYS_SRC_BURST_PART_COUNT,1,
+//PSYS_SRC_ACCEL,<0, 0, -0.01>,
+//PSYS_SRC_TEXTURE,kTexture,
+//PSYS_PART_START_COLOR, (vector)cHain_color,
+//PSYS_SRC_TARGET_KEY,kID,
+//PSYS_PART_FLAGS,PSYS_PART_RIBBON_MASK,
+//PSYS_PART_FLAGS,PSYS_PART_FOLLOW_SRC_MASK|
+//PSYS_PART_FOLLOW_VELOCITY_MASK|
+//PSYS_PART_INTERP_SCALE_MASK|
+//PSYS_PART_TARGET_POS_MASK
         ]);
 }
 
@@ -632,6 +646,21 @@ default
                         string sVal   = llList2String(lPar, 2);
 
 
+                        if(sToken == "particle")
+                        {
+                            if(sVar == "color")
+                                {
+                                    cHain_color = (string)sVal;
+                                }
+                            if(sVar == "particlemode")
+                            {
+                            if ((string)sVal=="Ribbon")kTexture=(key)"91235410-0b2b-3b15-934f-b91eb331fb75";
+                            //if ((string)sVal=="Ribbon")kTexture=(key)"cdb7025a-9283-17d9-8d20-cee010f36e90";
+                            if ((string)sVal=="Classic")kTexture=(key)"98a3d66c-7c96-4329-7cf9-79bc0e0ab5f6";
+                            //if ((string)sVal=="Classic")kTexture=(key)"4cde01ac-4279-2742-71e1-47ff81cc3529";
+                            if ((string)sVal=="noParticle")kTexture=(key)TEXTURE_TRANSPARENT;
+                            }
+                        }
 
                         //llSay(0, "SAVE "+sToken+"_"+sVar+"="+sVal);
 
@@ -653,7 +682,7 @@ default
                             else if(sVar == "locked")
                                 {
                                 g_iCuffLocked=(integer)sVal;
-                                if(!g_iSyncLock)            //Changes by Safra to Display Visual Lock/Unlock
+                                if(!g_iSyncLock)
                                 {
                                     if(g_iCuffLocked)
                                     {
@@ -912,7 +941,7 @@ default
                             DeleteDSReq((key)sStr);
                             list lTmp = llParseString2List(meta, ["|"],[]);
                             list mine = GetKey(llList2String(lTmp,0));
-                            SetParticles((integer)llList2String(mine,0), kID, (key)llList2String(lTmp,1), (float)llList2String(lTmp,2), (float)llList2String(lTmp,4));
+                            SetParticles((integer)llList2String(mine,0), kID,  (float)llList2String(lTmp,1), (float)llList2String(lTmp,3));
                             if(llStringLength(llList2String(lTmp,3))>0)
                                 llOwnerSay("@"+llList2String(lTmp,3));
                         }
@@ -1038,7 +1067,7 @@ default
 
 
             list Links = GetKey(sLinkTo);
-            SetParticles(llList2Integer(Links,0), kTarget, kTexture, fMaxAge, -1.111);
+            SetParticles(llList2Integer(Links,0), kTarget, fMaxAge, -1.111);
         }
     }
 }
