@@ -10,10 +10,8 @@ Safra (Safra Nitely)
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
-
 Visual locking system fix by Safra Nitely (based on togglelock by Aria)
 Cuff locking levels system fix by Safra Nitely (using OC standard levles of locking)
-
 */
 list StrideOfList(list src, integer stride, integer start, integer end)
 {
@@ -71,7 +69,7 @@ string Checkbox(integer iValue, string sLabel) {
 //list g_lCollars;
 string g_sAddon = "OpenCollar Cuffs";
 
-string g_sVersion = "1.0.0010";
+string g_sVersion = "1.0.0";
 
 //integer CMD_ZERO            = 0;
 integer CMD_OWNER           = 500;
