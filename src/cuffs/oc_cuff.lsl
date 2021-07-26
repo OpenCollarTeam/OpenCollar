@@ -157,7 +157,7 @@ Menu(key kID, integer iAuth) {
     sPrompt += "\nCuff Name: "+g_sAddon+"\n";
 
     if(UPDATE_AVAILABLE)sPrompt+="* An update is available!\n";
-    if(g_iAmNewer)sPrompt+="** You are using a pre-release version. Some bugs may be encountered!";
+    // if(g_iAmNewer)sPrompt+="** You are using a pre-release version. Some bugs may be encountered!";
     list lButtons  = [];//"TEST CHAINS"];
 
     if(g_iHasPoses && llGetInventoryType("oc_cuff_pose")==INVENTORY_SCRIPT){
