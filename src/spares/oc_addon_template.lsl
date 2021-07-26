@@ -125,6 +125,10 @@ default
         if(id)
         {
             Link("online", 0, "", llGetOwner());
+            // do like state_entry to fix random resets on teleport or login.
+            llSetTimerEvent(60);
+            g_iLMLastRecv = llGetUnixTime();
+        }
         }
         else
         {
