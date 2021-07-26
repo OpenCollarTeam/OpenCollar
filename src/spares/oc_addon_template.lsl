@@ -125,6 +125,10 @@ default
         if(id)
         {
             Link("online", 0, "", llGetOwner());
+            // do like the initial start up to prevent random script restarts when teleporting.
+            llSetTimerEvent(60);
+            g_iLMLastRecv = llGetUnixTime();
+        }
         }
         else
         {
