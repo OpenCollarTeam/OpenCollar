@@ -20,7 +20,7 @@ integer CMD_EVERYONE        = 504;
 //integer CMD_NOACCESS        = 599;
 integer CMD_USER;
 
-string g_sDevStage = "dev1";
+string g_sDevStage = "";
 string g_sVersion = "2.1";
 integer g_iUpdateAvailable;
 key g_kWebLookup;
