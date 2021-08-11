@@ -1,0 +1,38 @@
+#
+# Config for Leg-Cuffs
+#
+
+PoseName:Legs High
+PoseAnim:LockLegsHigh P6
+PoseChains:lulc=lllc~rulc=rllc~ilulc=illlc~irulc=irllc
+PoseRestrictions:
+PoseAge:5
+PoseGravity:0
+
+PoseName:Legs Low
+PoseAnim:LockLegsLow P6
+PoseChains:lulc=lllc~rulc=rllc
+PoseRestrictions:
+PoseAge:5
+PoseGravity:0
+
+PoseName:Shrink
+PoseAnim:Shrink P6
+PoseChains:illlc=bbelt~irllc=lbelt~lllc=lulc~rllc=rulc
+PoseRestrictions:
+PoseAge:5
+PoseGravity:0
+
+PoseName:Chainonly
+PoseAnim:chainonly
+PoseChains:irllc=illlc
+PoseRestrictions:
+PoseAge:5
+PoseGravity:3
+
+PoseName:Sit
+PoseAnim:cuff-sit
+PoseChains:ilulc=irulc~illlc=irllc
+PoseRestrictions:
+PoseAge:5
+PoseGravity:0
