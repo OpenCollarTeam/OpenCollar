@@ -218,7 +218,7 @@ default
                     
                     if(sStr == "settings=sent"){
                         if(g_iAddonLimitation){
-                            llSay(0, "Addons Limited is checked. To unweld, a collar owner must go to the collar Settings menu and find the AddOn Settings button.  Uncheck AddOns Limited and then proceed to unweld.");
+                            llSay(0, "Addons Limited is checked. To unweld, a collar owner (including unowned wearer) must go to the collar Settings menu and find the AddOn Settings button.  Uncheck AddOns Limited and then proceed to unweld.");
                             Link("offline", 0, "", g_kUser);
                             llSleep(2);
                             llResetScript();
