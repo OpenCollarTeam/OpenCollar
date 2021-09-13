@@ -1,10 +1,11 @@
-
 /*
 This file is a part of OpenCollar.
 Copyright ©2021
 : Contributors :
 Aria (Tashia Redrose)
     * February 2021       -       Created oc_cuff_pose
+Safra (Safra Nightly) 
+    * Updated Restriction functionality to clear a restriction when the pose changes
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
@@ -97,7 +98,7 @@ integer LM_SETTING_REQUEST  = 2001; //when startup, scripts send requests for se
 integer LM_SETTING_RESPONSE = 2002; //the settings script sends responses on this channel
 integer LM_SETTING_DELETE   = 2003; //delete token from settings
 //integer LM_SETTING_EMPTY    = 2004; //sent when a token has no value
-
+integer CMDLEVEL           = 500;
 
 Link(string sPkt, integer iNum, string sMsg, key kID)
 {
@@ -105,8 +106,13 @@ Link(string sPkt, integer iNum, string sMsg, key kID)
 }
 StartCuffPose(list lParams, integer iSave)
 {
-    if(iSave)Link("from_addon", LM_SETTING_SAVE, "occuffs_"+g_sPoseName+"pose="+llList2String(lParams,0), "");
+    if(iSave)
+    {
+        Link("from_addon", LM_SETTING_SAVE, "occuffs_"+g_sPoseName+"pose="+llList2String(lParams,0), "");
+        //Link("from_addon", LM_SETTING_SAVE, "occuffs_CMDLEVEL",(string)CMDLEVEL);
 
+        //llSay(0, "SAVE "+sToken+"_"+sVar+"="+sVal);
+    }
     //llSay(0, ".\nENTER StartCuffPose(list[], int)\n{\n\targ0 = "+llDumpList2String(lParams," ~ ")+"\n\targ1 = "+(string)iSave+"\n}\n\nAnimation = "+llList2String(lParams,1));
     llStartAnimation(llList2String(lParams,1));
 
@@ -148,22 +154,27 @@ default
 
     link_message(integer iSender, integer iNum, string sMsg, key kID)
     {
-        if(iNum==-1){
+        if(iNum==-1)
+        {
             llResetScript();
-        } else if(iNum == 1){
+        }
+        else if(iNum == 1)
+        {
             // READ NOTECARD REQUEST
-            if(kID=="read_poses"){
+            if(kID=="read_poses")
+                {
                 g_sPoseName=sMsg;
                 g_sPoseName = llToLower(str_replace(g_sPoseName, " ", ""));
                 g_sPoseName = llToLower(str_replace(g_sPoseName, "_", ""));
                 g_sPoseName = llToLower(str_replace(g_sPoseName, "=", ""));
                 g_sPoseName = llToLower(str_replace(g_sPoseName, "~", ""));
                 g_lPoseMap=[];
-            }
+                }
             if(kID=="read_collar")g_lCollarMap=[];
             //llSay(0, "sub dataserver call: "+(string)kID);
             UpdateDSRequest(NULL, llGetNotecardLine(sMsg,0), (string)kID+":0:"+sMsg);
-        } else if(iNum == 300)
+        }
+        else if(iNum == 300)
         {
 
             integer bSummon = FALSE;
@@ -171,10 +182,13 @@ default
             {
                 // chains must be summoned
                 bSummon=TRUE;
-            }else if(g_sActivePose==""){
-                if(sMsg==""){
+            }else if(g_sActivePose=="")
+            {
+                if(sMsg=="")
+                {
                     bSummon=FALSE;
-                }else bSummon=TRUE;
+                }
+                else bSummon=TRUE;
             }
 
             if(bSummon)
@@ -214,14 +228,21 @@ default
         {
             // Send back pose menu button list
             llMessageLinked(LINK_SET, 10, llDumpList2String(StrideOfList(g_lPoseMap, 6, 0,-1), "`"), sMsg+"^"+(string)kID);
-        } else if(iNum == 500)
+        }
+        else if(iNum == 500)
         {
+            Link("from_addon", LM_SETTING_DELETE, "occuffs_cmd" ,"level");
+            Link("from_addon", LM_SETTING_SAVE, "occuffs_cmdlevel="+(string)iNum,"");
             integer index=llListFindList(g_lPoseMap, [sMsg]);
             g_sCurrentPose=sMsg;
             //llSay(0, "Pose Map scan - only start animation ("+sMsg+") = "+(string)index);
             if(index!=-1)StartCuffPose(llList2List(g_lPoseMap, index,index+5), (integer)((string)kID));
-        } else if(iNum == 501)
+        }
+        else if(iNum == 501)
         {
+            Link("from_addon", LM_SETTING_SAVE, "occuffs_cmdlevel="+(string)iNum,"");
+
+            //llSay(0,"line 238 = " +(string)iNum);
             integer index=llListFindList(g_lPoseMap, [sMsg]);
             list lMap = llList2List(g_lPoseMap, index,index+5);
 
@@ -237,6 +258,11 @@ default
                 llStopAnimation(curAnim);
                 return;
             }
+        else if (iNum == 502 || iNum==503 )
+            {
+            Link("from_addon", LM_SETTING_SAVE, "occuffs_cmdlevel="+(string)iNum,"");
+            //llSay(0,"line 257 = " +(string)iNum);
+            }
             g_sCurrentPose = sMsg;
             StartCuffPose(lMap,TRUE);
         } else if(iNum == 505)
@@ -248,6 +274,7 @@ default
             string curAnim = llList2String(g_lPoseMap, index+1);
             g_sCurrentPose="NONE";
             llStopAnimation(curAnim);
+            llOwnerSay("@clear");
         } else if(iNum == 509){ // Signal used to clear the flags in the event of the cuffs being hidden, since no particles should be visible if hidden
             if(g_sCurrentPose!="NONE"){
                 integer index=llListFindList(g_lPoseMap, [g_sCurrentPose]);
@@ -256,6 +283,7 @@ default
                 string curAnim = llList2String(g_lPoseMap, index+1);
                 g_sCurrentPose="NONE";
                 llStopAnimation(curAnim);
+                llOwnerSay("@clear");
             }
 
             if(g_sActivePose != ""){
