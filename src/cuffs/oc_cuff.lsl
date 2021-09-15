@@ -1,13 +1,19 @@
-
 /*
 This file is a part of OpenCollar.
 Copyright ©2021
 : Contributors :
 Aria (Tashia Redrose)
-    * February 2021       -       Created oc_cuff
+    * February 2021         -       Created oc_cuff
 Safra (Safra Nitely)
-    * June 2021           -       add priority for animations, fix visual lock/unlock
+    * June 2021             -       add priority for animations, fix visual lock/unlock
+    * July 2021             -       added new prarticel engine - new chain and ribbon particles
+    * August 2021           -       addedd new texture control system. external script (oc_cuffs_config)
+    * September 2021        -       Restored restriction functionality to make restrictions clear
+ lillith (lillith Xeu)
+        * August 2021       -      fixed lockmeister system
 et al.
+
+
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
 Visual locking system fix by Safra Nitely (based on togglelock by Aria)
@@ -110,7 +116,8 @@ integer STOP_CUFF_POSE = -58935; // <-- stops all active animations originating 
 integer DESUMMON_PARTICLES = -58936; // Message only includes the From point name
 
 integer g_iFirstInit=TRUE;
-
+string cHain_color = "<1.0,1.0,1.0>";
+key kTexture = "";
 /*
  * Since Release Candidate 1, Addons will not receive all link messages without prior opt-in.
  * To opt in, add the needed link messages to g_lOptedLM = [], they'll be transmitted on
@@ -162,8 +169,16 @@ Menu(key kID, integer iAuth) {
 
     if(g_iHasPoses && llGetInventoryType("oc_cuff_pose")==INVENTORY_SCRIPT){
         if(!g_iHidden)
+        {
             lButtons+=["Pose"];
-        else sPrompt +="\nPoses not available while the cuffs are hidden";
+        }
+    }
+    if(g_iHasPoses && llGetInventoryType("oc_cuff_config")==INVENTORY_SCRIPT){
+        if(!g_iHidden)
+        {
+            lButtons+=["Cuff Config"];
+        }
+            else sPrompt +="\nPoses not available while the cuffs are hidden";
     }
 
     if(iAuth == CMD_OWNER)
@@ -176,9 +191,6 @@ Menu(key kID, integer iAuth) {
     }
 
     lButtons += [Checkbox(g_iSyncLock, "SyncLock")];
-
-
-
 
     //llSay(0, "opening menu");
     Dialog(kID, sPrompt, lButtons, ["DISCONNECT", UPMENU], 0, iAuth, "Menu~Main");
@@ -280,27 +292,28 @@ ClearAllParticles(){
     }
 }
 
-SetParticles(integer link, key kID,key kTexture, float fMaxAge, float fGravity){
+SetParticles(integer link, key kID, float fMaxAge, float fGravity){
 
-    if(kTexture=="" || kTexture=="def")kTexture="4cde01ac-4279-2742-71e1-47ff81cc3529";
+    //if(kTexture=="" || kTexture=="def")kTexture="4cde01ac-4279-2742-71e1-47ff81cc3529";
     if(fMaxAge==0)fMaxAge=7.3;
     if(llRound(fGravity) == -1) fGravity = -0.01;
     llLinkParticleSystem(link, [
-PSYS_SRC_PATTERN,PSYS_SRC_PATTERN_DROP,
-PSYS_PART_START_ALPHA,1,
-PSYS_PART_START_SCALE,<0.075, 0.075, 0>,
-PSYS_PART_END_SCALE,<0.075,0.075,0>,
-PSYS_PART_MAX_AGE,fMaxAge,
-PSYS_SRC_BURST_PART_COUNT,1,
-PSYS_SRC_ACCEL,<0, 0, -0.01>,
-PSYS_SRC_TEXTURE,kTexture,
-PSYS_SRC_TARGET_KEY,kID,
-PSYS_PART_FLAGS,PSYS_PART_FOLLOW_SRC_MASK|
-PSYS_PART_FOLLOW_VELOCITY_MASK|
-PSYS_PART_INTERP_SCALE_MASK|
-PSYS_PART_TARGET_POS_MASK
+
+        PSYS_PART_FLAGS,PSYS_PART_FOLLOW_SRC_MASK|PSYS_PART_FOLLOW_VELOCITY_MASK|PSYS_PART_TARGET_POS_MASK,
+        PSYS_SRC_PATTERN,PSYS_SRC_PATTERN_DROP,
+        PSYS_PART_START_SCALE, < 0.032, 0.075, 0 >,  // was < 0.032, 0.1, 0 >
+        PSYS_PART_MAX_AGE, 2.0,
+        PSYS_SRC_BURST_RATE, 0.06,     // was 0.08
+        PSYS_SRC_TEXTURE, kTexture,
+        PSYS_PART_START_COLOR, (vector)cHain_color,
+        PSYS_SRC_BURST_SPEED_MIN,0,
+        PSYS_SRC_BURST_SPEED_MAX,0,
+        PSYS_SRC_TARGET_KEY, kID,
+        PSYS_SRC_BURST_PART_COUNT, 1,
+        PSYS_SRC_ACCEL, <0,0,-0.1>
         ]);
-}
+
+    }
 
 list g_lMyPoints = [];
 string g_sActivePose;
@@ -630,8 +643,25 @@ default
                         string sVal   = llList2String(lPar, 2);
 
 
+                        if(sToken == "particle")
+                        {
+                            if(sVar == "color")
+                                {
+                                    cHain_color = (string)sVal;
+                                }
+                            if(sVar == "particlemode")
+                            {
 
-                        //llSay(0, "SAVE "+sToken+"_"+sVar+"="+sVal);
+                            if ((string)sVal=="Ribbon")kTexture=(key)"154ab4d5-6189-b014-b879-dac253ed5b06";
+                            if ((string)sVal=="Classic")kTexture=(key)"5d8c39c0-8ec1-1e01-5cad-6bd4ebbdc705";
+                            //if ((string)sVal=="Ribbon")kTexture=(key)"91235410-0b2b-3b15-934f-b91eb331fb75";  FOR v2 PARTICEL SYSTEM
+                            //if ((string)sVal=="Classic")kTexture=(key)"98a3d66c-7c96-4329-7cf9-79bc0e0ab5f6"; FOR v2 PARITCE SYSTEM
+                            if ((string)sVal=="noParticle")kTexture=(key)TEXTURE_TRANSPARENT;
+                            }
+                        }
+
+
+                                                //llSay(0, "SAVE "+sToken+"_"+sVar+"="+sVal);
 
                         if (sToken == "occuffs")
                         {
@@ -877,15 +907,16 @@ default
                                     Link("from_addon", STOP_CUFF_POSE, g_sCurrentPose, g_sPoseName);
                                     g_sCurrentPose="NONE";
                                     Link("from_addon", LM_SETTING_DELETE, "occuffs_"+g_sPoseName+"pose","");
-                                    //Link("from_addon", CLEAR_ALL_CHAINS, "", "");
+                                    Link("from_addon", CLEAR_ALL_CHAINS, "", "");
                                     iRespring=FALSE;
+                                    llOwnerSay("@clear");
                                     Link("from_addon", TIMEOUT_REGISTER, "2", "respring_poses:"+(string)iAuth+":"+(string)kAv+":"+(string)iPage+":"+(string)llGetKey());
                                 }else if(sMsg == "BACK"){
                                     iRespring=FALSE;
                                     Menu(kAv,iAuth);
                                 }else{
                                     // activate pose
-                                    //Link("from_addon", CLEAR_ALL_CHAINS, "", "");
+                                    Link("from_addon", CLEAR_ALL_CHAINS, "", "");
                                     g_sCurrentPose=sMsg;
                                     CMD_LEVEL=iAuth;
                                     Link("from_addon", LM_SETTING_SAVE, "occuffs_cmdlevel="+(string)iAuth,"");
@@ -910,7 +941,7 @@ default
                             DeleteDSReq((key)sStr);
                             list lTmp = llParseString2List(meta, ["|"],[]);
                             list mine = GetKey(llList2String(lTmp,0));
-                            SetParticles((integer)llList2String(mine,0), kID, (key)llList2String(lTmp,1), (float)llList2String(lTmp,2), (float)llList2String(lTmp,4));
+                            SetParticles((integer)llList2String(mine,0), kID,  (float)llList2String(lTmp,1), (float)llList2String(lTmp,3));
                             if(llStringLength(llList2String(lTmp,3))>0)
                                 llOwnerSay("@"+llList2String(lTmp,3));
                         }
@@ -960,6 +991,7 @@ default
                         }
                     } else if(iNum == STOP_CUFF_POSE && kID == g_sPoseName){
                         if(sStr!="NONE"){
+                            llOwnerSay("@clear");
                             llMessageLinked(LINK_SET, 505, sStr, "");
                         }
                     } else if(iNum == DESUMMON_PARTICLES)
@@ -975,8 +1007,33 @@ default
         } else if(channel==-8888)
         {
             // LockMeister v2
-            //llSay(0, "Command on LockMeister channel: "+msg);
-
+            key kLMKey = (key)llGetSubString(msg,0,35);
+            list lLMCmd = llParseString2List(msg,["|"],[]);
+            if (kLMKey == llGetOwner())
+            {
+                if (llGetListLength(lLMCmd) > 1)
+                {  // A Lockmeister command
+                    string sLMCMD = llList2String(lLMCmd,2);
+                    string sLMPoint = llList2String(lLMCmd,3);
+                    if (sLMCMD == "RequestPoint")
+                    {
+                        key kLink = NULL_KEY;
+                        list lKey = [];
+                        integer iMapIndex = llListFindList(g_lLMV2Map, [sLMPoint]);
+                        if (iMapIndex > -1) lKey = GetKey(llList2String(g_lLMV2Map, iMapIndex + 1));
+                        if (llList2Integer(lKey, 0) != LINK_ROOT)
+                            llRegionSayTo(id, -8888,(string)llGetOwner()+"|LMV2|ReplyPoint|"+sLMPoint+"|"+llList2String(lKey, 1));
+                    }
+                }
+                else
+                { // A Lockmeister Ping
+                    string sLMPoint = llGetSubString(msg,36,-1);
+                    if (llListFindList(g_lLMV2Map, [sLMPoint]) > -1)
+                    {
+                        llRegionSayTo(id, -8888, (string)llGetOwner()+sLMPoint+" ok");
+                    }
+                }
+            }
         } else if(channel == -9119)
         {
             //llSay(0, "Command on LockGuard Channel: "+msg);
@@ -1030,13 +1087,16 @@ default
                         fMaxAge=2+val;
                         ix++;
                     }
+                } else if (llList2String(lCmds, ix)=="ping")
+                {
+                    llRegionSayTo(id, -9119, "lockguard "+(string)llGetOwner()+" "+llList2String(lCmds, ix-1)+" okay");
                 }
                 ix++;
             }
 
 
             list Links = GetKey(sLinkTo);
-            SetParticles(llList2Integer(Links,0), kTarget, kTexture, fMaxAge, -1.111);
+            SetParticles(llList2Integer(Links,0), kTarget, fMaxAge, -1.111);
         }
     }
 }
