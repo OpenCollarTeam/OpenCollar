@@ -218,7 +218,7 @@ default
                     
                     if(sStr == "settings=sent"){
                         if(g_iAddonLimitation){
-                            llSay(0, "Error: Addon limitations are in place. Unweld tool cannot continue. To disable the addon limitation, please see the setitngs menu of your collar, inside the Addon.. submenu you will find the Limiter which must be disabled.");
+                            llSay(0, "Addons Limited is checked. To unweld, a collar owner (including unowned wearer) must go to the collar Settings menu and find the AddOn Settings button.  Uncheck AddOns Limited and then proceed to unweld.");
                             Link("offline", 0, "", g_kUser);
                             llSleep(2);
                             llResetScript();
