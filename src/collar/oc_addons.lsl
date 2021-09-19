@@ -1,18 +1,18 @@
 /*
 This file is a part of OpenCollar.
 Copyright ©2021
-
-
 : Contributors :
-
 Aria (Tashia Redrose)
     *January 2021       -       Created oc_addons
-
-
+    
+Medea (medea.destiny)
+    Sept 2021           -   Provided auth failure mode for menu. Insufficient auth now
+                            provides suitable notification to user and respawns main menu. 
+                            Fixes issue #665   
+    
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
-
 */
 
 string g_sParentMenu = "Main";
@@ -170,10 +170,17 @@ AddonsMenu(key kID, integer iAuth){
 }
 
 UserCommand(integer iNum, string sStr, key kID) {
-    if (iNum<CMD_OWNER || iNum>CMD_WEARER) return;
-    if (llToLower(sStr)==llToLower(g_sSubMenu) || llToLower(sStr) == "menu "+llToLower(g_sSubMenu)) AddonsMenu(kID, iNum);
+    if (llToLower(sStr)==llToLower(g_sSubMenu) || llToLower(sStr) == "menu "+llToLower(g_sSubMenu))
+    {
+        if(iNum>=CMD_OWNER && iNum<=CMD_WEARER) AddonsMenu(kID, iNum);
+        else {
+            llMessageLinked(LINK_SET,NOTIFY,"0Insufficient authority to access add-ons menu.",kID);
+            llMessageLinked(LINK_SET,0,"menu",kID);
+        }
+    }    
     //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else {
+        if (iNum<CMD_OWNER || iNum>CMD_WEARER) return;
         //integer iWSuccess = 0;
         //string sChangetype = llList2String(llParseString2List(sStr, [" "], []),0);
         //string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),1);
