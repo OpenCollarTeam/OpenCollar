@@ -4,6 +4,7 @@ This script is released public domain, unlike other OC scripts for a specific an
 -Authors Attribution-
 Aria (tiff589) - (August 2020)
 Lysea - (December 2020)
+Taya'Phidoux' (taya.maruti) - (july 2021)
 */
 
 integer API_CHANNEL = 0x60b97b5e;
@@ -125,6 +126,9 @@ default
         if(id)
         {
             Link("online", 0, "", llGetOwner());
+            // do like state_entry to fix random resets on teleport or login.
+            llSetTimerEvent(60);
+            g_iLMLastRecv = llGetUnixTime();
         }
         else
         {
