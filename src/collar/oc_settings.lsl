@@ -509,7 +509,7 @@ default
                 g_iBootup=FALSE;
             }
             llSetTimerEvent(0);
-        }else llSetTimerEvent(0.15); // 0.25 send 1 setting per quarter second
+        }else llSetTimerEvent(0.15); // send 1 setting per 0.15 second (previous - 0.25)
     }
 
 
