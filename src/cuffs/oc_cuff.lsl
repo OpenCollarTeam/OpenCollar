@@ -975,8 +975,33 @@ default
         } else if(channel==-8888)
         {
             // LockMeister v2
-            //llSay(0, "Command on LockMeister channel: "+msg);
-
+            key kLMKey = (key)llGetSubString(msg,0,35);
+            list lLMCmd = llParseString2List(msg,["|"],[]);
+            if (kLMKey == llGetOwner())
+            {
+                if (llGetListLength(lLMCmd) > 1) 
+                {  // A Lockmeister command
+                    string sLMCMD = llList2String(lLMCmd,2);
+                    string sLMPoint = llList2String(lLMCmd,3);
+                    if (sLMCMD == "RequestPoint") 
+                    {
+                        key kLink = NULL_KEY;
+                        list lKey = [];
+                        integer iMapIndex = llListFindList(g_lLMV2Map, [sLMPoint]);
+                        if (iMapIndex > -1) lKey = GetKey(llList2String(g_lLMV2Map, iMapIndex + 1));
+                        if (llList2Integer(lKey, 0) != LINK_ROOT) 
+                            llRegionSayTo(id, -8888,(string)llGetOwner()+"|LMV2|ReplyPoint|"+sLMPoint+"|"+llList2String(lKey, 1));
+                    }
+                } 
+                else 
+                { // A Lockmeister Ping
+                    string sLMPoint = llGetSubString(msg,36,-1);
+                    if (llListFindList(g_lLMV2Map, [sLMPoint]) > -1) 
+                    {
+                        llRegionSayTo(id, -8888, (string)llGetOwner()+sLMPoint+" ok");
+                    }
+                }
+            }
         } else if(channel == -9119)
         {
             //llSay(0, "Command on LockGuard Channel: "+msg);
@@ -1030,6 +1055,9 @@ default
                         fMaxAge=2+val;
                         ix++;
                     }
+                } else if (llList2String(lCmds, ix)=="ping")
+                {
+                    llRegionSayTo(id, -9119, "lockguard "+(string)llGetOwner()+" "+llList2String(lCmds, ix-1)+" okay");
                 }
                 ix++;
             }
