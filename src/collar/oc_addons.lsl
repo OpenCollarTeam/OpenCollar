@@ -172,11 +172,11 @@ AddonsMenu(key kID, integer iAuth){
 UserCommand(integer iNum, string sStr, key kID) {
     if (llToLower(sStr)==llToLower(g_sSubMenu) || llToLower(sStr) == "menu "+llToLower(g_sSubMenu))
     {
-        if(iNum>=CMD_OWNER && iNum<=CMD_WEARER) AddonsMenu(kID, iNum);
-        else {
+        if(iNum==CMD_EVERYONE) {
             llMessageLinked(LINK_SET,NOTIFY,"0Insufficient authority to access add-ons menu.",kID);
             llMessageLinked(LINK_SET,0,"menu",kID);
         }
+        else AddonsMenu(kID, iNum);
     }    
     //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else {
@@ -436,7 +436,7 @@ state active
         }
 
 
-        if(iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
+        if(iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID);
         else if(iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu+"|"+ g_sSubMenu,"");
         else if(iNum == DIALOG_RESPONSE){
