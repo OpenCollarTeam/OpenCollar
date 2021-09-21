@@ -1,4 +1,3 @@
-
 /*
 This file is a part of OpenCollar.
 Copyright ©2021
@@ -8,7 +7,6 @@ Aria (Tashia Redrose)
       * This combines oc_com, oc_auth, and oc_sys
     * July 2020     -       Maintenance fixes, feature implementations
 et al.
-
 Medea (Medea Destiny)
     *June 2020      -      *Fix issue #562, #381, #495 allow owners to permit wearers to set trusted/block.
                             -   added Wearer Trust option to Access Menu so that owners may allow or forbid
@@ -20,7 +18,10 @@ Medea (Medea Destiny)
                             *Fix issue #566, clear @setgroup when group unchecked properly.
                             *Extention to above, Disallow setting group access when no group active.  
                             *Fix issue #580 Limited printing settings to owner and wearer
-                            *#579 Added 'Listen 0' button to Settings menu that allows toggling channel 0 command listener on and off.  
+                            *#579 Added 'Listen 0' button to Settings menu that allows toggling channel 0
+                            command listener on and off.
+        Sept 2021   -   Removed g_lTestReports variable - unused leftover from alpha.  
+                    -   Added confirmation messages when group or public access is toggled and fixed a typo
   
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
@@ -406,10 +407,7 @@ string setor(integer iTest, string sTrue, string sFalse){
     else return sFalse;
 }
 
-list g_lTestReports = ["5556d037-3990-4204-a949-73e56cd3cb06", "1a828b4e-6345-4bb3-8d41-f93e6621ba25"]; // Aria and Roan
-// Any other team members please add yourself if you want feedback/bug reports. Or ask to be added if you do not have commit access
-// These IDs will only be in here during the testing period to allow for the experimental feedback/bug report system to do its thing
-// As most do not post to github, i am experimenting to see if a menu option in the collar of a Alpha/Beta might encourage feedback or bugs to be sent even if it has to be sent through a llInstantMessage
+
 
 integer g_iDoTriggerUpdate=FALSE;
 key g_kWelder = NULL_KEY;
@@ -565,14 +563,16 @@ state active
                             if(g_kGroup!=""){
                                 g_kGroup="";
                                 llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_group", "origin");
+                                llMessageLinked(LINK_SET,NOTIFY,"1Group Access has been turned off.",kAv); 
                             }else{
                                 key t_kGroup = llList2Key(llGetObjectDetails(llGetKey(), [OBJECT_GROUP]),0);
                                 if(t_kGroup==NULL_KEY){
-                                     llMessageLinked(LINK_SET, NOTIFY,"Group access can't be set while no group is active.",kAv);
+                                     llMessageLinked(LINK_SET, NOTIFY,"0Group access can't be set while no group is active.",kAv);
                                 }
                                 else{
                                     g_kGroup=t_kGroup;
                                      llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_group="+(string)g_kGroup, "origin");
+                                     llMessageLinked(LINK_SET,NOTIFY,"1Group Access has been turned on.",kAv);   
                                 }
                             }
                         } else {
@@ -583,8 +583,13 @@ state active
 
                             g_iPublic=1-g_iPublic;
 
-                            if(g_iPublic)llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_public=1", "origin");
-                            else llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_public","origin");
+                            if(g_iPublic) {
+                                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_public=1", "origin");
+                                llMessageLinked(LINK_SET,NOTIFY,"1Public Access has been turned on.",kAv); 
+                            } else {
+                                llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_public","origin");
+                                llMessageLinked(LINK_SET,NOTIFY,"1Public Access has been turned off.",kAv); 
+                            }
 
                         } else {
                             llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to changing public", kAv);
