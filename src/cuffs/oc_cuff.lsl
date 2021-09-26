@@ -13,7 +13,6 @@ Safra (Safra Nitely)
         * August 2021       -      fixed lockmeister system
 et al.
 
-
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
 Visual locking system fix by Safra Nitely (based on togglelock by Aria)
@@ -84,11 +83,6 @@ integer CMD_GROUP           = 502;
 integer CMD_WEARER          = 503;
 integer CMD_EVERYONE        = 504;
 integer CMD_LEVEL           = 504;
-//integer CMD_BLOCKED         = 598; // <--- Used in auth_request, will not return on a CMD_ZERO
-//integer CMD_RLV_RELAY       = 507;
-//integer CMD_SAFEWORD        = 510;
-//integer CMD_RELAY_SAFEWORD  = 511;
-//integer CMD_NOACCESS        = 599;
 
 integer LM_SETTING_SAVE     = 2000; //scripts send messages on this channel to have settings saved, <string> must be in form of "token=value"
 integer LM_SETTING_REQUEST  = 2001; //when startup, scripts send requests for settings on this channel
@@ -191,8 +185,6 @@ Menu(key kID, integer iAuth) {
     }
 
     lButtons += [Checkbox(g_iSyncLock, "SyncLock")];
-
-    //llSay(0, "opening menu");
     Dialog(kID, sPrompt, lButtons, ["DISCONNECT", UPMENU], 0, iAuth, "Menu~Main");
 }
 
@@ -210,10 +202,7 @@ UserCommand(integer iNum, string sStr, key kID) {
     } //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else
     {
-        //integer iWSuccess   = 0;
-        //string sChangetype  = llList2String(llParseString2List(sStr, [" "], []),0);
-        //string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),1);
-        //string sText;
+
     }
 }
 
@@ -301,9 +290,9 @@ SetParticles(integer link, key kID, float fMaxAge, float fGravity){
 
         PSYS_PART_FLAGS,PSYS_PART_FOLLOW_SRC_MASK|PSYS_PART_FOLLOW_VELOCITY_MASK|PSYS_PART_TARGET_POS_MASK,
         PSYS_SRC_PATTERN,PSYS_SRC_PATTERN_DROP,
-        PSYS_PART_START_SCALE, < 0.032, 0.075, 0 >,  // was < 0.032, 0.1, 0 >
-        PSYS_PART_MAX_AGE, 2.0,
-        PSYS_SRC_BURST_RATE, 0.06,     // was 0.08
+        PSYS_PART_START_SCALE, < 0.032, 0.032, 0 >,
+        PSYS_PART_MAX_AGE, 2,
+        PSYS_SRC_BURST_RATE, 0.04,
         PSYS_SRC_TEXTURE, kTexture,
         PSYS_PART_START_COLOR, (vector)cHain_color,
         PSYS_SRC_BURST_SPEED_MIN,0,
@@ -454,7 +443,6 @@ default
     attach(key kID){
         if(kID != NULL_KEY)
         {
-            // Process
             llResetScript();
         }
     }
@@ -467,7 +455,6 @@ default
             UpdateDSRequest(NULL, llHTTPRequest("https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/web/cuffs.txt",[],""), "check_version");
             if(g_iLMV2Listen !=-1)llListenRemove(g_iLMV2Listen);
             g_iLMV2Listen = llListen(-8888, "", "", "");
-
 
             if(g_iLGV2Listen !=-1)llListenRemove(g_iLGV2Listen);
             g_iLGV2Listen = llListen(-9119, "", "", "");
@@ -552,10 +539,6 @@ default
             if(llList2String(lMeta,0)=="read_conf"){
                 if(sData==EOF){
                     DeleteDSReq(kID);
-                    //llWhisper(0, "Cuff configuration finished reading : Cuff Name = "+g_sAddon);
-                    //llWhisper(0, "My Points: "+llDumpList2String(g_lMyPoints,", "));
-                    //llWhisper(0, "LMV2 Mapping: "+llDumpList2String(g_lLMV2Map, ">"));
-                    //llWhisper(0, "LGv2 Mapping: "+llDumpList2String(g_lLGv2Map, ">"));
                 }else{
                     integer iLine=(integer)llList2String(lMeta,1);
                     iLine++;
@@ -582,7 +565,6 @@ default
                         UpdateDSRequest(NULL, llHTTPRequest("https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/web/cuffs.txt",[],""), "check_version");
                         if(g_iLMV2Listen !=-1)llListenRemove(g_iLMV2Listen);
                         g_iLMV2Listen = llListen(-8888, "", "", "");
-
 
                         if(g_iLGV2Listen !=-1)llListenRemove(g_iLGV2Listen);
                         g_iLGV2Listen = llListen(-9119, "", "", "");
@@ -632,8 +614,6 @@ default
                     integer iNum = (integer) llJsonGetValue(msg, ["iNum"]);
                     string sStr  = llJsonGetValue(msg, ["sMsg"]);
                     key kID      = (key) llJsonGetValue(msg, ["kID"]);
-
-
                     if (iNum == LM_SETTING_RESPONSE)
                     {
 
@@ -641,8 +621,6 @@ default
                         string sToken = llList2String(lPar, 0);
                         string sVar   = llList2String(lPar, 1);
                         string sVal   = llList2String(lPar, 2);
-
-
                         if(sToken == "particle")
                         {
                             if(sVar == "color")
@@ -654,24 +632,18 @@ default
 
                             if ((string)sVal=="Ribbon")kTexture=(key)"154ab4d5-6189-b014-b879-dac253ed5b06";
                             if ((string)sVal=="Classic")kTexture=(key)"5d8c39c0-8ec1-1e01-5cad-6bd4ebbdc705";
-                            //if ((string)sVal=="Ribbon")kTexture=(key)"91235410-0b2b-3b15-934f-b91eb331fb75";  FOR v2 PARTICEL SYSTEM
-                            //if ((string)sVal=="Classic")kTexture=(key)"98a3d66c-7c96-4329-7cf9-79bc0e0ab5f6"; FOR v2 PARITCE SYSTEM
                             if ((string)sVal=="noParticle")kTexture=(key)TEXTURE_TRANSPARENT;
                             }
                         }
-
-
-                                                //llSay(0, "SAVE "+sToken+"_"+sVar+"="+sVal);
-
                         if (sToken == "occuffs")
                         {
-                           if (sVar == "cmdlevel") //set the level of the last user of the cuffs pose menu
+                           if (sVar == "cmdlevel")
                              {
-                                if ((integer)sVal  == 500) CMD_LEVEL =500;  //set menu access level to only owner
-                                if ((integer)sVal  == 501) CMD_LEVEL =501;  //set menu access level to owner or trusted
-                                if ((integer)sVal  == 502) CMD_LEVEL =502;  //set menu access level to group
-                                if ((integer)sVal  == 503) CMD_LEVEL =503;  //set menu access level to  self
-                                if ((integer)sVal  == 504) CMD_LEVEL =504;  //set menu access level to  public
+                                if ((integer)sVal  == 500) CMD_LEVEL =500;
+                                if ((integer)sVal  == 501) CMD_LEVEL =501;
+                                if ((integer)sVal  == 502) CMD_LEVEL =502;
+                                if ((integer)sVal  == 503) CMD_LEVEL =503;
+                                if ((integer)sVal  == 504) CMD_LEVEL =504;
                             }
 
                             if (sVar == "synclock")
@@ -681,7 +653,7 @@ default
                             else if(sVar == "locked")
                                 {
                                 g_iCuffLocked=(integer)sVal;
-                                if(!g_iSyncLock)            //Changes by Safra to Display Visual Lock/Unlock
+                                if(!g_iSyncLock)
                                 {
                                     if(g_iCuffLocked)
                                     {
@@ -743,7 +715,6 @@ default
                             }
                         }
 
-
                         if(sStr=="settings=sent"){
                             if(g_iSyncLock){
                                 g_iCuffLocked=g_iLocked;
@@ -781,8 +752,6 @@ default
                         string sToken = llList2String(lPar, 0);
                         string sVar   = llList2String(lPar, 1);
 
-
-                        //llSay(0, "DELETE "+sToken+"_"+sVar);
                         if(sToken == "global"){
                             if(sVar == "locked"){
                                 if(g_iSyncLock)
@@ -848,7 +817,6 @@ default
                             integer iPage = (integer)llList2String(lMenuParams,2);
                             integer iAuth = llList2Integer(lMenuParams, 3);
 
-
                             integer iRespring=TRUE;
                             if (sMenu == "Menu~Main")
                             {
@@ -860,14 +828,9 @@ default
                                 else if (sMsg == "Pose")
                                 {
                                     iRespring=FALSE;
-                                    llMessageLinked(LINK_SET,9, (string)kAv, (string)iAuth); // Retrieve the pose menu button names
-                                    //PosesMenu(kAv,iAuth,0);
-                                    //llSay(0, "This is an example addon.");
-                                } else if(sMsg == "TEST CHAINS"){
-                                    //llSay(0, "Chain Test Program");
-                                    //llSay(0, "Chaining frlac > fllac | bllac > brlac");
-                                    //llSay(0, "Activate pose | nadu");
-
+                                    llMessageLinked(LINK_SET,9, (string)kAv, (string)iAuth);
+                                } else if(sMsg == "TEST CHAINS")
+                                {
                                     Link("from_addon", SUMMON_PARTICLES, "frlac|fllac|2", "");
                                     Link("from_addon", SUMMON_PARTICLES, "bllac|brlac|2", "");
                                     Link("from_addon", CMD_OWNER, "nadu", "");
@@ -968,11 +931,6 @@ default
                         } else if(llList2String(lTmp,0) == g_sPoseName+"playback"){
                             list lMap = llParseStringKeepNulls(llBase64ToString(llList2String(lTmp,1)), ["~~~"],[]);
                             g_sCurrentPose=llList2String(lMap,0);
-
-                            //llSay(0, "callback (playback) : "+sStr);
-                            //llSay(0, llDumpList2String(lMap, " ~ "));
-
-                            //StartCuffPose(lMap,TRUE);
                             llMessageLinked(LINK_SET, 500, g_sCurrentPose, "1");
                         } else if(llList2String(lTmp,0)=="respring_poses"){
                             if(llGetKey() == (key)llList2String(lTmp,4))
@@ -1020,9 +978,12 @@ default
                         key kLink = NULL_KEY;
                         list lKey = [];
                         integer iMapIndex = llListFindList(g_lLMV2Map, [sLMPoint]);
-                        if (iMapIndex > -1) lKey = GetKey(llList2String(g_lLMV2Map, iMapIndex + 1));
-                        if (llList2Integer(lKey, 0) != LINK_ROOT)
+                        if (iMapIndex > -1)
+                        {
+                            lKey = GetKey(llList2String(g_lLMV2Map, iMapIndex + 1));
+                            if (llList2Integer(lKey, 0) != LINK_ROOT)
                             llRegionSayTo(id, -8888,(string)llGetOwner()+"|LMV2|ReplyPoint|"+sLMPoint+"|"+llList2String(lKey, 1));
+                        }
                     }
                 }
                 else
@@ -1071,7 +1032,6 @@ default
                     ix++;
                 } else if(llList2String(lCmds,ix)=="unlink"){
                     list Links = GetKey(sLinkTo);
-                    //llSay(0, "Clear particles for parameters: "+(string)Links);
                     llLinkParticleSystem(llList2Integer(Links,0), []);
                     return;
                 } else if(llList2String(lCmds,ix) == "texture"){
