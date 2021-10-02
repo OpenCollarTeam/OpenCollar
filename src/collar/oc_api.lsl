@@ -404,21 +404,6 @@ UserCommand(integer iAuth, string sCmd, key kID){
             llMessageLinked(LINK_SET,NOTIFY, "0%NOACCESS% to printing access lists!", kID);
     }
 }
- 
-list StrideOfList(list src, integer stride, integer start, integer end)
-{
-    list l = [];
-    integer ll = llGetListLength(src);
-    if(start < 0)start += ll;
-    if(end < 0)end += ll;
-    if(end < start) return llList2List(src, start, start);
-    while(start <= end)
-    {
-        l += llList2List(src, start, start);
-        start += stride;
-    }
-    return l;
-}
 
 SW(){
     llMessageLinked(LINK_SET, NOTIFY,"0You used the safeword, your owners have been notified", g_kWearer);
