@@ -141,15 +141,14 @@ Menu(key kID, integer iAuth) {
     string sPrompt = "\nOpenCollar "+COLLAR_VERSION;
     list lButtons = [Checkbox(g_iLocked, "Lock")];
 
-    if(!g_iWelded)lButtons+=g_lMainMenu;
+    if(!(g_iWelded&1))lButtons+=g_lMainMenu; // show lock/unlock when not welded
     else lButtons=g_lMainMenu;
 
     if(UPDATE_AVAILABLE ) sPrompt += "\n\nUPDATE AVAILABLE: Your version is: "+COLLAR_VERSION+", The current release version is: "+NEW_VERSION;
     if(g_iAmNewer)sPrompt+="\n\nYour collar version is newer than the public release. This may happen if you are using a beta or pre-release copy.\nNote: Pre-Releases may have bugs. Ensure you report any bugs to [https://github.com/OpenCollarTeam/OpenCollar Github]";
 
-    if(g_iWelded)sPrompt+="\n\n* The Collar is Welded by secondlife:///app/agent/"+(string)g_kWeldBy+"/about *";
-    if(iAuth==CMD_OWNER && g_iLocked && !g_iWelded)lButtons+=["Weld"];
-
+    if(g_iWelded&TRUE)sPrompt+="\n\n* The Collar is Welded by secondlife:///app/agent/"+(string)g_kWeldBy+"/about *";
+    if(iAuth==CMD_OWNER && g_iLocked && g_iWelded==FALSE)lButtons+=["Weld"];
 
     list lUtility;
 
@@ -327,13 +326,13 @@ UserCommand(integer iNum, string sStr, key kID) {
                 llMessageLinked(LINK_SET,NOTIFY,"0%NOACCESS% to toggling Allow Hide", kID);
                 if(sChangevalue == "remenu")Settings(kID,iNum);
             }
-        } else if(llToLower(sChangetype)=="lock" && !g_iWelded && (iNum == CMD_OWNER || iNum == CMD_WEARER)){
+        } else if(llToLower(sChangetype)=="lock" && !(g_iWelded&1) && (iNum == CMD_OWNER || iNum == CMD_WEARER)){
             // allow locking
             g_iLocked=TRUE;
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_locked="+(string)g_iLocked,"");
             llMessageLinked(LINK_SET, NOTIFY, "1%WEARERNAME%'s collar has been locked", kID);
             llPlaySound(g_sLockSound,1);
-        } else if(llToLower(sChangetype) == "unlock" && iNum == CMD_OWNER && !g_iWelded){
+        } else if(llToLower(sChangetype) == "unlock" && iNum == CMD_OWNER && !(g_iWelded&1)){
             g_iLocked=FALSE;
             llPlaySound(g_sUnlockSound,1);
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, "global_locked","");
