@@ -1,4 +1,3 @@
-
 /*
 This file is a part of OpenCollar.
 Copyright ©2021
@@ -7,7 +6,10 @@ Aria (Tashia Redrose)
     * February 2021       -       Created oc_cuff
 Safra (Safra Nitely)
     * June 2021           -       add priority for animations, fix visual lock/unlock
+Lilith (Lilith Xue)
+    * August 2021         -       Add ping for Lockmiester furniture compatibility
 et al.
+
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
 Visual locking system fix by Safra Nitely (based on togglelock by Aria)
@@ -69,7 +71,7 @@ string Checkbox(integer iValue, string sLabel) {
 //list g_lCollars;
 string g_sAddon = "OpenCollar Cuffs";
 
-string g_sVersion = "1.0.0";
+string g_sVersion = "2.0.001";
 
 //integer CMD_ZERO            = 0;
 integer CMD_OWNER           = 500;
@@ -877,7 +879,7 @@ default
                                     Link("from_addon", STOP_CUFF_POSE, g_sCurrentPose, g_sPoseName);
                                     g_sCurrentPose="NONE";
                                     Link("from_addon", LM_SETTING_DELETE, "occuffs_"+g_sPoseName+"pose","");
-                                    //Link("from_addon", CLEAR_ALL_CHAINS, "", "");
+                                    Link("from_addon", CLEAR_ALL_CHAINS, "", "");
                                     iRespring=FALSE;
                                     Link("from_addon", TIMEOUT_REGISTER, "2", "respring_poses:"+(string)iAuth+":"+(string)kAv+":"+(string)iPage+":"+(string)llGetKey());
                                 }else if(sMsg == "BACK"){
@@ -885,7 +887,7 @@ default
                                     Menu(kAv,iAuth);
                                 }else{
                                     // activate pose
-                                    //Link("from_addon", CLEAR_ALL_CHAINS, "", "");
+                                    Link("from_addon", CLEAR_ALL_CHAINS, "", "");
                                     g_sCurrentPose=sMsg;
                                     CMD_LEVEL=iAuth;
                                     Link("from_addon", LM_SETTING_SAVE, "occuffs_cmdlevel="+(string)iAuth,"");
@@ -988,9 +990,12 @@ default
                         key kLink = NULL_KEY;
                         list lKey = [];
                         integer iMapIndex = llListFindList(g_lLMV2Map, [sLMPoint]);
-                        if (iMapIndex > -1) lKey = GetKey(llList2String(g_lLMV2Map, iMapIndex + 1));
-                        if (llList2Integer(lKey, 0) != LINK_ROOT) 
-                            llRegionSayTo(id, -8888,(string)llGetOwner()+"|LMV2|ReplyPoint|"+sLMPoint+"|"+llList2String(lKey, 1));
+                        if (iMapIndex > -1) 
+                        {
+                            lKey = GetKey(llList2String(g_lLMV2Map, iMapIndex + 1));
+                            if (llList2Integer(lKey, 0) != LINK_ROOT) 
+                            llRegionSayTo(id, -8888,(string)llGetOwner()+"|LMV2|ReplyPoint|"+sLMPoint+"|"+llList2String(lKey, 1)); 
+                        }
                     }
                 } 
                 else 
