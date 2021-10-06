@@ -165,7 +165,7 @@ Menu(key kID, integer iAuth) {
     if(g_iHasPoses && llGetInventoryType("oc_cuff_pose")==INVENTORY_SCRIPT){
         if(!g_iHidden)
             lButtons+=["Pose"];
-        else sPrompt +="\nPoses not available while the cuffs are hidden";
+        else sPrompt +="\nPoses not available while the Collar is hidden";
     }
 
     if(iAuth == CMD_OWNER)
