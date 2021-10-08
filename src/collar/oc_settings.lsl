@@ -13,10 +13,151 @@ https://github.com/OpenCollarTeam/OpenCollar
 
 */
 
-//string g_sParentMenu = "Apps";
+string  g_sSettings = ".settings";
+list    g_lSettings;
+list    g_lMenuIDs;
+key     g_kWearer;
+key     g_kSettingsCard=NULL_KEY;
+key     g_kSettingsRead;
+integer g_iSettingsRead;
+integer g_iSettingsLoaded;
+integer g_iNoComma=FALSE;
+integer g_iRebootConfirmed=FALSE;
+
+integer g_iMenuStride;
+integer g_iLastStride;
+string  g_sVariableView;
+string  g_sTokenView="";
+
+string  g_sLoadURL;
+key     g_kLoadURL;
+key     g_kLoadURLBy;
+integer g_iLoadURLConsented;
+
+
+
+//MESSAGE MAP
+//integer CMD_ZERO = 0;
+integer CMD_OWNER = 500;
+//integer CMD_TRUSTED = 501;
+//integer CMD_GROUP = 502;
+integer CMD_WEARER = 503;
+integer CMD_EVERYONE = 504;
+//integer CMD_RLV_RELAY = 507;
+//integer CMD_SAFEWORD = 510;
+//integer CMD_RELAY_SAFEWORD = 511;
+integer NOTIFY = 1002;
+
+integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved
+//str must be in form of "token=value"
+integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+integer LM_SETTING_RESPONSE = 2002;//the settings script sends responses on this channel
+integer LM_SETTING_DELETE = 2003;//delete token from settings
+integer LM_SETTING_EMPTY = 2004;//sent when a token has no value
+
+//integer MENUNAME_REQUEST = 3000;
+//integer MENUNAME_RESPONSE = 3001;
+//integer MENUNAME_REMOVE = 3003;
+
+//integer RLV_CMD = 6000;
+integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
+
+//integer RLV_OFF = 6100; // send to inform plugins that RLV is disabled now, no message or key needed
+//integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no message or key needed
 
 integer TIMEOUT_REGISTER = 30498;
 integer TIMEOUT_FIRED = 30499;
+
+integer ALIVE = -55;
+integer READY = -56;
+integer STARTUP = -57;
+integer REBOOT = -1000;
+
+integer DIALOG = -9000;
+integer DIALOG_RESPONSE = -9001;
+integer DIALOG_TIMEOUT = -9002;
+
+string UPMENU = "BACK";
+//string ALL = "ALL";
+
+// return a CSV containing all global_var=val
+string SettingsFor(string SelectToken){
+    list lSettings;    
+    integer i = llGetListLength(g_lSettings); 
+    while((i-=2)>=0){        
+        list lTmp = llParseString2List(llList2String(g_lSettings,i),["_"],[]);
+        string sTok = llList2String(lTmp,0);
+        string sVar = llList2String(lTmp,1);
+        if(sTok == SelectToken)
+            lSettings+=llList2String(g_lSettings,i)+"="+llList2String(g_lSettings,i+1);
+    }
+    return llList2CSV(lSettings);
+}
+
+// sends "ALIVE oc_setttings <global_var=val list>"
+SettingsLoaded(){
+        g_iSettingsLoaded = TRUE;
+        llSetTimerEvent(0);   
+        llMessageLinked(LINK_SET, ALIVE, "oc_settings", SettingsFor("global")); 
+}
+
+// dialogs for "settings edit"
+SettingsMenu(integer stridePos, key kAv, integer iAuth){
+    string sText = "OpenCollar - Interactive Settings editor";
+    list lButtons = [];
+    if(iAuth != CMD_OWNER){
+        sText+="\n\nOnly owner may use this feature";
+        Dialog(kAv, sText, [], [UPMENU], 0, iAuth, "Menu~Main");
+        return;
+    }
+    integer end = llGetListLength(g_lSettings); integer i;
+    if(stridePos == 0){
+        for(i=0;i<end;i+=2){
+            list lSetting = llParseString2List(llList2String(g_lSettings,i), ["_"],[]);            
+            string sToken = llList2String(lSetting,0);
+            if(llListFindList(lButtons,[sToken])==-1)lButtons+=sToken;
+        }                         
+        sText+="\nCurrently viewing Tokens";
+    } else if(stridePos==1){
+        for(i=0;i<end;i+=2){
+            list lToken_Var = llParseString2List(llList2String(g_lSettings,i), ["_"],[]);            
+            string sToken = llList2String(lToken_Var,0);          
+            string sVar = llList2String(lToken_Var,1);
+            if(sToken==g_sTokenView)lButtons+=sVar;
+        }        
+        sText+="\nCurrently viewing Variables for token '"+g_sTokenView+"'";
+    } else if(stridePos == 2){
+        integer iPos = llListFindList(g_lSettings,[g_sTokenView+"_"+g_sVariableView]);
+        if(iPos==-1){
+            // cannot do it
+            lButtons=[];
+            sText+="\nCurrently viewing the variable '"+g_sTokenView+"_"+g_sVariableView+"'\nNo data found";
+        } else {
+            lButtons = ["DELETE", "MODIFY"];
+            sText = "\nCurrently viewing the variable '"+g_sTokenView+"_"+g_sVariableView+"'\nData contained in var: "+llList2String(g_lSettings, iPos+1);
+        }
+    } else if(stridePos==3){
+        integer iPos = llListFindList(g_lSettings,[g_sTokenView+"_"+g_sVariableView]);
+        
+        sText+="\n\nPlease enter a new value for: "+g_sTokenView+"_"+g_sVariableView+"\n\nCurrent value: "+llList2String(g_lSettings, iPos+1);
+        lButtons =[];
+    } else if(stridePos==8){
+        sText+= "\n\nPlease enter the token name";
+        lButtons=[];
+    } else if(stridePos == 9){
+        sText += "\n\nPlease enter the variable name for '"+g_sTokenView;
+        lButtons=[];
+    }
+    
+    g_iLastStride=stridePos;
+    Dialog(kAv, sText,lButtons, setor((lButtons!=[]), ["+ NEW", UPMENU], []), 0, iAuth, "settings~edit~"+(string)stridePos);    
+}
+
+list setor(integer test, list a, list b){
+    if(test)return a;
+    else return b;
+}
+
 
 
 string GetSetting(string sToken) {
@@ -77,43 +218,8 @@ list SetSetting(string sToken, string sValue) {
     return g_lSettings + [sToken, sValue];
 }
 
-list g_lSettings;
-//MESSAGE MAP
-//integer CMD_ZERO = 0;
-integer CMD_OWNER = 500;
-//integer CMD_TRUSTED = 501;
-//integer CMD_GROUP = 502;
-integer CMD_WEARER = 503;
-integer CMD_EVERYONE = 504;
-//integer CMD_RLV_RELAY = 507;
-//integer CMD_SAFEWORD = 510;
-//integer CMD_RELAY_SAFEWORD = 511;
 
-integer NOTIFY = 1002;
-integer REBOOT = -1000;
 
-integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved
-//str must be in form of "token=value"
-integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
-integer LM_SETTING_RESPONSE = 2002;//the settings script sends responses on this channel
-integer LM_SETTING_DELETE = 2003;//delete token from settings
-integer LM_SETTING_EMPTY = 2004;//sent when a token has no value
-
-//integer MENUNAME_REQUEST = 3000;
-//integer MENUNAME_RESPONSE = 3001;
-//integer MENUNAME_REMOVE = 3003;
-
-//integer RLV_CMD = 6000;
-//integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
-
-//integer RLV_OFF = 6100; // send to inform plugins that RLV is disabled now, no message or key needed
-//integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no message or key needed
-
-integer DIALOG = -9000;
-integer DIALOG_RESPONSE = -9001;
-integer DIALOG_TIMEOUT = -9002;
-//string UPMENU = "BACK";
-//string ALL = "ALL";
 
 /*//--                       Anti-License Text                         --//*/
 /*//     Contributed Freely to the Public Domain without limitation.     //*/
@@ -224,18 +330,12 @@ Error(key kID, string sCmd){
     llMessageLinked(LINK_SET,NOTIFY,"0%NOACCESS% to command: "+sCmd, kID);
 }
 
-key g_kLoadURL;
-string g_sLoadURL;
-key g_kLoadURLBy;
-integer g_iLoadURLConsented;
 UserCommand(integer iNum, string sStr, key kID) {
     string sLower=  llToLower(sStr);
     if(sLower == "print settings" || sLower == "debug settings"){
         if(AuthCheck(iNum))PrintAll(kID, llGetSubString(sLower,0,4));
-        else Error(kID, sStr);
-    }
-    else if(llGetSubString(sLower,0,5) == "reboot")
-    {
+        else Error(kID, sStr);        
+    } else if(llGetSubString(sLower,0,5) == "reboot") {
         if(AuthCheck(iNum)){
             if(g_iRebootConfirmed || sLower == "reboot --f"){
                 llMessageLinked(LINK_SET, NOTIFY, "0Rebooting your %DEVICETYPE%...", kID);
@@ -251,8 +351,7 @@ UserCommand(integer iNum, string sStr, key kID) {
             g_iCurrentIndex=0;
             llSetTimerEvent(10.0); // schedule refresh
         }
-    }
-    else if(sLower == "load"){
+    } else if(sLower == "load"){
         if(AuthCheck(iNum)){
             // reload settings - assume there is a .settings notecard
             llMessageLinked(LINK_SET, NOTIFY, "0Loading from notecard...", kID);
@@ -275,21 +374,13 @@ UserCommand(integer iNum, string sStr, key kID) {
         if(AuthCheck(iNum)){
             g_iCurrentIndex=0;
             llSetTimerEvent(10);
-        }
+        }     
+            
+    }else if(sLower=="settings edit"){
+        SettingsMenu(0, kID, iNum);
     }
+    
 }
-integer g_iRebootConfirmed=FALSE;
-key g_kWearer;
-list g_lMenuIDs;
-integer g_iMenuStride;
-//integer g_iLocked=FALSE;
-
-key g_kSettingsRead;
-integer g_iSettingsRead;
-
-key g_kSettingsCard=NULL_KEY;
-string g_sSettings = ".settings";
-integer g_iNoComma=FALSE;
 
 integer iSetor(integer test,integer a,integer b){
     if(test)return a;
@@ -471,8 +562,9 @@ default
         if(llGetInventoryType(g_sSettings)!=INVENTORY_NONE){
             g_iSettingsRead=0;
             g_kSettingsCard = llGetInventoryKey(g_sSettings);
-            g_kSettingsRead = llGetNotecardLine(g_sSettings, 0);
-        }
+            g_kSettingsRead = llGetNotecardLine(g_sSettings, 0);        
+        }else
+            SettingsLoaded();    // if there is no notecard, then no need to wait    
     }
 
     changed(integer iChange){
@@ -493,6 +585,7 @@ default
                 g_iCurrentIndex=0;
                 llSetTimerEvent(2);
                 llMessageLinked(LINK_SET, NOTIFY, "0Settings notecard loaded successfully", g_kWearer);
+                SettingsLoaded();   
             } else {
                 ProcessSettingLine(sData);
 
@@ -514,10 +607,13 @@ default
 
 
     link_message(integer iSender,integer iNum,string sStr,key kID){
+                
         if(iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID);
-        //else if(iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
-        //    llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu+"|"+ g_sSubMenu,"");
-        else if(iNum == DIALOG_RESPONSE){
+        
+        else if(iNum==REBOOT) {
+            if(g_iSettingsLoaded) SettingsLoaded(); // sent ALIVE on receiving REBOOT signal
+            
+        } else if(iNum == DIALOG_RESPONSE){
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if(iMenuIndex!=-1){
                 string sMenu = llList2String(g_lMenuIDs, iMenuIndex+1);
@@ -526,7 +622,6 @@ default
                 key kAv = llList2Key(lMenuParams,0);
                 string sMsg = llList2String(lMenuParams,1);
                 integer iAuth = llList2Integer(lMenuParams,3);
-                //integer iRespring=TRUE;
 
                 if(sMenu == "Reboot"){
                     if(sMsg=="No")return;
@@ -534,18 +629,88 @@ default
                         g_iRebootConfirmed=TRUE;
                         llMessageLinked(LINK_SET, iAuth, "reboot", kAv);
                     }
-                } else if(sMenu == "Consent~LoadURL")
-                {
+                } else if(sMenu == "Consent~LoadURL"){
                     if(sMsg == "DECLINE"){
                         llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to loading auth or intern settings", g_kLoadURLBy);
-                    } else if(sMsg == "ACCEPT")
-                    {
+                    } else if(sMsg == "ACCEPT"){
                         llMessageLinked(LINK_SET, NOTIFY, "1Consented. Reloading URL", g_kLoadURLBy);
                         g_iLoadURLConsented=TRUE;
                         g_kLoadURL = llHTTPRequest(g_sLoadURL, [], "");
                     }
+                } else if(sMenu == "Menu~Main"){
+                    if(sMsg == UPMENU){
+                        llMessageLinked(LINK_SET, iAuth, "menu Settings", kAv);
+                    }
+                } else if(sMenu == "settings~edit~0"){
+                    if(sMsg == UPMENU){
+                        llMessageLinked(LINK_SET, iAuth, "menu Settings", kAv);
+                        return;
+                    } else if(sMsg == "+ NEW"){
+                        SettingsMenu(8, kAv, iAuth);
+                        return;
+                    }
+                    if(sMsg == "intern" || sMsg == "auth"){
+                        llMessageLinked(LINK_SET, NOTIFY, "0Editing of the "+sMsg+" token is prohibited by the security policy", kAv);
+                        SettingsMenu(0, kAv, iAuth);
+                    } else {
+                        g_sTokenView=sMsg;
+                        SettingsMenu(1, kAv,iAuth);
+                    }
+                } else if(sMenu == "settings~edit~1"){
+                    if(sMsg==UPMENU){
+                        SettingsMenu(0,kAv,iAuth);
+                        return;
+                    }else if(sMsg == "+ NEW"){
+                        SettingsMenu(9, kAv, iAuth);
+                        return;
+                    }
+                    
+                    g_sVariableView=sMsg;
+                    SettingsMenu(2, kAv,iAuth);
+                    
+                } else if(sMenu == "settings~edit~2"){
+                    if(sMsg == UPMENU){
+                        SettingsMenu(1,kAv,iAuth);
+                        return;
+                    } else if(sMsg == "DELETE"){
+                        string  sToken = g_sTokenView+"_"+g_sVariableView;
+                        integer iPosx  = llListFindList(g_lSettings, [sToken]);
+                        if(iPosx==-1){
+                            SettingsMenu(2,kAv,iAuth);
+                            return;
+                        }                       
+                        if(!CheckModifyPerm(sStr, kID))return;
+                        
+                        llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sTokenView+"_"+g_sVariableView,"");
+                        llMessageLinked(LINK_SET, RLV_REFRESH,"","");
+                        llMessageLinked(LINK_SET, NOTIFY, "1"+sToken+" has been deleted from settings", kAv);
+                        return;
+                    } else if(sMsg == "MODIFY"){
+                        SettingsMenu(3, kAv,iAuth);
+                    }
+                } else if(sMenu == "settings~edit~3"){
+                    if(sMsg == UPMENU){
+                        SettingsMenu(2,kAv,iAuth);
+                    } else {
+                        string  sToken = g_sTokenView+"_"+g_sVariableView;
+                        integer iPosx  = llListFindList(g_lSettings, [sToken]);     
+                        if(iPosx == -1)SettingsMenu(2,kAv,iAuth);
+                        else{
+                            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sTokenView+"_"+g_sVariableView+"="+sMsg,"");
+                            llMessageLinked(LINK_SET, NOTIFY, "1Settings modified: "+sToken+"="+sMsg,kAv);
+                            SettingsMenu(1,kAv,iAuth);
+                            return;
+                        }
+                    }
+                } else if(sMenu == "settings~edit~8"){
+                    g_sTokenView=sMsg;
+                    SettingsMenu(9, kAv,iAuth);
+                } else if(sMenu == "settings~edit~9"){
+                    g_sVariableView=sMsg;
+                    g_lSettings = SetSetting(g_sTokenView+"_"+g_sVariableView,"0");
+                    
+                    SettingsMenu(3, kAv,iAuth);
                 }
-
             }
         } else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
