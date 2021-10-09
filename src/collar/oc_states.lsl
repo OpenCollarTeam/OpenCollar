@@ -20,8 +20,19 @@ et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
 
+      ~~ boot states ~~
+default: REBOOT reboot         
+            ALIVE                   from oc_api & oc_core & oc_settings
+startup: STARTUP     
+            0 initialize            from oc_core
+            LM_SETTING_REQUEST ALL  from oc_api
+            "settings=sent"         from oc_settings
+running: TIMEOUT_READY              
+
 */
 
+integer g_iStartup; // keep track on where in the bootup sequence we are
+string  g_sSettings;
 
 //integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
@@ -41,80 +52,7 @@ integer TIMEOUT_FIRED = 30499;
 
 integer g_iVerbosityLevel = 1;
 
-/*list StrideOfList(list src, integer stride, integer start, integer end)
-{
-    list l = [];
-    integer ll = llGetListLength(src);
-    if(start < 0)start += ll;
-    if(end < 0)end += ll;
-    if(end < start) return llList2List(src, start, start);
-    while(start <= end)
-    {
-        l += llList2List(src, start, start);
-        start += stride;
-    }
-    return l;
-}*/
-//integer NOTIFY_OWNERS=1003;
 
-
-
-SettingsMenu(integer stridePos, key kAv, integer iAuth)
-{
-    string sText = "OpenCollar - Interactive Settings editor";
-    list lBtns = [];
-    if(iAuth != CMD_OWNER){
-        sText+="\n\nOnly owner may use this feature";
-        Dialog(kAv, sText, [], [UPMENU], 0, iAuth, "Menu~Main");
-        return;
-    }
-    if(stridePos == 0){
-        integer i=0;
-        integer end = llGetListLength(g_lSettings);
-        for(i=0;i<end;i+=3){
-            if(llListFindList(lBtns,[llList2String(g_lSettings,i)])==-1)lBtns+=llList2String(g_lSettings,i);
-        }            
-        sText+="\nCurrently viewing Tokens";
-    } else if(stridePos==1){
-        integer i=0;
-        integer end = llGetListLength(g_lSettings);
-        for(i=0;i<end;i+=3){
-            if(llList2String(g_lSettings,i)==g_sTokenView){
-                lBtns+=llList2String(g_lSettings,i+1);
-            }
-        }
-        sText+="\nCurrently viewing Variables for token '"+g_sTokenView+"'";
-    } else if(stridePos == 2){
-        integer iPos = llListFindList(g_lSettings,[g_sTokenView,g_sVariableView]);
-        if(iPos==-1){
-            // cannot do it
-            lBtns=[];
-            sText+="\nCurrently viewing the variable '"+g_sTokenView+"_"+g_sVariableView+"'\nNo data found";
-        } else {
-            lBtns = ["DELETE", "MODIFY"];
-            sText = "\nCurrently viewing the variable '"+g_sTokenView+"_"+g_sVariableView+"'\nData contained in var: "+llList2String(g_lSettings, iPos+2);
-        }
-    } else if(stridePos==3){
-        integer iPos = llListFindList(g_lSettings,[g_sTokenView,g_sVariableView]);
-        sText+="\n\nPlease enter a new value for: "+g_sTokenView+"_"+g_sVariableView+"\n\nCurrent value: "+llList2String(g_lSettings, iPos+2);
-        lBtns =[];
-    } else if(stridePos==8){
-        sText+= "\n\nPlease enter the token name";
-        lBtns=[];
-    } else if(stridePos == 9){
-        sText += "\n\nPlease enter the variable name for '"+g_sTokenView;
-        lBtns=[];
-    }
-    
-    g_iLastStride=stridePos;
-    Dialog(kAv, sText,lBtns, setor((lBtns!=[]), ["+ NEW", UPMENU], []), 0, iAuth, "settings~edit~"+(string)stridePos);
-    
-}
-
-list setor(integer test, list a, list b){
-    if(test)return a;
-    else return b;
-}
 
 integer NOTIFY = 1002;
 integer REBOOT = -1000;
@@ -142,118 +80,166 @@ integer DIALOG_TIMEOUT = -9002;
 string UPMENU = "BACK";
 //string ALL = "ALL";
 
-Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
-    key kMenuID = llGenerateKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
 
-    integer iIndex = llListFindList(g_lMenuIDs, [kID]);
-    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
-    else g_lMenuIDs += [kID, kMenuID, sName];
-}
-list g_lSettings;
-integer g_iLoading;
-//key g_kWearer;
-list g_lMenuIDs;
-integer g_iMenuStride;
-//list g_lOwner;
-//list g_lTrust;
-key g_kMenuUser;
-integer g_iLastAuth;
-//list g_lBlock;
-string g_sVariableView;
-//integer g_iLocked=FALSE;
-string g_sTokenView="";
-integer g_iLastStride;
-integer g_iWaitMenu;
 
 list g_lTimers; // signal, start_time, seconds_from
-
-integer g_iExpectAlive=0;
-list g_lAlive;
-integer g_iPasses=-1;
 
 
 integer ALIVE = -55;
 integer READY = -56;
 integer STARTUP = -57;
+
+
+// oc_settings, oc_api and oc_core need to be ALIVE
+list g_lWaiting=["oc_settings", "oc_api" ,"oc_core"] ;  
+integer Alive(string scriptName){   
+    integer iScript = llListFindList(g_lWaiting,[scriptName]);
+    if(~iScript){
+        g_lWaiting = llDeleteSubList(g_lWaiting, iScript, iScript);
+        //g_lAlive+=[scriptName];
+    }
+    if(llGetListLength(g_lWaiting)==0){ 
+        return TRUE;
+    }
+    return FALSE;
+}
+
+integer antiCrash(string scriptName){
+    if(llGetScriptState(scriptName)==FALSE){
+        llResetOtherScript(scriptName);
+        llSleep(0.5);
+        llSetScriptState(scriptName,TRUE);
+        llSleep(1);
+        
+        if(scriptName=="oc_folders") llOwnerSay("WARNING! Opencollar detected that your folder script stopped running, and has restarted it. Usually this is a stack heap error, which means the folder script ran out of memory trying to read your folders. This happens when you have too many subfolders in one place. To stop this happening, please consider reorganizing your #RLV so that no individual folder has too many subfolders inside it, and check for folders that begin with a ~ directly in your #RLV root folder that can be deleted -- normally these are temporary attachment folders and are no longer needed."); 
+        if(g_iVerbosityLevel >=1)
+            llMessageLinked(LINK_SET, NOTIFY, "0"+scriptName+" has been reset. If the script stack heaped, please file a bug report on our github.", llGetOwner());
+        return TRUE;
+    }    
+    return FALSE;
+}
+
+Reboot(){        
+    integer i = llGetListLength(g_lWaiting);
+    while(i--)            
+        antiCrash(llList2String(g_lWaiting,i));                       
+        
+    llMessageLinked(LINK_SET, REBOOT,"reboot", llGetScriptName());
+    llSetTimerEvent(15);  
+}
+
+Startup(string scriptName){    
+    llMessageLinked(LINK_SET, STARTUP, scriptName, g_sSettings);
+}
 default
 {
     state_entry()
     {
         if(llGetStartParameter() != 0) state inUpdate;
-        
-        g_lAlive=[];
-        g_iPasses=-1;
-        g_iExpectAlive=1;
-        llSetTimerEvent(1);
-        //llScriptProfiler(TRUE);
-        llMessageLinked(LINK_SET, REBOOT,"reboot", "");
-        llSleep(5);
-        //llMessageLinked(LINK_SET, 0, "initialize", "");
+        Reboot();
+
         if(g_iVerbosityLevel>=1)
             llOwnerSay("Collar is preparing to startup, please be patient.");
+    }
+    timer(){        
+        // if only oc_settings failed, it's likely because it's a version witout ALIVE response
+        if(llGetListLength(g_lWaiting)==1 && llList2String(g_lWaiting,0)=="oc_settings")
+            state startup;   
+            
+        if(g_iVerbosityLevel>=1)
+            llOwnerSay("ALIVE check failed for "+llDumpList2String(g_lWaiting," & "));
+            
+        g_iVerbosityLevel=0;    // quietly keep trying
+        Reboot();         
+    }
+    
+    link_message(integer iSender, integer iNum, string sStr, key kID){
+        if(iNum == REBOOT && sStr == "reboot --f")llResetScript();
+
+        if(iNum == ALIVE){    
+            list lSettings = llParseString2List(sStr, ["="],[]);
+            string sVar = llList2String(lSettings,0);
+            string sVal = llList2String(lSettings,1);       
+            if(sVar == "oc_settings" && kID!=NULL_KEY) 
+                g_sSettings = (string)kID;                
+            if(~llListFindList(g_lWaiting, [sVar])) // go through every script in g_lWaiting
+                if(Alive(sVar)) state startup;    // pass if all gave the ALIVE signal
+        }
+    }
+}
+
+state startup
+{
+    state_entry()
+    {                
+        g_iStartup=0;
+        Startup("ALL");
+        llSetTimerEvent(60); 
     }
     
     
     on_rez(integer iRez){
-        llSleep(10);
         llResetScript();
     }
     
     timer(){
-        
-        if(g_iExpectAlive){
-            if(llGetTime()>=5 && g_iPasses<3){
-                llMessageLinked(LINK_SET,READY, "","");
-                llResetTime();
-                //llSay(0, "PASS COUNT: "+(string)g_iPasses);
-                g_iPasses++;
-            } else if(llGetTime()>=7.5 && g_iPasses>=3){
-                if(g_iVerbosityLevel>=2)
-                    llOwnerSay("Scripts ready: "+(string)llGetListLength(g_lAlive));
-                llMessageLinked(LINK_SET,STARTUP,llDumpList2String(g_lAlive,","),"");
-                g_iExpectAlive=0;
-                g_lAlive=[];
-                g_iPasses=0;
-                llSleep(10);
-                
-                if(g_iVerbosityLevel >=1)
-                    llMessageLinked(LINK_SET,NOTIFY,"0Startup in progress... be patient", llGetOwner());
-                //llMessageLinked(LINK_SET,LM_SETTING_REQUEST,"ALL","");
-                llMessageLinked(LINK_SET,0,"initialize","");
-            }
-            
-            return;
+        if(g_iVerbosityLevel>=1)
+            llOwnerSay("Startup timeout on other scripts feedback.");    
+        //llResetScript();    
+        state running; // move on anyway        
+    }     
+    
+    changed(integer iChange){
+        if(iChange&CHANGED_INVENTORY){
+            llResetScript();
         }
+    }
+    link_message(integer iSender, integer iNum, string sStr, key kID){
+        if(iNum == REBOOT && sStr == "reboot --f")llResetScript();
         
-        if(!g_iWaitMenu && llGetListLength(g_lTimers) == 0)
-            llSetTimerEvent(15);
+        if(iNum == 0 && sStr=="initialize"){
+            g_iStartup=g_iStartup|1;
+        }else if(iNum == LM_SETTING_REQUEST && sStr=="ALL"){  
+            g_iStartup=g_iStartup|2;  
+        }else if(iNum == LM_SETTING_RESPONSE && sStr == "settings=sent"){ 
+            g_iStartup=g_iStartup|4;      
+        }
+        if(g_iStartup>=7) state running;
+    }          
+}
+
+state running
+{
+    state_entry()
+    {          
+        llSetTimerEvent(0);
+        llMessageLinked(LINK_SET, TIMEOUT_READY, "","");
+        
+        // check if any haven't started up yet
+        llMessageLinked(LINK_SET, READY, "","");
+    }    
+    
+    on_rez(integer iRez){
+       llResetScript();
+    }
+    changed(integer iChange){
+        if(iChange&CHANGED_INVENTORY){
+            llResetScript();
+        }
+    }    
+    
+    timer(){     
+        if( llGetListLength(g_lTimers) == 0) 
+            llSetTimerEvent(15);            
+            
         // Check all script states, then check list of managed scripts
         integer i=0;
         integer end = llGetInventoryNumber(INVENTORY_SCRIPT);
         integer iModified=FALSE;
         for(i=0;i<end;i++){
-            string scriptName = llGetInventoryName(INVENTORY_SCRIPT, i);
-            // regular anti-crash
-            if(llGetScriptState(scriptName)==FALSE){
-                llResetOtherScript(scriptName);
-                llSleep(0.5);
-                llSetScriptState(scriptName,TRUE);
-                llSleep(1);
-                iModified=TRUE;
-                if(scriptName=="oc_folders") llOwnerSay("WARNING! Opencollar detected that your folder script stopped running, and has restarted it. Usually this is a stack heap error, which means the folder script ran out of memory trying to read your folders. This happens when you have too many subfolders in one place. To stop this happening, please consider reorganizing your #RLV so that no individual folder has too many subfolders inside it, and check for folders that begin with a ~ directly in your #RLV root folder that can be deleted -- normally these are temporary attachment folders and are no longer needed."); 
-                if(g_iVerbosityLevel >=1)
-                    llMessageLinked(LINK_SET, NOTIFY, "0"+scriptName+" has been reset. If the script stack heaped, please file a bug report on our github.", llGetOwner());
-            }
-        }
-        
+            iModified+=antiCrash(llGetInventoryName(INVENTORY_SCRIPT, i));
+        }        
         if(iModified) llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "ALL","");
-        
-        if(!g_iLoading && g_iWaitMenu){
-            g_iWaitMenu=FALSE;
-            SettingsMenu(0,g_kMenuUser,g_iLastAuth);
-        }
-        
         
         // proceed
         i=0;
@@ -282,157 +268,19 @@ default
         
         if(iNum>=CMD_OWNER && iNum <= CMD_EVERYONE){
             if(sStr == "fix"){
-                g_iExpectAlive=1;
-                llResetTime();
-                g_iPasses=0;
-                g_lAlive=[];
-                g_iLoading=FALSE;
-                g_lSettings=[];
-                
                 llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "ALL", "");
-            }
-            if(llToLower(sStr)=="settings edit"){
-                g_lSettings=[];
-                g_iLoading=TRUE;
-                g_iWaitMenu=TRUE;
-                g_kMenuUser=kID;
-                g_iLastAuth=iNum;
-                llResetTime();
-                llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "ALL","");
-                llSetTimerEvent(1);
             }
         } else if(iNum == TIMEOUT_REGISTER){
             g_lTimers += [(string)kID, llGetUnixTime(), (integer)sStr];
             llResetTime();
             llSetTimerEvent(1);
-        } else if(iNum == DIALOG_RESPONSE){
-            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            if(iMenuIndex!=-1){
-                string sMenu = llList2String(g_lMenuIDs, iMenuIndex+1);
-                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
-                list lMenuParams = llParseString2List(sStr, ["|"],[]);
-                key kAv = llList2Key(lMenuParams,0);
-                string sMsg = llList2String(lMenuParams,1);
-                integer iAuth = llList2Integer(lMenuParams,3);
-                integer iRemenu=FALSE;
-                
-                if(sMenu == "Menu~Main"){
-                    if(sMsg == UPMENU){
-                        iRemenu=FALSE;
-                        llMessageLinked(LINK_SET, iAuth, "menu Settings", kAv);
-                    }
-                } else if(sMenu == "settings~edit~0"){
-                    if(sMsg == UPMENU){
-                        llMessageLinked(LINK_SET, iAuth, "menu Settings", kAv);
-                        return;
-                    } else if(sMsg == "+ NEW"){
-                        SettingsMenu(8, kAv, iAuth);
-                        return;
-                    }
-                    if(sMsg == "intern" || sMsg == "auth"){
-                        llMessageLinked(LINK_SET, NOTIFY, "0Editing of the "+sMsg+" token is prohibited by the security policy", kAv);
-                        SettingsMenu(0, kAv, iAuth);
-                    } else {
-                        g_sTokenView=sMsg;
-                        SettingsMenu(1, kAv,iAuth);
-                    }
-                } else if(sMenu == "settings~edit~1"){
-                    if(sMsg==UPMENU){
-                        SettingsMenu(0,kAv,iAuth);
-                        return;
-                    }else if(sMsg == "+ NEW"){
-                        SettingsMenu(9, kAv, iAuth);
-                        return;
-                    }
-                    
-                    g_sVariableView=sMsg;
-                    SettingsMenu(2, kAv,iAuth);
-                    
-                } else if(sMenu == "settings~edit~2"){
-                    if(sMsg == UPMENU){
-                        SettingsMenu(1,kAv,iAuth);
-                        return;
-                    } else if(sMsg == "DELETE"){
-                        integer iPosx = llListFindList(g_lSettings,[g_sTokenView,g_sVariableView]);
-                        if(iPosx==-1){
-                            SettingsMenu(2,kAv,iAuth);
-                            return;
-                        }
-                        llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sTokenView+"_"+g_sVariableView,"");
-                        llMessageLinked(LINK_SET, RLV_REFRESH,"","");
-                        llMessageLinked(LINK_SET, NOTIFY, "1"+g_sTokenView+"_"+g_sVariableView+" has been deleted from settings", kAv);
-                        g_iLoading=TRUE;
-                        g_lSettings=[];
-                        g_iWaitMenu=TRUE;
-                        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "ALL","");
-                        llSetTimerEvent(1);
-                        return;
-                    } else if(sMsg == "MODIFY"){
-                        SettingsMenu(3, kAv,iAuth);
-                    }
-                } else if(sMenu == "settings~edit~3"){
-                    if(sMsg == UPMENU){
-                        SettingsMenu(2,kAv,iAuth);
-                    } else {
-                        integer iPosx = llListFindList(g_lSettings, [g_sTokenView, g_sVariableView]);
-                        if(iPosx == -1)SettingsMenu(2,kAv,iAuth);
-                        else{
-                            g_lSettings = llListReplaceList(g_lSettings, [sMsg], iPosx+2,iPosx+2);
-                            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sTokenView+"_"+g_sVariableView+"="+sMsg,"");
-                            llMessageLinked(LINK_SET, NOTIFY, "1Settings modified: "+g_sTokenView+"_"+g_sVariableView+"="+sMsg,kAv);
-                            SettingsMenu(1,kAv,iAuth);
-                            return;
-                        }
-                    }
-                } else if(sMenu == "settings~edit~8"){
-                    g_sTokenView=sMsg;
-                    SettingsMenu(9, kAv,iAuth);
-                } else if(sMenu == "settings~edit~9"){
-                    g_sVariableView=sMsg;
-                    g_lSettings += [g_sTokenView,g_sVariableView,"not set"];
-                    
-                    SettingsMenu(3, kAv,iAuth);
-                }
-                        
-            }
-            
-        } else if (iNum == DIALOG_TIMEOUT) {
-            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
-        }else if(iNum == LM_SETTING_RESPONSE){
-            // Detect here the Settings
-            list lSettings = llParseString2List(sStr, ["_","="],[]);
-            string sToken = llList2String(lSettings,0);
-            string sVar = llList2String(lSettings,1);
-            string sVal = llList2String(lSettings, 2);
-            if(sToken == "global"){
-                if(sVar == "verbosity"){
-                    g_iVerbosityLevel = (integer)sVal;
-                }
-            }
-            
-            
-            if(sStr == "settings=sent"){
-                g_iLoading=FALSE;
-                return;
-            }
-            
-            if(g_iLoading && llListFindList(g_lSettings, [sToken, sVar, sVal]) == -1 )g_lSettings+=[sToken, sVar, sVal];
-            
-        } else if(iNum == 0){
-            if(sStr == "initialize"){
-                llMessageLinked(LINK_SET, TIMEOUT_READY, "","");
-            }
+
         }else if(iNum == -99999){
             if(sStr == "update_active")state inUpdate;
         } else if(iNum == ALIVE){
-            g_iExpectAlive=1;
-            llResetTime();
-            llSetTimerEvent(1);
-            if(llListFindList(g_lAlive,[sStr])==-1){
-                g_iPasses=0;
-                g_lAlive+=[sStr];
-            }
+            Startup(sStr);
+            llSleep(1);
+            llMessageLinked(LINK_SET, 0, "initialize", llGetKey());
         }
     }
 }
