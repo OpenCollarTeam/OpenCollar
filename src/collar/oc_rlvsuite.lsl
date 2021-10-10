@@ -1,21 +1,49 @@
-
 /*// This file is part of OpenCollar.
 //  Copyright (c) 2018 - 2019 Tashia Redrose, Silkie Sabra, lillith xue                            
 // Licensed under the GPLv2.  See LICENSE for full details. 
-
-
 medea (medea destiny)
-    June 2021       -       *Fix for issue #492 / issue #432, command to update camera settings (blur amount, maxcamera and mincamera)
-                            when numeric value changed via RLV/RLV settings/Camera used insufficent auth level and incorrect 
-                            bitmask values to alter restriction while active even though the setting was altered.
-                            *Fix for issue #586, Dazzle set wrong restriction (was setting camunlock instead of renderresolutiondivisor)
-                            *Added comments explaining the restrictions settings to make life easier for future
-                             contributors and people learning from reading OC scripts.
+    June 2021   -   Fix for issue #492 / issue #432, command to update camera settings (blur amount, maxcamera and mincamera)
+                    when numeric value changed via RLV/RLV settings/Camera used insufficent auth level and incorrect 
+                    bitmask values to alter restriction while active even though the setting was altered.
+                -   Fix for issue #586, Dazzle set wrong restriction (was setting camunlock instead of renderresolutiondivisor)
+                    Added comments explaining the restrictions settings to make life easier for future
+                -   contributors and people learning from reading OC scripts.
+    Sept 2021   -   Fixes to comments above
+                -   Corrected values for Rummage and Dress restrictions, added @emote=n to Talk restrictions #649
+                -   Restored SetDebug, SetEnv and Mouselook restrictions which had gone missing.
+                -   Added Camera settings & Muffle to restriction settings. Created shortcut to camera settings 
+                    from camera restrictions category, and support correct BACK button behavior so it returns 
+                    the user to whichever menu they arrived at that from #649
+                -   MENU REDESIGN. At time of writing this is still being discussed, but at this moment the 
+                    individual restrictions subcategory menus are placed below the presets, on the basis that 
+                    standard UI design principles call for detailed, multi-page functions to go lower in the 
+                    attention hierarchy that quick, single-click preset functions. Various buttons/terminologies
+                    have been changed to try to make the whole thing more user-friendly. Also "macro" terminology
+                    has been removed, and preset used only where necessary to differentiate. issues #649 & # 654
+                -   Added ListRestrictions() function which converts restriction integer pairs into human-readable
+                    lists of restrictions and given chat command "(prefix)restriction list". Also used by List Presets
+                    button, which lists what the preset restriction buttons actually do. #649
+                -   Given extensive explanatory text in menus. ListRestrictions() function is used to print out all
+                    restrictions the wearer is currently under, rather than requiring menu user to visit every 
+                    category menu to find out.  #649
+                -   "Daze" preset renamed to "Names/Map", "Dazzle" to "Blur", and "Rummage" to "Inventory" because
+                    older names were downright confusing.  #649
+                -   Changed some names in g_lRLVlist to be clearer #649
+                -   Changed auth for adding/removing presets to CMD_OWNER AND CMD_TRUSTED to match the auth 
+                    requirements of setting individual restrictions as short-term solution to issue #656. 
+                -   Added Restore function to Customize menu to restore presets to defaults, per issue #663
+                -   Rewritten dialog code to set individual restrictions, 'cos it was badly broken. Issue #664
+                    
+                
+                             
+                             
+                             
 */        
-string g_sScriptVersion = "8.0";
+string g_sScriptVersion = "8.2";
 
 string g_sParentMenu = "RLV";
-string g_sSubMenu = "Macros";
+string g_sSubMenu = "Restrictions";
+
 
 
 integer g_iJustRezzed=FALSE;
@@ -79,9 +107,13 @@ string Checkbox(integer iValue, string sLabel) {
 }
 
 
-// Default Macros will look like the old oc_rlvsuite Buttons
-list g_lMacros = ["Hear", 4, 0, "Talk" , 2, 0, "Touch", 0, 16384, "Stray", 29360128, 524288, "Rummage", 1342179328, 131168, "Dress", 0, 15, "IM", 384, 0, "Daze", 323584, 0, "Dazzle", 0, 33554432];
-integer g_lMaxMacros = 10;  // Maximum number of Macros allowed
+// Default presets will look like the old oc_rlvsuite Buttons
+list g_lMacros = ["Hear", 4, 0, "Talk" , 3, 0, "Touch", 0, 16384, "Stray", 29360128, 524288, "Inventory", 1342179328, 96, "Dress", 0, 30, "IM", 384, 0, "Names/Map", 323584, 0, "Blur", 0, 33554432];
+/*NOTE: When changing these values for defaults, they should also be changed in the restrictions~restore section of dialogue response in link_message event, where this variable is restored to default settings. This is hardcoded inthe dialog response to save storing defaults and current as separate permanent lists*/
+
+
+
+integer g_lMaxMacros = 9;  // Maximum number of presets allowed
 
 string g_sTmpMacroName = "";
 //string g_sTmpRestName = "";
@@ -96,80 +128,71 @@ list g_lCategory = ["Chat",
                     "Outfit"
                 ];
 
-list g_lUtilityMain = ["[Manage]","BACK"];
+//list g_lUtilityMain = ["LIST PRESETS","[ADVANCED]","[CUSTOMIZE]","BACK"];
 list g_lUtilityNone = ["BACK"];
 /*
  ****Understanding g_lRLVList and the restrictions mask****
-
 All RLV restrictions are stored as a pair of bitmasks, g_iRestrictions1 and g_iRestrictions 2. 
 If you look at g_lRLVList below, you will see this list forms a strided list in the format:
 Button name, Category Value, RLV Command
 The Category Value determines which subcategory of the restrictions menu the restriction will be listen in.
 0=chat, 1= show/hide, 2=teleport, 3=misc, 4=edit/mod, 5=Interact, 6=movement, 7=camera and 8=outfit
-
 Each restriction is given a binary value, which will be 2^index/3 -- divided by three because this is a list with a stride of 3, so each group of 3 values represents one restriction. The index used to provide the power value is listed
 in the comments beside each group of 3 entries below. For example the sendIM restriction has the number 8 next to it, and so the binary value of sendim is 2^8, or 256. 
-
-We can store 31 differenent restrictions in each of the two restrictions integers. Thus g_iRestrictions1 is the combined bitmask of all restrictions from emote (0) to rez (30). Restrictions above this value are stored in g_iRestrictions2,  starting from 2^1. Thus the index is no longer 2^index/3, but 2^index/3-30. For example a list index of 93 (addattach) gives us 93/3-30 =1. 
-
-Where there is a single number in the comment beside the restriction line in g_lRLVList (i.e. See IM for the recim restriction we have 25) , the power value is that number and this will be the bitmask value in g_iRestrictions1. Where there are two numbers, (i.e fly restriction, 46 and 16) the second number is the power value, and will be stored in g_iRestrictions2.
-
+We can store 31 different restrictions in each of the two restrictions integers. Thus g_iRestrictions1 is the combined bitmask of all restrictions from emote (0) to rez (30). Restrictions above this value are stored in g_iRestrictions2,  starting from 2^0 (1). Thus the index is no longer 2^index/3, but 2^index/3-31. For example a list index of 93 (addattach) gives us 93/3-31 =0. 
+The number in the comment beside the restriction line in g_lRLVList (i.e. See IM for the recim restriction we have 25 26) gives the index/3 value, and the bit that's used to store this. For calculating the integer value that represents a mask, you'd do (integer)llPow(2,bit-1); i.e. for bit 1 we get 2^0=1, for bit 2 we get 2^1=2 and so on.
 Putting it all together: 
-
 Imagine we have the restrictions sendIM, See IM, Start IM and Notecard in place.
-The power values for these are:
-Send IM  = 7
-See IM   = 8
-Start IM = 9
-Notecard = 35 5
-
+The bit values for these are:
+Send IM  = 8
+See IM   = 9
+Start IM = 10
+Notecard =  5
 Here we can see that g_iRestrictions1 will have bits 7,8 and 9 set and g_iRestrictions2 will have bit 5 set.
 We can easily calculate these values:
 g_iRestrictions1= 2^7 + 2^8 + 2^9 = 128+256+512 = 896
-g_iRestrictions2= 2^5 = 32
-
+g_iRestrictions2= 2^4 = 16
 We can test if a particular restiction is set with an AND conditional.
 For example, to check if whisper restriction (Power value 4) we would do:
 if(g_iRestrictions1 & llPow(2,4))
-
 We can set a bit simply by adding the value of the power if not set or subtracting the value if set, or we can toggle the bit by XORing the integer with the bitmask value. NOTE that LSL uses ^ for XOR, not for powers. So 
 g_iRestrictions1=g_iRestrictions1^llPow(2,5) will toggle the chatnormal restriction.
 */
 integer g_iRestrictions1 = 0;
 integer g_iRestrictions2 = 0;
-list g_lRLVList = [   // ButtonText, CategoryIndex, RLVCMD
-    "EmoteTrunc"    , 0 , "emote"                               ,    // 0
-    "Send Chat"     , 0 , "sendchat"                            ,    // 1
-    "See Chat"      , 0 , "recvchat"                            ,    // 2
-    "See Emote"     , 0 , "recvemote"                           ,    // 3
-    "Whisper"       , 0 , "chatwhisper"                         ,    // 4
-    "Normal"        , 0 , "chatnormal"                          ,    // 5
-    "Shout"         , 0 , "chatshout"                           ,    // 6
-    "Send IM"       , 0 , "sendim"                              ,    // 7
-    "See IM"        , 0 , "recvim"                              ,    // 8
-    "Start IM"      , 0 , "startim"                             ,    // 9
-    "Gesture"       , 0 , "sendgesture"                         ,    // 10
-    "Inventory"     , 1 , "showinv"                             ,    // 11
-    "Minimap"       , 1 , "showminimap"                         ,    // 12
-    "Worldmap"      , 1 , "showworldmap"                        ,    // 13
-    "Location"      , 1 , "showloc"                             ,    // 14
-    "Names"         , 1 , "shownames"                           ,    // 15
-    "Nametags"      , 1 , "shownametags"                        ,    // 16
-    "Nearby"        , 1 , "shownearby"                          ,    // 17
-    "Text"          , 1 , "showhovertext"                       ,    // 18
-    "Text HUD"      , 1 , "showhovertexthud"                    ,    // 19
-    "Text World"    , 1 , "showhovertextworld"                  ,    // 20
-    "Text All"      , 1 , "showhovertextall"                    ,    // 21
-    "Landmark"      , 2 , "tplm"                                ,    // 22
-    "TP Location"   , 2 , "tploc"                               ,    // 23
-    "Local"         , 2 , "tplocal"                             ,    // 24
-    "Accept"        , 2 , "tplure"                              ,    // 25
-    "Offer"         , 2 , "tprequest"                           ,    // 26
-    "Permissions"   , 3 , "acceptpermission"                    ,    // 27
-    "Edit"          , 4 , "edit"                                ,    // 28
-    "Edit Object"   , 4 , "editobj"                             ,    // 29
-    "Rez"           , 4 , "rez"                                 ,    // 30  
-    "Add Attach"    , 8 , "addattach"                           ,    // 31  1
+list g_lRLVList = [   // ButtonText, CategoryIndex, RLVCMD          index | bit
+    "EmoteTrunc"    , 0 , "emote"                               ,    // 0 1 - g_iRestrictions1
+    "Send Chat"     , 0 , "sendchat"                            ,    // 1 2
+    "See Chat"      , 0 , "recvchat"                            ,    // 2 3
+    "See Emote"     , 0 , "recvemote"                           ,    // 3 4
+    "Whisper"       , 0 , "chatwhisper"                         ,    // 4 5
+    "Normal Chat"   , 0 , "chatnormal"                          ,    // 5 6
+    "Shout"         , 0 , "chatshout"                           ,    // 6 7
+    "Send IM"       , 0 , "sendim"                              ,    // 7 8
+    "See IM"        , 0 , "recvim"                              ,    // 8 9
+    "Start IM"      , 0 , "startim"                             ,    // 9 10
+    "Gesture"       , 0 , "sendgesture"                         ,    // 10 11
+    "Inventory"     , 1 , "showinv"                             ,    // 11 12
+    "Minimap"       , 1 , "showminimap"                         ,    // 12 13
+    "Worldmap"      , 1 , "showworldmap"                        ,    // 13 14
+    "Location"      , 1 , "showloc"                             ,    // 14 15
+    "Names"         , 1 , "shownames"                           ,    // 15 16
+    "Nametags"      , 1 , "shownametags"                        ,    // 16 17
+    "Nearby"        , 1 , "shownearby"                          ,    // 17 18
+    "Text"          , 1 , "showhovertext"                       ,    // 18 19
+    "Text HUD"      , 1 , "showhovertexthud"                    ,    // 19 20
+    "Text World"    , 1 , "showhovertextworld"                  ,    // 20 21
+    "Text All"      , 1 , "showhovertextall"                    ,    // 21 22
+    "Landmark"      , 2 , "tplm"                                ,    // 22 23
+    "TP Location"   , 2 , "tploc"                               ,    // 23 24
+    "TP Local"      , 2 , "tplocal"                             ,    // 24 25
+    "Accept TP"     , 2 , "tplure"                              ,    // 25 26
+    "Offer TP"      , 2 , "tprequest"                           ,    // 26 27
+    "Permissions"   , 3 , "acceptpermission"                    ,    // 27 28
+    "Edit"          , 4 , "edit"                                ,    // 28 29
+    "Edit Object"   , 4 , "editobj"                             ,    // 29 30
+    "Rez"           , 4 , "rez"                                 ,    // 30 31
+    "Add Attach"    , 8 , "addattach"                           ,    // 31  1 - g_iRestrictions2
     "Rem Attach"    , 8 , "remattach"                           ,    // 32  2
     "Add Cloth"     , 8 , "addoutfit"                           ,    // 33  3
     "Rem Cloth"     , 8 , "remoutfit"                           ,    // 34  4
@@ -181,9 +204,9 @@ list g_lRLVList = [   // ButtonText, CategoryIndex, RLVCMD
     "Attachment"    , 5 , "touchattach"                         ,    // 40  10
     "Own Attach"    , 5 , "touchattachself"                     ,    // 41  11
     "Other Attach"  , 5 , "touchattachother"                    ,    // 42  12
-    "HUD"           , 5 , "touchhud"                            ,    // 43  13
-    "World"         , 5 , "touchworld"                          ,    // 44  14
-    "All"           , 5 , "touchall"                            ,    // 45  15
+    "Touch HUD"     , 5 , "touchhud"                            ,    // 43  13
+    "Touch World"   , 5 , "touchworld"                          ,    // 44  14
+    "Touch All"     , 5 , "touchall"                            ,    // 45  15
     "Fly"           , 6 , "fly"                                 ,    // 46  16
     "Jump"          , 6 , "jump"                                ,    // 47  17
     "Stand Up"      , 6 , "unsit"                               ,    // 48  18
@@ -196,12 +219,14 @@ list g_lRLVList = [   // ButtonText, CategoryIndex, RLVCMD
     "Blur View"     , 7 , "setdebug_renderresolutiondivisor"    ,    // 55  25
     "MaxDistance"   , 7 , "setcam_avdistmax"                    ,    // 56  26
     "MinDistance"   , 7 , "setcam_avdistmin"                    ,    // 57  27
-    "Send Emote"    , 0 , "rediremote"                   
-//  "Idle"          , 3 , "allowidle"                           , 268435456 , 0         , CMD_EVERYONE ,   // 59  // Everything down here was ignored. There seem to be a Limit how
-//  "Set Debug"     , 3 , "setdebug"                            , 536870912 , 0         , CMD_OWNER    ,   // 60  // big a lsl-list can go
-//  "Environment"   , 3 , "setenv"                              , 1073741824, 0         , CMD_EVERYONE ,   // 61
-//  "Mouselook"     , 7 , "camdistmax:0"                        , 0         , 67108864  , CMD_EVERYONE     // 62
-];
+    "Send Emote"    , 0 , "rediremote"                          ,    // 58  28 
+    "Set Debug"     , 3 , "setdebug"                            ,    // 59  29
+    "Environment"   , 3 , "setenv"                              ,    // 60  30
+    "Mouselook"     , 7 , "camdistmax:0"                            // 61  31
+//    "Idle"          , 3 , "allowidle"                           ,  // Unofficial command Not supported in all viewers
+]; 
+
+   
 
 integer g_iBlurAmount = 5;
 float g_fMaxCamDist = 2.0;
@@ -222,6 +247,23 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
     else g_lMenuIDs += [kID, kMenuID, sName];
 }
 
+list listRestrictions(integer r1, integer r2)
+{
+    list out;
+    list out2;
+    integer i;
+    integer bit;
+    while(i<31)
+    {
+        bit=(integer)llPow(2,i);
+        if(r1&bit) out+=llList2String(g_lRLVList,i*3);
+        if(r2&bit) out2+=llList2String(g_lRLVList,i*3+90);
+        ++i;
+    }
+    if(out+out2==[]) return ["None"];
+    else return out+out2;
+}
+
 Menu(key kID, integer iAuth) {
     
     list lButtons =[];
@@ -230,25 +272,28 @@ Menu(key kID, integer iAuth) {
         // calculate checkbox
         integer b1 = llList2Integer(g_lMacros,i+1);
         integer b2 = llList2Integer(g_lMacros, i+2);
-        
         lButtons+=[Checkbox(bool((g_iRestrictions1 & b1 ) || ( g_iRestrictions2 & b2)), llList2String(g_lMacros,i))];
     }
     //for (i=0; i<llGetListLength(g_lMacros);i=i+3) lButtons += llList2String(g_lMacros,i);
-    
-    Dialog(kID, "\n[Macros]\n \nClick on a Macro to toggle it.", lButtons, g_lUtilityMain, 0, iAuth, "Restrictions~Main");
+    Dialog(kID, "\n[Restrictions]\nToggle restriction presets on/off. LIST PRESETS - shows what each button does. Access individual restrictions via the [ADVANCED] menu. [CUSTOMIZE] for restriction settings and customising the Restriction buttons in this menu.\nMore info: http://opencollar.cc/docs/RLV#restrictions\nCurrent Restrictions:"+llDumpList2String(listRestrictions(g_iRestrictions1,g_iRestrictions2),", ")+".", lButtons, ["LIST PRESETS","[ADVANCED]","[CUSTOMIZE]","BACK"], 0, iAuth, "Restrictions~Main");
 }
-
-MenuRestrictions(key kID, integer iAuth){
-    string sPrompt = "\n[Restriction Categories]\n";
-    sPrompt += "\nSelect a Category to set restrictions:";
+MenuManage(key kID, integer iAuth)
+{
+    string sPrompt="[Restriction settings]\nClick 'Save Preset' to save current restrictions as a preset button in the Restrictions menu. 'Del. Preset' to delete an existing button ("+(string)(llGetListLength(g_lMacros)/3)+"/"+(string)g_lMaxMacros+" used). 'Restore' will restore buttons to defaults.\n'Camera' to change camera/blur settings , and 'Muffle' to set speech muffling\nMore info: http://opencollar.cc/docs/RLV#settings\n.\n Current Restrictions:\n"+llDumpList2String(listRestrictions(g_iRestrictions1,g_iRestrictions2),", ");
+    Dialog(kID,sPrompt , ["Save Preset","Del. Preset","Restore","Camera","Muffle"], g_lUtilityNone, 0, iAuth, "Restrictions~Manage");
+}
+MenuDetailed(key kID, integer iAuth){
+    string sPrompt = "\n[Restriction Categories]\nSet anyRLV restrictions individually from these category menus.\n Current Restrictions:\n"+llDumpList2String(listRestrictions(g_iRestrictions1,g_iRestrictions2),", ");
     Dialog(kID, sPrompt, g_lCategory, ["[Clear All]"]+g_lUtilityNone, 0, iAuth, "Restrictions~Restrictions");
     
 }
 
 MenuCategory(key kID, integer iAuth, string sCategory)
 {
-    string sPrompt = "\n[Category "+sCategory+"]";
-    
+    string sPrompt = "\n[Category "+sCategory+"]/nToggle individual restrictions on or off.\n Current Restrictions:\n"+llDumpList2String(listRestrictions(g_iRestrictions1,g_iRestrictions2),", ");;
+    list lUtility=g_lUtilityNone;
+    if(sCategory=="Camera") lUtility=["Settings"]+lUtility;
+
     integer iCatIndex = llListFindList(g_lCategory,[sCategory]);
     
     list lMenu = [];
@@ -270,7 +315,7 @@ MenuCategory(key kID, integer iAuth, string sCategory)
             
         }
     }
-    Dialog(kID, sPrompt, lMenu, g_lUtilityNone, 0, iAuth, "Restrictions~Category");
+    Dialog(kID, sPrompt, lMenu,lUtility, 0, iAuth, "Restrictions~Category");
 }
 
 MenuDelete(key kID, integer iAuth)
@@ -282,9 +327,9 @@ MenuDelete(key kID, integer iAuth)
         {
             lButtons += llList2String(g_lMacros,i);
         }
-        Dialog(kID, "Select a Macro you want to delete:", lButtons, g_lUtilityNone, 0, iAuth, "Restrictions~Delete");
+        Dialog(kID, "Select a preset restrictions button you want to delete:", lButtons, g_lUtilityNone, 0, iAuth, "Restrictions~Delete");
     } else {
-        llMessageLinked(LINK_SET, NOTIFY, "0"+"%NOACCESS% to delete a macro", kID);
+        llMessageLinked(LINK_SET, NOTIFY, "0"+"%NOACCESS% to delete a restrictions preset", kID);
         llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kID);
     }
 }
@@ -362,8 +407,6 @@ ApplyAll(integer iMask1, integer iMask2, integer iBoot)
         
         
     }
-    
-    
     string sCommandList = llDumpList2String(lResult,",");
     lResult=[];
 
@@ -378,7 +421,7 @@ ApplyAll(integer iMask1, integer iMask2, integer iBoot)
 
 ApplyCommand(string sCommand, integer iAdd,key kID, integer iAuth)
 {
-    //llSay(0, "Apply CMD");
+   // llSay(0, "Apply CMD "+sCommand+"|"+(string)iAdd);
     integer iMenuIndex = llListFindList(g_lRLVList,[sCommand]);
     integer iActualIndex=iMenuIndex;
     integer iMenuIndex2;
@@ -389,7 +432,7 @@ ApplyCommand(string sCommand, integer iAdd,key kID, integer iAuth)
         iMenuIndex2=0;
         iMenuIndex = (integer)llPow(2, iMenuIndex/3);
     }
-    
+   // llSay(0, "Apply CMD "+sCommand+"|"+(string)iAdd+"|actual="+(string)iActualIndex+"|"+(string)iMenuIndex+","+(string)iMenuIndex2);
     if (iActualIndex > -1) {
         integer allow=FALSE;
         if(iAuth==CMD_OWNER||iAuth==CMD_TRUSTED)allow=TRUE;
@@ -419,13 +462,13 @@ ApplyCommand(string sCommand, integer iAdd,key kID, integer iAuth)
                 if(iMenuIndex==0){
                     if((g_iRestrictions2 & iMenuIndex2)){
                         // STOP
-                        //llSay(0, "BIT SET. REFUSE EXISTING RESTRICTION");
+                       // llSay(0, "BIT SET. REFUSE EXISTING RESTRICTION");
                         return;
                     }
                 } else if(iMenuIndex2 ==0){
                     if((g_iRestrictions1 & iMenuIndex)){
                         //STOP
-                        //llSay(0, "BIT SET. REFUSE EXISTING RESTRICTION");
+                       // llSay(0, "BIT SET2. REFUSE EXISTING RESTRICTION");
                         return;
                     }
                 }
@@ -443,36 +486,53 @@ ApplyCommand(string sCommand, integer iAdd,key kID, integer iAuth)
 
 UserCommand(integer iNum, string sStr, key kID) {
     if (iNum<CMD_OWNER || iNum>CMD_EVERYONE) return;
-    if (llSubStringIndex(sStr,"macro") && llSubStringIndex(sStr,"restriction") && llSubStringIndex(sStr,"restrictions") && llSubStringIndex(sStr,"sit") && sStr != "menu "+g_sSubMenu && sStr != "menu Restrictions") return;
-    if (llToLower(sStr)=="macro" || sStr == "menu "+g_sSubMenu) Menu(kID, iNum);
-    if(llToLower(sStr)=="restrictions" || sStr == "menu Restrictions")MenuRestrictions(kID, iNum);
+    
+    if (llToLower(sStr)=="restrictions" || llToLower(sStr) == "menu restrictions") Menu(kID, iNum);
+    else if(llToLower(sStr)=="advanced" || llToLower(sStr) == "menu [advanced]")MenuDetailed(kID, iNum);
+    else if(llToLower(sStr)=="customize" || llToLower(sStr) == "menu customize") MenuManage(kID,iNum);
+   else if(llToLower(sStr)=="list presets") {
+        integer x=llGetListLength(g_lMacros);
+        integer i;
+        string out="0List of preset buttons, and what individual restrictions they apply:";
+        while(i<x) {
+            out+="\n"+llList2String(g_lMacros,i)+": "+llDumpList2String(listRestrictions(llList2Integer(g_lMacros,i+1),llList2Integer(g_lMacros,i+2)),", ");
+            i=i+3;
+        }
+        llMessageLinked(LINK_SET,NOTIFY,out,kID);
+    }else if(llSubStringIndex(llToLower(sStr),"menu category")==0) {
+        sStr=llGetSubString(sStr,14,-1);
+        if(~llListFindList(g_lCategory,[sStr])) MenuCategory(kID,iNum,sStr);
+    }
+    if (llSubStringIndex(sStr,"preset") && llSubStringIndex(sStr,"restriction") && llSubStringIndex(sStr,"restrictions") && llSubStringIndex(sStr,"sit")) return;
     else { 
         string sChangetype = llList2String(llParseString2List(sStr, [" "], []),0);
         string sChangekey = llList2String(llParseString2List(sStr, [" "], []),1);
         string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),2);
-        
-        if (sChangetype == "macro") {
+        //llOwnerSay(sChangetype+" | "+sChangekey);
+        if (sChangetype == "preset") {
             integer iIndex = llListFindList(g_lMacros,[sChangevalue]);
             if (iIndex > -1) {
-                if (iNum == CMD_OWNER){
+                if (iNum == CMD_OWNER || iNum==CMD_TRUSTED){
                     if (sChangekey == "add") {
-                        llMessageLinked(LINK_SET, NOTIFY, "0"+"Macro Added: '"+sChangevalue+"'", kID);
+                        llMessageLinked(LINK_SET, NOTIFY, "0"+"Restriction preset added: '"+sChangevalue+"'", kID);
                         ApplyAll(g_iRestrictions1 | llList2Integer(g_lMacros,iIndex+1),g_iRestrictions2 | llList2Integer(g_lMacros,iIndex+2),FALSE);
-                        llOwnerSay("Macro '"+llList2String(g_lMacros,iIndex)+"' has been added!");
+                        llOwnerSay("Button '"+llList2String(g_lMacros,iIndex)+"' has been added!");
                     } else if (sChangekey == "replace") {
-                        llMessageLinked(LINK_SET, NOTIFY, "0"+"Replaced restrictions with Macro '"+sChangevalue+"'", kID);
+                        llMessageLinked(LINK_SET, NOTIFY, "0"+"Replaced current restrictions with preset '"+sChangevalue+"'", kID);
                         ApplyAll(llList2Integer(g_lMacros,iIndex+1),llList2Integer(g_lMacros,iIndex+2),FALSE);
-                        llOwnerSay("Macro '"+llList2String(g_lMacros,iIndex)+"' replaced your Restrictions!");
+                        llOwnerSay("Preset '"+llList2String(g_lMacros,iIndex)+"' replaced your Restrictions!");
                     } else if (sChangekey == "clear") {
-                        llMessageLinked(LINK_SET, NOTIFY, "0"+"Macro cleared '"+sChangevalue+"'", kID);
+                        llMessageLinked(LINK_SET, NOTIFY, "0"+"Restriction presets cleared '"+sChangevalue+"'", kID);
                         ApplyAll(g_iRestrictions1 ^ (g_iRestrictions1 & llList2Integer(g_lMacros,iIndex+1)),g_iRestrictions2 ^ (g_iRestrictions2 & llList2Integer(g_lMacros,iIndex+2)),FALSE);
-                        llOwnerSay("Macro '"+llList2String(g_lMacros,iIndex)+"' has been cleared!");
-                    }
-                } else llMessageLinked(LINK_SET, NOTIFY, "0"+"Macro not applied!", kID);
-            } else llInstantMessage(kID,"Macro '"+sChangevalue+"' does not exist!");
+                        llOwnerSay("Restriction preset '"+llList2String(g_lMacros,iIndex)+"' has been cleared!");
+                    } 
+                } else llMessageLinked(LINK_SET, NOTIFY, "0"+"Insufficient authority to set restrictions!", kID);
+            } else llInstantMessage(kID,"Restriction preset '"+sChangevalue+"' does not exist!");
         } else if (sChangetype == "restriction" || sChangetype == "rlv") {
             if (sChangekey == "add") ApplyCommand(sChangevalue,TRUE, kID, iNum);
             else if (sChangekey == "rem" && iNum != CMD_WEARER) ApplyCommand(sChangevalue,FALSE, kID, iNum);
+            else if (sChangekey == "list")
+                 llMessageLinked(LINK_SET,NOTIFY,"0Current Restrictions:\n"+llDumpList2String(listRestrictions(g_iRestrictions1,g_iRestrictions2),"\n"),kID);
         } else if (sChangetype == "restrictions") Menu(kID,iNum);
     }
 }
@@ -502,6 +562,7 @@ default
     }
     state_entry(){
         llMessageLinked(LINK_SET, ALIVE, llGetScriptName(),"");
+         //       llOwnerSay("New:"+(string)llGetUsedMemory());
     }
     link_message(integer iSender, integer iNum, string sStr, key kID){
         if(iNum == REBOOT){
@@ -523,6 +584,7 @@ state active
         if(llGetStartParameter()!=0)llResetScript();
         g_iRLV = FALSE;
         //llSetTimerEvent(1);
+
         
     }
     
@@ -544,13 +606,14 @@ state active
         
     link_message(integer iSender,integer iNum,string sStr,key kID){
        // llOwnerSay(llDumpList2String([iSender, iNum, llGetSPMaxMemory(), llGetFreeMemory()], " ^ "));
+        // llOwnerSay("inum="+(string)iNum+" | kID="+(string)kID+"| sStr="+sStr);
         if(iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID);
         else if(iNum == MENUNAME_REQUEST) {
             if(sStr == g_sParentMenu){
                 
                 
                 llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu+"|"+ g_sSubMenu,"");  // Register menu "Restrictions"
-                llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu+"|Restrictions", "");
+              //  llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu+"|Restrictions", "");
             }
         } else if(iNum == DIALOG_RESPONSE){
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
@@ -568,45 +631,84 @@ state active
                 
                 if(sMenu == "Restrictions~Main"){ 
                     if(sMsg == "BACK") llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
-                    else if (sMsg == "[Manage]") Dialog(kAv, "Select an Option:\n \nSave As: Save current restrictions into a Macro\nDelete: Delete a Macro", ["Save As","Delete"], g_lUtilityNone, 0, iAuth, "Restrictions~Manage");
-                    else {
+                    else if (sMsg == "[CUSTOMIZE]") MenuManage(kAv,iAuth);
+                    else if(sMsg == "[ADVANCED]") MenuDetailed(kAv,iAuth);
+                    else if(sMsg == "LIST PRESETS")  {
+                         UserCommand(iAuth,"list presets",kAv);
+                         Menu(kAv,iAuth);
+                    } else {
                         integer iChkbxState = CheckboxState(sMsg);
                         string sChkbxLbl = CheckboxText(sMsg);
                         
                         if(!iChkbxState){
                             // toggle the macro
-                            UserCommand(iAuth, "macro add "+sChkbxLbl, kAv);
+                            UserCommand(iAuth, "preset add "+sChkbxLbl, kAv);
                         } else {
-                            UserCommand(iAuth, "macro clear "+sChkbxLbl,kAv);
+                            UserCommand(iAuth, "preset clear "+sChkbxLbl,kAv);
                         }
                         Menu(kAv,iAuth);
                     }
                 } else if (sMenu == "Restrictions~Manage"){
-                    if (sMsg == "Save As") {
+                    if (sMsg == "Save Preset") {
                         if (iAuth == CMD_OWNER) {
-                            Dialog(kAv, "Enter the name of the new Macro:", [], [], 0, iAuth,"Restrictions~textbox");
+                            if(g_iRestrictions1+g_iRestrictions2==0)  {
+                                llRegionSayTo(kAv,0,"No restrictions are curently in place to save!");
+                                MenuManage(kAv,iAuth);
+                                return;
+                            }
+                            Dialog(kAv, "Save all current restrictions as a new preset button in the Restrictions menu. Current restrictions: "+llDumpList2String(listRestrictions(g_iRestrictions1,g_iRestrictions2),", ")+".\nEnter the name of the new button or click submit without typing to cancel:", [], [], 0, iAuth,"Restrictions~textbox");
                         } else {
                             llMessageLinked(LINK_SET, NOTIFY, "0"+"%NOACCESS%", kAv);
-                            llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
+                            MenuManage(kAv,iAuth);
                         }
-                    } else if (sMsg == "Delete") MenuDelete(kAv, iAuth);
-                      else if (sMsg == "BACK") Menu(kAv, iAuth);
+                    } else if (sMsg == "Del. Preset") MenuDelete(kAv, iAuth);
+                    else if( sMsg == "Camera") llMessageLinked(LINK_SET,iAuth,"menu managecamera",kAv);
+                    else if( sMsg =="Muffle") llMessageLinked(LINK_SET,iAuth,"menu managechat",kAv);
+                    else if (sMsg == "BACK") Menu(kAv, iAuth);
+                    else if(sMsg=="Restore") Dialog(kAv,"Restore restriction buttons to the default set. ARE YOU SURE?",["Yes","No!"],[],0,iAuth,"Restrictions~Restore");
+                } else if (sMenu == "Restrictions~Restore") {
+                    if(sMsg=="Yes")  {
+                        if(iAuth!=CMD_OWNER) llMessageLinked(LINK_SET,NOTIFY,"0Only an owner can restore buttons.",kAv);
+                        else  {
+                           g_lMacros = ["Hear", 4, 0, "Talk" , 3, 0, "Touch", 0, 16384, "Stray", 29360128, 524288, "Inventory", 1342179328, 96, "Dress", 0, 30, "IM", 384, 0, "Names/Map", 323584, 0, "Blur", 0, 33554432];
+                            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvsuite_macros=" + llDumpList2String(g_lMacros,"^"), "");
+                        }
+                    }MenuManage(kAv,iAuth);    
                 } else if (sMenu == "Restrictions~Restrictions"){
-                    if(sMsg == "BACK") llMessageLinked(LINK_SET,0,"menu "+g_sParentMenu,kAv);
+                    if(sMsg == "BACK") Menu(kAv,iAuth);
                     else if (sMsg == "[Clear All]") {
                         if (iAuth != CMD_WEARER && (iAuth == CMD_OWNER||iAuth==CMD_TRUSTED)) {
                             ApplyAll(0,0, FALSE);
-                            MenuRestrictions(kAv, iAuth);
+                            MenuDetailed(kAv, iAuth);
                         } else {
                             llMessageLinked(LINK_SET, NOTIFY, "0"+"%NOACCESS%", kAv);
-                            MenuRestrictions(kAv, iAuth);
+                            MenuDetailed(kAv, iAuth);
                         }
                     }
                     else MenuCategory(kAv, iAuth, sMsg);
                 
-                } else if (sMenu == "Restrictions~Category"){
-                    if(sMsg == "BACK") MenuRestrictions(kAv,iAuth);
-                    else {
+                } 
+                else if (sMenu == "Restrictions~Category")
+                {
+                    if(sMsg == "BACK") MenuDetailed(kAv,iAuth);
+                    else if(sMsg == "Settings") llMessageLinked(LINK_SET,iAuth,"menu managecamera2",kAv);
+                    else 
+                    {
+                        integer iVal=CheckboxState(sMsg);
+                        sMsg = llGetSubString( sMsg, llStringLength(llList2String(g_lCheckboxes,0))+1, -1);
+                        if(llListFindList(g_lRLVList,[sMsg])>-1) 
+                        {
+                            if(iVal) 
+                            {
+                                if (iAuth != CMD_WEARER) ApplyCommand(sMsg,FALSE,kAv, iAuth);
+                                else llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS%", kAv);
+                            }
+                            else ApplyCommand(sMsg,TRUE,kAv,iAuth);
+                        }
+                        MenuCategory(kAv, iAuth, llList2String(g_lCategory, llList2Integer(g_lRLVList,llListFindList(g_lRLVList,[sMsg])+1)));
+                    }
+                
+                        /*
                         sMsg = llGetSubString( sMsg, llStringLength(llList2String(g_lCheckboxes,0))+1, -1);
                         integer iMenuIndex1 = llListFindList(g_lRLVList,[sMsg]);
                         integer iMenuIndex2=0;
@@ -619,6 +721,7 @@ state active
                         
                         if (iMenuIndex1 > -1) {
                             if (g_iRestrictions1 & (integer)llPow(2,iMenuIndex1) || g_iRestrictions2 & (integer)llPow(2,iMenuIndex2)) {
+                               llOwnerSay(sMsg+" restriction found active:"+(string)iMenuIndex+"/"+(string)g_iRestrictions1+","+(string)iMenuIndex2+"/"+(string)g_iRestrictions2); 
                                 if (iAuth != CMD_WEARER) ApplyCommand(sMsg,FALSE,kAv, iAuth);
                                 else llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS%", kAv);
                             } else {
@@ -627,15 +730,19 @@ state active
                             MenuCategory(kAv, iAuth, llList2String(g_lCategory, llList2Integer(g_lRLVList,llListFindList(g_lRLVList,[sMsg])+1)));
                         }
                     }
-                
+                */
                 
                 } else if (sMenu == "Restrictions~textbox") {
-                
+                    if(sMsg=="")  {
+                        llRegionSayTo(kAv,0,"Cancelled save.");
+                        MenuManage(kAv,iAuth);
+                        return;
+                    }
                     if (llListFindList(g_lMacros,[sMsg]) > -1) {
                         g_sTmpMacroName = sMsg;
-                        Dialog(kAv, "A Macro named '"+sMsg+"' does already exist!\n \nDo you want to override it?", ["YES","NO"], g_lUtilityNone, 0, iAuth, "Restrictions~Override");
+                        Dialog(kAv, "A button named '"+sMsg+"' already exists!\n \nDo you want to override it?", ["YES","NO"], g_lUtilityNone, 0, iAuth, "Restrictions~Override");
                     } else {
-                        if (llGetListLength(g_lMacros)/3 >= g_lMaxMacros) Dialog(kAv, "You have already created the maximum amount of macros!", ["OK"], g_lUtilityNone, 0, iAuth, "Restrictions~MaxMacro");
+                        if (llGetListLength(g_lMacros)/3 >= g_lMaxMacros) Dialog(kAv, "Out of button space, please delete one first.", ["OK"], g_lUtilityNone, 0, iAuth, "Restrictions~MaxMacro");
                         else {
                             sMsg = llGetSubString(sMsg,0,11);
                             sMsg = llDumpList2String(llParseStringKeepNulls((sMsg = "") + sMsg, [" "], []), "_");
@@ -651,7 +758,7 @@ state active
                         g_lMacros = llListReplaceList(g_lMacros, [g_sTmpMacroName,g_iRestrictions1,g_iRestrictions2], iIndex, iIndex+2);
                         llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvsuite_macros=" + llDumpList2String(g_lMacros,"^"), "");
                         Menu(kAv,iAuth);
-                    } else Dialog(kAv, "Enter the name of the new Macro:", [], [], 0, iAuth,"Restrictions~textbox");
+                    } else Dialog(kAv, "Enter the name of the new button:", [], [], 0, iAuth,"Restrictions~textbox");
                 } else if (sMenu == "Restrictions~Delete"){
                     if (iAuth <= CMD_TRUSTED){
                         integer iIndex = llListFindList(g_lMacros,[sMsg]);
@@ -701,7 +808,7 @@ state active
             ApplyAll(iMask1,iMask2,TRUE);
         } else if (iNum == REBOOT && sStr == "reboot") {
             llResetScript();
-        } else if(iNum == LINK_CMD_DEBUG){
+      /*}else if(iNum == LINK_CMD_DEBUG){
             integer onlyver=0;
             if(sStr == "ver")onlyver=1;
             llInstantMessage(kID, llGetScriptName() +" SCRIPT VERSION: "+g_sScriptVersion);
@@ -709,6 +816,8 @@ state active
             
             llInstantMessage(kID, llGetScriptName() +" MEMORY USED: "+(string)llGetUsedMemory());
             llInstantMessage(kID, llGetScriptName() +" MEMORY FREE: "+(string)llGetFreeMemory());
+            //Commenting this out for general release 'cos memory is tight.
+            */
         } else if (iNum == LINK_CMD_RESTRICTIONS) {
             list lCMD = llParseString2List(sStr,["="],[]);
             if (llList2Integer(lCMD,2) > -1) ApplyCommand(llList2String(lCMD,0),llList2Integer(lCMD,1),kID,llList2Integer(lCMD,2));
