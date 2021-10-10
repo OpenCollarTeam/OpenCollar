@@ -184,16 +184,12 @@ default
         g_iExpectAlive=1;
         llSetTimerEvent(1);
         //llScriptProfiler(TRUE);
-      //  llMessageLinked(LINK_SET, REBOOT,"reboot", "");
-        //llSleep(5);
-        //llMessageLinked(LINK_SET, 0, "initialize", "");
         if(g_iVerbosityLevel>=1)
             llOwnerSay("Collar is preparing to startup, please be patient.");
     }
     
     
     on_rez(integer iRez){
-        //llSleep(10);
         llResetScript();
     }
     
@@ -424,8 +420,6 @@ default
             if(sStr == "update_active")state inUpdate;
         } else if(iNum == ALIVE){
             g_iExpectAlive=1;
-            //llResetTime();
-            //llSetTimerEvent(1);
             if(llListFindList(g_lAlive,[sStr])==-1){
                 g_iPasses=0;
                 g_lAlive+=[sStr];

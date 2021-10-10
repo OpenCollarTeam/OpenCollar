@@ -46,11 +46,6 @@ integer g_iVerbosityLevel=1;
 
 integer g_iNotifyInfo=FALSE;
 
-/*string MajorMinor(){
-    list lTmp = llParseString2List(COLLAR_VERSION,["."],[]);
-    return llList2String(lTmp,0)+"."+llList2String(lTmp,1);
-}*/
-
 string g_sSafeword="RED";
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
@@ -390,16 +385,7 @@ Compare(string V1, string V2){
 }
 
 key g_kUpdateCheck = NULL_KEY;
-/*DoCheckUpdate(){
-    g_kUpdateCheck = llHTTPRequest("https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/web/version.txt",[],"");
-}*/
-
 key g_kCheckDev;
-/*
-DoCheckDevUpdate()
-{
-    g_kCheckDev = llHTTPRequest("https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/web/dev_version.txt",[],"");
-}*/
 
 ///The setor method is derived from a similar PHP proposed function, though it was denied,
 ///https://wiki.php.net/rfc/ifsetor
