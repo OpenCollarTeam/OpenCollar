@@ -321,18 +321,6 @@ state active
         NukeOtherText();
         //llOwnerSay((string)llGetUsedMemory());
     }
-/*    timer(){
-        // calculate offset
-        if(g_iShow){
-            string offsets = "";
-            integer i=0;
-            for(i=0;i<g_iOffset;i++){
-                offsets+=" \n";
-            }
-            llSetLinkPrimitiveParams(g_iTextPrim, [PRIM_TEXT, g_sTitle+offsets, g_vColor, 1]);
-        }else llSetLinkPrimitiveParams(g_iTextPrim, [PRIM_TEXT, "", ZERO_VECTOR, 0]);
-        llSetTimerEvent(0);
-    }*/
 
     changed(integer iChange){
         if(iChange&CHANGED_LINK){
