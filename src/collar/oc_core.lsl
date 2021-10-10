@@ -1,4 +1,3 @@
-
 /*
 This file is a part of OpenCollar.
 Copyright ©2021
@@ -8,19 +7,24 @@ Aria (Tashia Redrose)
       * This combines oc_com, oc_auth, and oc_sys
     * July 2020     -       Maintenance fixes, feature implementations
 et al.
-
 Medea (Medea Destiny)
-    *June 2020      -      *Fix issue #562, #381, #495 allow owners to permit wearers to set trusted/block.
-                            -   added Wearer Trust option to Access Menu so that owners may allow or forbid
-                                wearer from adding/removing to trusted and block lists
-                            -   Moved Limit Range to Settings menu to make room in Access menu for above,
-                                as it seems logical to have this as a global setting. 
-                            *Added explanatory text to settings menu prompt and access prompt,
-                            *Added safeword to help/about prompt. 
-                            *Fix issue #566, clear @setgroup when group unchecked properly.
-                            *Extention to above, Disallow setting group access when no group active.  
-                            *Fix issue #580 Limited printing settings to owner and wearer
-                            *#579 Added 'Listen 0' button to Settings menu that allows toggling channel 0 command listener on and off.  
+    *June 2020  -  *Fix issue #562, #381, #495 allow owners to permit wearers to set trusted/block.
+                -   added Wearer Trust option to Access Menu so that owners may allow or forbid
+                    wearer from adding/removing to trusted and block lists
+                -   Moved Limit Range to Settings menu to make room in Access menu for above,
+                    as it seems logical to have this as a global setting. 
+                -   Added explanatory text to settings menu prompt and access prompt,
+                -   Added safeword to help/about prompt. 
+                -   Fix issue #566, clear @setgroup when group unchecked properly.
+                -   Extention to above, Disallow setting group access when no group active.  
+                -   Fix issue #580 Limited printing settings to owner and wearer
+                -   #579 Added 'Listen 0' button to Settings menu that allows toggling channel 0
+                    command listener on and off.
+    Sept 2021   -   Added sleep before notify for device name chage, issue #672 
+                -   Added confirmation messages when group or public access is toggled and fixed a typo
+                -   Efficiency pass, inlined majorminor(), docheckupdate() and docheckdevupdate().
+                    Removed g_lTestReports, left over from alpha.a
+                  
   
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
@@ -30,7 +34,7 @@ integer NOTIFY_OWNERS=1003;
 
 //string g_sParentMenu = "";
 string g_sSubMenu = "Main";
-string COLLAR_VERSION = "8.1.0000"; // Provide enough room
+string COLLAR_VERSION = "8.2.0000"; // Provide enough room
 // LEGEND: Major.Minor.Build RC Beta Alpha
 integer UPDATE_AVAILABLE=FALSE;
 string NEW_VERSION = "";
@@ -42,10 +46,10 @@ integer g_iVerbosityLevel=1;
 
 integer g_iNotifyInfo=FALSE;
 
-string MajorMinor(){
+/*string MajorMinor(){
     list lTmp = llParseString2List(COLLAR_VERSION,["."],[]);
     return llList2String(lTmp,0)+"."+llList2String(lTmp,1);
-}
+}*/
 
 string g_sSafeword="RED";
 //MESSAGE MAP
@@ -239,7 +243,8 @@ UserCommand(integer iNum, string sStr, key kID) {
                 g_iUpdateAuth = iNum;
                 llListenRemove(g_iUpdateListener);
                 g_iUpdateListener = llListen(g_iUpdateChan, "", "", "");
-                llWhisper(g_iUpdateChan, "UPDATE|"+MajorMinor());
+                list lTmp = llParseString2List(COLLAR_VERSION,["."],[]);
+                llWhisper(g_iUpdateChan, "UPDATE|"+llList2String(lTmp,0)+"."+llList2String(lTmp,1));
                 g_iWaitUpdate = TRUE;
                 llSetTimerEvent(5);
             } else llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to update the collar", kID);
@@ -314,6 +319,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                     return;
                 }
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_devicename="+sChangevalue,"");
+                llSleep(0.4); //To ensure the notify happens AFTER the new device name is in place.
                 llMessageLinked(LINK_SET, NOTIFY, "0The device name is now set to: %DEVICENAME%", kID);
             }
         } else if(llToLower(sChangetype) == "allowhide"){
@@ -379,21 +385,21 @@ Compare(string V1, string V2){
         UPDATE_AVAILABLE=FALSE;
         g_iAmNewer=TRUE;
 
-        llSetText("", <1,0,0>,1);
+       // llSetText("", <1,0,0>,1); //Not sure what this is for, but seems unnecessary? Commented out unless someone finds a reason for it.
     }
 }
 
 key g_kUpdateCheck = NULL_KEY;
-DoCheckUpdate(){
+/*DoCheckUpdate(){
     g_kUpdateCheck = llHTTPRequest("https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/web/version.txt",[],"");
-}
+}*/
 
 key g_kCheckDev;
-
+/*
 DoCheckDevUpdate()
 {
     g_kCheckDev = llHTTPRequest("https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/web/dev_version.txt",[],"");
-}
+}*/
 
 ///The setor method is derived from a similar PHP proposed function, though it was denied,
 ///https://wiki.php.net/rfc/ifsetor
@@ -406,10 +412,7 @@ string setor(integer iTest, string sTrue, string sFalse){
     else return sFalse;
 }
 
-list g_lTestReports = ["5556d037-3990-4204-a949-73e56cd3cb06", "1a828b4e-6345-4bb3-8d41-f93e6621ba25"]; // Aria and Roan
-// Any other team members please add yourself if you want feedback/bug reports. Or ask to be added if you do not have commit access
-// These IDs will only be in here during the testing period to allow for the experimental feedback/bug report system to do its thing
-// As most do not post to github, i am experimenting to see if a menu option in the collar of a Alpha/Beta might encourage feedback or bugs to be sent even if it has to be sent through a llInstantMessage
+
 
 integer g_iDoTriggerUpdate=FALSE;
 key g_kWelder = NULL_KEY;
@@ -565,14 +568,16 @@ state active
                             if(g_kGroup!=""){
                                 g_kGroup="";
                                 llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_group", "origin");
+                                llMessageLinked(LINK_SET,NOTIFY,"1Group Access has been turned off.",kAv); 
                             }else{
                                 key t_kGroup = llList2Key(llGetObjectDetails(llGetKey(), [OBJECT_GROUP]),0);
                                 if(t_kGroup==NULL_KEY){
-                                     llMessageLinked(LINK_SET, NOTIFY,"Group access can't be set while no group is active.",kAv);
+                                     llMessageLinked(LINK_SET, NOTIFY,"0Group access can't be set while no group is active.",kAv);
                                 }
                                 else{
                                     g_kGroup=t_kGroup;
                                      llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_group="+(string)g_kGroup, "origin");
+                                     llMessageLinked(LINK_SET,NOTIFY,"1Group Access has been turned on.",kAv);   
                                 }
                             }
                         } else {
@@ -580,15 +585,15 @@ state active
                         }
                     } else if(sMsg == Checkbox(g_iPublic, "Public")){
                         if(iAuth ==CMD_OWNER){
-
                             g_iPublic=1-g_iPublic;
-
-                            if(g_iPublic)llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_public=1", "origin");
-                            else llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_public","origin");
-
-                        } else {
-                            llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to changing public", kAv);
-                        }
+                            if(g_iPublic) {
+                                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_public=1", "origin");
+                                llMessageLinked(LINK_SET,NOTIFY,"1Public Access has been turned on.",kAv); 
+                            } else {
+                                llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_public","origin");
+                                llMessageLinked(LINK_SET,NOTIFY,"1Public Access has been turned off.",kAv); 
+                            } 
+                        } else llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to changing public", kAv);
                     } else if(sMsg == "Runaway"){
                         llMessageLinked(LINK_SET,0,"menu runaway", kAv);
                         iRespring=FALSE;
@@ -863,7 +868,7 @@ state active
                 llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, "");
                 llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Apps", "");
 
-                DoCheckUpdate();
+                g_kUpdateCheck = llHTTPRequest("https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/web/version.txt",[],"");
 
                 if(llGetAttached()){
 
@@ -889,7 +894,7 @@ state active
         if(kRequest == g_kUpdateCheck){
             if(iStatus==200){
                 Compare(COLLAR_VERSION, sBody);
-                if(g_iAmNewer)DoCheckDevUpdate();
+                if(g_iAmNewer)g_kCheckDev = llHTTPRequest("https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/web/dev_version.txt",[],"");
             }
             else
                 llOwnerSay("Could not check for an update. The server returned a unknown status code");
