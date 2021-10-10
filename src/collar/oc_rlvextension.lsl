@@ -284,7 +284,7 @@ integer g_iLastTrustedEx;
 
 integer LIST_TYPE_OWNER = 1;
 integer LIST_TYPE_TRUSTED = 2;
-UpdateList(list newlist, integer type) ;
+UpdateList(list newlist, integer type)
 {
     list oldlist=g_lOwners;
     integer mask=g_iOwnerEx;
