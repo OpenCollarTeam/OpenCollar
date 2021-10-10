@@ -9,6 +9,21 @@
 // giver script inside the updater to let it know what to send over.  When the
 // update is finished, this script does a little final cleanup and then deletes
 // itself.
+/*
+
+Medea (medea.destiny)
+    sept 2021   -   Reset time each time a setting is received to stop the script
+                    requesting settings repeatedly while they are still being
+                    sent. Changed timing so that updater shim sends stored settings
+                    to the new oc_settings script BEFORE starting the reboot process
+                    rather than trying to send settings while the collar was rebooting,
+                    which was prone to failing with faster boot fixes for 8.2. Changed
+                    timer to 2 seconds rather than 1 - timer event checks were assuming
+                    a 2 second timer, so it was double triggering.
+                            
+*/
+
+
 
 integer g_iStartParam;
 integer LOADPIN = -1904;
@@ -42,6 +57,7 @@ integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for sett
 integer LM_SETTING_RESPONSE = 2002;//the settings script will send responses on this channel
 integer LM_SETTING_DELETE = 2003;//delete token from store
 //integer LM_SETTING_EMPTY = 2004;//sent when a token has no value in the settings store
+
 
 string gp(integer perm)
 {
@@ -117,6 +133,7 @@ default {
         g_iStartParam = llGetStartParameter();
         if (g_iStartParam < 0 ){
             g_iIsUpdate = TRUE;
+          //  llOwnerSay("g_iIsUpdate=TRUE");
         }
         
         llOwnerSay("Update will start shortly. Checking for existing settings");
@@ -132,7 +149,7 @@ default {
             llSleep(5); // settle for a moment: oc_settings will not be ready right away to handle our request
             llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "ALL", "");
             llResetTime();
-            llSetTimerEvent(1); // Timeout the settings request in 30 seconds
+            llSetTimerEvent(2); // Timeout the settings request in 30 seconds
         }else{
             llOwnerSay("No existing settings found. Starting install");
             llWhisper(g_iStartParam,"reallyready");
@@ -226,19 +243,22 @@ default {
         else if (!llSubStringIndex(sMsg, "DONE")){
             llOwnerSay("Restoring settings");
             llSleep(15); // WAIT A FEW SECONDS TO ALLOW EVERYTHING TO SETTLE DOWN
-            llMessageLinked(LINK_SET, REBOOT, "reboot", "");
-            llSleep(15);
+           // llMessageLinked(LINK_SET, REBOOT, "reboot", ""); //moved to after settings send
+           // llSleep(15);
             //restore settings
             if (g_iIsUpdate) {
                 llMessageLinked(LINK_SET, LINK_UPDATE, "LINK_REQUEST","");
                 integer n;
                 integer iStop = llGetListLength(g_lSettings);
+              //  llOwnerSay("Restore "+(string)iStop+" settings.");
+              //  dumpsettings();
                 for (n = 0; n < iStop; n++) {
                     string sSetting = llList2String(g_lSettings, n);
                     //Look through deprecated settings to see if we should ignore any...
                     // Settings look like rlvmain_on=1, we want to deprecate the token ie. rlvmain_on <--store
                     list lTest = llParseString2List(sSetting,["="],[]);
                     string sToken = llList2String(lTest,0);
+                    llSleep(0.1); //pad sending linked messages to avoid message drops.
                     if (llListFindList(g_lDeprecatedSettingTokens,[sToken]) == -1) { //If it doesn't exist in our list
                         if (~llListFindList(["auth_block","auth_trust","auth_owner"],[sToken])) {
                             lTest = llParseString2List(llGetSubString(sSetting,llSubStringIndex(sSetting,"=")+1,-1),[","],[]);
@@ -246,21 +266,32 @@ default {
                             for (;i<llGetListLength(lTest);++i) {
                                 string sValue = llList2String(lTest,i);
                                 if ((key)sValue) {}
-                                else lTest = llDeleteSubList(lTest,i,i);
+                                else
+                                {
+                                 //   llOwnerSay("Auth setting failed test on "+sToken+": "+sValue);
+                                     lTest = llDeleteSubList(lTest,i,i);
+                                }
                             }
                             sSetting = sToken+"="+llDumpList2String(lTest,",");
                         }
+                        
                         llMessageLinked(LINK_SET, LM_SETTING_SAVE, sSetting, "origin");
+                      //  llOwnerSay("Sent setting: "+sSetting);
                     } else {
                         //Debug("SP - Deleting :"+ llList2String(sDeprecatedSplitSettingTokenForTest,0));
                          //remove it if it's somehow persistent still
                         llMessageLinked(LINK_SET, LM_SETTING_DELETE, sToken, "origin");
+                     //   llOwnerSay("Removed setting: "+sSetting);
                     }
                 }
+                llSleep(10);
+                llMessageLinked(LINK_SET, REBOOT, "reboot", "");
+                llSleep(15);
             }
             // remove the script pin
             llSetRemoteScriptAccessPin(0);
             // celebrate
+            
             llOwnerSay("Installation is finishing!");
             llSleep(5);
             integer iDuplicateRemove=0;
@@ -283,8 +314,8 @@ default {
                 llMessageLinked(LINK_SET,CMD_OWNER,"reboot --f",llGetOwner());
             }
             
-            llSleep(15); // oc_sys sleeps for 10 seconds
-            llOwnerSay("Installation Completed!");
+           // llSleep(15); // oc_sys sleeps for 10 seconds
+            llOwnerSay("Installation Completed! When your collar has finished booting (look for the 'startup complete' message) it will be ready to use.");
             // delete shim script
             llRemoveInventory(llGetScriptName());
         }
@@ -296,6 +327,7 @@ default {
         if (iNum == LM_SETTING_RESPONSE) {
             if (sStr != "settings=sent") {
                 if (llListFindList(g_lSettings, [sStr]) == -1) {
+                    llResetTime();
                     if(llListFindList(g_lSettings,["intern_weld=1"])==-1 && llSubStringIndex(sStr, "intern_weldby")!=-1)return;
                     else{
                         g_lSettings += [sStr];
