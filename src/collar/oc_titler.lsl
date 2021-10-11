@@ -166,30 +166,30 @@ UserCommand(integer iNum, string sStr, key kID) {
                 return;
             }
             g_sTitle=sTitle;
-            Save(4); 
+            Save(SAVE_TITLE);
         } else if(sChangetype == "titler"){
             if(sChangevalue == "color"){
                 if(!validvector(sParam)) ColorMenu(kID,iNum);
                 else {
                     g_vColor=text2col(sParam);
-                    Save(8);
+                    Save(SAVE_COLOR);
                 }
             } else if(sChangevalue == "show"){
                 g_iShow=TRUE;
-                Save(1);
+                Save(SAVE_SHOW_HIDE);
             } else if(sChangevalue == "hide"){
                 g_iShow=FALSE;
-                Save(1);
+                Save(SAVE_SHOW_HIDE);
             } else if(sChangevalue == "up"){
                 g_iOffset++;
-                Save(2);
+                Save(SAVE_OFFSET);
             } else if(sChangevalue == "down"){
                 g_iOffset--;
                 if(g_iOffset<0)g_iOffset=0;
-                Save(2);
+                Save(SAVE_OFFSET);
             }else if(sChangevalue == "plain"){
                 g_iNoB64 = ! g_iNoB64;
-                Save(4);
+                Save(SAVE_TITLE);
 
                 string ToggleMsg = "0Titler plain text mode is now set to ";
 
@@ -209,19 +209,25 @@ UserCommand(integer iNum, string sStr, key kID) {
     }
 }
 integer g_iShow=FALSE;
-Save(integer what){// 1= save showhide, 2-save offset 4=save title 8=save colour
-    if(what&1){
+
+integer  SAVE_SHOW_HIDE = 1;
+integer  SAVE_OFFSET = 2;
+integer  SAVE_TITLE = 4;
+integer  SAVE_COLOR = 8;
+
+Save(integer what){
+    if(what&SAVE_SHOW_HIDE){
         if(g_iShow)llMessageLinked(LINK_SET, LM_SETTING_SAVE, "titler_show=1","");
         else llMessageLinked(LINK_SET, LM_SETTING_DELETE, "titler_show","");
     }
-    if(what&2)llMessageLinked(LINK_SET, LM_SETTING_SAVE, "titler_offset="+(string)g_iOffset, "");
-    if(what&4){
+    if(what&SAVE_OFFSET)llMessageLinked(LINK_SET, LM_SETTING_SAVE, "titler_offset="+(string)g_iOffset, "");
+    if(what&SAVE_TITLE){
         if(!g_iNoB64)
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, "titler_title="+llStringToBase64(g_sTitle), "");
         else
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, "titler_title="+g_sTitle, "");
     }
-    if(what&8)llMessageLinked(LINK_SET, LM_SETTING_SAVE, "titler_color="+(string)g_vColor,"");
+    if(what&SAVE_COLOR)llMessageLinked(LINK_SET, LM_SETTING_SAVE, "titler_color="+(string)g_vColor,"");
 
 
     Titler();
@@ -315,18 +321,6 @@ state active
         NukeOtherText();
         //llOwnerSay((string)llGetUsedMemory());
     }
-/*    timer(){
-        // calculate offset
-        if(g_iShow){
-            string offsets = "";
-            integer i=0;
-            for(i=0;i<g_iOffset;i++){
-                offsets+=" \n";
-            }
-            llSetLinkPrimitiveParams(g_iTextPrim, [PRIM_TEXT, g_sTitle+offsets, g_vColor, 1]);
-        }else llSetLinkPrimitiveParams(g_iTextPrim, [PRIM_TEXT, "", ZERO_VECTOR, 0]);
-        llSetTimerEvent(0);
-    }*/
 
     changed(integer iChange){
         if(iChange&CHANGED_LINK){
@@ -368,14 +362,14 @@ state active
                     else if(sMsg == "UP"){
                         g_iOffset++;
 
-                        Save(2);
+                        Save(SAVE_OFFSET);
                     } else if(sMsg == "DOWN"){
                         g_iOffset--;
                         if(g_iOffset<0)g_iOffset=0;
-                        Save(2);
+                        Save(SAVE_OFFSET);
                     } else if(sMsg == Checkbox(g_iShow,"Show")){
                         g_iShow=!g_iShow;
-                        Save(1);
+                        Save(SAVE_SHOW_HIDE);
 
                     } else if(sMsg == "Set Title"){
                         iRespring=FALSE;
@@ -402,13 +396,13 @@ state active
 
                     if(iRespring)ColorMenu(kAv,iAuth);
 
-                    Save(8);
+                    Save(SAVE_COLOR);
                 } else if(sMenu == "Textbox~Title"){
                     g_sTitle = sMsg;
 
                     // pop menu back up
                     Menu(kAv, iAuth);
-                    Save(4);
+                    Save(SAVE_TITLE);
                 } else if(sMenu == "Textbox~Color"){
                     if(!validvector(sMsg)) {
                         llRegionSayTo(kAv,0,"Not a valid vector! Please try again.");
@@ -417,7 +411,7 @@ state active
                     }
                     g_vColor = text2col(sMsg);
                     ColorMenu(kAv,iAuth);
-                    Save(8);
+                    Save(SAVE_COLOR);
                 }
             }
         }else if (iNum == DIALOG_TIMEOUT) {

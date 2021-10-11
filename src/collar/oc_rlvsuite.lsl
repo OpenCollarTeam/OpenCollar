@@ -116,7 +116,6 @@ list g_lMacros = ["Hear", 4, 0, "Talk" , 3, 0, "Touch", 0, 16384, "Stray", 29360
 integer g_lMaxMacros = 9;  // Maximum number of presets allowed
 
 string g_sTmpMacroName = "";
-//string g_sTmpRestName = "";
 list g_lCategory = ["Chat",
                     "Show/Hide",
                     "Teleport",
@@ -128,7 +127,6 @@ list g_lCategory = ["Chat",
                     "Outfit"
                 ];
 
-//list g_lUtilityMain = ["LIST PRESETS","[ADVANCED]","[CUSTOMIZE]","BACK"];
 list g_lUtilityNone = ["BACK"];
 /*
  ****Understanding g_lRLVList and the restrictions mask****
@@ -247,7 +245,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
     else g_lMenuIDs += [kID, kMenuID, sName];
 }
 
-list listRestrictions(integer r1, integer r2)
+list ListRestrictions(integer r1, integer r2)
 {
     list out;
     list out2;
@@ -275,22 +273,22 @@ Menu(key kID, integer iAuth) {
         lButtons+=[Checkbox(bool((g_iRestrictions1 & b1 ) || ( g_iRestrictions2 & b2)), llList2String(g_lMacros,i))];
     }
     //for (i=0; i<llGetListLength(g_lMacros);i=i+3) lButtons += llList2String(g_lMacros,i);
-    Dialog(kID, "\n[Restrictions]\nToggle restriction presets on/off. LIST PRESETS - shows what each button does. Access individual restrictions via the [ADVANCED] menu. [CUSTOMIZE] for restriction settings and customising the Restriction buttons in this menu.\nMore info: http://opencollar.cc/docs/RLV#restrictions\nCurrent Restrictions:"+llDumpList2String(listRestrictions(g_iRestrictions1,g_iRestrictions2),", ")+".", lButtons, ["LIST PRESETS","[ADVANCED]","[CUSTOMIZE]","BACK"], 0, iAuth, "Restrictions~Main");
+    Dialog(kID, "\n[Restrictions]\nToggle restriction presets on/off. LIST PRESETS - shows what each button does. Access individual restrictions via the [ADVANCED] menu. [CUSTOMIZE] for restriction settings and customising the Restriction buttons in this menu.\nMore info: http://opencollar.cc/docs/RLV#restrictions\nCurrent Restrictions:"+llDumpList2String(ListRestrictions(g_iRestrictions1,g_iRestrictions2),", ")+".", lButtons, ["LIST PRESETS","[ADVANCED]","[CUSTOMIZE]","BACK"], 0, iAuth, "Restrictions~Main");
 }
 MenuManage(key kID, integer iAuth)
 {
-    string sPrompt="[Restriction settings]\nClick 'Save Preset' to save current restrictions as a preset button in the Restrictions menu. 'Del. Preset' to delete an existing button ("+(string)(llGetListLength(g_lMacros)/3)+"/"+(string)g_lMaxMacros+" used). 'Restore' will restore buttons to defaults.\n'Camera' to change camera/blur settings , and 'Muffle' to set speech muffling\nMore info: http://opencollar.cc/docs/RLV#settings\n.\n Current Restrictions:\n"+llDumpList2String(listRestrictions(g_iRestrictions1,g_iRestrictions2),", ");
+    string sPrompt="[Restriction settings]\nClick 'Save Preset' to save current restrictions as a preset button in the Restrictions menu. 'Del. Preset' to delete an existing button ("+(string)(llGetListLength(g_lMacros)/3)+"/"+(string)g_lMaxMacros+" used). 'Restore' will restore buttons to defaults.\n'Camera' to change camera/blur settings , and 'Muffle' to set speech muffling\nMore info: http://opencollar.cc/docs/RLV#settings\n.\n Current Restrictions:\n"+llDumpList2String(ListRestrictions(g_iRestrictions1,g_iRestrictions2),", ");
     Dialog(kID,sPrompt , ["Save Preset","Del. Preset","Restore","Camera","Muffle"], g_lUtilityNone, 0, iAuth, "Restrictions~Manage");
 }
 MenuDetailed(key kID, integer iAuth){
-    string sPrompt = "\n[Restriction Categories]\nSet anyRLV restrictions individually from these category menus.\n Current Restrictions:\n"+llDumpList2String(listRestrictions(g_iRestrictions1,g_iRestrictions2),", ");
+    string sPrompt = "\n[Restriction Categories]\nSet anyRLV restrictions individually from these category menus.\n Current Restrictions:\n"+llDumpList2String(ListRestrictions(g_iRestrictions1,g_iRestrictions2),", ");
     Dialog(kID, sPrompt, g_lCategory, ["[Clear All]"]+g_lUtilityNone, 0, iAuth, "Restrictions~Restrictions");
     
 }
 
 MenuCategory(key kID, integer iAuth, string sCategory)
 {
-    string sPrompt = "\n[Category "+sCategory+"]/nToggle individual restrictions on or off.\n Current Restrictions:\n"+llDumpList2String(listRestrictions(g_iRestrictions1,g_iRestrictions2),", ");;
+    string sPrompt = "\n[Category "+sCategory+"]/nToggle individual restrictions on or off.\n Current Restrictions:\n"+llDumpList2String(ListRestrictions(g_iRestrictions1,g_iRestrictions2),", ");;
     list lUtility=g_lUtilityNone;
     if(sCategory=="Camera") lUtility=["Settings"]+lUtility;
 
@@ -495,7 +493,7 @@ UserCommand(integer iNum, string sStr, key kID) {
         integer i;
         string out="0List of preset buttons, and what individual restrictions they apply:";
         while(i<x) {
-            out+="\n"+llList2String(g_lMacros,i)+": "+llDumpList2String(listRestrictions(llList2Integer(g_lMacros,i+1),llList2Integer(g_lMacros,i+2)),", ");
+            out+="\n"+llList2String(g_lMacros,i)+": "+llDumpList2String(ListRestrictions(llList2Integer(g_lMacros,i+1),llList2Integer(g_lMacros,i+2)),", ");
             i=i+3;
         }
         llMessageLinked(LINK_SET,NOTIFY,out,kID);
@@ -532,7 +530,7 @@ UserCommand(integer iNum, string sStr, key kID) {
             if (sChangekey == "add") ApplyCommand(sChangevalue,TRUE, kID, iNum);
             else if (sChangekey == "rem" && iNum != CMD_WEARER) ApplyCommand(sChangevalue,FALSE, kID, iNum);
             else if (sChangekey == "list")
-                 llMessageLinked(LINK_SET,NOTIFY,"0Current Restrictions:\n"+llDumpList2String(listRestrictions(g_iRestrictions1,g_iRestrictions2),"\n"),kID);
+                 llMessageLinked(LINK_SET,NOTIFY,"0Current Restrictions:\n"+llDumpList2String(ListRestrictions(g_iRestrictions1,g_iRestrictions2),"\n"),kID);
         } else if (sChangetype == "restrictions") Menu(kID,iNum);
     }
 }
@@ -613,7 +611,6 @@ state active
                 
                 
                 llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu+"|"+ g_sSubMenu,"");  // Register menu "Restrictions"
-              //  llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu+"|Restrictions", "");
             }
         } else if(iNum == DIALOG_RESPONSE){
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
@@ -656,7 +653,7 @@ state active
                                 MenuManage(kAv,iAuth);
                                 return;
                             }
-                            Dialog(kAv, "Save all current restrictions as a new preset button in the Restrictions menu. Current restrictions: "+llDumpList2String(listRestrictions(g_iRestrictions1,g_iRestrictions2),", ")+".\nEnter the name of the new button or click submit without typing to cancel:", [], [], 0, iAuth,"Restrictions~textbox");
+                            Dialog(kAv, "Save all current restrictions as a new preset button in the Restrictions menu. Current restrictions: "+llDumpList2String(ListRestrictions(g_iRestrictions1,g_iRestrictions2),", ")+".\nEnter the name of the new button or click submit without typing to cancel:", [], [], 0, iAuth,"Restrictions~textbox");
                         } else {
                             llMessageLinked(LINK_SET, NOTIFY, "0"+"%NOACCESS%", kAv);
                             MenuManage(kAv,iAuth);
@@ -707,31 +704,6 @@ state active
                         }
                         MenuCategory(kAv, iAuth, llList2String(g_lCategory, llList2Integer(g_lRLVList,llListFindList(g_lRLVList,[sMsg])+1)));
                     }
-                
-                        /*
-                        sMsg = llGetSubString( sMsg, llStringLength(llList2String(g_lCheckboxes,0))+1, -1);
-                        integer iMenuIndex1 = llListFindList(g_lRLVList,[sMsg]);
-                        integer iMenuIndex2=0;
-                        if(iMenuIndex1/3 >=31){
-                            iMenuIndex2 = (iMenuIndex1/3)-30;
-                            iMenuIndex1=0;
-                        } else {
-                            iMenuIndex1 /= 3;
-                        }
-                        
-                        if (iMenuIndex1 > -1) {
-                            if (g_iRestrictions1 & (integer)llPow(2,iMenuIndex1) || g_iRestrictions2 & (integer)llPow(2,iMenuIndex2)) {
-                               llOwnerSay(sMsg+" restriction found active:"+(string)iMenuIndex+"/"+(string)g_iRestrictions1+","+(string)iMenuIndex2+"/"+(string)g_iRestrictions2); 
-                                if (iAuth != CMD_WEARER) ApplyCommand(sMsg,FALSE,kAv, iAuth);
-                                else llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS%", kAv);
-                            } else {
-                                ApplyCommand(sMsg,TRUE,kAv,iAuth);
-                            }
-                            MenuCategory(kAv, iAuth, llList2String(g_lCategory, llList2Integer(g_lRLVList,llListFindList(g_lRLVList,[sMsg])+1)));
-                        }
-                    }
-                */
-                
                 } else if (sMenu == "Restrictions~textbox") {
                     if(sMsg=="")  {
                         llRegionSayTo(kAv,0,"Cancelled save.");

@@ -133,7 +133,6 @@ default {
         g_iStartParam = llGetStartParameter();
         if (g_iStartParam < 0 ){
             g_iIsUpdate = TRUE;
-          //  llOwnerSay("g_iIsUpdate=TRUE");
         }
         
         llOwnerSay("Update will start shortly. Checking for existing settings");
@@ -243,15 +242,11 @@ default {
         else if (!llSubStringIndex(sMsg, "DONE")){
             llOwnerSay("Restoring settings");
             llSleep(15); // WAIT A FEW SECONDS TO ALLOW EVERYTHING TO SETTLE DOWN
-           // llMessageLinked(LINK_SET, REBOOT, "reboot", ""); //moved to after settings send
-           // llSleep(15);
             //restore settings
             if (g_iIsUpdate) {
                 llMessageLinked(LINK_SET, LINK_UPDATE, "LINK_REQUEST","");
                 integer n;
                 integer iStop = llGetListLength(g_lSettings);
-              //  llOwnerSay("Restore "+(string)iStop+" settings.");
-              //  dumpsettings();
                 for (n = 0; n < iStop; n++) {
                     string sSetting = llList2String(g_lSettings, n);
                     //Look through deprecated settings to see if we should ignore any...
@@ -268,7 +263,6 @@ default {
                                 if ((key)sValue) {}
                                 else
                                 {
-                                 //   llOwnerSay("Auth setting failed test on "+sToken+": "+sValue);
                                      lTest = llDeleteSubList(lTest,i,i);
                                 }
                             }
@@ -314,7 +308,6 @@ default {
                 llMessageLinked(LINK_SET,CMD_OWNER,"reboot --f",llGetOwner());
             }
             
-           // llSleep(15); // oc_sys sleeps for 10 seconds
             llOwnerSay("Installation Completed! When your collar has finished booting (look for the 'startup complete' message) it will be ready to use.");
             // delete shim script
             llRemoveInventory(llGetScriptName());
