@@ -36,7 +36,7 @@ string SettingsFor(string SelectToken){
 }
 
 // sends "ALIVE oc_setttings <global_var=val list>"
-sendALIVE(){
+SendALIVE(){
         g_iSettingsLoaded = TRUE;
         llSetTimerEvent(0);   
         llMessageLinked(LINK_SET, ALIVE, "oc_settings", SettingsFor("global")); 
@@ -564,7 +564,7 @@ default
             g_kSettingsCard = llGetInventoryKey(g_sSettings);
             g_kSettingsRead = llGetNotecardLine(g_sSettings, 0);
         }
-        else    sendALIVE();    // if there is no notecard, then no need to wait    
+        else    SendALIVE();    // if there is no notecard, then no need to wait    
     }
 
     changed(integer iChange){
@@ -585,7 +585,7 @@ default
                 g_iCurrentIndex=0;
                 llSetTimerEvent(2);
                 llMessageLinked(LINK_SET, NOTIFY, "0Settings notecard loaded successfully", g_kWearer);
-                sendALIVE();   
+                SendALIVE();   
             } else {
                 ProcessSettingLine(sData);
 
@@ -768,7 +768,7 @@ default
                 llSetTimerEvent(5);
             }
         } else if(iNum==REBOOT) {
-            if(g_iSettingsLoaded) sendALIVE(); // sent ALIVE on receiving REBOOT signal
+            if(g_iSettingsLoaded) SendALIVE(); // sent ALIVE on receiving REBOOT signal
         }
         //llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
             
