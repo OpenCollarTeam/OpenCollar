@@ -104,7 +104,7 @@ integer Alive(string scriptName){
     return FALSE;
 }
 
-integer antiCrash(string scriptName){
+integer AntiCrash(string scriptName){
     if(llGetScriptState(scriptName)==FALSE){
         llResetOtherScript(scriptName);
         llSleep(0.5);
@@ -122,7 +122,7 @@ integer antiCrash(string scriptName){
 Reboot(){        
     integer i = llGetListLength(g_lWaiting);
     while(i--)            
-        antiCrash(llList2String(g_lWaiting,i));                       
+        AntiCrash(llList2String(g_lWaiting,i));                       
         
     llMessageLinked(LINK_SET, REBOOT,"reboot", llGetScriptName());
     llSetTimerEvent(15);  
@@ -237,7 +237,7 @@ state running
         integer end = llGetInventoryNumber(INVENTORY_SCRIPT);
         integer iModified=FALSE;
         for(i=0;i<end;i++){
-            iModified+=antiCrash(llGetInventoryName(INVENTORY_SCRIPT, i));
+            iModified+=AntiCrash(llGetInventoryName(INVENTORY_SCRIPT, i));
         }        
         if(iModified) llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "ALL","");
         
