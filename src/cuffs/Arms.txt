@@ -3,112 +3,91 @@
 #
 
 PoseName:Belt Collar
-PoseAnim:[LX] Belt_Collar
-PoseChains:bluac=bbelt~bruac=bbelt~illac=lbelt~irlac=rbelt~bbelt=bcollar
-PoseRestrictions:touchall=n,fly=n
-PoseAge:5
-PoseGravity:0
-
-PoseName:Belt
-PoseAnim:cuff-belt2
-PoseChains:illac=lbelt~irlac=rbelt~iluac=bbelt~iruac=bbelt~bluac=bruac
+PoseAnim:BTC P6
+PoseChains:bluac=bb~bruac=bb~illac=lb~irlac=rb~bb=bcollar
 PoseRestrictions:
 PoseAge:5
 PoseGravity:0
 
+PoseName:Belt
+PoseAnim:CB P6
+PoseChains:illac=lb~irlac=rb~iluac=bb~iruac=bb~bluac=bruac
+PoseRestrictions:touchall=n,fly=n
+PoseAge:5
+PoseGravity:0
+
 PoseName:Pinion
-PoseAnim:cuff-pinion
-PoseChains:bluac=bruac~bruac=bbelt~bbelt=bluac~fluac=fllac~fruac=frlac~bllac=lbelt~brlac=rbelt
+PoseAnim:CP P6
+PoseChains:bluac=bruac~bruac=bb~bb=bluac~fluac=fllac~fruac=frlac~bllac=lb~brlac=rb
 PoseRestrictions:
 PoseAge:5
 PoseGravity:0
 
 PoseName:Front 1
-PoseAnim:[LX]LockArmsFront
-PoseChains:frlac=fllac
-PoseRestrictions:
-PoseAge:5
-PoseGravity:0
-
-PoseName:Front 2
-PoseAnim:cuff-front
-PoseChains:frlac=fllac
-PoseRestrictions:
-PoseAge:5
-PoseGravity:0
-
-PoseName:Front 3
-PoseAnim:[LX] Front-Close
+PoseAnim:AFC P6
 PoseChains:bllac=brlac~illac=occ~irlac=occ~luac=llac~ruac=rlac
 PoseRestrictions:
 PoseAge:5
 PoseGravity:0
 
+PoseName:Front 2
+PoseAnim:AF P6
+PoseChains:frlac=fllac
+PoseRestrictions:
+PoseAge:5
+PoseGravity:0
+
 PoseName:Back 1
-PoseAnim:[LX]LockArmsBehind
+PoseAnim:AB P6
 PoseChains:illac=irlac~iruac=iluac
 PoseRestrictions:
 PoseAge:5
 PoseGravity:0
 
-PoseName:Back 2
-PoseAnim:cuff-back
-PoseChains:fllac=frlac~fruac=fluac
-PoseRestrictions:
-PoseAge:5
-PoseGravity:0
-
-PoseName:Back 3
-PoseAnim:cuff-back2
-PoseChains:bllac=brlac~fllac=frlac~bluac=bruac
-PoseRestrictions:
-PoseAge:5
-PoseGravity:0
-
-PoseName:Crossed Back 1
-PoseAnim:[LX]LockArmsBackCrossed
+PoseName:Cross Back 1
+PoseAnim:ACB P6
 PoseChains:iluac=frlac~iruac=fllac~bllac=blrac
 PoseRestrictions:
 PoseAge:5
 PoseGravity:0
 
-PoseName:Crossed Back 2
-PoseAnim:winter seale - u-shape2
-PoseChains:iluac=illac~iruac=irlac~bllac=bbelt~brlac=bbelt
+PoseName:Cross Back 2
+PoseAnim:CUS P6
+PoseChains:iluac=illac~iruac=irlac~bllac=bb~brlac=bb
 PoseRestrictions:
 PoseAge:5
 PoseGravity:0
 
 PoseName:Head 1
-PoseAnim:[LX]LockArmsBehindHead
+PoseAnim:ABH P6
 PoseChains:irlac=rcollar~illac=lcollar
 PoseRestrictions:
 PoseAge:5
 PoseGravity:0
 
 PoseName:Head 2
-PoseAnim:[LX]LockArmsBehindHead2
+PoseAnim:CAUB P6
 PoseChains:irlac=bcollar~illac=bcollar~luac=illac~ruac=irlac
 PoseRestrictions:
 PoseAge:5
 PoseGravity:0
 
 PoseName:Head 3
-PoseAnim:cuff-head
+PoseAnim:CHB P6
 PoseChains:fllac=lcollar~frlac=rcollar
 PoseRestrictions:
 PoseAge:5
 PoseGravity:0
 
 PoseName:Head 4
-PoseAnim:cuff-armsup
+PoseAnim:CAUB P6
 PoseChains:fluac=lcollar~fruac=rcollar~bllac=brlac
 PoseRestrictions:
 PoseAge:5
 PoseGravity:0
 
 PoseName:Pony
-PoseAnim:Cuff-PonyFront*
+PoseAnim:CPFB P6
 PoseChains:llac=luac~rlac=ruac
 PoseRestrictions:
 PoseAge:5

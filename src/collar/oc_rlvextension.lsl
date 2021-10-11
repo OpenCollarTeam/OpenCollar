@@ -282,13 +282,14 @@ MenuSetValue(key kID, integer iAuth, string sValueName) {
 integer g_iLastOwnerEx;
 integer g_iLastTrustedEx;
 
-integer LIST_TYPE_OWNER = 1;
-integer LIST_TYPE_TRUSTED = 2;
-UpdateList(list newlist, integer type)
+integer EX_TYPE_OWNER=1;
+integer EX_TYPE_TRUSTED=2;
+integer EX_TYPE_CUSTOM=4;
+UpdateList(list newlist, integer type) // type 1=owner, 2=trusted;
 {
     list oldlist=g_lOwners;
     integer mask=g_iOwnerEx;
-    if(type==LIST_TYPE_TRUSTED) {
+    if(type==EX_TYPE_TRUSTED) {
         oldlist=g_lTrusted;
         mask=g_iTrustedEx;
     }
@@ -303,8 +304,8 @@ UpdateList(list newlist, integer type)
         --i;
         if(llListFindList(oldlist,llList2List(newlist,i,i))==-1) SetUserExes(llList2Key(newlist,i),mask,0);
     }
-    if(type==LIST_TYPE_OWNER)g_lOwners=newlist;
-    else if(type==LIST_TYPE_TRUSTED) g_lTrusted=newlist;
+    if(type==EX_TYPE_OWNER)g_lOwners=newlist;
+    else if(type==EX_TYPE_TRUSTED) g_lTrusted=newlist;
 }
         
 SetUserExes(key id, integer mask, integer lastmask)
@@ -329,9 +330,9 @@ SetAllExes(integer clearall, integer type, integer send) //type 1=owners type 2=
     integer i;
     integer end;
     string sAgent;
-    if(type&1) //Owners
+    if(type&EX_TYPE_OWNER) //Owners
     {
-        if(send) Save(16);
+        if(send) Save(SAVE_OWNER);
         list lTemp=g_lOwners+g_lTempOwners;
         end=llGetListLength(lTemp);
         if(end==0) return;
@@ -345,9 +346,9 @@ SetAllExes(integer clearall, integer type, integer send) //type 1=owners type 2=
         if(clearall) g_iLastOwnerEx=0;
         else g_iLastOwnerEx=g_iOwnerEx;
     }
-    if(type&2) //trusted
+    if(type&EX_TYPE_TRUSTED) //trusted
     {
-        if(send) Save(32);
+        if(send) Save(SAVE_TRUSTED);
         end=llGetListLength(g_lTrusted);
         if(end==0) return;
         i=0;
@@ -360,9 +361,9 @@ SetAllExes(integer clearall, integer type, integer send) //type 1=owners type 2=
         if(clearall) g_iLastTrustedEx=0;
         else g_iLastTrustedEx=g_iTrustedEx;
     }
-    if(type&4)
+    if(type&EX_TYPE_CUSTOM)
     {
-        if(send) Save(64);
+        if(send) Save(SAVE_CUSTOM);
         end=llGetListLength(g_lCustomExceptions);
         i=1;
         while(i<end)
@@ -373,15 +374,25 @@ SetAllExes(integer clearall, integer type, integer send) //type 1=owners type 2=
         }
     }
 }
+
+integer SAVE_MINCAM=1;
+integer SAVE_MAXCAM=2;
+integer SAVE_BLURAMOUNT=4;
+integer SAVE_MUFFLE=8;
+integer SAVE_OWNER=16;
+integer SAVE_TRUSTED=32;
+integer SAVE_CUSTOM=64;
+integer SAVE_ALL=127;
+
 Save(integer iVal){ //iVal is bitmask of settings to save. 127 to save all.
     
-   if(iVal&1) llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvext_mincamdist="+(string)g_fMinCamDist, "");
-   if(iVal&2) llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvext_maxcamdist="+(string)g_fMaxCamDist, "");
-   if(iVal&4) llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvext_bluramount="+(string)g_iBlurAmount, "");
-   if(iVal&8) llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvext_muffle="+(string)g_bMuffle, "");
-   if(iVal&16) llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvext_owner="+(string)g_iOwnerEx, "");
-   if(iVal&32) llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvext_trusted="+(string)g_iTrustedEx, "");
-   if(iVal&64) llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvext_custom="+llDumpList2String(g_lCustomExceptions, "^"),"");
+   if(iVal&SAVE_MINCAM) llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvext_mincamdist="+(string)g_fMinCamDist, "");
+   if(iVal&SAVE_MAXCAM) llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvext_maxcamdist="+(string)g_fMaxCamDist, "");
+   if(iVal&SAVE_BLURAMOUNT) llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvext_bluramount="+(string)g_iBlurAmount, "");
+   if(iVal&SAVE_MUFFLE) llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvext_muffle="+(string)g_bMuffle, "");
+   if(iVal&SAVE_OWNER) llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvext_owner="+(string)g_iOwnerEx, "");
+   if(iVal&SAVE_TRUSTED) llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvext_trusted="+(string)g_iTrustedEx, "");
+   if(iVal&SAVE_CUSTOM) llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvext_custom="+llDumpList2String(g_lCustomExceptions, "^"),"");
 
 }
 
@@ -446,11 +457,11 @@ UserCommand(integer iNum, string sStr, key kID) {
                 if(sChangeArg1 == "owner"){
                     g_iOwnerEx = (integer)sChangeArg2;
                     llMessageLinked(LINK_SET, NOTIFY, "0Owner exceptions modified", kID);
-                    SetAllExes(FALSE,1,TRUE);
+                    SetAllExes(FALSE,EX_TYPE_OWNER,TRUE);
                 } else if(llGetSubString(sChangeArg1,0,4) == "trust"){
                     g_iTrustedEx = (integer)sChangeArg2;
                     llMessageLinked(LINK_SET, NOTIFY, "0Trusted exceptions modified", kID);
-                    SetAllExes(FALSE,2,TRUE);
+                    SetAllExes(FALSE,EX_TYPE_TRUSTED,TRUE);
                 } else {
                     // modify custom exception. arg1 = name, arg2 = uuid, arg3 = bitmask. remove old if exists, replace with new. including updating the exception uuid
                     string sChangeArg3 = llToLower(llList2String(llParseString2List(sStr,[" "],[]),4));
@@ -465,7 +476,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                     }
                     llMessageLinked(LINK_SET, NOTIFY, "0Custom exceptions modified  ("+sChangeArg1+"): "+sChangeArg2+" = "+sChangeArg3, kID);
                     g_lCustomExceptions += [sChangeArg1, sChangeArg2, (integer)sChangeArg3];
-                    SetAllExes(FALSE,4,TRUE);
+                    SetAllExes(FALSE,EX_TYPE_CUSTOM,TRUE);
                 }
             } else if(sChangekey == "listmasks"){
                 integer ix=0;
@@ -501,6 +512,7 @@ default
         llResetScript();
     }
     state_entry(){
+        llOwnerSay((string)llGetFreeMemory()+"/"+(string)llGetUsedMemory());
         llMessageLinked(LINK_SET, ALIVE, llGetScriptName(),"");
     }
     link_message(integer iSender, integer iNum, string sStr, key kID){
@@ -562,12 +574,12 @@ state active
                     else{
                         // remove it
                         integer iPos = llListFindList(g_lCustomExceptions, [sMsg]);
-                        SetAllExes(TRUE,4,FALSE);
+                        SetAllExes(TRUE,EX_TYPE_CUSTOM,FALSE);
                         llSleep(0.5);
                         
                         g_lCustomExceptions = llDeleteSubList(g_lCustomExceptions, iPos,iPos+2);
                         MenuCustomExceptionsSelect(kAv,iAuth);
-                        SetAllExes(FALSE,4,TRUE);
+                        SetAllExes(FALSE,EX_TYPE_CUSTOM,TRUE);
                     }
                 } else if(sMenu == "Exceptions~AddCustomName"){
                     g_sTmpExceptionName=sMsg;
@@ -577,7 +589,7 @@ state active
                     llMessageLinked(LINK_SET,NOTIFY,"0Adding exception..", kAv);
                     g_lCustomExceptions += [g_sTmpExceptionName,g_kTmpExceptionID,0];
                     
-                    Save(64);
+                    Save(SAVE_CUSTOM);
                     MenuSetExceptions(kAv, iAuth, "Custom");
                 } else if (sMenu == "Exceptions~Set") {
                     if (sMsg == UPMENU) MenuExceptions(kAv,iAuth);
@@ -587,15 +599,15 @@ state active
                         if (iIndex > -1) {
                             integer iTarget;
                             if (g_sExTarget == "Owner") {
-                                iTarget=1;
+                                iTarget=EX_TYPE_OWNER;
                                 if (g_iOwnerEx & llList2Integer(lRLVEx,iIndex+2)) g_iOwnerEx = g_iOwnerEx ^ llList2Integer(lRLVEx,iIndex+2);
                                 else g_iOwnerEx = g_iOwnerEx | llList2Integer(lRLVEx,iIndex+2);
                             } else if (g_sExTarget == "Trusted") {
-                                iTarget=2;
+                                iTarget=EX_TYPE_TRUSTED;
                                 if (g_iTrustedEx & llList2Integer(lRLVEx,iIndex+2)) g_iTrustedEx = g_iTrustedEx ^ llList2Integer(lRLVEx,iIndex+2);
                                 else g_iTrustedEx = g_iTrustedEx | llList2Integer(lRLVEx,iIndex+2);
                             } else if(g_sExTarget == "Custom"){
-                                iTarget=4;
+                                iTarget=EX_TYPE_CUSTOM;
                                 integer iPos=llListFindList(g_lCustomExceptions, [g_sTmpExceptionName])+2;
                                 integer iTmpBits = llList2Integer(g_lCustomExceptions, iPos);
                                 // do stuff
@@ -641,7 +653,7 @@ state active
                         if (sMsg == "Muffle") {
                             g_bMuffle = !g_bMuffle;
                             SetMuffle(g_bMuffle);
-                            Save(8);
+                            Save(SAVE_MUFFLE);
                         }
                         MenuChat(kAv,iAuth);
                     }
@@ -661,7 +673,7 @@ state active
                                 if (g_fMinCamDist < 0.1) g_fMinCamDist = 0.1;
                                 else if (g_fMinCamDist > g_fMaxCamDist) g_fMinCamDist = g_fMaxCamDist;
                                 llMessageLinked(LINK_SET,LINK_CMD_RESTDATA,llList2String(lMenu,1)+"="+(string)g_fMinCamDist,kAv);
-                                Save(1);
+                                Save(SAVE_MINCAM);
                             } else if (llList2String(lMenu,1) == "MaxCamDist") {
                                 g_fMaxCamDist+=(float)sMsg;/*
                                 if (sMsg == "+1.0") g_fMaxCamDist += 1.0;
@@ -673,14 +685,14 @@ state active
                                 if (g_fMaxCamDist < g_fMinCamDist) g_fMaxCamDist = g_fMinCamDist;
                                 else if (g_fMaxCamDist > 20.0) g_fMaxCamDist = 20.0;
                                 llMessageLinked(LINK_SET,LINK_CMD_RESTDATA,llList2String(lMenu,1)+"="+(string)g_fMaxCamDist,kAv);
-                                Save(2);
+                                Save(SAVE_MAXCAM);
                             } else if (llList2String(lMenu,1) == "BlurAmount") {
                                 if (sMsg == "+blur") g_iBlurAmount += 1;
                                 else if (sMsg == "-blur") g_iBlurAmount -= 1;
                                 if (g_iBlurAmount < 2) g_iBlurAmount = 2;
                                 else if (g_iBlurAmount > 30) g_iBlurAmount = 30;
                                 llMessageLinked(LINK_SET,LINK_CMD_RESTDATA,llList2String(lMenu,1)+"="+(string)g_iBlurAmount,kAv);
-                                Save(4);
+                                Save(SAVE_BLURAMOUNT);
                             }
                             MenuSetValue(kAv,iAuth,llList2String(lMenu,1));
                         }
@@ -724,7 +736,7 @@ state active
                 
                 if(g_iRLV==TRUE && g_lOwners!=[])
                 {
-                    SetAllExes(FALSE,1,FALSE);
+                    SetAllExes(FALSE,EX_TYPE_OWNER,FALSE);
                 }
             } else if (sToken == "rlvext_trusted") {
                 if(g_iTrustedEx==(integer)sValue)return;
@@ -732,7 +744,7 @@ state active
                 
                 if(g_iRLV==TRUE && g_lTrusted!=[])
                 {
-                    SetAllExes(FALSE,2,FALSE);
+                    SetAllExes(FALSE,EX_TYPE_TRUSTED,FALSE);
                    
                     } 
                 
@@ -740,9 +752,9 @@ state active
                 list lCustomExceptions = llParseString2List(sValue,["^"],[]);
                 if(samelist(g_lCustomExceptions,lCustomExceptions)) return;
                 if(g_iRLV){
-                    if(g_lCustomExceptions!=[]) SetAllExes(TRUE,4,FALSE);
+                    if(g_lCustomExceptions!=[]) SetAllExes(TRUE,EX_TYPE_CUSTOM,FALSE);
                     g_lCustomExceptions = lCustomExceptions;
-                    SetAllExes(FALSE,4,FALSE);
+                    SetAllExes(FALSE,EX_TYPE_CUSTOM,FALSE);
                     }
                     else g_lCustomExceptions = lCustomExceptions;
             }else if (llGetSubString(sToken, 0, i) == "auth_") {
@@ -750,10 +762,10 @@ state active
                     list lOwners = llParseString2List(sValue, [","], []);
                     if(samelist(lOwners,g_lOwners))return;
                     if (g_iRLV==TRUE && g_iOwnerEx!=0){
-                        if(g_lOwners!=[]) UpdateList(lOwners,LIST_TYPE_OWNER);
+                        if(g_lOwners!=[]) UpdateList(lOwners,EX_TYPE_OWNER);
                         else {
                             g_lOwners=lOwners;
-                            SetAllExes(FALSE,1,FALSE);
+                            SetAllExes(FALSE,EX_TYPE_OWNER,FALSE);
                         }
                     }
                     else { 
@@ -763,10 +775,10 @@ state active
                     list lTrusted = llParseString2List(sValue, [","], []);
                     if(samelist(lTrusted,g_lTrusted))return;
                     if (g_iRLV==TRUE && g_iTrustedEx!=0){
-                        if(g_lTrusted!=[])UpdateList(lTrusted,LIST_TYPE_TRUSTED);
+                        if(g_lTrusted!=[])UpdateList(lTrusted,EX_TYPE_TRUSTED);
                         else {
                             g_lTrusted=lTrusted;
-                            SetAllExes(FALSE,2,FALSE);
+                            SetAllExes(FALSE,EX_TYPE_TRUSTED,FALSE);
                         }
                     }
                     else {
@@ -776,13 +788,13 @@ state active
                     list lTempOwners = llParseString2List(sValue, [","], []);
                     if(samelist(g_lTempOwners,lTempOwners))return;
                     if (g_iRLV==TRUE &&g_iOwnerEx!=0){
-                        SetAllExes(TRUE,1,FALSE);
+                        SetAllExes(TRUE,EX_TYPE_OWNER,FALSE);
                         g_lTempOwners=lTempOwners;
-                        SetAllExes(FALSE,1,FALSE);
+                        SetAllExes(FALSE,EX_TYPE_OWNER,FALSE);
                         }
                     else g_lTempOwners=lTempOwners;
                 }
-            } else if (sToken == "settings" && sValue == "send") Save(127);
+            } else if (sToken == "settings" && sValue == "send") Save(SAVE_ALL);
             list lSettings = llParseString2List(sStr, ["_","="],[]);
             if(llList2String(lSettings,0)=="global"){
                 if(llList2String(lSettings,1)=="locked"){
@@ -798,24 +810,24 @@ state active
 
             if(sStr == "global_locked") g_iLocked=FALSE;
             else if (sStr == "auth_owner") {
-                SetAllExes(TRUE,1,FALSE);
+                SetAllExes(TRUE,EX_TYPE_OWNER,FALSE);
                 g_lOwners = []; 
             } else if (sStr == "auth_trust") {
-                SetAllExes(TRUE,2,FALSE);
+                SetAllExes(TRUE,EX_TYPE_TRUSTED,FALSE);
                 g_lTrusted = []; 
             } else if (sStr == "auth_tempowner") {
-                SetAllExes(TRUE,4,FALSE);
+                SetAllExes(TRUE,EX_TYPE_OWNER,FALSE);
                 g_lTempOwners = []; 
             }
         } else if(iNum == -99999){
             if(sStr == "update_active")llResetScript();
         }else if (iNum == RLV_OFF){
             //ApplyAllExceptions(TRUE,TRUE,7,TRUE);
-            SetAllExes(TRUE,7,FALSE);
+            SetAllExes(TRUE,EX_TYPE_OWNER|EX_TYPE_TRUSTED|EX_TYPE_CUSTOM,FALSE);
             g_iRLV = FALSE;
         } else if (iNum == RLV_REFRESH || iNum == RLV_ON) {
             g_iRLV = TRUE;
-            SetAllExes(FALSE,7,TRUE);
+            SetAllExes(FALSE,EX_TYPE_OWNER|EX_TYPE_TRUSTED|EX_TYPE_CUSTOM,TRUE);
             SetMuffle(g_bMuffle);
             llSleep(1);
             llMessageLinked(LINK_SET,LINK_CMD_RESTDATA,"MinCamDist="+(string)g_fMinCamDist,kID);
