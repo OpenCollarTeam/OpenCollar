@@ -243,7 +243,7 @@ MenuSetExceptions(key kID, integer iAuth, string sTarget){
     if(sTarget=="Owner") menutext+="OWNERS";
     else if(sTarget=="Trusted") menutext+="TRUSTED PEOPLE";
     else menutext+="'"+g_sTmpExceptionName+"'";
-    menutext+=" from being impacted by wearer's restrictions. Even if restricted, wearer can:\n *IM - talk in IMs with them.\n *RcvIM - Receive IMs from them.\n *RcvChat - Hear their public chat.\n *RcvEmote - See their public emotes\n *Lure - Receive TP offers from them.\n *StartIM - Start a new IM conversation with them.\n *Force TP - When OFF, wearer is automatically teleported on receiving a TP offer from them.";
+    menutext+=" from being impacted by wearer's restrictions. Even if restricted, wearer can:\n *IM - talk in IMs with them.\n *RcvIM - Receive IMs from them.\n *RcvChat - Hear their public chat.\n *RcvEmote - See their public emotes\n *Lure - Receive TP offers from them.\n *StartIM - Start a new IM conversation with them.\n *Force TP - When on, wearer is automatically teleported on receiving a TP offer from them.";
     
     Dialog(kID, menutext, lButtons, [UPMENU], 0, iAuth, "Exceptions~Set");
 }
