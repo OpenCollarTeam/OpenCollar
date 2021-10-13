@@ -39,7 +39,8 @@ Medea Destiny -
                     restrictions, remove the restriction, navigate back to UNSIT, unsit the collar
                     wearer, then navigate back to restrictions and reset it. This does that 
                     automatically for owners. 
-                -   Added explanatory text to exceptions and force sit menus                  
+                -   Added explanatory text to exceptions and force sit menus
+                -   Renamed Refuse TP to Force TP to reflect what the button actually does.                  
 
 */
 string g_sParentMenu = "RLV";
