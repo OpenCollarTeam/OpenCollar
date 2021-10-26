@@ -71,7 +71,7 @@ string Checkbox(integer iValue, string sLabel) {
 //list g_lCollars;
 string g_sAddon = "OpenCollar Cuffs";
 
-string g_sVersion = "2.0.001";
+string g_sVersion = "2.0.0";
 
 //integer CMD_ZERO            = 0;
 integer CMD_OWNER           = 500;
