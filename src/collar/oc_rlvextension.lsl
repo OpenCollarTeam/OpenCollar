@@ -648,7 +648,7 @@ state active
                     else if (sMsg == "Max Dist") MenuSetValue(kAv, iAuth, "MaxCamDist");
                     else if (sMsg == "Blur Amount") MenuSetValue(kAv, iAuth, "BlurAmount"); 
                 } else if (sMenu == "Settings~Chat") {
-                    if (sMsg == UPMENU) llMessageLinked(LINK_SET, iAuth, "menu manage", kAv);
+                    if (sMsg == UPMENU) llMessageLinked(LINK_SET, iAuth, "menu customize", kAv);
                     else {
                         sMsg = llGetSubString(sMsg,2,-1);
                         if (sMsg == "Muffle") {
