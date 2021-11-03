@@ -273,11 +273,11 @@ Menu(key kID, integer iAuth) {
         lButtons+=[Checkbox(bool((g_iRestrictions1 & b1 ) || ( g_iRestrictions2 & b2)), llList2String(g_lMacros,i))];
     }
     //for (i=0; i<llGetListLength(g_lMacros);i=i+3) lButtons += llList2String(g_lMacros,i);
-    Dialog(kID, "\n[Restrictions]\nToggle restriction presets on/off. LIST PRESETS - shows what each button does. Access individual restrictions via the [ADVANCED] menu. [CUSTOMIZE] for restriction settings and customising the Restriction buttons in this menu.\nMore info: http://opencollar.cc/docs/RLV#Restrictions\nCurrent Restrictions:"+llDumpList2String(ListRestrictions(g_iRestrictions1,g_iRestrictions2),", ")+".", lButtons, ["LIST PRESETS","[ADVANCED]","[CUSTOMIZE]","BACK"], 0, iAuth, "Restrictions~Main");
+    Dialog(kID, "\n[Restrictions]\nToggle restriction presets on/off. LIST PRESETS - shows what each button does. Access individual restrictions via the [ADVANCED] menu. [CUSTOMIZE] for restriction settings and customising the Restriction buttons in this menu.\nMore info: http://opencollar.cc/docs/RLV#restrictions\nCurrent Restrictions:"+llDumpList2String(ListRestrictions(g_iRestrictions1,g_iRestrictions2),", ")+".", lButtons, ["LIST PRESETS","[ADVANCED]","[CUSTOMIZE]","BACK"], 0, iAuth, "Restrictions~Main");
 }
 MenuManage(key kID, integer iAuth)
 {
-    string sPrompt="[Restriction settings]\nClick 'Save Preset' to save current restrictions as a preset button in the Restrictions menu. 'Del. Preset' to delete an existing button ("+(string)(llGetListLength(g_lMacros)/3)+"/"+(string)g_lMaxMacros+" used). 'Restore' will restore buttons to defaults.\n'Camera' to change camera/blur settings , and 'Muffle' to set speech muffling\nMore info: http://opencollar.cc/docs/RLV#Customize\n.\n Current Restrictions:\n"+llDumpList2String(ListRestrictions(g_iRestrictions1,g_iRestrictions2),", ");
+    string sPrompt="[Restriction settings]\nClick 'Save Preset' to save current restrictions as a preset button in the Restrictions menu. 'Del. Preset' to delete an existing button ("+(string)(llGetListLength(g_lMacros)/3)+"/"+(string)g_lMaxMacros+" used). 'Restore' will restore buttons to defaults.\n'Camera' to change camera/blur settings , and 'Muffle' to set speech muffling\nMore info: http://opencollar.cc/docs/RLV#customize\n.\n Current Restrictions:\n"+llDumpList2String(ListRestrictions(g_iRestrictions1,g_iRestrictions2),", ");
     Dialog(kID,sPrompt , ["Save Preset","Del. Preset","Restore","Camera","Muffle"], g_lUtilityNone, 0, iAuth, "Restrictions~Manage");
 }
 MenuDetailed(key kID, integer iAuth){
