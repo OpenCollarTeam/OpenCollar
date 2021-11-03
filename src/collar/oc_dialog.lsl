@@ -3,7 +3,16 @@
 // Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy,
 // Romka Swallowtail, Garvin Twine, and Tashia Redrose,  et al.
 // Licensed under the GPLv2.  See LICENSE for full details.
+/*
+Medea Destiny -
 
+    Sep 2021  - Optimised substitutions by shortcutting no match for % in string after %NOACCESS% and %WEARER%
+              - Replaced GetTruncatedString function with far more optimised function
+              - Restored dialog chatting over-long prompts in local, which seems to have got lost somewhere. Improved
+                version of function now works with prompts of any length and does not break up words.
+              - Changed prompt for button descriptions in local chat from "Please check..." to "See..." to trigger it less often
+              - Added warning text to prompt when prompt is trunctated, so menu prompt text will now show "(CONT. IN LOCAL CHAT)"
+*/
 integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
 //integer CMD_TRUSTED = 501;
@@ -70,14 +79,16 @@ integer g_iSensorTimeout;
 string SubstituteVars(string sMsg) {
         if (~llSubStringIndex(sMsg, "%NOACCESS"))
             sMsg = llDumpList2String(llParseStringKeepNulls(sMsg, ["%NOACCESS%"], []), "Access Denied");
+        if (~llSubStringIndex(sMsg, "%WEARERNAME%"))
+            sMsg = llDumpList2String(llParseStringKeepNulls((sMsg = "") + sMsg, ["%WEARERNAME%"], []), g_sWearerName);
+        if (llSubStringIndex(sMsg,"%")==-1) return sMsg; //Substitutions below are rare, this will save work most of the time.
         if (~llSubStringIndex(sMsg, "%PREFIX%"))
             sMsg = llDumpList2String(llParseStringKeepNulls((sMsg = "") + sMsg, ["%PREFIX%"], []), g_sPrefix);
         if (~llSubStringIndex(sMsg, "%CHANNEL%"))
             sMsg = llDumpList2String(llParseStringKeepNulls((sMsg = "") + sMsg, ["%CHANNEL%"], []), (string)g_iListenChan);
         if (~llSubStringIndex(sMsg, "%DEVICETYPE%"))
             sMsg = llDumpList2String(llParseStringKeepNulls((sMsg = "") + sMsg, ["%DEVICETYPE%"], []), g_sDeviceType);
-        if (~llSubStringIndex(sMsg, "%WEARERNAME%"))
-            sMsg = llDumpList2String(llParseStringKeepNulls((sMsg = "") + sMsg, ["%WEARERNAME%"], []), g_sWearerName);
+        
         if(~llSubStringIndex(sMsg, "%DEVICENAME%"))
             sMsg = llDumpList2String(llParseStringKeepNulls((sMsg="")+sMsg, ["%DEVICENAME%"],[]),g_sDeviceName);
 
@@ -258,16 +269,38 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
     if (iPromptlen + iNBPromptlen + iPagerPromptLen < 512) //we can fit it all in the dialog
         sThisPrompt = sPrompt + sNumberedButtons + sPagerPrompt ;
     else if (iPromptlen + iPagerPromptLen < 512) { //we can fit in the whole prompt and pager info, but not the buttons list
-        if (iPromptlen + iPagerPromptLen < 459) {
-            sThisPrompt = sPrompt + "\nPlease check nearby chat for button descriptions.\n" + sPagerPrompt;
+        if (iPromptlen + iPagerPromptLen < 468) {
+            sThisPrompt = sPrompt + "\nSee nearby chat for button descriptions.\n" + sPagerPrompt;
         } else
             sThisPrompt = sPrompt + sPagerPrompt;
         sThisChat = sNumberedButtons;
     } else {  //can't fit prompt and pager, so send truncated prompt, pager and chat full prompt and button list
-        sThisPrompt=TruncateString(sPrompt,510-iPagerPromptLen)+sPagerPrompt;
+        sThisPrompt=TruncateString(sPrompt,489-iPagerPromptLen)+"(CONT. IN LOCAL CHAT)"+sPagerPrompt;
         sThisChat = sPrompt+sNumberedButtons;
     }
     //Debug("chat prompt:"+sThisChat);
+    if(sThisChat!="")
+    {
+        integer iChatLen=llStringLength(sThisChat);
+        integer index=1020;
+        while(iChatLen) {
+            if(iChatLen<1020) {
+                Notify(kRecipient,sThisChat,FALSE);
+                iChatLen=0;
+            }
+            else {
+                index=1020;
+                while(llGetSubString(sThisChat,index,index)!=" ") {
+                    --index;
+                    }
+                Notify(kRecipient,llGetSubString(sThisChat,0,index-1),FALSE);
+                sThisChat=llGetSubString(sThisChat,index+1,-1);
+                iChatLen=llStringLength(sThisChat);
+            }
+        }
+        sThisChat="";
+    }
+                
     integer iChan=llRound(llFrand(10000000)) + 100000;
     while (~llListFindList(g_lMenus, [iChan])) iChan=llRound(llFrand(10000000)) + 100000;
     integer iListener = llListen(iChan, "", kRecipient, "");
@@ -350,24 +383,8 @@ integer GetStringBytes(string sStr) {
 
 
 string TruncateString(string sStr, integer iBytes) {
-    sStr = llEscapeURL(sStr);
-    integer j = 0;
-    string sOut;
-    integer l = llStringLength(sStr);
-    for (; j < l; j++) {
-        string c = llGetSubString(sStr, j, j);
-        if (c == "%") {
-            if (iBytes >= 2) {
-                sOut += llGetSubString(sStr, j, j+2);
-                j += 2;
-                iBytes -= 2;
-            }
-        } else if (iBytes >= 1) {
-            sOut += c;
-            iBytes --;
-        }
-    }
-    return llUnescapeURL(sOut);
+     return llBase64ToString(llGetSubString(llStringToBase64(sStr), 0, 4*(integer)(iBytes/3.0)-1));
+     //Base64Encoding will produce a 4-character string for every 3 bytes of input. Thus trimming a base64-encoded string to 4/3rds length and decoding will give the correct byte length. Compared to the function this replaces, it saves a minimum of 510 bytes and is MANY times faster - with a 1200 character test string saving 6468 bytes of maximum memory use and completing in 0.134 seconds instead of 27.06 seconds.
 }
 
 list PrettyButtons(list lOptions, list lUtilityButtons, list iPagebuttons) { //returns a list formatted to that "options" will start in the top left of a dialog, and "utilitybuttons" will start in the bottom right

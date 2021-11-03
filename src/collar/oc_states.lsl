@@ -1,25 +1,22 @@
-  
 /*
 This file is a part of OpenCollar.
 Copyright ©2020
-
-
 : Contributors :
-
 Aria (Tashia Redrose)
     *August 2020        -       *Created oc_states
                                 *Due to significant issues with original implementation, States has been turned into a anti-crash
                                 script instead of a script state manager.
                                 *Repurpose oc_states to be anti-crash and a interactive settings editor.
 Medea (Medea Destiny)
-    *July 2021          -       *See issue #587: Added warning when script resets folders script that user should consider cleaning up their #RLV                                
+    *July 2021          -       *See issue #587: Added warning when script resets folders script that user should consider cleaning
+                                up their #RLV 
+    Sept 2021           -       Tighten timings and number of passes on reboot process and reduced sleep padding.                               
                                             
     
     
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
-
 */
 
 
@@ -170,7 +167,7 @@ list g_lTimers; // signal, start_time, seconds_from
 
 integer g_iExpectAlive=0;
 list g_lAlive;
-integer g_iPasses=-1;
+integer g_iPasses=0;
 
 
 integer ALIVE = -55;
@@ -187,35 +184,31 @@ default
         g_iExpectAlive=1;
         llSetTimerEvent(1);
         //llScriptProfiler(TRUE);
-        llMessageLinked(LINK_SET, REBOOT,"reboot", "");
-        llSleep(5);
-        //llMessageLinked(LINK_SET, 0, "initialize", "");
         if(g_iVerbosityLevel>=1)
             llOwnerSay("Collar is preparing to startup, please be patient.");
     }
     
     
     on_rez(integer iRez){
-        llSleep(10);
         llResetScript();
     }
     
     timer(){
         
         if(g_iExpectAlive){
-            if(llGetTime()>=5 && g_iPasses<3){
+            if(llGetTime()>=3 && g_iPasses<2){ //>=5
                 llMessageLinked(LINK_SET,READY, "","");
                 llResetTime();
                 //llSay(0, "PASS COUNT: "+(string)g_iPasses);
                 g_iPasses++;
-            } else if(llGetTime()>=7.5 && g_iPasses>=3){
+            } else if(llGetTime()>=2 && g_iPasses>=2){ //>=7.5
                 if(g_iVerbosityLevel>=2)
                     llOwnerSay("Scripts ready: "+(string)llGetListLength(g_lAlive));
                 llMessageLinked(LINK_SET,STARTUP,llDumpList2String(g_lAlive,","),"");
                 g_iExpectAlive=0;
                 g_lAlive=[];
                 g_iPasses=0;
-                llSleep(10);
+                llSleep(1); //10
                 
                 if(g_iVerbosityLevel >=1)
                     llMessageLinked(LINK_SET,NOTIFY,"0Startup in progress... be patient", llGetOwner());
@@ -427,12 +420,12 @@ default
             if(sStr == "update_active")state inUpdate;
         } else if(iNum == ALIVE){
             g_iExpectAlive=1;
-            llResetTime();
-            llSetTimerEvent(1);
             if(llListFindList(g_lAlive,[sStr])==-1){
                 g_iPasses=0;
                 g_lAlive+=[sStr];
-            }
+            }else return;
+            llResetTime();
+            llSetTimerEvent(1);            
         }
     }
 }

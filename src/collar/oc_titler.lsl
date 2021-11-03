@@ -1,22 +1,28 @@
 /*
 This file is a part of OpenCollar.
 Copyright 2021
-
 : Contributors :
 Aria (Tashia Redrose)
     * Mar 2020      - Fix bug where title would not detect the float text prim.
                     - Fixed bug where titler would display garbled text as a result of failing to decode base64
     * Jan 2020      - Rewrote titler to cleanup the code and make easier to read
-
+    
+Medea (Medea Destiny)
+    Oct 2021    -   Refactored SAVE to only save changed settings. Added helpful menu text.
+                    Added text2col() function that makes a sensible colour vector out of whatever
+                    is thrown at it. Added Added validvector() function to confirm vectors are valid
+                    before setting, used to make "[prefix] title color" command without following vector
+                    provide colour menu rather than setting colour to black, and means that "[prefix]
+                    title color red" will now pop up the color menu rather than setting the title text
+                    to black. Text changes now set instantly rather than after 2.5 second delay.
 et al.
-
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
 */
 
 string g_sParentMenu = "Apps";
 string g_sSubMenu = "Titler";
-string g_sVersion = "8.1"; // leave unmodified if not changed at all after release, otherwise change to next version number
+string g_sVersion = "8.2"; // leave unmodified if not changed at all after release, otherwise change to next version number
 
 DebugOutput(key kID, list ITEMS){
     integer i=0;
@@ -91,7 +97,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 }
 
 Menu(key kID, integer iAuth) {
-    string sPrompt = "\n[Titler]";
+    string sPrompt = "\n[Titler]\n Use Up/Down to change the position of the title, Color to set text color, Set Title to set the title text. Show/Hide to choose whether the title should be displayed or not.";
     list lButtons = ["UP","DOWN", "Set Title", "Color", Checkbox(g_iShow, "Show")];
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "Menu~Titler");
 }
@@ -102,6 +108,39 @@ ColorMenu(key kAv, integer iAuth){
     Dialog(kAv, sPrompt, ["colormenu please"], [UPMENU, "Custom"], 0, iAuth, "Menu~Colors");
 }
 
+integer validvector(string input)
+{
+    list t=llParseString2List(input,[",","<",">"," "],[]);
+    if(llGetListLength(t)!=3) return FALSE;
+    t=llParseString2List(input,[",","<",">"," ","."],[]);
+    string s=(string)t;
+    integer x=llStringLength(s);
+    while(x) {
+        --x;
+        if(llGetSubString(s,x,x)!="0" && (integer)llGetSubString(s,x,x)==0) return FALSE;
+        }
+    return TRUE;
+}
+        
+vector text2col(string input)
+{
+    list t=llParseString2List(input,[",","<",">"," "],[]);
+    integer norm;
+    integer x;
+    integer this;
+    while(x<3)
+    {
+        this=llList2Integer(t,x);
+        if(this<0) t=llListReplaceList(t,[0],x,x);
+        else if(this>1) norm=TRUE;
+        if(this>255) t=llListReplaceList(t,[255],x,x);
+        ++x;
+    }
+    vector out=(vector)("<"+llList2CSV(t)+">");
+    if(norm) out=out/255;
+    return out;
+}
+        
 
 UserCommand(integer iNum, string sStr, key kID) {
     if (iNum<CMD_OWNER || iNum>CMD_WEARER) return;
@@ -121,32 +160,36 @@ UserCommand(integer iNum, string sStr, key kID) {
         if(iNum !=CMD_OWNER)return;
 
         if(sChangetype == "title"){
-            g_sTitle = llDumpList2String(llList2List(llParseString2List(sStr,[" "],[]), 1,-1)," ");
-            if(g_sTitle == ""){
+            string sTitle = llDumpList2String(llList2List(llParseString2List(sStr,[" "],[]), 1,-1)," ");
+            if(sTitle == ""){
                 Dialog(kID, "What should the title say?", [], [], 0, iNum, "Textbox~Title");
-
+                return;
             }
-            Save();
+            g_sTitle=sTitle;
+            Save(SAVE_TITLE);
         } else if(sChangetype == "titler"){
             if(sChangevalue == "color"){
-                g_vColor=(vector)sParam;
-                Save();
+                if(!validvector(sParam)) ColorMenu(kID,iNum);
+                else {
+                    g_vColor=text2col(sParam);
+                    Save(SAVE_COLOR);
+                }
             } else if(sChangevalue == "show"){
                 g_iShow=TRUE;
-                Save();
+                Save(SAVE_SHOW_HIDE);
             } else if(sChangevalue == "hide"){
                 g_iShow=FALSE;
-                Save();
+                Save(SAVE_SHOW_HIDE);
             } else if(sChangevalue == "up"){
                 g_iOffset++;
-                Save();
+                Save(SAVE_OFFSET);
             } else if(sChangevalue == "down"){
                 g_iOffset--;
                 if(g_iOffset<0)g_iOffset=0;
-                Save();
+                Save(SAVE_OFFSET);
             }else if(sChangevalue == "plain"){
                 g_iNoB64 = ! g_iNoB64;
-                Save();
+                Save(SAVE_TITLE);
 
                 string ToggleMsg = "0Titler plain text mode is now set to ";
 
@@ -166,27 +209,42 @@ UserCommand(integer iNum, string sStr, key kID) {
     }
 }
 integer g_iShow=FALSE;
-Save(){
-    if(g_iShow)llMessageLinked(LINK_SET, LM_SETTING_SAVE, "titler_show=1","");
-    else llMessageLinked(LINK_SET, LM_SETTING_DELETE, "titler_show","");
 
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "titler_offset="+(string)g_iOffset, "");
+integer  SAVE_SHOW_HIDE = 1;
+integer  SAVE_OFFSET = 2;
+integer  SAVE_TITLE = 4;
+integer  SAVE_COLOR = 8;
 
-    if(!g_iNoB64)
-        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "titler_title="+llStringToBase64(g_sTitle), "");
-    else
-        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "titler_title="+g_sTitle, "");
-
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "titler_color="+(string)g_vColor,"");
+Save(integer what){
+    if(what&SAVE_SHOW_HIDE){
+        if(g_iShow)llMessageLinked(LINK_SET, LM_SETTING_SAVE, "titler_show=1","");
+        else llMessageLinked(LINK_SET, LM_SETTING_DELETE, "titler_show","");
+    }
+    if(what&SAVE_OFFSET)llMessageLinked(LINK_SET, LM_SETTING_SAVE, "titler_offset="+(string)g_iOffset, "");
+    if(what&SAVE_TITLE){
+        if(!g_iNoB64)
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "titler_title="+llStringToBase64(g_sTitle), "");
+        else
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "titler_title="+g_sTitle, "");
+    }
+    if(what&SAVE_COLOR)llMessageLinked(LINK_SET, LM_SETTING_SAVE, "titler_color="+(string)g_vColor,"");
 
 
     Titler();
 }
 
 Titler(){
-    llSetTimerEvent(2.5);
+    // llSetTimerEvent(2.5);
     // Show the title if applicable after 5 seconds
-
+    //Why should this be done with a delay??? Moving it here.
+    if(g_iShow){
+            string offsets = "";
+            integer i=0;
+            for(i=0;i<g_iOffset;i++){
+                offsets+=" \n";
+            }
+            llSetLinkPrimitiveParams(g_iTextPrim, [PRIM_TEXT, g_sTitle+offsets, g_vColor, 1]);
+    }else llSetLinkPrimitiveParams(g_iTextPrim, [PRIM_TEXT, "", ZERO_VECTOR, 0]);
 }
 key g_kWearer;
 integer g_iOffset=8;
@@ -263,18 +321,6 @@ state active
         NukeOtherText();
         //llOwnerSay((string)llGetUsedMemory());
     }
-    timer(){
-        // calculate offset
-        if(g_iShow){
-            string offsets = "";
-            integer i=0;
-            for(i=0;i<g_iOffset;i++){
-                offsets+=" \n";
-            }
-            llSetLinkPrimitiveParams(g_iTextPrim, [PRIM_TEXT, g_sTitle+offsets, g_vColor, 1]);
-        }else llSetLinkPrimitiveParams(g_iTextPrim, [PRIM_TEXT, "", ZERO_VECTOR, 0]);
-        llSetTimerEvent(0);
-    }
 
     changed(integer iChange){
         if(iChange&CHANGED_LINK){
@@ -316,14 +362,14 @@ state active
                     else if(sMsg == "UP"){
                         g_iOffset++;
 
-                        Save();
+                        Save(SAVE_OFFSET);
                     } else if(sMsg == "DOWN"){
                         g_iOffset--;
                         if(g_iOffset<0)g_iOffset=0;
-                        Save();
+                        Save(SAVE_OFFSET);
                     } else if(sMsg == Checkbox(g_iShow,"Show")){
                         g_iShow=!g_iShow;
-                        Save();
+                        Save(SAVE_SHOW_HIDE);
 
                     } else if(sMsg == "Set Title"){
                         iRespring=FALSE;
@@ -342,7 +388,7 @@ state active
                         Menu(kAv, iAuth);
                         iRespring=FALSE;
                     } else if(sMsg == "Custom"){
-                        Dialog(kAv, "[Titler Custom Color]", [], [], 0, iAuth, "Textbox~Color");
+                        Dialog(kAv, "[Titler Custom Color]\nType in a custom colour using the R,G,B format, i.e. '255,0,0' gives pure red.", [], [], 0, iAuth, "Textbox~Color");
                         iRespring=FALSE;
                     } else  {
                         g_vColor = (vector)sMsg;
@@ -350,18 +396,22 @@ state active
 
                     if(iRespring)ColorMenu(kAv,iAuth);
 
-                    Save();
+                    Save(SAVE_COLOR);
                 } else if(sMenu == "Textbox~Title"){
                     g_sTitle = sMsg;
 
                     // pop menu back up
                     Menu(kAv, iAuth);
-                    Save();
+                    Save(SAVE_TITLE);
                 } else if(sMenu == "Textbox~Color"){
-                    g_vColor = (vector)sMsg;
-
+                    if(!validvector(sMsg)) {
+                        llRegionSayTo(kAv,0,"Not a valid vector! Please try again.");
+                        Dialog(kAv, "[Titler Custom Color]\nType in a custom colour using the R,G,B format, i.e. '255,0,0' gives pure red.", [], [], 0, iAuth, "Textbox~Color");
+                        return;
+                    }
+                    g_vColor = text2col(sMsg);
                     ColorMenu(kAv,iAuth);
-                    Save();
+                    Save(SAVE_COLOR);
                 }
             }
         }else if (iNum == DIALOG_TIMEOUT) {
