@@ -1,19 +1,19 @@
-
 /*
 This file is a part of OpenCollar.
 Copyright ©2021
-
-
 : Contributors :
 All contributors of previous revision of oc_settings
-
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
 
+Medea Destiny
+        Sept 2021   -   Tightened timings on release of all settings and reduced sleep
+                        padding on initialize
 */
 
 //string g_sParentMenu = "Apps";
+
 
 integer TIMEOUT_REGISTER = 30498;
 integer TIMEOUT_FIRED = 30499;
@@ -509,7 +509,7 @@ default
                 g_iBootup=FALSE;
             }
             llSetTimerEvent(0);
-        }else llSetTimerEvent(0.25); // send 1 setting per quarter second
+        }else llSetTimerEvent(0.15); // send 1 setting per 0.15 second (previous - 0.25)
     }
 
 
@@ -598,7 +598,7 @@ default
                 llSleep (5); // Sleep for 5 seconds to give some padding for all scripts to switch to the ready state!
                 g_iBootup=TRUE;
                 g_iCurrentIndex=0;
-                llSetTimerEvent(5);
+                llSetTimerEvent(0.5); //5
             }
         }
         //llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));

@@ -1,27 +1,26 @@
-    
 /*
 This file is a part of OpenCollar.
 Copyright ©2021
-
-
 : Contributors :
-
 Aria (Tashia Redrose)
     *June 2020       -       Created oc_api
       * This implements some auth features, and acts as a API Bridge for addons and plugins
 Felkami (Caraway Ohmai)
-    *Dec 2020        -       Fix: 457Switched optin from searching by string to list
+    *Dec 2020   -   Fix: 457Switched optin from searching by string to list
 Medea (Medea Destiny)
-    *June 2021       -      *Fix issue #566  setgroup not clearing properly, 
-                            *Fix issue #562, #381, #495 allow owners to permit wearers to set trusted/block
-                            *Fix issue #579 Add interface channel to DoListeners() function so Highlander works again
-                            *Issue #579 Restored menuto function to interface channel for backwards compatibility
-                            *Issue #579 Added control of channel 0 listening via settings menu
-                            *Fix issue 585 give wearer accept/deny dialog to confirm runaway disable setting
+    *June 2021  -   Fix issue #566  setgroup not clearing properly, 
+                -   Fix issue #562, #381, #495 allow owners to permit wearers to set trusted/block
+                -   Fix issue #579 Add interface channel to DoListeners() function so Highlander works again
+                -   Issue #579 Restored menuto function to interface channel for backwards compatibility
+                -   Issue #579 Added control of channel 0 listening via settings menu
+                -   Fix issue 585 give wearer accept/deny dialog to confirm runaway disable setting
+                            
+Yosty7b3        
+    *Oct 2021   -   Remove unused StrideOfList() function.
+                                   
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
-
 */
 list g_lOwner;
 list g_lTrust;
@@ -403,21 +402,6 @@ UserCommand(integer iAuth, string sCmd, key kID){
         else
             llMessageLinked(LINK_SET,NOTIFY, "0%NOACCESS% to printing access lists!", kID);
     }
-}
- 
-list StrideOfList(list src, integer stride, integer start, integer end)
-{
-    list l = [];
-    integer ll = llGetListLength(src);
-    if(start < 0)start += ll;
-    if(end < 0)end += ll;
-    if(end < start) return llList2List(src, start, start);
-    while(start <= end)
-    {
-        l += llList2List(src, start, start);
-        start += stride;
-    }
-    return l;
 }
 
 SW(){

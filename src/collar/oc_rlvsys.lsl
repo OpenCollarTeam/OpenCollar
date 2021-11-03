@@ -1,8 +1,17 @@
-// This file is part of OpenCollar.
-// Copyright (c) 2008 - 2016 Satomi Ahn, Nandana Singh, Wendy Starfall,
-// Medea Destiny, littlemousy, Romka Swallowtail, Garvin Twine,
-// Sumi Perl et al.
-// Licensed under the GPLv2.  See LICENSE for full details.
+/*
+ This file is part of OpenCollar.
+Copyright (c) 2008 - 2016 Satomi Ahn, Nandana Singh, Wendy Starfall,
+Medea Destiny, littlemousy, Romka Swallowtail, Garvin Twine,
+Sumi Perl et al.
+Licensed under the GPLv2.  See LICENSE for full details.
+
+Medea Destiny   -
+        Sept 20201  -   Added RLV_CMD_OVERRIDE function. This allows one shot (=force) commands to be sent that will override any restrictions. 
+                        This command should only be used where operator has owner permission. The notion behind it is that owners should
+                        not be restricted by wearer restictions. They can unset restrictions manually, perform the function, and then reset
+                        the restriction, but that's a lot of hassle. This performs the function automatically. Operator and wearer are notified of 
+                        restrictions that have been temporarily restricted to avoid being misled that a restriciton is not present.
+*/
 
 string g_sScriptVersion = "8.1";
 integer g_iRLVOn = TRUE;
@@ -60,6 +69,7 @@ integer DO_RLV_REFRESH = 26001;//RLV plugins should reinstate their restrictions
 integer RLV_CLEAR = 6002;//RLV plugins should clear their restriction lists upon receiving this message.
 integer RLV_VERSION = 6003; //RLV Plugins can recieve the used RLV viewer version upon receiving this message..
 integer RLVA_VERSION = 6004; //RLV Plugins can recieve the used RLVa viewer version upon receiving this message..
+integer RLV_CMD_OVERRIDE=6010; //RLV Plugins can send one-shot (force) commands with a list of restrictions to temporarily lift if required to ensure that the one-shot commands can be executed
 
 integer RLV_OFF = 6100;
 integer RLV_ON = 6101;
@@ -620,7 +630,31 @@ state active
                 llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "30", "recheck_lock");
                 llMessageLinked(LINK_SET, RLV_REFRESH, "","");
                 llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "ALL","");
-            } 
+            } else if(iNum == RLV_CMD_OVERRIDE){
+                //New feature! RLV_CMD_OVERRIDE is designed to allow one-shot (force) commands to override current restrictions. This is done by sending the behavior(s) to send as a comma separated list, followed by a ~ and then the restrictions to temporarily lift as another comma separate list as as sMsg. EXAMPLE: llMessageLinked(LINK_THIS,RLV_CMD_OVERRIDE,"unsit~unsit","") will lift the current unsit restriction if present, issue an @unsit=force, then restore the unsit restriction if it was previously present. These commands should ONLY be sent if the issuer has OWNER auth.
+                list lCommands=llParseString2List(llList2String(llParseString2List(sStr,["~"],[]),0),[","],[]);
+                list lOverrides=llParseString2List(llList2String(llParseString2List(sStr,["~"],[]),1),[","],[]);
+                integer iLen=llGetListLength(lOverrides);
+                while(iLen--) {
+                    if(llListFindList(g_lBaked,llList2List(lOverrides,iLen,iLen))==-1)
+                    {
+                        lOverrides=llDeleteSubList(lOverrides,iLen,iLen);
+                    }
+                    else llOwnerSay("@"+llList2String(lOverrides,iLen)+"=y");
+                }
+                llSleep(0.5); 
+                iLen=llGetListLength(lCommands);
+                while(iLen--){
+                    llOwnerSay("@"+llList2String(lCommands,iLen)+"=force");
+                    llSleep(0.1);
+                }
+                llSleep(0.5); 
+                iLen=llGetListLength(lOverrides);
+                while(iLen--){
+                    llOwnerSay("@"+llList2String(lOverrides,iLen)+"=n");
+                }
+                if(kID!="" && lOverrides!=[]) llMessageLinked(LINK_SET,NOTIFY,"1Owner Override. Restiction(s): "+llDumpList2String(lOverrides,", ")+" -- were temporarily lifted to perform request, but are now back in place.",kID);
+            }
         }
 
         if(iNum == LINK_CMD_DEBUG){
