@@ -277,7 +277,7 @@ Menu(key kID, integer iAuth) {
 }
 MenuManage(key kID, integer iAuth)
 {
-    string sPrompt="[Restriction settings]\nClick 'Save Preset' to save current restrictions as a preset button in the Restrictions menu. 'Del. Preset' to delete an existing button ("+(string)(llGetListLength(g_lMacros)/3)+"/"+(string)g_lMaxMacros+" used). 'Restore' will restore buttons to defaults.\n'Camera' to change camera/blur settings , and 'Muffle' to set speech muffling\nMore info: http://opencollar.cc/docs/RLV#settings\n.\n Current Restrictions:\n"+llDumpList2String(ListRestrictions(g_iRestrictions1,g_iRestrictions2),", ");
+    string sPrompt="[Restriction settings]\nClick 'Save Preset' to save current restrictions as a preset button in the Restrictions menu. 'Del. Preset' to delete an existing button ("+(string)(llGetListLength(g_lMacros)/3)+"/"+(string)g_lMaxMacros+" used). 'Restore' will restore buttons to defaults.\n'Camera' to change camera/blur settings , and 'Muffle' to set speech muffling\nMore info: http://opencollar.cc/docs/RLV#customize\n.\n Current Restrictions:\n"+llDumpList2String(ListRestrictions(g_iRestrictions1,g_iRestrictions2),", ");
     Dialog(kID,sPrompt , ["Save Preset","Del. Preset","Restore","Camera","Muffle"], g_lUtilityNone, 0, iAuth, "Restrictions~Manage");
 }
 MenuDetailed(key kID, integer iAuth){

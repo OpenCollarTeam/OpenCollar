@@ -405,7 +405,7 @@ UserCommand(integer iNum, string sStr, key kID) {
     if (sStr=="sit" || sStr == "menu "+llToLower(g_sSubMenu1)) MenuForceSit(kID, iNum);
     else if (sStr=="exceptions" || sStr == "menu "+llToLower(g_sSubMenu2)) MenuExceptions(kID,iNum);
     else if (sStr=="menu managecamera" || sStr=="menu managecamera2") {
-        g_sCameraBackMenu="menu manage";
+        g_sCameraBackMenu="menu customize";
         if(sStr=="menu managecamera2") g_sCameraBackMenu="menu category Camera";
         if (iNum < CMD_EVERYONE) MenuCamera(kID,iNum);
         else {
@@ -648,7 +648,7 @@ state active
                     else if (sMsg == "Max Dist") MenuSetValue(kAv, iAuth, "MaxCamDist");
                     else if (sMsg == "Blur Amount") MenuSetValue(kAv, iAuth, "BlurAmount"); 
                 } else if (sMenu == "Settings~Chat") {
-                    if (sMsg == UPMENU) llMessageLinked(LINK_SET, iAuth, "menu manage", kAv);
+                    if (sMsg == UPMENU) llMessageLinked(LINK_SET, iAuth, "menu customize", kAv);
                     else {
                         sMsg = llGetSubString(sMsg,2,-1);
                         if (sMsg == "Muffle") {
