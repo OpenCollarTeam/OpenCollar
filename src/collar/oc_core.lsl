@@ -166,18 +166,19 @@ AccessMenu(key kID, integer iAuth){
         return;
     }
     string sPrompt = "\nOpenCollar Access Controls\n+/- buttons to control access lists.\nGroup allows access to current group, Public allows access to all. Wearer trust allows an owned wearer to add/remove from trusted list.\nRunaway removes all owners, access list prints out who has access.";
-    list lButtons = ["+ Owner", "+ Trust", "+ Block", "- Owner", "- Trust", "- Block", Checkbox(bool((g_kGroup!="")), "Group"), Checkbox(g_iPublic, "Public")];
+    list lButtons = ["+ Owner", "+ Trust", "+ Block", "- Owner", "- Trust", "- Block", Checkbox(g_kGroup!="", "Group"), Checkbox(g_iPublic, "Public")];
 
     lButtons += [Checkbox(g_iAllowWearerSetTrusted, "Wearer Trust"), "Runaway", "Access List"];
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "Menu~Auth");
 }
 
 HelpMenu(key kID, integer iAuth){
-    string EXTRA_VER_TXT = setor(bool((llGetSubString(COLLAR_VERSION,-1,-1)=="0")), "", " (ALPHA "+llGetSubString(COLLAR_VERSION,-1,-1)+") ");
-    EXTRA_VER_TXT += setor(bool((llGetSubString(COLLAR_VERSION,-2,-2)=="0")), "", " (BETA "+llGetSubString(COLLAR_VERSION,-2,-2)+") ");
-    EXTRA_VER_TXT += setor(bool((llGetSubString(COLLAR_VERSION,-3,-3) == "0")), "", " (RC "+llGetSubString(COLLAR_VERSION,-3,-3)+") ");
+    string EXTRA_VER_TXT;
+    if(llGetSubString(COLLAR_VERSION,-1,-1)!="0") EXTRA_VER_TXT = " (ALPHA "+llGetSubString(COLLAR_VERSION,-1,-1)+") ";
+    if(llGetSubString(COLLAR_VERSION,-2,-2)!="0") EXTRA_VER_TXT += " (BETA "+llGetSubString(COLLAR_VERSION,-2,-2)+") ";
+    if(llGetSubString(COLLAR_VERSION,-3,-3)!="0") EXTRA_VER_TXT += " (RC " + llGetSubString(COLLAR_VERSION,-3,-3)+") ";   
 
-    string sPrompt = "\nOpenCollar "+COLLAR_VERSION+" "+EXTRA_VER_TXT+"\nVersion: "+setor(g_iAmNewer, "(Newer than release)", "")+" "+setor(UPDATE_AVAILABLE, "(Update Available)", "(Most Current Version)");
+    string sPrompt = "\nOpenCollar "+COLLAR_VERSION+" "+EXTRA_VER_TXT+"\nVersion: "+llList2String(["","(Newer than release)"],g_iAmNewer)+" "+llList2String(["(Most Current Version)","(Update Available)"],UPDATE_AVAILABLE);
     sPrompt += "\n\nDocumentation https://opencollar.cc";
     sPrompt += "\nPrefix: "+g_sPrefix+"\nChannel: "+(string)g_iChannel;
     sPrompt += "\nSafeword: "+g_sSafeword;
@@ -190,13 +191,9 @@ HelpMenu(key kID, integer iAuth){
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "Menu~Help");
 }
 
-integer bool(integer a){
-    if(a)return TRUE;
-    else return FALSE;
-}
 list g_lCheckboxes=["▢", "▣"];
 string Checkbox(integer iValue, string sLabel) {
-    return llList2String(g_lCheckboxes, bool(iValue))+" "+sLabel;
+    return llList2String(g_lCheckboxes, (iValue>0))+" "+sLabel;
 }
 integer g_iUpdatePin = 0;
 //string g_sDeviceName;
@@ -387,19 +384,6 @@ Compare(string V1, string V2){
 key g_kUpdateCheck = NULL_KEY;
 key g_kCheckDev;
 
-///The setor method is derived from a similar PHP proposed function, though it was denied,
-///https://wiki.php.net/rfc/ifsetor
-///The concept is roughly the same though we're not dealing with lists in this method, so is just modified
-///The ifsetor proposal would give a function which would be more like
-///ifsetor(list[index], sTrue, sFalse)
-///LSL can't check if a list item is set without a stack heap if it is out of range, this is significantly easier for us to just check for a integer boolean
-string setor(integer iTest, string sTrue, string sFalse){
-    if(iTest)return sTrue;
-    else return sFalse;
-}
-
-
-
 integer g_iDoTriggerUpdate=FALSE;
 key g_kWelder = NULL_KEY;
 StartUpdate(){
@@ -426,7 +410,7 @@ default
             }
         } else if(iNum == READY){
             llOwnerSay("@detach=n");
-            llMessageLinked(LINK_SET, ALIVE, llGetScriptName(), "");
+            llMessageLinked(LINK_SET, ALIVE, llGetScriptName(), ""); 
         } else if(iNum == STARTUP){
             state active;
         }
@@ -549,7 +533,7 @@ state active
                     } else if(sMsg == "Access List"){
                         if(iAuth == CMD_OWNER || iAuth == CMD_WEARER ){
                         llMessageLinked(LINK_SET, iAuth, "print auth", kAv);}
-                    } else if(sMsg == Checkbox(bool((g_kGroup!="")), "Group")){
+                    } else if(sMsg == Checkbox((g_kGroup!=""), "Group")){
                         if(iAuth ==CMD_OWNER){
                             if(g_kGroup!=""){
                                 g_kGroup="";
@@ -630,7 +614,7 @@ state active
                         }
 
                         g_iHide=1-g_iHide;
-                        llMessageLinked(LINK_SET, iAuth, setor(g_iHide, "hide", "show"), kAv);
+                        llMessageLinked(LINK_SET, iAuth, llList2String(["show","hide"],g_iHide), kAv);
                         llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_hide="+(string)g_iHide, "");
                     } else if(sMsg == "Load"){
                         llMessageLinked(LINK_SET, iAuth, sMsg, kAv);
