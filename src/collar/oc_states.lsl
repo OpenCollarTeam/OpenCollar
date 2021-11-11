@@ -30,7 +30,6 @@ running: TIMEOUT_READY
 */
 
 integer g_iStartup; // keep track on where in the bootup sequence we are
-string  g_sSettings;
 
 //integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
@@ -94,7 +93,6 @@ integer Alive(string scriptName){
     integer iScript = llListFindList(g_lWaiting,[scriptName]);
     if(~iScript){
         g_lWaiting = llDeleteSubList(g_lWaiting, iScript, iScript);
-        //g_lAlive+=[scriptName];
     }
     if(llGetListLength(g_lWaiting)==0){ 
         return TRUE;
@@ -128,7 +126,7 @@ Reboot(){
 }
 
 Startup(string scriptName){    
-    llMessageLinked(LINK_SET, STARTUP, scriptName, g_sSettings);
+    llMessageLinked(LINK_SET, STARTUP, scriptName, "");
 }
 default
 {
@@ -160,13 +158,9 @@ default
         if(iNum == REBOOT && sStr == "reboot --f")llResetScript();
 
         if(iNum == ALIVE){    
-            list lSettings = llParseString2List(sStr, ["="],[]);
-            string sVar = llList2String(lSettings,0);
-            string sVal = llList2String(lSettings,1); 
-            if(sVar == "oc_settings" && kID!=NULL_KEY) 
-                g_sSettings = (string)kID;                
-            if(~llListFindList(g_lWaiting, [sVar])) // go through every script in g_lWaiting
-                if(Alive(sVar)){
+            string scriptName = llList2String(llParseString2List(sStr, ["="],[]),0);
+            if(~llListFindList(g_lWaiting, [scriptName])) // go through every script in g_lWaiting
+                if(Alive(scriptName)){
                     state startup;    // pass if all gave the ALIVE signal
                 }
         }
