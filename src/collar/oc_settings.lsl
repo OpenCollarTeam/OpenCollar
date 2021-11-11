@@ -19,25 +19,11 @@ integer g_iLastStride;
 string  g_sVariableView;
 string  g_sTokenView="";
 
-// return a CSV containing all global_var=val
-string SettingsFor(string SelectToken){
-    list lSettings;    
-    integer i = llGetListLength(g_lSettings); 
-    while((i-=2)>=0){        
-        list lTmp = llParseString2List(llList2String(g_lSettings,i),["_"],[]);
-        string sTok = llList2String(lTmp,0);
-        string sVar = llList2String(lTmp,1);
-        if(sTok == SelectToken)
-            lSettings+=llList2String(g_lSettings,i)+"="+llList2String(g_lSettings,i+1);
-    }
-    return llList2CSV(lSettings);
-}
-
 // sends "ALIVE oc_setttings <global_var=val list>"
 SendALIVE(){
         g_iSettingsLoaded = TRUE;
-        llSetTimerEvent(0);   
-        llMessageLinked(LINK_SET, ALIVE, "oc_settings", SettingsFor("global")); 
+        llSetTimerEvent(0);
+        llMessageLinked(LINK_SET, ALIVE, "oc_settings", llList2Json(JSON_OBJECT, g_lSettings));
 }
 
 // dialogs for "settings edit"
