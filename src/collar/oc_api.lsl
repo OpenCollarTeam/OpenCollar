@@ -22,8 +22,6 @@ et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
 */
-string g_sDeviceName = "OpenCollar";
-string g_sDeviceType = "collar";
 list g_lOwner;
 list g_lTrust;
 list g_lBlock;
@@ -232,7 +230,7 @@ UpdateLists(key kID, key kIssuer){
             if(llListFindList(g_lOwner, [(string)kID])==-1){
                 g_lOwner+=kID;
                 llMessageLinked(LINK_SET, NOTIFY, "1"+SLURL(kID)+" has been added as owner", kIssuer);
-                llMessageLinked(LINK_SET, NOTIFY, "0You are now a owner on this "+g_sDeviceType, kID);
+                llMessageLinked(LINK_SET, NOTIFY, "0You are now a owner on this collar", kID);
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_owner="+llDumpList2String(g_lOwner,","), "origin");
                 g_iMode = ACTION_REM | ACTION_TRUST | ACTION_BLOCK;
                 UpdateLists(kID, kIssuer);
@@ -242,7 +240,7 @@ UpdateLists(key kID, key kIssuer){
             if(llListFindList(g_lTrust, [(string)kID])==-1){
                 g_lTrust+=kID;
                 llMessageLinked(LINK_SET, NOTIFY, "1"+SLURL(kID)+" has been added to the trusted user list", kIssuer);
-                llMessageLinked(LINK_SET, NOTIFY, "0You are now a trusted user on this "+g_sDeviceType, kID);
+                llMessageLinked(LINK_SET, NOTIFY, "0You are now a trusted user on this collar", kID);
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_trust="+llDumpList2String(g_lTrust, ","), "origin");
                 g_iMode = ACTION_REM | ACTION_OWNER | ACTION_BLOCK;
                 UpdateLists(kID, kIssuer);
@@ -253,7 +251,7 @@ UpdateLists(key kID, key kIssuer){
                 if(kID != g_kWearer || g_iGrantedConsent || kIssuer==g_kWearer){
                     g_lBlock+=kID;
                     llMessageLinked(LINK_SET, NOTIFY, "1"+SLURL(kID)+" has been blocked", kIssuer);
-                    llMessageLinked(LINK_SET, NOTIFY, "0Your access to this "+g_sDeviceType+" is now blocked", kID);
+                    llMessageLinked(LINK_SET, NOTIFY, "0Your access to this collar is now blocked", kID);
                     llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_block="+llDumpList2String(g_lBlock,","),"origin");
                     g_iMode=ACTION_REM|ACTION_OWNER|ACTION_TRUST;
                     UpdateLists(kID, kIssuer);
@@ -270,7 +268,7 @@ UpdateLists(key kID, key kIssuer){
                     integer iPos = llListFindList(g_lOwner, [(string)kID]);
                     g_lOwner = llDeleteSubList(g_lOwner, iPos, iPos);
                     llMessageLinked(LINK_SET, NOTIFY, "1"+SLURL(kID)+" has been removed from the owner role", kIssuer);
-                    llMessageLinked(LINK_SET, NOTIFY, "0You have been removed from %WEARERNAME%'s "+g_sDeviceType, kID);
+                    llMessageLinked(LINK_SET, NOTIFY, "0You have been removed from %WEARERNAME%'s collar", kID);
                     llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_owner="+llDumpList2String(g_lOwner,","), "origin");
                     g_iGrantedConsent=FALSE;
                 } else if(kID == g_kWearer && !g_iGrantedConsent){
@@ -284,7 +282,7 @@ UpdateLists(key kID, key kIssuer){
                     integer iPos = llListFindList(g_lTrust, [(string)kID]);
                     g_lTrust = llDeleteSubList(g_lTrust, iPos, iPos);
                     llMessageLinked(LINK_SET, NOTIFY, "1"+SLURL(kID)+" has been removed from the trusted role", kIssuer);
-                    llMessageLinked(LINK_SET, NOTIFY, "0You have been removed from %WEARERNAME%'s "+g_sDeviceType, kID);
+                    llMessageLinked(LINK_SET, NOTIFY, "0You have been removed from %WEARERNAME%'s collar", kID);
                     llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_trust="+llDumpList2String(g_lTrust, ","),"origin");
                     g_iGrantedConsent=FALSE;
                 } else if(kID == g_kWearer && !g_iGrantedConsent){
@@ -297,7 +295,7 @@ UpdateLists(key kID, key kIssuer){
                 integer iPos = llListFindList(g_lBlock, [(string)kID]);
                 g_lBlock = llDeleteSubList(g_lBlock, iPos, iPos);
                 llMessageLinked(LINK_SET, NOTIFY, "1"+SLURL(kID)+" has been removed from the blocked list", kIssuer);
-                llMessageLinked(LINK_SET, NOTIFY, "0You have been removed from %WEARERNAME%'s "+g_sDeviceType+" blacklist", kID);
+                llMessageLinked(LINK_SET, NOTIFY, "0You have been removed from %WEARERNAME%'s collar blacklist", kID);
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_block="+llDumpList2String(g_lBlock,","),"origin");
             }
         }
@@ -360,7 +358,7 @@ UserCommand(integer iAuth, string sCmd, key kID){
                     else if(sType == "trust")lOpts=g_lTrust;
                     else if(sType == "block")lOpts=g_lBlock;
                     
-                    Dialog(kID, g_sDeviceName+"\n\nRemove "+sType, lOpts, [UPMENU],0,iAuth,"removeUser");
+                    Dialog(kID, "OpenCollar\n\nRemove "+sType, lOpts, [UPMENU],0,iAuth,"removeUser");
                 }
             }else {
                 UpdateLists((key)sID, kID);
@@ -388,7 +386,7 @@ UserCommand(integer iAuth, string sCmd, key kID){
         // trigger runaway sequence if approval was given
         if(g_iRunawayMode == 2){
             g_iRunawayMode=-1;
-            llMessageLinked(LINK_SET, NOTIFY_OWNERS, "Runaway completed on %WEARERNAME%'s "+g_sDeviceType, kID);
+            llMessageLinked(LINK_SET, NOTIFY_OWNERS, "Runaway completed on %WEARERNAME%'s collar", kID);
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_owner","origin");
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_trust","origin");
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_block","origin");
@@ -433,8 +431,6 @@ default
         llResetScript();
     }
     state_entry(){
-        g_kWearer = llGetOwner();
-        g_sPrefix = llToLower(llGetSubString(llKey2Name(llGetOwner()),0,1));        
         llMessageLinked(LINK_SET, ALIVE, llGetScriptName(),"");
     }
     link_message(integer iSender, integer iNum, string sStr, key kID){
@@ -457,6 +453,8 @@ state active
     
     state_entry(){
         if(llGetStartParameter()!=0)llResetScript();
+        g_kWearer = llGetOwner();
+        g_sPrefix = llToLower(llGetSubString(llKey2Name(llGetOwner()),0,1));
         // make the API Channel be per user
         while(g_iInterfaceChannel==0){
             g_iInterfaceChannel = (integer)("0x" + llGetSubString(g_kWearer,30,-1));
@@ -591,10 +589,6 @@ state active
                 if(sVar == "channel"){
                     g_iChannel = (integer)sVal;
                     DoListeners();
-                } else if(sVar == "devicename"){
-                    g_sDeviceName = sVal;
-                } else if(sVar == "devicetype"){
-                    g_sDeviceType = sVal;
                 } else if(sVar == "prefix"){
                     g_sPrefix = sVal;
                 } else if(sVar == "safeword"){
@@ -692,7 +686,7 @@ state active
                         //UpdateLists((key)sMsg);
                         g_kTry = (key)sMsg;
                         if(!(g_iMode&ACTION_BLOCK))
-                            Dialog(g_kTry, g_sDeviceName+"\n\n"+SLURL(kAv)+" is trying to add you to an access list, do you agree?", ["Yes", "No"], [], 0, CMD_NOACCESS, "scan~confirm");
+                            Dialog(g_kTry, "OpenCollar\n\n"+SLURL(kAv)+" is trying to add you to an access list, do you agree?", ["Yes", "No"], [], 0, CMD_NOACCESS, "scan~confirm");
                         else UpdateLists((key)sMsg, g_kMenuUser);
                     }
                 } else if(sMenu == "WearerConfirmation"){
@@ -792,12 +786,12 @@ state active
             }
         }
         
-        Dialog(g_kMenuUser, g_sDeviceName+"\nAdd Menu", lPeople, [">Wearer<",UPMENU], 0, g_iCurrentAuth, "scan~add");
+        Dialog(g_kMenuUser, "OpenCollar\nAdd Menu", lPeople, [">Wearer<",UPMENU], 0, g_iCurrentAuth, "scan~add");
     }
     
     no_sensor(){
         if(!(g_iMode&ACTION_SCANNER))return;
         
-        Dialog(g_kMenuUser, g_sDeviceName+"\nAdd Menu", [], [">Wearer<", UPMENU], 0, g_iCurrentAuth, "scan~add");
+        Dialog(g_kMenuUser, "OpenCollar\nAdd Menu", [], [">Wearer<", UPMENU], 0, g_iCurrentAuth, "scan~add");
     }
 }
