@@ -101,6 +101,7 @@ integer Alive(string scriptName){
 }
 
 integer AntiCrash(string scriptName){
+    if(!~llGetInventoryType(scriptName)) return TRUE;
     if(llGetScriptState(scriptName)==FALSE){
         llResetOtherScript(scriptName);
         llSleep(0.5);
@@ -216,7 +217,7 @@ state running
 {
     state_entry()
     {          
-        llSetTimerEvent(0);
+        llSetTimerEvent(15);
         llMessageLinked(LINK_SET, TIMEOUT_READY, "","");
         
         // check if any haven't started up yet
