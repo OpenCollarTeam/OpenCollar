@@ -737,22 +737,19 @@ default
             g_lSettings = SetSetting(sTok,sVal);
 
             llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, sStr, "");
-        } else if(iNum == LM_SETTING_REQUEST)
-        {
+        } else if(iNum == LM_SETTING_REQUEST) {
             if(SettingExists(sStr)) llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, sStr+"="+GetSetting(sStr), "");
             else if(sStr == "ALL"){
+                while(llGetTime()<5) llSleep(1);
                 g_iCurrentIndex=0;
-                llSetTimerEvent(2);
+                llSetTimerEvent(0.15);
             } else llMessageLinked(LINK_SET, LM_SETTING_EMPTY, sStr, ""); // Unfortunately. The only time you ever get the empty signal is when you explicitly request the setting.
-        } else if(iNum == 0){
-            if(sStr == "initialize"){
-                llSleep (5); // Sleep for 5 seconds to give some padding for all scripts to switch to the ready state!
-                g_iBootup=TRUE;
-                g_iCurrentIndex=0;
-                llSetTimerEvent(0.5); //5
-            }
         } else if(iNum==REBOOT) {
-            if(g_iSettingsLoaded) SendALIVE(); // sent ALIVE on receiving REBOOT signal
+            llResetTime();
+            g_iBootup=TRUE;
+            if(g_iSettingsLoaded){
+                SendALIVE(); // sent ALIVE on receiving REBOOT signal
+            }
         }
         //llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
     }
