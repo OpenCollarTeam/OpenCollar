@@ -1,0 +1,41 @@
+/*
+
+oc_wearerhud
+
+Copyright(c) Medea Destiny, Nirea Mercury et al.
+Licensed under the GPLv2.  See LICENSE for full details. 
+
+This script can be dropped into an object worn as a HUD attachment and will trigger
+the OpenCollar menu for the wearer's own collar, using the OpenCollar interface channel
+menuto function. At some point we may expand interface channel functionality (or rather
+revert the removal of this) and make this a more general purpose wearer hud.
+
+
+    Medea Destiny - 
+        Dec 2020 - Created script
+        
+*/
+
+key g_kWearer;
+integer g_iInterfaceChannel;
+
+default
+{
+    state_entry()
+    {
+        
+    }
+    attach(key kID)
+    {
+        if(kID) {
+            g_kWearer=llGetOwner();
+            g_iInterfaceChannel=-llAbs((integer)("0x" + llGetSubString(g_kWearer,30,-1)));
+        }
+    }
+        
+    touch_start(integer total_number)
+    {
+        if(llDetectedKey(0)!=g_kWearer) return;
+        llRegionSayTo(g_kWearer,g_iInterfaceChannel,"menuto"+(string)g_kWearer);
+    }
+}
