@@ -287,7 +287,7 @@ state active
                     }
                     SayToAddonX((key)llList2String(g_lAddons,i), "dc", 0, "", llGetOwner());
                     llMessageLinked(LINK_SET, NOTIFY, "0Addon: "+llList2String(g_lAddons,i+1)+" has been removed because it has not been seen for 5 minutes or more.", g_kWearer);
-                    g_lAddons = llDeleteSubList(g_lAddons, i, i+5);
+                    g_lAddons = llDeleteSubList(g_lAddons, i, i+4);
                     i=-5; // if we change the stride of the list this must be updated
                     end=llGetListLength(g_lAddons);
                     if(g_iVerbosityLevel>=4)
