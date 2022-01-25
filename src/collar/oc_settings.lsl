@@ -15,6 +15,16 @@ Medea Destiny
 //string g_sParentMenu = "Apps";
 
 
+integer g_iSettingsLoaded;
+
+// sends "ALIVE oc_setttings <global_var=val list>"                                                                                                     
+SendALIVE(){
+        g_iSettingsLoaded = TRUE;
+        llSetTimerEvent(0);
+        llMessageLinked(LINK_SET, ALIVE, "oc_settings", llList2Json(JSON_OBJECT, g_lSettings));
+}
+
+         
 integer TIMEOUT_REGISTER = 30498;
 integer TIMEOUT_FIRED = 30499;
 
@@ -114,6 +124,11 @@ integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 //string UPMENU = "BACK";
 //string ALL = "ALL";
+
+
+integer ALIVE = -55;
+integer READY = -56;
+integer STARTUP = -57;
 
 /*//--                       Anti-License Text                         --//*/
 /*//     Contributed Freely to the Public Domain without limitation.     //*/
@@ -473,6 +488,7 @@ default
             g_kSettingsCard = llGetInventoryKey(g_sSettings);
             g_kSettingsRead = llGetNotecardLine(g_sSettings, 0);
         }
+        else    SendALIVE();    // if there is no notecard, then no need to wait  
     }
 
     changed(integer iChange){
@@ -493,6 +509,7 @@ default
                 g_iCurrentIndex=0;
                 llSetTimerEvent(2);
                 llMessageLinked(LINK_SET, NOTIFY, "0Settings notecard loaded successfully", g_kWearer);
+                SendALIVE();   
             } else {
                 ProcessSettingLine(sData);
 
@@ -590,15 +607,15 @@ default
         {
             if(SettingExists(sStr)) llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, sStr+"="+GetSetting(sStr), "");
             else if(sStr == "ALL"){
+                while(llGetTime()<5) llSleep(1);																								
                 g_iCurrentIndex=0;
-                llSetTimerEvent(2);
+                llSetTimerEvent(0.15);
             } else llMessageLinked(LINK_SET, LM_SETTING_EMPTY, sStr, ""); // Unfortunately. The only time you ever get the empty signal is when you explicitly request the setting.
-        } else if(iNum == 0){
-            if(sStr == "initialize"){
-                llSleep (5); // Sleep for 5 seconds to give some padding for all scripts to switch to the ready state!
-                g_iBootup=TRUE;
-                g_iCurrentIndex=0;
-                llSetTimerEvent(0.5); //5
+        } else if(iNum==REBOOT){
+            llResetTime();
+            g_iBootup=TRUE;
+            if(g_iSettingsLoaded){
+                SendALIVE(); // sent ALIVE on receiving REBOOT signal
             }
         }
         //llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
