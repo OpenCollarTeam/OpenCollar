@@ -17,8 +17,19 @@ Medea (Medea Destiny)
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
+
+      ~~ boot states ~~
+default: REBOOT reboot         
+            ALIVE                   from oc_api & oc_core & oc_settings
+startup: STARTUP     
+            0 initialize            from oc_core
+            LM_SETTING_REQUEST ALL  from oc_api
+            "settings=sent"         from oc_settings
+running: TIMEOUT_READY              
+
 */
 
+integer g_iStartup; // keep track on where in the bootup sequence we are
 
 //integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
@@ -70,26 +81,104 @@ string UPMENU = "BACK";
 
 list g_lTimers; // signal, start_time, seconds_from
 
-integer g_iExpectAlive=0;
-list g_lAlive;
-integer g_iPasses=0;
 
 integer ALIVE = -55;
 integer READY = -56;
 integer STARTUP = -57;
+
+
+// oc_settings, oc_api and oc_core need to be ALIVE
+list g_lWaiting;  
+integer Alive(string scriptName){   
+    integer iScript = llListFindList(g_lWaiting,[scriptName]);
+    if(~iScript){
+        g_lWaiting = llDeleteSubList(g_lWaiting, iScript, iScript);
+    }
+    if(llGetListLength(g_lWaiting)==0){ 
+        return TRUE;
+    }
+    return FALSE;
+}
+
+integer AntiCrash(string scriptName){
+    if(!~llGetInventoryType(scriptName)) return TRUE;
+    
+    if(llGetScriptState(scriptName)==FALSE){
+        llResetOtherScript(scriptName);
+        llSleep(0.5);
+        llSetScriptState(scriptName,TRUE);
+        llSleep(1);
+        
+        if(scriptName=="oc_folders") llOwnerSay("WARNING! Opencollar detected that your folder script stopped running, and has restarted it. Usually this is a stack heap error, which means the folder script ran out of memory trying to read your folders. This happens when you have too many subfolders in one place. To stop this happening, please consider reorganizing your #RLV so that no individual folder has too many subfolders inside it, and check for folders that begin with a ~ directly in your #RLV root folder that can be deleted -- normally these are temporary attachment folders and are no longer needed."); 
+        if(g_iVerbosityLevel >=1)
+            llMessageLinked(LINK_SET, NOTIFY, "0"+scriptName+" has been reset. If the script stack heaped, please file a bug report on our github.", llGetOwner());
+        return TRUE;
+    }    
+    return FALSE;
+}
+
+Reboot(){        
+    integer i = llGetListLength(g_lWaiting);
+    while(i--)            
+        AntiCrash(llList2String(g_lWaiting,i));                       
+        
+    llMessageLinked(LINK_SET, REBOOT,"reboot", llGetScriptName());
+    llResetTime();
+    llSetTimerEvent(5);  
+}
+
+Startup(string scriptName){    
+    llMessageLinked(LINK_SET, STARTUP, scriptName, "");
+}
 default
 {
     state_entry()
     {
+        g_lWaiting=["oc_settings", "oc_api" ,"oc_core"];
         if(llGetStartParameter() != 0) state inUpdate;
-        
-        g_lAlive=[];
-        g_iPasses=-1;
-        g_iExpectAlive=1;
-        llSetTimerEvent(1);
-        //llScriptProfiler(TRUE);
+        Reboot();
+
         if(g_iVerbosityLevel>=1)
             llOwnerSay("Preparing to startup, please be patient.");
+    }
+    timer(){    
+        llMessageLinked(LINK_SET, READY, "","");
+        if(llGetTime()<15) return;
+    
+        // if only oc_settings failed, it's likely because it's a version witout ALIVE response
+        if(llGetListLength(g_lWaiting)==1 && llList2String(g_lWaiting,0)=="oc_settings")
+            state startup;   
+            
+        if(g_iVerbosityLevel>=1)
+            llOwnerSay("ALIVE check failed for "+llDumpList2String(g_lWaiting," & "));            
+            
+        g_iVerbosityLevel=0;    // quietly keep trying    
+        Reboot();   
+    }
+    
+    link_message(integer iSender, integer iNum, string sStr, key kID){
+        if(iNum == REBOOT && sStr == "reboot --f")llResetScript();
+
+        if(iNum == ALIVE){
+            string scriptName = llList2String(llParseString2List(sStr, ["="],[]),0);
+            if(~llListFindList(g_lWaiting, [scriptName])) // go through every script in g_lWaiting
+                if(Alive(scriptName)){
+                    state startup;    // pass if all gave the ALIVE signal
+                }
+        }
+    }
+}
+
+state startup
+{
+    state_entry()
+    {                
+        g_iStartup=0;
+        Startup("ALL");
+        llSetTimerEvent(60); 
+        
+        if(g_iVerbosityLevel>=2)
+            llOwnerSay("Waiting for settings to load.");
     }
     
     
@@ -98,51 +187,68 @@ default
     }
     
     timer(){
-        
-        if(g_iExpectAlive){
-            if(llGetTime()>=3 && g_iPasses<2){ //>=5
-                llMessageLinked(LINK_SET,READY, "","");
-                llResetTime();
-                //llSay(0, "PASS COUNT: "+(string)g_iPasses);
-                g_iPasses++;
-            } else if(llGetTime()>=2 && g_iPasses>=2){ //>=7.5
-                if(g_iVerbosityLevel>=2)
-                    llOwnerSay("Scripts ready: "+(string)llGetListLength(g_lAlive));
-                llMessageLinked(LINK_SET,STARTUP,llDumpList2String(g_lAlive,","),"");
-                g_iExpectAlive=0;
-                g_lAlive=[];
-                g_iPasses=0;
-                llSleep(1); //10
-                
-                if(g_iVerbosityLevel >=1)
-                    llMessageLinked(LINK_SET,NOTIFY,"0Startup in progress... be patient", llGetOwner());
-                //llMessageLinked(LINK_SET,LM_SETTING_REQUEST,"ALL","");
-                llMessageLinked(LINK_SET,0,"initialize","");
-            }
-            
-            return;
+        if(g_iVerbosityLevel>=1)
+            llOwnerSay("Startup timeout on other scripts feedback. code:"+(string)g_iStartup);    
+        //llResetScript();    
+        state running; // move on anyway        
+    }     
+    
+    changed(integer iChange){
+        if(iChange&CHANGED_INVENTORY){
+            llResetScript();
         }
+    }
+    link_message(integer iSender, integer iNum, string sStr, key kID){
+        if(iNum == REBOOT && sStr == "reboot --f")llResetScript();
         
-        if(llGetListLength(g_lTimers) == 0)
-            llSetTimerEvent(15);
+        if(iNum == 0 && sStr=="initialize"){
+            g_iStartup=g_iStartup|1;
+        }else if(iNum == LM_SETTING_REQUEST && sStr=="ALL"){  
+            g_iStartup=g_iStartup|2;  
+        }else if(iNum == LM_SETTING_RESPONSE && sStr == "settings=sent"){ 
+            g_iStartup=g_iStartup|4;        
+        } else if(iNum == ALIVE){
+            Startup(sStr);
+        }
+        if(g_iStartup>=7) state running;
+    }          
+}
+
+state running
+{
+    state_entry()
+    {          
+        llSetTimerEvent(5);
+        llMessageLinked(LINK_SET, TIMEOUT_READY, "","");
+        
+        // check if any haven't started up yet
+        llMessageLinked(LINK_SET, READY, "","");
+        
+        if(g_iVerbosityLevel>=2)
+            llOwnerSay("Startup Complete.");
+    }    
+    
+    on_rez(integer iRez){
+       llResetScript();
+    }
+    changed(integer iChange){
+        if(iChange&CHANGED_INVENTORY){
+            llSleep(4);
+            llResetScript();
+        }
+    }    
+    
+    timer(){
+        if( llGetListLength(g_lTimers) == 0) 
+            llSetTimerEvent(15);            
+            
         // Check all script states, then check list of managed scripts
         integer i=0;
         integer end = llGetInventoryNumber(INVENTORY_SCRIPT);
         integer iModified=FALSE;
         for(i=0;i<end;i++){
-            string scriptName = llGetInventoryName(INVENTORY_SCRIPT, i);
-            // regular anti-crash
-            if(llGetScriptState(scriptName)==FALSE){
-                llResetOtherScript(scriptName);
-                llSleep(0.5);
-                llSetScriptState(scriptName,TRUE);
-                llSleep(1);
-                iModified=TRUE;
-                if(scriptName=="oc_folders") llOwnerSay("WARNING! Opencollar detected that your folder script stopped running, and has restarted it. Usually this is a stack heap error, which means the folder script ran out of memory trying to read your folders. This happens when you have too many subfolders in one place. To stop this happening, please consider reorganizing your #RLV so that no individual folder has too many subfolders inside it, and check for folders that begin with a ~ directly in your #RLV root folder that can be deleted -- normally these are temporary attachment folders and are no longer needed."); 
-                if(g_iVerbosityLevel >=1)
-                    llMessageLinked(LINK_SET, NOTIFY, "0"+scriptName+" has been reset. If the script stack heaped, please file a bug report on our github.", llGetOwner());
-            }
-        }
+            iModified+=AntiCrash(llGetInventoryName(INVENTORY_SCRIPT, i));
+        }        
         if(iModified) llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "ALL","");
         
         // proceed
@@ -172,40 +278,18 @@ default
         
         if(iNum>=CMD_OWNER && iNum <= CMD_EVERYONE){
             if(sStr == "fix"){
-                g_iExpectAlive=1;
-                llResetTime();
-                g_iPasses=0;
-                g_lAlive=[];
+                llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "ALL", "");
             }
         } else if(iNum == TIMEOUT_REGISTER){
             g_lTimers += [(string)kID, llGetUnixTime(), (integer)sStr];
             llResetTime();
             llSetTimerEvent(1);
-        }else if(iNum == LM_SETTING_RESPONSE){
-            // Detect here the Settings
-            list lSettings = llParseString2List(sStr, ["_","="],[]);
-            string sToken = llList2String(lSettings,0);
-            string sVar = llList2String(lSettings,1);
-            string sVal = llList2String(lSettings, 2);
-            if(sToken == "global"){
-                if(sVar == "verbosity"){
-                    g_iVerbosityLevel = (integer)sVal;
-                }
-            }
-        } else if(iNum == 0){
-            if(sStr == "initialize"){
-                llMessageLinked(LINK_SET, TIMEOUT_READY, "","");
-            }
         }else if(iNum == -99999){
             if(sStr == "update_active")state inUpdate;
         } else if(iNum == ALIVE){
-            g_iExpectAlive=1;
-            if(llListFindList(g_lAlive,[sStr])==-1){
-                g_iPasses=0;
-                g_lAlive+=[sStr];
-            }else return;
-            llResetTime();
-            llSetTimerEvent(1);            
+            Startup(sStr);
+            llSleep(1);
+            llMessageLinked(LINK_SET, 0, "initialize", llGetKey());
         }
     }
 }
