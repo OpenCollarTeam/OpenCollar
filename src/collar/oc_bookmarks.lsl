@@ -1,10 +1,14 @@
 // oc_bookmarks
 // This file is part of OpenCollar.
-// Copyright (c) 2008 - 2017 Satomi Ahn, Nandana Singh, Wendy Starfall,  
+// Copyright (c) 2008 - 2021 Satomi Ahn, Nandana Singh, Wendy Starfall,  
 // Sumi Perl, Master Starship, littlemousy, mewtwo064, ml132,       
-// Romka Swallowtail, Garvin Twine et al.                 
+// Romka Swallowtail, Garvin Twine, Medea Destiny et al.                 
 // Licensed under the GPLv2.  See LICENSE for full details.
+/*
+Medea Destiny -
+    Dec 2021   -   Provided clickable SLURL feedback to command issuer
 
+*/
 
 string g_sScriptVersion = "8.1";
 integer LINK_CMD_DEBUG=1999;
@@ -184,10 +188,10 @@ You can enter:
         g_kCommander = kID;
         if (llListFindList(g_lVolatile_Destinations, [sCmd]) >= 0) {
             integer iIndex = llListFindList(g_lVolatile_Destinations, [sCmd]);
-            TeleportTo(llList2String(g_lVolatile_Slurls, iIndex));
+            TeleportTo(llList2String(g_lVolatile_Slurls, iIndex),kID);
         } else if (llListFindList(g_lDestinations, [sCmd]) >= 0) { //Found exact match, TP over
             integer iIndex = llListFindList(g_lDestinations, [sCmd]);
-            TeleportTo(llList2String(g_lDestinations_Slurls, iIndex));
+            TeleportTo(llList2String(g_lDestinations_Slurls, iIndex),kID);
         } else if (llStringLength(sCmd) > 0) { // We didn't get a case sensitive match, so lets loop through what we know and try find what we need
             integer i;
             integer iEnd = llGetListLength(g_lDestinations);
@@ -337,7 +341,7 @@ ReadDestinations() {  // On inventory change, re-read our ~destinations notecard
         g_kDataID = llGetNotecardLine(g_sCard, 0);
 }
 
-TeleportTo(string sStr) {  //take a string in region (x,y,z) format, and retrieve global coordinates.  The teleport takes place in the data server section
+TeleportTo(string sStr,key kIssuer) {  //take a string in region (x,y,z) format, and retrieve global coordinates.  The teleport takes place in the data server section
     string sRegion = llStringTrim(llGetSubString(sStr, 0, llSubStringIndex(sStr, "(") - 1), STRING_TRIM);
     string sCoords = llStringTrim(llGetSubString(sStr, llSubStringIndex(sStr, "(") + 1 , llStringLength(sStr) - 2), STRING_TRIM);
     list tokens = llParseString2List(sCoords, [","], []);
@@ -350,6 +354,9 @@ TeleportTo(string sStr) {  //take a string in region (x,y,z) format, and retriev
         llMapDestination(sRegion, g_vLocalPos, ZERO_VECTOR);
     else  //We've got RLV, let's use it
         g_kRequestHandle = llRequestSimulatorData(sRegion, DATA_SIM_POS);
+        llRegionSayTo(kIssuer,0,"Sending "+llGetDisplayName(g_kWearer)+" to http://maps.secondlife.com/secondlife/"+sRegion+"/"+(string)((integer)g_vLocalPos.x) + "/"+(string)((integer)g_vLocalPos.y)+"/"+(string)((integer)g_vLocalPos.z)+".");   
+    
+   
 }
 
 PrintDestinations(key kID) {  // On inventory change, re-read our ~destinations notecard
