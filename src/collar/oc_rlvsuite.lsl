@@ -35,7 +35,7 @@ medea (medea destiny)
                 -   Rewritten dialog code to set individual restrictions, 'cos it was badly broken. Issue #664
     Feb 2022    -   Fix for #732: Empty g_lMacros list returned via LM_SETTING_RESPONSE parses as a list with a single 
                     empty element, thus messing up the list stride. Not sure why we're keeping nulls here, but setting
-                    to empty list if list length is too short works.
+                    to empty list if list length is too short works. 
                 
                              
                              
