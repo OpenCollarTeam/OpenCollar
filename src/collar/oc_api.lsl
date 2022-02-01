@@ -436,7 +436,7 @@ default
     link_message(integer iSender, integer iNum, string sStr, key kID){
         if(iNum == REBOOT){
             if(sStr == "reboot"){
-                llResetScript();
+                llMessageLinked(LINK_SET, ALIVE, llGetScriptName(),"");
             }
         } else if(iNum == READY){
             llMessageLinked(LINK_SET, ALIVE, llGetScriptName(), "");
@@ -448,7 +448,11 @@ default
 state active
 {
     on_rez(integer iNum){
-        llResetScript();
+        llMessageLinked(LINK_SET, ALIVE, llGetScriptName(),"");
+    }
+        
+    changed(integer change){
+        if (change & CHANGED_OWNER) llResetScript();
     }
     
     state_entry(){
@@ -660,8 +664,10 @@ state active
             }
         } else if(iNum == REBOOT){
             if(sStr=="reboot"){
-                llResetScript();
+                llMessageLinked(LINK_SET, ALIVE, llGetScriptName(),"");
             }
+        } else if(iNum == STARTUP && sStr=="ALL"){
+            llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "ALL","");
         } 
         else if(iNum == DIALOG_RESPONSE){
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
