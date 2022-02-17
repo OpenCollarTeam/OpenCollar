@@ -42,6 +42,7 @@ Medea Destiny -
                 -   Added explanatory text to exceptions and force sit menus
                 -   Renamed Refuse TP to Force TP to reflect what the button actually does.                  
     Dec2021     -   Fixed filtering of unsit - > sit unsit for chat command and remote (issue #703 )
+                -   Fix to disengaging strict sit when disabled via menu when already sitting.
 */
 string g_sParentMenu = "RLV";
 string g_sSubMenu1 = "Force Sit";
@@ -626,6 +627,7 @@ state active
                             MenuForceSit(kAv,iAuth);
                         } else{
                             g_iStrictSit=1-g_iStrictSit;
+                            if(!g_iStrictSit) llMessageLinked(LINK_SET,RLV_CMD,"unsit=y","strictsit");
                             llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvext_strict="+(string)g_iStrictSit, "");
                             MenuForceSit(kAv,iAuth);
                         }
