@@ -43,6 +43,9 @@ Medea Destiny -
                 -   Renamed Refuse TP to Force TP to reflect what the button actually does.                  
     Dec2021     -   Fixed filtering of unsit - > sit unsit for chat command and remote (issue #703 )
                 -   Fix to disengaging strict sit when disabled via menu when already sitting.
+    Feb2021     -   SetAllExes triggered on RLV_REFRESH / RLV_ON was saving values, causing exception
+                    settings to be restored to defaults if trigged before settings are received.
+                    (fixes #740, #720, #719)
 */
 string g_sParentMenu = "RLV";
 string g_sSubMenu1 = "Force Sit";
@@ -827,7 +830,7 @@ state active
             g_iRLV = FALSE;
         } else if (iNum == RLV_REFRESH || iNum == RLV_ON) {
             g_iRLV = TRUE;
-            SetAllExes(FALSE,EX_TYPE_OWNER|EX_TYPE_TRUSTED|EX_TYPE_CUSTOM,TRUE);
+            SetAllExes(FALSE,EX_TYPE_OWNER|EX_TYPE_TRUSTED|EX_TYPE_CUSTOM,FALSE);
             SetMuffle(g_bMuffle);
             llSleep(1);
             llMessageLinked(LINK_SET,LINK_CMD_RESTDATA,"MinCamDist="+(string)g_fMinCamDist,kID);
