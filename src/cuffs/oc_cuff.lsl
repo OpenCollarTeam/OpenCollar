@@ -8,12 +8,15 @@ Safra (Safra Nitely)
     * June 2021           -       add priority for animations, fix visual lock/unlock
 Lilith (Lilith Xue)
     * August 2021         -       Add ping for Lockmiester furniture compatibility
+Ping (Pingout Duffield)
+    * February 2022       -       Added code to clear RLV restrictions between poses
 et al.
 
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
 Visual locking system fix by Safra Nitely (based on togglelock by Aria)
 Cuff locking levels system fix by Safra Nitely (using OC standard levles of locking)
+
 */
 list StrideOfList(list src, integer stride, integer start, integer end)
 {
@@ -71,7 +74,7 @@ string Checkbox(integer iValue, string sLabel) {
 //list g_lCollars;
 string g_sAddon = "OpenCollar Cuffs";
 
-string g_sVersion = "2.0.0";
+string g_sVersion = "1.0.0010";
 
 //integer CMD_ZERO            = 0;
 integer CMD_OWNER           = 500;
@@ -110,6 +113,7 @@ integer REPLY_POINT_KEY = -58933;
 integer CLEAR_ALL_CHAINS = -58934;
 integer STOP_CUFF_POSE = -58935; // <-- stops all active animations originating from this cuff
 integer DESUMMON_PARTICLES = -58936; // Message only includes the From point name
+integer CLEAR_POSE_RESTRICTION = -58937;  // Clear Restrictions between poses 
 
 integer g_iFirstInit=TRUE;
 
@@ -159,13 +163,13 @@ Menu(key kID, integer iAuth) {
     sPrompt += "\nCuff Name: "+g_sAddon+"\n";
 
     if(UPDATE_AVAILABLE)sPrompt+="* An update is available!\n";
-    // if(g_iAmNewer)sPrompt+="** You are using a pre-release version. Some bugs may be encountered!";
+    if(g_iAmNewer)sPrompt+="** You are using a pre-release version. Some bugs may be encountered!";
     list lButtons  = [];//"TEST CHAINS"];
 
     if(g_iHasPoses && llGetInventoryType("oc_cuff_pose")==INVENTORY_SCRIPT){
         if(!g_iHidden)
             lButtons+=["Pose"];
-        else sPrompt +="\nPoses not available while the Collar is hidden";
+        else sPrompt +="\nPoses not available while the cuffs are hidden";
     }
 
     if(iAuth == CMD_OWNER)
@@ -597,7 +601,6 @@ default
             {
                 // This signal, indicates the collar has approved the addon and that communication requests will be responded to if the requests are valid collar LMs.
                 g_kCollar = id;
-                g_iLMLastRecv = llGetUnixTime(); // Initial message should also probably count as a pong for timing reasons
                 Link("from_addon", LM_SETTING_REQUEST, "ALL", "");
             } else if(sPacketType == "denied" && g_kCollar == NULL_KEY)
             {
@@ -649,9 +652,7 @@ default
                             if (sVar == "synclock")
                             {
                                 g_iSyncLock=(integer)sVal;
-                            }
-                            else if(sVar == "locked")
-                                {
+                            } else if(sVar == "locked"){
                                 g_iCuffLocked=(integer)sVal;
                                 if(!g_iSyncLock)            //Changes by Safra to Display Visual Lock/Unlock
                                 {
@@ -678,17 +679,8 @@ default
                             if(sVar=="locked"){
                                 g_iLocked=(integer)sVal;
                                 if(g_iSyncLock){
-                                    if(g_iLocked)
-                                    {
-                                        llOwnerSay("@detach=n");
-                                        ToggleLock(TRUE);
-                                    }
-                                    else
-                                    {
-                                        llOwnerSay("@detach=y");
-                                        ToggleLock(FALSE);
-                                    }
-
+                                    if(g_iLocked)llOwnerSay("@detach=n");
+                                    else llOwnerSay("@detach=y");
                                 }
                             } else if(sVar=="checkboxes"){
                                 g_lCheckboxes=llParseString2List(sVal,[","],[]);
@@ -757,31 +749,16 @@ default
                         //llSay(0, "DELETE "+sToken+"_"+sVar);
                         if(sToken == "global"){
                             if(sVar == "locked"){
-                                if(g_iSyncLock)
-                                {
-                                    llOwnerSay("@detach=y");
-                                    ToggleLock(FALSE);
-                                    }
+                                if(g_iSyncLock)llOwnerSay("@detach=y");
                             }
-                        } else if(sToken == "occuffs")
-                        {
-                            if(sVar == "synclock")
-                            {
+                        } else if(sToken == "occuffs"){
+                            if(sVar == "synclock"){
                                 g_iSyncLock=FALSE;
-                                if(!g_iCuffLocked)
-                                {
-                                    llOwnerSay("@detach=y");
-                                    ToggleLock(FALSE);
-                                    }
+                                if(!g_iCuffLocked)llOwnerSay("@detach=y");
                             }
-                            else if(sVar == "locked")
-                                {
+                            else if(sVar == "locked"){
                                 g_iCuffLocked=FALSE;
-                                if(!g_iSyncLock)
-                                {
-                                    llOwnerSay("@detach=y");
-                                    ToggleLock(FALSE);
-                                    };
+                                if(!g_iSyncLock)llOwnerSay("@detach=y");
                             } else if(sVar==g_sPoseName+"pose"){
                                 g_sCurrentPose="NONE";
                             }
@@ -879,7 +856,8 @@ default
                                     Link("from_addon", STOP_CUFF_POSE, g_sCurrentPose, g_sPoseName);
                                     g_sCurrentPose="NONE";
                                     Link("from_addon", LM_SETTING_DELETE, "occuffs_"+g_sPoseName+"pose","");
-                                    Link("from_addon", CLEAR_ALL_CHAINS, "", "");
+                                    //Link("from_addon", CLEAR_ALL_CHAINS, "", "");
+                                    Link("from_addon", CLEAR_POSE_RESTRICTION, "", "");
                                     iRespring=FALSE;
                                     Link("from_addon", TIMEOUT_REGISTER, "2", "respring_poses:"+(string)iAuth+":"+(string)kAv+":"+(string)iPage+":"+(string)llGetKey());
                                 }else if(sMsg == "BACK"){
@@ -887,7 +865,9 @@ default
                                     Menu(kAv,iAuth);
                                 }else{
                                     // activate pose
-                                    Link("from_addon", CLEAR_ALL_CHAINS, "", "");
+                                    // Clear previous RLV Restrictions if any
+                                    Link("from_addon", CLEAR_POSE_RESTRICTION, "", "");
+                                    //Link("from_addon", CLEAR_ALL_CHAINS, "", "");
                                     g_sCurrentPose=sMsg;
                                     CMD_LEVEL=iAuth;
                                     Link("from_addon", LM_SETTING_SAVE, "occuffs_cmdlevel="+(string)iAuth,"");
@@ -957,8 +937,15 @@ default
                             llOwnerSay("@clear");
                             llSleep(0.5);
                             llOwnerSay("@detach=n");
-                            ToggleLock(TRUE);
-
+                        }
+                    } else if(iNum == CLEAR_POSE_RESTRICTION)
+                    {
+                        // ClearAllParticles();
+                        if(!g_iCuffLocked)llOwnerSay("@clear");
+                        else {
+                            llOwnerSay("@clear");
+                            llSleep(0.5);
+                            llOwnerSay("@detach=n");
                         }
                     } else if(iNum == STOP_CUFF_POSE && kID == g_sPoseName){
                         if(sStr!="NONE"){
@@ -977,36 +964,8 @@ default
         } else if(channel==-8888)
         {
             // LockMeister v2
-            key kLMKey = (key)llGetSubString(msg,0,35);
-            list lLMCmd = llParseString2List(msg,["|"],[]);
-            if (kLMKey == llGetOwner())
-            {
-                if (llGetListLength(lLMCmd) > 1) 
-                {  // A Lockmeister command
-                    string sLMCMD = llList2String(lLMCmd,2);
-                    string sLMPoint = llList2String(lLMCmd,3);
-                    if (sLMCMD == "RequestPoint") 
-                    {
-                        key kLink = NULL_KEY;
-                        list lKey = [];
-                        integer iMapIndex = llListFindList(g_lLMV2Map, [sLMPoint]);
-                        if (iMapIndex > -1) 
-                        {
-                            lKey = GetKey(llList2String(g_lLMV2Map, iMapIndex + 1));
-                            if (llList2Integer(lKey, 0) != LINK_ROOT) 
-                            llRegionSayTo(id, -8888,(string)llGetOwner()+"|LMV2|ReplyPoint|"+sLMPoint+"|"+llList2String(lKey, 1)); 
-                        }
-                    }
-                } 
-                else 
-                { // A Lockmeister Ping
-                    string sLMPoint = llGetSubString(msg,36,-1);
-                    if (llListFindList(g_lLMV2Map, [sLMPoint]) > -1) 
-                    {
-                        llRegionSayTo(id, -8888, (string)llGetOwner()+sLMPoint+" ok");
-                    }
-                }
-            }
+            //llSay(0, "Command on LockMeister channel: "+msg);
+
         } else if(channel == -9119)
         {
             //llSay(0, "Command on LockGuard Channel: "+msg);
@@ -1060,9 +1019,6 @@ default
                         fMaxAge=2+val;
                         ix++;
                     }
-                } else if (llList2String(lCmds, ix)=="ping")
-                {
-                    llRegionSayTo(id, -9119, "lockguard "+(string)llGetOwner()+" "+llList2String(lCmds, ix-1)+" okay");
                 }
                 ix++;
             }
