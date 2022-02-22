@@ -8,8 +8,9 @@ Safra (Safra Nitely)
     * June 2021           -       add priority for animations, fix visual lock/unlock
 Lilith (Lilith Xue)
     * August 2021         -       Add ping for Lockmiester furniture compatibility
+Ping (Pingout Duffield)
+    * February 2022       -       Add code to allow RLV Restrictions to clear between poses
 et al.
-
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
 Visual locking system fix by Safra Nitely (based on togglelock by Aria)
@@ -110,6 +111,7 @@ integer REPLY_POINT_KEY = -58933;
 integer CLEAR_ALL_CHAINS = -58934;
 integer STOP_CUFF_POSE = -58935; // <-- stops all active animations originating from this cuff
 integer DESUMMON_PARTICLES = -58936; // Message only includes the From point name
+integer CLEAR_POSE_RESTRICTION = -58937;  // Clear Restrictions between poses 
 
 integer g_iFirstInit=TRUE;
 
@@ -879,7 +881,8 @@ default
                                     Link("from_addon", STOP_CUFF_POSE, g_sCurrentPose, g_sPoseName);
                                     g_sCurrentPose="NONE";
                                     Link("from_addon", LM_SETTING_DELETE, "occuffs_"+g_sPoseName+"pose","");
-                                    Link("from_addon", CLEAR_ALL_CHAINS, "", "");
+                                    //Link("from_addon", CLEAR_ALL_CHAINS, "", "");
+                                    Link("from_addon", CLEAR_POSE_RESTRICTION, "", "");
                                     iRespring=FALSE;
                                     Link("from_addon", TIMEOUT_REGISTER, "2", "respring_poses:"+(string)iAuth+":"+(string)kAv+":"+(string)iPage+":"+(string)llGetKey());
                                 }else if(sMsg == "BACK"){
@@ -887,7 +890,9 @@ default
                                     Menu(kAv,iAuth);
                                 }else{
                                     // activate pose
-                                    Link("from_addon", CLEAR_ALL_CHAINS, "", "");
+                                    // Link("from_addon", CLEAR_ALL_CHAINS, "", "");
+                                    // Clear previous RLV Restrictions if any
+                                    Link("from_addon", CLEAR_POSE_RESTRICTION, "", "");
                                     g_sCurrentPose=sMsg;
                                     CMD_LEVEL=iAuth;
                                     Link("from_addon", LM_SETTING_SAVE, "occuffs_cmdlevel="+(string)iAuth,"");
@@ -959,6 +964,14 @@ default
                             llOwnerSay("@detach=n");
                             ToggleLock(TRUE);
 
+                        }
+                    } else if(iNum == CLEAR_POSE_RESTRICTION)
+                    {
+                        if(!g_iCuffLocked)llOwnerSay("@clear");
+                        else {
+                            llOwnerSay("@clear");
+                            llSleep(0.5);
+                            llOwnerSay("@detach=n");
                         }
                     } else if(iNum == STOP_CUFF_POSE && kID == g_sPoseName){
                         if(sStr!="NONE"){
