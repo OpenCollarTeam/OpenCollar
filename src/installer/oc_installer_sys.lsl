@@ -254,8 +254,8 @@ default {
                     g_iDone = FALSE;
                     //llSetTimerEvent(30.0);
                 }
-                llPlaySound("d023339f-9a9d-75cf-4232-93957c6f620c",1.0);
-                if(sParam == "8.0")llWhisper(g_initChannel,"-.. ---|"+g_sBuildVersion); //tell collar we are here and to send the pin
+                llPlaySound("9fc93abc-98d0-9ed1-05eb-2d41bd5b7506",1.0);
+                if((integer)llGetSubString(sParam,0,0)>=8)llWhisper(g_initChannel,"-.. ---|"+g_sBuildVersion); //tell collar we are here and to send the pin
                 else llWhisper(g_initChannel, "-.. ---|AppInstall"); // fix for the deprecated message in previous versions
             } else if (sCmd == "ready") {
                 // person clicked "Yes I want to update" on the collar menu.
