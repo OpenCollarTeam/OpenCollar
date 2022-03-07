@@ -13,6 +13,8 @@
 // script right after handshaking, we're free to rewrite everything that comes
 // after the handshake.
 
+// Stormed DarkShade  - Mar 22 - Added voice prompting to the install process
+
 // In addition to the handshake and shim installation, this script decides
 // which bundles should be installed into (or removed from) the collar.  It
 // loops over each bundle in inventory, telling the BundleGiver script to
