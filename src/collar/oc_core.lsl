@@ -24,7 +24,8 @@ Medea (Medea Destiny)
                 -   Added confirmation messages when group or public access is toggled and fixed a typo
                 -   Efficiency pass, inlined majorminor(), docheckupdate() and docheckdevupdate().
                     Removed g_lTestReports, left over from alpha.a
-                  
+   
+   march 2022   -  Stormed Darkshade (stormedstormy) Added button for reboot to help menu            
   
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
@@ -186,7 +187,7 @@ HelpMenu(key kID, integer iAuth){
         llMessageLinked(LINK_SET, NOTIFY, sPrompt, kID);
         return;
     }
-    list lButtons = ["Update", "Support", "License"];
+    list lButtons = ["Update", "Support", "License", "Reboot"];
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "Menu~Help");
 }
 
@@ -682,6 +683,8 @@ state active
                     if(sMsg == UPMENU){
                         iRespring=FALSE;
                         Menu(kAv,iAuth);
+                    } else if(sMsg == "Reboot")
+                        {llMessageLinked(LINK_SET, iAuth, "Reboot", kAv);
                     } else if(sMsg == "License"){
                         llGiveInventory(kAv, ".license");
                     } else if(sMsg == "Support"){
