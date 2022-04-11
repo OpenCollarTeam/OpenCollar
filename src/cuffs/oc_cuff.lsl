@@ -8,8 +8,10 @@ Safra (Safra Nitely)
     * June 2021           -       add priority for animations, fix visual lock/unlock
 Lilith (Lilith Xue)
     * August 2021         -       Add ping for Lockmiester furniture compatibility
+Ping (Pingout Duffield)
+    * February 2022       -       Add code to allow RLV Restrictions to clear between poses
+    * April 2022          -       Remove SyncLock (Test)
 et al.
-
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
 Visual locking system fix by Safra Nitely (based on togglelock by Aria)
@@ -110,6 +112,7 @@ integer REPLY_POINT_KEY = -58933;
 integer CLEAR_ALL_CHAINS = -58934;
 integer STOP_CUFF_POSE = -58935; // <-- stops all active animations originating from this cuff
 integer DESUMMON_PARTICLES = -58936; // Message only includes the From point name
+integer CLEAR_POSE_RESTRICTION = -58937;  // Clear Restrictions between poses 
 
 integer g_iFirstInit=TRUE;
 
@@ -173,11 +176,11 @@ Menu(key kID, integer iAuth) {
         lButtons+=["ClearChains"];
     }
 
-    if(!g_iSyncLock){
+//    if(!g_iSyncLock){
         lButtons += [Checkbox(g_iCuffLocked, "Lock")];
-    }
+//    }
 
-    lButtons += [Checkbox(g_iSyncLock, "SyncLock")];
+//    lButtons += [Checkbox(g_iSyncLock, "SyncLock")];
 
 
 
@@ -332,7 +335,7 @@ integer TIMEOUT_FIRED = 30499;
 
 integer g_iCuffLocked=FALSE;
 integer g_iLocked;
-integer g_iSyncLock;
+// integer g_iSyncLock;
 string g_sCurrentPose="NONE";
 
 PosesMenu (key kAv, integer iAuth, integer iPage)
@@ -646,14 +649,14 @@ default
                                 if ((integer)sVal  == 504) CMD_LEVEL =504;  //set menu access level to  public
                             }
 
-                            if (sVar == "synclock")
-                            {
-                                g_iSyncLock=(integer)sVal;
-                            }
+                            // if (sVar == "synclock")
+                            // {
+                            //    g_iSyncLock=(integer)sVal;
+                            //  }
                             else if(sVar == "locked")
                                 {
                                 g_iCuffLocked=(integer)sVal;
-                                if(!g_iSyncLock)            //Changes by Safra to Display Visual Lock/Unlock
+//                                if(!g_iSyncLock)            //Changes by Safra to Display Visual Lock/Unlock
                                 {
                                     if(g_iCuffLocked)
                                     {
@@ -677,19 +680,19 @@ default
                         }else if(sToken == "global"){
                             if(sVar=="locked"){
                                 g_iLocked=(integer)sVal;
-                                if(g_iSyncLock){
-                                    if(g_iLocked)
-                                    {
-                                        llOwnerSay("@detach=n");
-                                        ToggleLock(TRUE);
-                                    }
-                                    else
-                                    {
-                                        llOwnerSay("@detach=y");
-                                        ToggleLock(FALSE);
-                                    }
+                         //       if(g_iSyncLock){
+                         //           if(g_iLocked)
+                         //           {
+                         //               llOwnerSay("@detach=n");
+                         //               ToggleLock(TRUE);
+                         //           }
+                         //           else
+                         //           {
+                         //               llOwnerSay("@detach=y");
+                         //               ToggleLock(FALSE);
+                         //           }
 
-                                }
+                         //       }
                             } else if(sVar=="checkboxes"){
                                 g_lCheckboxes=llParseString2List(sVal,[","],[]);
                             } else if(sVar == "hide"){
@@ -717,17 +720,18 @@ default
 
 
                         if(sStr=="settings=sent"){
-                            if(g_iSyncLock){
-                                g_iCuffLocked=g_iLocked;
-                                if(g_iLocked){
-                                    llOwnerSay("@detach=n");
-                                    ToggleLock(TRUE);
-                                }
-                                else {
-                                    ToggleLock(FALSE);
-                                    llOwnerSay("@detach=y");
-                                }
-                            }else{
+                     //       if(g_iSyncLock){
+                     //           g_iCuffLocked=g_iLocked;
+                     //           if(g_iLocked){
+                     //               llOwnerSay("@detach=n");
+                     //               ToggleLock(TRUE);
+                     //           }
+                     //           else {
+                     //               ToggleLock(FALSE);
+                     //               llOwnerSay("@detach=y");
+                     //           }
+                     //       }else
+                                {
                                 if(g_iCuffLocked){
                                     ToggleLock(TRUE);
                                     llOwnerSay("@detach=n");
@@ -756,33 +760,35 @@ default
 
                         //llSay(0, "DELETE "+sToken+"_"+sVar);
                         if(sToken == "global"){
-                            if(sVar == "locked"){
-                                if(g_iSyncLock)
-                                {
+                            if(sVar == "locked")
+                            {
+                      //          if(g_iSyncLock)
+                               {
                                     llOwnerSay("@detach=y");
                                     ToggleLock(FALSE);
-                                    }
-                            }
+                                }
+                           }
                         } else if(sToken == "occuffs")
                         {
-                            if(sVar == "synclock")
-                            {
-                                g_iSyncLock=FALSE;
-                                if(!g_iCuffLocked)
-                                {
-                                    llOwnerSay("@detach=y");
-                                    ToggleLock(FALSE);
-                                    }
-                            }
-                            else if(sVar == "locked")
-                                {
-                                g_iCuffLocked=FALSE;
-                                if(!g_iSyncLock)
-                                {
-                                    llOwnerSay("@detach=y");
-                                    ToggleLock(FALSE);
-                                    };
-                            } else if(sVar==g_sPoseName+"pose"){
+                           // if(sVar == "synclock")
+                           // {
+                           //     g_iSyncLock=FALSE;
+                           //     if(!g_iCuffLocked)
+                           //     {
+                           //         llOwnerSay("@detach=y");
+                           //         ToggleLock(FALSE);
+                           //         }
+                           // }
+                           // else if(sVar == "locked")
+                           //     {
+                           //     g_iCuffLocked=FALSE;
+                           //     if(!g_iSyncLock)
+                           //     {
+                           //         llOwnerSay("@detach=y");
+                           //         ToggleLock(FALSE);
+                           //         };
+                           // } else 
+                            if(sVar==g_sPoseName+"pose"){
                                 g_sCurrentPose="NONE";
                             }
                         } else if(sToken == "anim")
@@ -846,13 +852,15 @@ default
                                 }else if(sMsg == "ClearChains"){
                                     if(iAuth==CMD_OWNER)
                                         Link("from_addon", CLEAR_ALL_CHAINS, "", "");
-                                } else if(sMsg == Checkbox(g_iSyncLock, "SyncLock")){
-                                    if(iAuth == CMD_OWNER){
-                                        g_iSyncLock=1-g_iSyncLock;
+                                } 
+                            //    else if(sMsg == Checkbox(g_iSyncLock, "SyncLock")){
+                            //        if(iAuth == CMD_OWNER){
+                            //            g_iSyncLock=1-g_iSyncLock;
                                         // sync lock save
-                                        Link("from_addon", LM_SETTING_SAVE, "occuffs_synclock="+(string)g_iSyncLock, "");
-                                    }else Link("from_addon", NOTIFY, "0%NOACCESS% to toggling lock sync!", kAv);
-                                } else if(sMsg == Checkbox(g_iCuffLocked, "Lock")){
+                            //            Link("from_addon", LM_SETTING_SAVE, "occuffs_synclock="+(string)g_iSyncLock, "");
+                            //        }else Link("from_addon", NOTIFY, "0%NOACCESS% to toggling lock sync!", kAv);
+                            //    } 
+                                else if(sMsg == Checkbox(g_iCuffLocked, "Lock")){
                                     if(iAuth==CMD_OWNER){
                                         g_iCuffLocked=1-g_iCuffLocked;
                                        // ToggleLock();
@@ -879,7 +887,8 @@ default
                                     Link("from_addon", STOP_CUFF_POSE, g_sCurrentPose, g_sPoseName);
                                     g_sCurrentPose="NONE";
                                     Link("from_addon", LM_SETTING_DELETE, "occuffs_"+g_sPoseName+"pose","");
-                                    Link("from_addon", CLEAR_ALL_CHAINS, "", "");
+                                    //Link("from_addon", CLEAR_ALL_CHAINS, "", "");
+                                    Link("from_addon", CLEAR_POSE_RESTRICTION, "", "");
                                     iRespring=FALSE;
                                     Link("from_addon", TIMEOUT_REGISTER, "2", "respring_poses:"+(string)iAuth+":"+(string)kAv+":"+(string)iPage+":"+(string)llGetKey());
                                 }else if(sMsg == "BACK"){
@@ -887,7 +896,9 @@ default
                                     Menu(kAv,iAuth);
                                 }else{
                                     // activate pose
-                                    Link("from_addon", CLEAR_ALL_CHAINS, "", "");
+                                    // Link("from_addon", CLEAR_ALL_CHAINS, "", "");
+                                    // Clear previous RLV Restrictions if any
+                                    Link("from_addon", CLEAR_POSE_RESTRICTION, "", "");
                                     g_sCurrentPose=sMsg;
                                     CMD_LEVEL=iAuth;
                                     Link("from_addon", LM_SETTING_SAVE, "occuffs_cmdlevel="+(string)iAuth,"");
@@ -959,6 +970,14 @@ default
                             llOwnerSay("@detach=n");
                             ToggleLock(TRUE);
 
+                        }
+                    } else if(iNum == CLEAR_POSE_RESTRICTION)
+                    {
+                        if(!g_iCuffLocked)llOwnerSay("@clear");
+                        else {
+                            llOwnerSay("@clear");
+                            llSleep(0.5);
+                            llOwnerSay("@detach=n");
                         }
                     } else if(iNum == STOP_CUFF_POSE && kID == g_sPoseName){
                         if(sStr!="NONE"){
