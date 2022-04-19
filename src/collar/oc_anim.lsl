@@ -472,7 +472,6 @@ state active
                 CONTROL_ROT_RIGHT |
                 CONTROL_UP |
                 CONTROL_DOWN |
-                CONTROL_ML_LBUTTON | 
                 0x02 |
                 0x04,
                 TRUE,TRUE);

@@ -856,7 +856,9 @@ default
                             ToggleLock(TRUE);
 
                         }
+
                     } else if(iNum == CLEAR_POSE_RESTRICTION) {
+
                         if(!g_iCuffLocked)llOwnerSay("@clear");
                         else {
                             llOwnerSay("@clear");
