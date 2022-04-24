@@ -17,15 +17,13 @@ https://github.com/OpenCollarTeam/OpenCollar
 Visual locking system fix by Safra Nitely (based on togglelock by Aria)
 Cuff locking levels system fix by Safra Nitely (using OC standard levles of locking)
 */
-list StrideOfList(list src, integer stride, integer start, integer end)
-{
+list StrideOfList(list src, integer stride, integer start, integer end) {
     list l = [];
     integer ll = llGetListLength(src);
     if(start < 0)start += ll;
     if(end < 0)end += ll;
     if(end < start) return llList2List(src, start, start);
-    while(start <= end)
-    {
+    while(start <= end) {
         l += llList2List(src, start, start);
         start += stride;
     }
@@ -190,12 +188,10 @@ UserCommand(integer iNum, string sStr, key kID) {
         return;
     }
 
-    if (llToLower(sStr) == llToLower(g_sAddon) || llToLower(sStr) == "menu "+llToLower(g_sAddon))
-    {
+    if (llToLower(sStr) == llToLower(g_sAddon) || llToLower(sStr) == "menu "+llToLower(g_sAddon)) {
         Menu(kID, iNum);
     } //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
-    else
-    {
+    else {
         //integer iWSuccess   = 0;
         //string sChangetype  = llList2String(llParseString2List(sStr, [" "], []),0);
         //string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),1);
@@ -299,8 +295,7 @@ PSYS_PART_TARGET_POS_MASK
 
 list g_lMyPoints = [];
 string g_sActivePose;
-list GetKey(string LinkName)
-{
+list GetKey(string LinkName) {
     integer i=0;
     integer end = llGetNumberOfPrims();
     for(i=LINK_ROOT;i<=end;i++){
@@ -327,24 +322,20 @@ integer g_iCuffLocked=FALSE;
 integer g_iLocked;
 string g_sCurrentPose="NONE";
 
-PosesMenu (key kAv, integer iAuth, integer iPage)
-{
-    if (iAuth <= CMD_LEVEL)
-    {
+PosesMenu (key kAv, integer iAuth, integer iPage) {
+    if (iAuth <= CMD_LEVEL) {
     string sPrompt = "\n[OpenCollar Cuffs]\n> Poses selection\n\n* Current Pose: ";
     sPrompt += g_sCurrentPose;
     list lButtons = g_lPoses;
     Dialog(kAv, sPrompt, lButtons, ["*STOP*", "BACK"], iPage, iAuth, "Cuffs~Poses");
     }
-    else
-    {
+    else {
     string sPrompt = "\n[OpenCollar Cuffs]\n> Poses selection\n\n* Only your owner can access this menu! ";
     }
 }
 
 
-Desummon(list lPoints)
-{
+Desummon(list lPoints) {
     integer ix=0;
     integer end = llGetListLength(lPoints);
     for(ix=0;ix<end;ix++){
@@ -353,8 +344,7 @@ Desummon(list lPoints)
     }
 }
 
-Summon(list opts, string age, string gravity)
-{
+Summon(list opts, string age, string gravity) {
 
     integer i=0;
     integer end = llGetListLength(opts);
@@ -368,8 +358,7 @@ Summon(list opts, string age, string gravity)
 string g_sPoseName= "";
 integer g_iHidden=FALSE;
 
-ToggleLock(integer iLocked)
-{
+ToggleLock(integer iLocked) {
     if(g_iHidden)return;
     integer i=LINK_ROOT;
     integer end = llGetNumberOfPrims();
@@ -397,8 +386,7 @@ ToggleLock(integer iLocked)
     }
 }
 
-ToggleAlpha(integer iHidden)
-{
+ToggleAlpha(integer iHidden) {
     if(iHidden)ClearAllParticles();
     integer i=0;
     integer end = llGetNumberOfPrims();
@@ -438,15 +426,12 @@ default
         }
     }
 
-    link_message(integer iSend,integer iNum, string sMsg, key kID)
-    {
+    link_message(integer iSend,integer iNum, string sMsg, key kID) {
         if(iNum==2) {
 
             UpdateDSRequest(NULL, llHTTPRequest("https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/web/cuffs.txt",[],""), "check_version");
             if(g_iLMV2Listen !=-1)llListenRemove(g_iLMV2Listen);
             g_iLMV2Listen = llListen(-8888, "", "", "");
-
-
             if(g_iLGV2Listen !=-1)llListenRemove(g_iLGV2Listen);
             g_iLGV2Listen = llListen(-9119, "", "", "");
         } else if(iNum == 0) {
@@ -620,7 +605,6 @@ default
                             else if(sVar == "locked") {
                                 g_iCuffLocked=(integer)sVal;
                            //Changes by Safra to Display Visual Lock/Unlock
-                                {
                                     if(g_iCuffLocked) {
                                     llOwnerSay("@detach=n");
                                     ToggleLock(TRUE);
@@ -629,8 +613,7 @@ default
                                     llOwnerSay("@detach=y");
                                     ToggleLock(FALSE);
                                     }
-                                }
-                            } else if(sVar == g_sPoseName+"pose") {
+                             } else if(sVar == g_sPoseName+"pose") {
                                 // check pose map for this pose then perform start animation process
                                 g_sCurrentPose=sVal;
                                 if(!g_iHidden)
@@ -664,7 +647,6 @@ default
                         }
 
                         if(sStr=="settings=sent") {
-                                {
                                 if(g_iCuffLocked) {
                                     ToggleLock(TRUE);
                                     llOwnerSay("@detach=n");
@@ -673,7 +655,7 @@ default
                                     ToggleLock(FALSE);
                                     llOwnerSay("@detach=y");
                                 }
-                            }
+
                             if(g_sCurrentPose!="NONE")llMessageLinked(LINK_SET,500, g_sCurrentPose, "0");
                             if(g_sActivePose!="")llMessageLinked(LINK_SET,300, g_sActivePose, "");
 
@@ -720,8 +702,7 @@ default
                     }
                     else if (iNum == DIALOG_RESPONSE) {
                         integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-                        if (iMenuIndex != -1)
-                        {
+                        if (iMenuIndex != -1) {
                             string sMenu = llList2String(g_lMenuIDs, iMenuIndex + 1);
                             g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
                             list lMenuParams = llParseString2List(sStr, ["|"], []);
@@ -729,8 +710,6 @@ default
                             string sMsg = llList2String(lMenuParams, 1);
                             integer iPage = (integer)llList2String(lMenuParams,2);
                             integer iAuth = llList2Integer(lMenuParams, 3);
-
-
                             integer iRespring=TRUE;
                             if (sMenu == "Menu~Main") {
                                 if (sMsg == UPMENU) {
@@ -901,8 +880,7 @@ default
                 else { 
                 // A Lockmeister Ping
                     string sLMPoint = llGetSubString(msg,36,-1);
-                    if (llListFindList(g_lLMV2Map, [sLMPoint]) > -1) 
-                    {
+                    if (llListFindList(g_lLMV2Map, [sLMPoint]) > -1) {
                         llRegionSayTo(id, -8888, (string)llGetOwner()+sLMPoint+" ok");
                     }
                 }
@@ -917,8 +895,7 @@ default
             key kTexture="";
             float fMaxAge=0;
             if(llList2String(lCmds,0)=="lockguard"){
-                if(llList2String(lCmds,1) != (string)llGetOwner())
-                {
+                if(llList2String(lCmds,1) != (string)llGetOwner()) {
                     return; // immediately cease processing
                 }
             }
@@ -934,8 +911,7 @@ default
                 return;
             }
             ix=2;
-            while(ix!=end)
-            {
+            while(ix!=end) {
                 if(llList2String(lCmds,ix) == "link"){
                     kTarget = (key)llList2String(lCmds,ix+1);
                     ix++;
@@ -951,8 +927,7 @@ default
                     }
                 } else if(llList2String(lCmds,ix)=="life") {
                     float val = (float)llList2String(lCmds,ix+1);
-                    if(val!=0)
-                    {
+                    if(val!=0) {
                         fMaxAge=2+val;
                         ix++;
                     }
