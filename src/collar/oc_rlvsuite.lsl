@@ -598,7 +598,7 @@ state active
         if(changed && CHANGE_REGION){
             if( g_bForceMouselook == TRUE){
                 FormatCommand("camdistmax:0",FALSE);
-                FormatCommand("camdistmax:0",TRUE)
+                FormatCommand("camdistmax:0",TRUE);
             }
         }
     }
