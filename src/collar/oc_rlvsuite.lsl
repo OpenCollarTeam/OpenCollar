@@ -594,6 +594,15 @@ state active
         //llSetTimerEvent(1);
     }
     
+    change(integer changed){
+        if(changed && CHANGE_REGION){
+            if( g_bForceMouselook == TRUE){
+                FormatCommand("camdistmax:0",FALSE);
+                FormatCommand("camdistmax:0",TRUE)
+            }
+        }
+    }
+    
     timer(){
         if(llGetTime()>=20 && g_iJustRezzed){
             llMessageLinked(LINK_SET, RLV_REFRESH, "",""); // refreshes rlvsuite restrictions
