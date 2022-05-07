@@ -317,8 +317,8 @@ string GetOutfitSystem(integer iCorePath){
         if(iCorePath)return ".outfits/.core";
         else return ".outfits";
     }else{
-        if(iCorePath)return "outfits/core";
-        else return "outfits";
+        if(iCorePath)return "~outfits/~core";
+        else return "~outfits";
     }
 }
 
@@ -327,8 +327,8 @@ string GetFolderName(integer iCore){
         if(iCore)return ".core";
         else return ".outfits";
     }else{
-        if(iCore)return "core";
-        else return "outfits";
+        if(iCore)return "~core";
+        else return "~outfits";
     }
 }
 
