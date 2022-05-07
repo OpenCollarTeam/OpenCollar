@@ -594,8 +594,8 @@ state active
         //llSetTimerEvent(1);
     }
     
-    change(integer changed){
-        if(changed && CHANGED_REGION){
+    changed(integer change){
+        if(change && CHANGED_REGION){
             if( g_bForceMouselook == TRUE){
                 FormatCommand("camdistmax:0",FALSE);
                 FormatCommand("camdistmax:0",TRUE);
