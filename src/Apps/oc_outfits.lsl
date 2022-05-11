@@ -341,13 +341,13 @@ default
     state_entry(){
         llMessageLinked(LINK_SET, ALIVE, llGetScriptName(),"");
         llListen(999988, "", llGetOwner(), "");
-        llOwnerSay("@version=999988");
+        llOwnerSay("@versionnew=999988");
     }
     listen(integer iChan, string sName, key kID, string sMsg)
     {
-        if(llSubStringIndex(sMsg, "RLVa")==-1){
-            g_iRLVa=FALSE;
-        }else g_iRLVa=TRUE;
+        if(~llSubStringIndex(sMsg, "RLVa")){
+            g_iRLVa=TRUE;
+        }else g_iRLVa=FALSE;
     }
     link_message(integer iSender, integer iNum, string sStr, key kID){
         if(iNum == REBOOT){
