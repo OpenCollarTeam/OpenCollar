@@ -59,8 +59,13 @@ integer MENUNAME_RESPONSE = 3001;
 integer OUTFITS_ADD = -999901;
 integer OUTFITS_REM = -999902;
 
-//integer RLV_CMD = 6000;
-//integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
+integer RLV_CMD = 6000;
+integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
+integer DO_RLV_REFRESH = 26001;//RLV plugins should reinstate their restrictions upon receiving this message.
+integer RLV_CLEAR = 6002;//RLV plugins should clear their restriction lists upon receiving this message.
+integer RLV_VERSION = 6003; //RLV Plugins can recieve the used RLV viewer version upon receiving this message..
+integer RLVA_VERSION = 6004; //RLV Plugins can recieve the used RLVa viewer version upon receiving this message..
+integer RLV_CMD_OVERRIDE=6010; //RLV Plugins can send one-shot (force) commands with a list of restrictions to temporarily lift if required to ensure that the one-shot commands can be executed
 
 //integer RLV_OFF = 6100; // send to inform plugins that RLV is disabled now, no message or key needed
 //integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no message or key needed
