@@ -340,14 +340,6 @@ default
     }
     state_entry(){
         llMessageLinked(LINK_SET, ALIVE, llGetScriptName(),"");
-        llListen(999988, "", llGetOwner(), "");
-        llOwnerSay("@versionnew=999988");
-    }
-    listen(integer iChan, string sName, key kID, string sMsg)
-    {
-        if(~llSubStringIndex(sMsg, "RLVa")){
-            g_iRLVa=TRUE;
-        }else g_iRLVa=FALSE;
     }
     link_message(integer iSender, integer iNum, string sStr, key kID){
         if(iNum == REBOOT){
@@ -370,10 +362,16 @@ state active
     {
         if(llGetStartParameter()!=0)llResetScript();
         g_kWearer = llGetOwner();
-        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "global_locked","");
+        //llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "global_locked","");
+        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "ALL","");
     }
     link_message(integer iSender,integer iNum,string sStr,key kID){
         if(iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID);
+        else if(iNum == RLV_VERSION || iNum == RLVA_VERSION ){
+               if(~llSubStringIndex(sStr, "RLVa")){
+                  g_iRLVa=TRUE;
+               }else g_iRLVa=FALSE;
+        }
         else if(iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu+"|"+ g_sSubMenu,"");
         else if(iNum == -99999){
