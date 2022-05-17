@@ -11,6 +11,8 @@ Lilith (Lilith Xue)
 Ping (Pingout Duffield)
     * February 2022       -       Add code to allow RLV Restrictions to clear between poses
     * April 2022          -       Remove SyncLock, Clean Up Script Style
+Kristen Mynx
+    * May 2022        -       Added resizer support
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
@@ -168,7 +170,10 @@ Menu(key kID, integer iAuth) {
             lButtons+=["Pose"];
         else sPrompt +="\nPoses not available while the Collar is hidden";
     }
-
+    if(llGetInventoryType("oc_cuff_resizer")==INVENTORY_SCRIPT){
+        if(!g_iHidden)
+            lButtons+=["Cuff Resize"];
+    }
     if(iAuth == CMD_OWNER) {
         lButtons+=["ClearChains"];
     }
@@ -721,6 +726,9 @@ default
                                     llMessageLinked(LINK_SET,9, (string)kAv, (string)iAuth); // Retrieve the pose menu button names
                                     //PosesMenu(kAv,iAuth,0);
                                     //llSay(0, "This is an example addon.");
+                                } else if(sMsg == "Cuff Resize"){
+                                    iRespring=FALSE;
+                                    llMessageLinked(LINK_SET,31, (string)kAv, (string)iAuth);
                                 } else if(sMsg == "TEST CHAINS"){
                                     //llSay(0, "Chain Test Program");
                                     //llSay(0, "Chaining frlac > fllac | bllac > brlac");
