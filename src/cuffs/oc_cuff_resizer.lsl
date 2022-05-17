@@ -138,7 +138,7 @@ Scale(integer iScale, integer iRezSize, key kAV) {
     // http://wiki.secondlife.com/wiki/LlScaleByFactor
     if (llScaleByFactor(fScale)==TRUE) {
         g_iScaleFactor = iScale;
-        Link("from_addon",NOTIFY,"1"+"Scaling finished, the %DEVICETYPE% is now on "+ (string)g_iScaleFactor +"% of the rez size.",kAV);
+        Link("from_addon",NOTIFY,"1"+"Scaling finished, the cuff is now on "+ (string)g_iScaleFactor +"% of the rez size.",kAV);
     } else Link("from_addon",NOTIFY,"1"+ "The object cannot be scaled as you requested; prims would surpass minimum or maximum size.",kAV);
 }
 
