@@ -369,7 +369,7 @@ state active
                         {
                             llOwnerSay("Pre-Addon Deletion List: "+llDumpList2String(g_lAddons,"~"));
                         }
-                        g_lAddons = llDeleteSubList(g_lAddons, iPos, iPos+5);
+                        g_lAddons = llDeleteSubList(g_lAddons, iPos, iPos+4);
                         if(g_iVerbosityLevel>=4)
                         {
                             llOwnerSay("Post-Addon Deletion List: "+llDumpList2String(g_lAddons,"~"));
