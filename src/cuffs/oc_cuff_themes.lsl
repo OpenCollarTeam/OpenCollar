@@ -269,6 +269,10 @@ default
         if(iNum == -1){ // oc_cuff sends this when it starts (which is also on_rez)
             llResetScript();
         }
+        if (iNum == 32) // [New Theme] from oc_cuff script
+        {
+            PrintCurrentProperties(kID);
+        }
     }
     listen(integer channel, string name, key id, string msg){
         if(channel==API_CHANNEL && llGetOwner() == llGetOwnerKey(id)){ // also be sure its a message from my collar
