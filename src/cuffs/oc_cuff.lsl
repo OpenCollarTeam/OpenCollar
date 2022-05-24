@@ -477,7 +477,7 @@ default
                 llSetTimerEvent(60);
 
                 ToggleAlpha(FALSE);
-                llOwnerSay(g_sAddon+" ready ("+(string)llGetFreeMemory()+"b)");
+                //llOwnerSay(g_sAddon+" ready ("+(string)llGetFreeMemory()+"b)");
             }
         }
     }
