@@ -69,6 +69,7 @@ integer DO_RLV_REFRESH = 26001;//RLV plugins should reinstate their restrictions
 integer RLV_CLEAR = 6002;//RLV plugins should clear their restriction lists upon receiving this message.
 integer RLV_VERSION = 6003; //RLV Plugins can recieve the used RLV viewer version upon receiving this message..
 integer RLVA_VERSION = 6004; //RLV Plugins can recieve the used RLVa viewer version upon receiving this message..
+integer RLV_VERSION_REQUEST = 6005; //RLV Plugins and addons can exclusivly request which version was detected.
 integer RLV_CMD_OVERRIDE=6010; //RLV Plugins can send one-shot (force) commands with a list of restrictions to temporarily lift if required to ensure that the one-shot commands can be executed
 
 integer RLV_OFF = 6100;
@@ -483,8 +484,20 @@ state active
             if (g_iRlvActive == TRUE) {
                 llSleep(2);
                 llMessageLinked(LINK_SET, RLV_ON, "", NULL_KEY);
-                if (g_iRlvaVersion) llMessageLinked(LINK_SET, RLVA_VERSION, (string) g_iRlvaVersion, NULL_KEY);
-            }
+                if (g_iRlvaVersion) {
+                	llMessageLinked(LINK_SET, RLVA_VERSION, (string) g_iRlvaVersion, NULL_KEY);
+                }
+                else {
+					llMessageLinked(LINK_SET,RLV_VERSION, (string) g_iRlvVersion,NULL_KEY);
+				}
+			}
+		} else if(iNum == RLV_VERSION_REQUEST ){
+			if (g_iRlvaVersion) {
+               	llMessageLinked(LINK_SET, RLVA_VERSION, (string) g_iRlvaVersion, NULL_KEY);
+			}
+            else {
+				llMessageLinked(LINK_SET,RLV_VERSION, (string) g_iRlvVersion,NULL_KEY);
+			}
         } else if(iNum == TIMEOUT_FIRED)
         {
             
