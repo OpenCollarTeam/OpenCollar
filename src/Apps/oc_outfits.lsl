@@ -313,7 +313,7 @@ integer ALIVE = -55;
 integer READY = -56;
 integer STARTUP = -57;
 
-integer g_iRLVa = 0;
+integer g_iRLVa = FALSE;
 
 string RLVA_APPEND=".";
 
@@ -367,13 +367,12 @@ state active
     {
         if(llGetStartParameter()!=0)llResetScript();
         g_kWearer = llGetOwner();
-        //llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "global_locked","");
-        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "ALL","");
+        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "global_locked","");
     }
     link_message(integer iSender,integer iNum,string sStr,key kID){
         if(iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID);
-        else if(iNum == RLV_VERSION || iNum == RLVA_VERSION ){
-               if(~llSubStringIndex(sStr, "RLVa")){
+        else if(iNum == RLVA_VERSION ){
+               if(sStr == "1"){
                   g_iRLVa=TRUE;
                }else g_iRLVa=FALSE;
         }
