@@ -615,13 +615,7 @@ default {
                 if (sMessage == "Cancel") return;
                 else if (sMessage == "-") MenuAO(kID);
                 else if (sMessage == "Collar Menu"){
-                    // use the authorized user to return to the collar menu, using the addon script to prevent breaking it.
-                    llMessageLinked(LINK_THIS,CMD_USER,"CollarMenu",kID);
-                    //llRegionSayTo(g_kWearer, API_CHANNEL, llList2Json(JSON_OBJECT, ["pkt_type", "online", "kID", g_kWearer, "addon_name", "OC_Sub_AO", "optin", ""]));
-                    //llSleep(2);
-                    //llRegionSayTo(g_kWearer, API_CHANNEL, llList2Json(JSON_OBJECT, ["pkt_type", "from_addon", "kID", g_kWearer, "iNum", 0, "sMsg", "menu", "addon_name", "OC_Sub_AO"]));
-                    //llSleep(0.5);
-                    //llRegionSayTo(g_kWearer, API_CHANNEL, llList2Json(JSON_OBJECT, ["pkt_type", "offline", "addon_name", "OC_Sub_AO", "kID", g_kWearer]));
+                    llMessageLinked(LINK_THIS,0,"CollarMenu",kID);
                 }
                 else if (~llSubStringIndex(sMessage,"LOCK")) {
                     Command(kID,llToLower(sMessage));
