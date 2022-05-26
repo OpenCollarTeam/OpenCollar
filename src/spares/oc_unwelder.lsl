@@ -131,7 +131,8 @@ default
             }
         }else {
             
-            llSay(0, "Unwelder now in use");
+    //        llSay(0, "Unwelder now in use");
+            llSetText("In use by\n" + llKey2Name (llDetectedKey(0)), <1,0,0>,1);
             llSetText("In use..", <1,0,0>,1);
             g_iLMLastSent = llGetUnixTime();
             g_kUser=llDetectedKey(0);
