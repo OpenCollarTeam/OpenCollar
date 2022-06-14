@@ -116,21 +116,34 @@ integer g_iLMLastSent;
 key g_kUser = NULL_KEY;
 integer g_iWelded=FALSE;
 integer g_iAddonLimitation = TRUE;
+integer softCounter = 0;
+
+softreset(){
+   if(softCounter < 3){
+      softCounter++;
+      // Assume we have been booted unintentialy and give it another try!
+      g_kCollar = NULL_KEY;
+      API_CHANNEL = ((integer)("0x" + llGetSubString((string)g_kUser, 0, 8))) + 0xf6eb - 0xd2;
+      Link("online", 0, "", g_kUser);
+   }
+   else llResetScript(); // after we try to prolong the connection do a hard reset.
+}
+
 default
 {
     state_entry(){
         llSetText("",ZERO_VECTOR,0);
         llSay(0, "Unwelder is now ready");
+        llSetTimerEvent(10);
     }
     touch_start(integer t){
         if(g_kUser != NULL_KEY){
             if(llDetectedKey(0) == g_kUser){
-                Link("from_addon", 0, "menu "+g_sAddon, g_kUser);                
+                Link("from_addon", 0, "menu "+g_sAddon, g_kUser); 
             } else {
                 llSay(0, "Unweld tool is in use, try again in a few minutes");
             }
         }else {
-            
             llSay(0, "Unwelder now in use");
             llSetText("In use..", <1,0,0>,1);
             g_iLMLastSent = llGetUnixTime();
@@ -139,7 +152,6 @@ default
             llListen(API_CHANNEL, "", "", "");
             Link("online", 0, "", g_kUser); // This is the signal to initiate communication between the addon and the collar
             llResetTime();
-            llSetTimerEvent(60);
             
         }
     }
@@ -148,7 +160,8 @@ default
     {
         if(llGetTime() >= 30.0 && g_kCollar==NULL_KEY && g_kUser!=NULL_KEY){
             llSay(0, "Connection timed out to collar.");
-            llResetScript();
+            softreset();
+            //llResetScript();
         }
         if (llGetUnixTime() >= (g_iLMLastSent + 30) && g_kCollar != NULL_KEY)
         {
@@ -159,7 +172,8 @@ default
         if (llGetUnixTime() > (g_iLMLastRecv + (5 * 60)) && g_kCollar != NULL_KEY)
         {
             g_kCollar = NULL_KEY;
-            llResetScript(); // perform our action on disconnect
+            softreset();
+            //llResetScript(); // perform our action on disconnect
         }
         
         if (g_kCollar == NULL_KEY) Link("online", 0, "", g_kUser);
@@ -172,6 +186,7 @@ default
             // This signal, indicates the collar has approved the addon and that communication requests will be responded to if the requests are valid collar LMs.
             g_kCollar = id;
             Link("from_addon", LM_SETTING_REQUEST, "ALL", "");
+            g_iLMLastRecv = llGetUnixTime();
             llSay(0, "Unwelder has connected");
             llSay(0, "Downloading active settings");
         } else if(sPacketType == "denied" && g_kCollar==id){
@@ -182,7 +197,8 @@ default
         else if (sPacketType == "dc" && g_kCollar == id)
         {
             g_kCollar = NULL_KEY;
-            llResetScript(); // This addon is designed to always be connected because it is a test
+            softreset();
+            //llResetScript(); // This addon is designed to always be connected because it is a test
         }
         else if (sPacketType == "pong" && g_kCollar == id)
         {
@@ -283,6 +299,7 @@ default
                                 Link("offline", 0, "", llGetOwnerKey(g_kCollar));
                                 g_lMenuIDs = [];
                                 g_kCollar = NULL_KEY;
+                                llResetScript(); // this is where you would want a hard reset.
                             }
                         }
                     }
