@@ -120,7 +120,7 @@ integer softCounter = 0;
 
 softreset(){
    if(softCounter < 3){
-      softcounter ++;
+      softCounter ++;
       // assume unintentional disconnect and try to salvage.
       g_kCollar = NULL_KEY;
       API_CHANNEL = ((integer)("0x" + llGetSubString((string)g_kUser, 0, 8))) + 0xf6eb - 0xd2;
