@@ -94,7 +94,11 @@ UserCommand(integer iNum, string sStr, key kID) {
         string sCommand = llList2String(lCommands,1);
         string sVar = llList2String(lCommands,2);
         string sVal = llList2String(lCommands,3);
-        if( iNum > iLockAuth  && lock) {
+        if( iNum == cmd_wearer  && lock) {
+            /* we lock out the wearer from access even if they are the one who locked it.
+               This Section can be commented out for it to be possible for the wearer to
+               unlock them self if they lock it.
+            */
             llInstantMessage(kID,"Sorry the lock is engaged you have no access!");
             return;
         }
