@@ -111,7 +111,7 @@ UserCommand(integer iNum, string sStr, key kID) {
             llInstantMessage(kID,"/me makes a soft click as the lock is enabled");
             llPlaySound("dec9fb53-0fef-29ae-a21d-b3047525d312", 1.0);
             check_settings();
-        } else llInstantMesage(kID,"Sorry you are not authorized to unlock this device");
+        } else {llInstantMesage(kID,"Sorry you are not authorized to unlock this device");
     }
 }
 
@@ -298,7 +298,7 @@ default
                             }
                             if (sMsg == biLock )
                             {
-                                UserCommand(iAuth,g_sAddon+"unlock",kAv);
+                                UserCommand(iAuth,g_sAddon+"lock",kAv);
                             }
                             else if (sMsg == "DISCONNECT")
                             {
