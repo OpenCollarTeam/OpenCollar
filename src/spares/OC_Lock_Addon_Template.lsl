@@ -94,7 +94,7 @@ UserCommand(integer iNum, string sStr, key kID) {
         string sCommand = llList2String(lCommands,1);
         string sVar = llList2String(lCommands,2);
         string sVal = llList2String(lCommands,3);
-        if( iLockAuth < iNum && lock) {
+        if( iLockAuth <= CMD_WEARER && lock) {
             llInstantMessage(kID,"Sorry the lock is engaged you have no access!");
             return;
         }
