@@ -94,26 +94,24 @@ UserCommand(integer iNum, string sStr, key kID) {
         string sCommand = llList2String(lCommands,1);
         string sVar = llList2String(lCommands,2);
         string sVal = llList2String(lCommands,3);
-        if( iLockAuth <= CMD_WEARER && lock) {
+        if( iLockAuth < iNum && lock) {
             llInstantMessage(kID,"Sorry the lock is engaged you have no access!");
             return;
         }
         if (sCommand == "unlock" && iNum <= iLockAuth){
-            bLock = biLock;
             lock = FALSE;
             iLockAuth = CMD_WEARER;
             llInstantMessage(kID,"/me makes a soft click as the lock is disabled");
             llPlaySound("82fa6d06-b494-f97c-2908-84009380c8d1", 1.0);
             check_settings();
         }
-        if (sCommand == "lock" && iNum <= iLockAuth){
-            bLock = baLock;
+        else if (sCommand == "lock" && iNum <= iLockAuth){
             lock = TRUE;
             iLockAuth = iNum;
             llInstantMessage(kID,"/me makes a soft click as the lock is enabled");
             llPlaySound("dec9fb53-0fef-29ae-a21d-b3047525d312", 1.0);
             check_settings();
-        }
+        } else llInstantMesage(kID,"Sorry you are not authorized to unlock this device");
     }
 }
 
