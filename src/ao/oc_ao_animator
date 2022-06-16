@@ -149,6 +149,7 @@ default {
             }
             else if( sVar == "sWalkAnim"){
                 g_sWalkAnim = sVal;
+                SetAnimOverride();
             }
             else if( sVar == "iSitAnywhereOn"){
                 g_iSitAnywhereOn = (integer)sVal;
@@ -182,7 +183,7 @@ default {
             }
         }
         else if( iNum == AO_SETOVERRIDE){
-            list lPar     = llParseString2List(sStr, ["_","="], []);
+            list lPar     = llParseString2List(sStr, [":","="], []);
             string sToken  = llList2String(lPar, 0);
             string sVar   = llList2String(lPar, 1);
             string sVal  = llList2String(lPar, 2);
