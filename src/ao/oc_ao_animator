@@ -236,16 +236,26 @@ default {
             else llResetAnimationOverride("ALL");
         }
     }
+    
+    on_rez(integer start_pram){
+        if(g_iAO_ON){
+            llRequestPermissions(g_kWearer,PERMISSION_OVERRIDE_ANIMATIONS);
+            SwitchStand();
+        }
+    }
 
     changed(integer iChange) {
         if (iChange & CHANGED_LINK) {
             if(g_iReady){
-                SetAnimOverride();
-                SwitchStand();
+                if(g_iAO_ON){
+                    llRequestPermissions(g_kWearer,PERMISSION_OVERRIDE_ANIMATIONS);
+                    SwitchStand();
+                }
             }
         }
         if (iChange & CHANGED_INVENTORY) PermsCheck();
     }
+    
     
     dataserver(key kRequest, string sData) {
         if (kRequest == g_kCard) {
