@@ -257,7 +257,7 @@ ToggleSitAnywhere() {
         if (g_iSitAnywhereOn) {
             llMessageLinked(LINK_THIS,AO_SETOVERRIDE,"switchstand",llGetOwner());
         } else {
-            llMessageLinked(LINK_THIS,AO_SETOVERRIDE,"set_Standing="+g_sSitAnywhereAnim,llGetOwner());
+            llMessageLinked(LINK_THIS,AO_SETOVERRIDE,"set:Standing="+g_sSitAnywhereAnim,llGetOwner());
         }
         g_iSitAnywhereOn = !g_iSitAnywhereOn;
         llMessageLinked(LINK_THIS,AO_SETTINGS,"iSitAnywhereOn="+(string)g_iSitAnywhereOn,llGetOwner());
@@ -443,7 +443,7 @@ Command(key kID, string sCommand,integer iNum) {
         } else if (sCommand == "off") {
             g_iAO_ON = FALSE;
             llMessageLinked(LINK_THIS,AO_SETTINGS,"iAO_ON="+(string)g_iAO_ON,kID);
-            llMessageLinked(LINK_THIS,AO_SETOVERRIDE,"RESET_ALL",kID);
+            llMessageLinked(LINK_THIS,AO_SETOVERRIDE,"RESET:ALL",kID);
             //llResetAnimationOverride("ALL");
             ShowStatus();
         } else if (sCommand == "unlock"){
@@ -696,10 +696,10 @@ default {
                     if (~llSubStringIndex(sMessage,"☑")) {
                         g_iSitAnimOn = FALSE;
                         llMessageLinked(LINK_THIS,AO_SETTINGS,"iSitAnimOn="+(string)g_iSitAnimOn,kID);
-                        llMessageLinked(LINK_THIS,AO_SETOVERRIDE,"reset_Sitting",kID);
+                        llMessageLinked(LINK_THIS,AO_SETOVERRIDE,"RESET:Sitting",kID);
                     } else if (g_sSitAnim != "") {
                         g_iSitAnimOn = TRUE;
-                        if (g_iAO_ON) llMessageLinked(LINK_THIS,AO_SETOVERRIDE,"set_Sitting="+g_sSitAnim,kID);
+                        if (g_iAO_ON) llMessageLinked(LINK_THIS,AO_SETOVERRIDE,"set:Sitting="+g_sSitAnim,kID);
                     } else Notify(kID,"Sorry, the currently loaded animation set doesn't have any sits.",TRUE);
                     MenuAO(kID,iAuth);
                 } else if (sMessage == "Stand Time") MenuInterval(kID,iAuth);
@@ -763,7 +763,7 @@ default {
                             llMessageLinked(LINK_THIS,AO_SETTINGS,"sWalkAnim="+g_sWalkAnim,kID);
                             
                         }
-                        if (g_iAO_ON && (sMenuType != "Sitting" || g_iSitAnimOn)) llMessageLinked(LINK_THIS,AO_SETOVERRIDE,"set_"+sMenuType+"="+sMessage,kID);
+                        if (g_iAO_ON && (sMenuType != "Sitting" || g_iSitAnimOn)) llMessageLinked(LINK_THIS,AO_SETOVERRIDE,"set:"+sMenuType+"="+sMessage,kID);
                     } else llOwnerSay("No "+sMenuType+" animation set.");
                     MenuChooseAnim(kID,sMenuType,iAuth);
                 }
