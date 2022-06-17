@@ -299,17 +299,17 @@ default {
                     }
                     if (sAnimationState == "Sitting on Ground"){
                         g_sSitAnywhereAnim = llList2String(lTemp,0);
-                        llMessageLinked(LINK_THIS,AO_STATUS,"UPDATE_sSitAnywhereAnim="+g_sSitAnywhereAnim,llGetOwner());
+                        llMessageLinked(LINK_THIS,AO_STATUS,"UPDATE:sSitAnywhereAnim="+g_sSitAnywhereAnim,llGetOwner());
                     }
                     else if (sAnimationState == "Sitting") {
                         g_sSitAnim = llList2String(lTemp,0);
-                        llMessageLinked(LINK_THIS,AO_STATUS,"UPDATE_sSitAnim="+g_sSitAnim,llGetOwner());
+                        llMessageLinked(LINK_THIS,AO_STATUS,"UPDATE:sSitAnim="+g_sSitAnim,llGetOwner());
                         if (g_sSitAnim != "") g_iSitAnimOn = TRUE;
                         else g_iSitAnimOn = FALSE;
-                        llMessageLinked(LINK_THIS,AO_STATUS,"UPDATE_iSitAnimOn="+(string)g_iSitAnimOn,llGetOwner());
+                        llMessageLinked(LINK_THIS,AO_STATUS,"UPDATE:iSitAnimOn="+(string)g_iSitAnimOn,llGetOwner());
                     } else if (sAnimationState == "Walking"){
                         g_sWalkAnim = llList2String(lTemp,0);
-                        llMessageLinked(LINK_THIS,AO_STATUS,"UPDATE_sWaLkAnim="+g_sWalkAnim,llGetOwner());
+                        llMessageLinked(LINK_THIS,AO_STATUS,"UPDATE:sWaLkAnim="+g_sWalkAnim,llGetOwner());
                     }
                     else if (sAnimationState != "Standing") lTemp = llList2List(lTemp,0,0);
                     if (lTemp) g_sJson_Anims = llJsonSetValue(g_sJson_Anims, [sAnimationState],llDumpList2String(lTemp,"|"));
@@ -320,19 +320,19 @@ default {
                 g_iCardLine = 0;
                 g_kCard = "";
                 g_iSitAnywhereOn = FALSE;
-                llMessageLinked(LINK_THIS,AO_STATUS,"UPDATE_iSitAnywhereOn="+(string)g_iSitAnywhereOn,llGetOwner());
+                llMessageLinked(LINK_THIS,AO_STATUS,"UPDATE:iSitAnywhereOn="+(string)g_iSitAnywhereOn,llGetOwner());
                 integer index = llListFindList(g_lCustomCards,[g_sCard]);
                 if (~index) g_sCard = llList2String(g_lCustomCards,index+1)+" ("+g_sCard+")";
                 g_lCustomCards = [];
                 if (g_sJson_Anims == "{}") {
                     llOwnerSay("\""+g_sCard+"\" is an invalid animation set and can't play.");
                     g_iAO_ON = FALSE;
-                    llMessageLinked(LINK_THIS,AO_STATUS,"UPDATE_iAO_ON="+(string)g_iAO_ON,llGetOwner());
+                    llMessageLinked(LINK_THIS,AO_STATUS,"UPDATE:iAO_ON="+(string)g_iAO_ON,llGetOwner());
                 } else {
                     llOwnerSay("The \""+g_sCard+"\" animation set was loaded successfully.");
                     g_iAO_ON = TRUE;
                     llMessageLinked(LINK_THIS,AO_GIVEOVERRIDE,g_sJson_Anims,llGetOwner());
-                    llMessageLinked(LINK_THIS,AO_STATUS,"UPDATE_iAOOn="+(string)g_iAO_ON,llGetOwner());
+                    llMessageLinked(LINK_THIS,AO_STATUS,"UPDATE:iAOOn="+(string)g_iAO_ON,llGetOwner());
                 }
                 llRequestPermissions(g_kWearer,PERMISSION_OVERRIDE_ANIMATIONS);
             }
