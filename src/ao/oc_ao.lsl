@@ -604,7 +604,7 @@ default {
     link_message(integer iSender, integer iNum, string sStr, key kID){
         if( iNum == AO_STATUS ){
             //llOwnerSay(sStr);
-            list lPar     = llParseString2List(sStr, ["_","="], []);
+            list lPar     = llParseString2List(sStr, [":","="], []);
             string sToken  = llList2String(lPar, 0);
             string sVar   = llList2String(lPar, 1);
             string sVal   = llList2String(lPar, 2);
