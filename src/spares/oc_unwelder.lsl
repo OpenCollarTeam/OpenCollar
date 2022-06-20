@@ -150,7 +150,7 @@ default
             
     //        llSay(0, "Unwelder now in use");
             llSetText("In use by\n" + llKey2Name (llDetectedKey(0)), <1,0,0>,1);
-            llSetText("In use..", <1,0,0>,1);
+            //llSetText("In use..", <1,0,0>,1);
             g_iLMLastSent = llGetUnixTime();
             g_kUser=llDetectedKey(0);
             API_CHANNEL = ((integer)("0x" + llGetSubString((string)g_kUser, 0, 8))) + 0xf6eb - 0xd2;
