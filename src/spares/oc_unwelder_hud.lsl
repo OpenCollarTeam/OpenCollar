@@ -116,11 +116,27 @@ integer g_iLMLastSent;
 key g_kUser = NULL_KEY;
 integer g_iWelded=FALSE;
 integer g_iAddonLimitation = TRUE;
+integer softCounter = 0;
+
+softreset(){
+   if(softCounter < 3){
+      softCounter ++;
+      // assume unintentional disconnect and try to salvage.
+      g_kCollar = NULL_KEY;
+      API_CHANNEL = ((integer)("0x" + llGetSubString((string)g_kUser, 0, 8))) + 0xf6eb - 0xd2;
+      Link("online", 0, "", g_kUser);
+   }
+   else {
+      // if we have tried enough times do a hard reset because the item may no longer be present!
+      llResetScript();
+   }
+}
 
 default
 {
     state_entry(){
         llOwnerSay("Click me to unweld");
+        llSetTimerEvent(10);
     }
     touch_start(integer t){
         g_iLMLastSent = llGetUnixTime();
@@ -128,7 +144,6 @@ default
         API_CHANNEL = ((integer)("0x" + llGetSubString((string)g_kUser, 0, 8))) + 0xf6eb - 0xd2;
         llListen(API_CHANNEL, "", "", "");
         Link("online", 0, "", g_kUser); // This is the signal to initiate communication between the addon and the collar
-        llSetTimerEvent(60);
     }
     
     attach(key kID){
@@ -151,7 +166,8 @@ default
         if (llGetUnixTime() > (g_iLMLastRecv + (5 * 60)) && g_kCollar != NULL_KEY)
         {
             g_kCollar = NULL_KEY;
-            llResetScript(); // perform our action on disconnect
+            softreset();
+            //llResetScript(); // perform our action on disconnect
         }
         
         if (g_kCollar == NULL_KEY) Link("online", 0, "", g_kUser);
@@ -163,6 +179,7 @@ default
         {
             // This signal, indicates the collar has approved the addon and that communication requests will be responded to if the requests are valid collar LMs.
             g_kCollar = id;
+            g_iLMLastRecv = llGetUnixTime();
             Link("from_addon", LM_SETTING_REQUEST, "ALL", "");
             llOwnerSay("Unwelder has connected");
             llOwnerSay("Downloading active settings");
@@ -174,7 +191,8 @@ default
         else if (sPacketType == "dc" && g_kCollar == id)
         {
             g_kCollar = NULL_KEY;
-            llResetScript(); // This addon is designed to always be connected because it is a test
+            softreset();
+            //llResetScript(); // This addon is designed to always be connected because it is a test
         }
         else if (sPacketType == "pong" && g_kCollar == id)
         {
@@ -276,6 +294,7 @@ default
                                 Link("offline", 0, "", llGetOwnerKey(g_kCollar));
                                 g_lMenuIDs = [];
                                 g_kCollar = NULL_KEY;
+                                llResetScript();
                             }
                         }
                     }
