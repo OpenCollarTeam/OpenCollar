@@ -407,7 +407,6 @@ OrderMenu(key kID,integer iAuth) {
 Command(key kID, string sCommand,integer iNum) {
     //llOwnerSay("first check:"+sCommand+"from:"+(string)iNum);
     if (iNum<CMD_OWNER || iNum>CMD_WEARER) {
-        llOwnerSay("not authorized");
         return;
     }
     if (llSubStringIndex(llToLower(sCommand), llToLower(g_sAddon)) && llToLower(sCommand) != "menu " + llToLower(g_sAddon)) return;
