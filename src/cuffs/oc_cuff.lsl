@@ -169,6 +169,11 @@ Menu(key kID, integer iAuth) {
         if(!g_iHidden)
             lButtons+=["Pose"];
         else sPrompt +="\nPoses not available while the Collar is hidden";
+	 if(llGetInventoryType("oc_cuff_themes")==INVENTORY_SCRIPT
+	 && (llGetObjectPermMask(MASK_OWNER) & (PERM_COPY | PERM_MODIFY | PERM_TRANSFER))  == (PERM_COPY | PERM_MODIFY | PERM_TRANSFER)){
+        if(!g_iHidden)
+            lButtons+=["New Theme"];
+        }        
     }
     if(llGetInventoryType("oc_cuff_resizer")==INVENTORY_SCRIPT){
         if(!g_iHidden)
