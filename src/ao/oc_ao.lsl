@@ -407,7 +407,25 @@ OrderMenu(key kID,integer iAuth) {
 Command(key kID, string sCommand,integer iNum) {
     //llOwnerSay("first check:"+sCommand+"from:"+(string)iNum);
     if (iNum<CMD_OWNER || iNum>CMD_WEARER) {
-        return;
+        if(iNum == AO_SETOVERRIDE){
+            if (sCommand == "on") {
+                g_iAO_ON = TRUE;
+                llMessageLinked(LINK_THIS,AO_SETTINGS,"iAO_ON="+(string)g_iAO_ON,kID);
+                llMessageLinked(LINK_THIS,AO_SETTINGS,"start",kID);
+                ShowStatus();
+            } else if (sCommand == "off") {
+                g_iAO_ON = FALSE;
+                llMessageLinked(LINK_THIS,AO_SETTINGS,"iAO_ON="+(string)g_iAO_ON,kID);
+                llMessageLinked(LINK_THIS,AO_SETOVERRIDE,"RESET:ALL",kID);
+                //llResetAnimationOverride("ALL");
+                ShowStatus();
+            } else {
+                return;
+            }
+        }
+        else {
+            return;
+        }
     }
     if (llSubStringIndex(llToLower(sCommand), llToLower(g_sAddon)) && llToLower(sCommand) != "menu " + llToLower(g_sAddon)) return;
     if (iNum == CMD_OWNER && llToLower(sCommand) == "runaway") {
@@ -640,6 +658,9 @@ default {
             }
             ShowStatus();
         }
+        if( iNum == AO_ANTISLIDE){
+            llMessageLinked(LINK_THIS,AO_ANTISLIDE,"AOantislide off",g_kWearer);
+        }
     }
 
     listen(integer iChannel, string sName, key kID, string sMessage) {
@@ -670,6 +691,9 @@ default {
                     key kID      = (key) llJsonGetValue(sMessage, ["kID"]);
                     if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE)
                     {
+                        Command(kID, sStr, iNum);
+                    }
+                    else if ( iNum == AO_SETOVERRIDE){
                         Command(kID, sStr, iNum);
                     }
                 }
