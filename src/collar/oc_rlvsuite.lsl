@@ -597,7 +597,12 @@ state active
     changed(integer change){
         if(change && CHANGED_REGION){
             if( g_bForceMouselook == TRUE){
+                // Disable Mouse look
                 FormatCommand("camdistmax:0",FALSE);
+                // force the user out of mouse look
+                FormatCommand("camdistmin:1",FALSE);
+                // re enable mouse look
+                FormatCommand("camdistmin:0",TRUE);
                 FormatCommand("camdistmax:0",TRUE);
             }
         }
