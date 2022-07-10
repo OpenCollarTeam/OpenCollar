@@ -12,13 +12,13 @@ Felkami (Caraway Ohmai)
     *Dec 2020       -       Fixed #461, Modified runaway language to not assume relay on at runaway
 
 Kristen Mynx,  Phidoux (taya Maruti)
-    *May 2021  - Fixed bug: !release or @clear sent to the relay would clear all
+    *May 2022  - Fixed bug: !release or @clear sent to the relay would clear all
     restrictions and exceptions from the collar.   Changed the relay to send all RLV 
     commands through RLV_CMD link messages instead of directly to the viewer.  oc_rlvsys
     will process them, and arbitrate between collar and relay restrictions and exceptions.
     Also removed DO_RLV_REFRESH which cleared all restrictions and exceptions.
 
-   *July 2021  - Fixed bug: Ask mode only accepted one RLV command from the object.
+   *July 2022  - Fixed bug: Ask mode only accepted one RLV command from the object.
     
 et al.
 
