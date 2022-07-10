@@ -18,7 +18,7 @@ Kristen Mynx,  Phidoux (taya Maruti)
     will process them, and arbitrate between collar and relay restrictions and exceptions.
     Also removed DO_RLV_REFRESH which cleared all restrictions and exceptions.
 
-   *July 2020  - Fixed bug: Ask mode only accepted one RLV command from the object.
+   *July 2021  - Fixed bug: Ask mode only accepted one RLV command from the object.
     
 et al.
 
