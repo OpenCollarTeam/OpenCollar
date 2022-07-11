@@ -4,7 +4,7 @@
 // lillith xue, littlemousy et al.
 // Licensed under the GPLv2.  See LICENSE for full details.
 
-string g_sScriptVersion = "8.1.0000";
+string g_sScriptVersion = "8.1.0001";
 integer LINK_CMD_DEBUG=1999;
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
@@ -745,8 +745,8 @@ state active
             if (llList2String(lLGCmd,0) == "lockguard") {
                 key kLGAv = llList2Key(lLGCmd,1);           // Request Avatar-UUID
                 string sLGPoint = llList2String(lLGCmd,2);  // Request ChainPoint
-                string sLGCMD = llList2String(lLGCmd,3);    // Request Command
-                key kLGTarget = llList2Key(lLGCmd,4);       // Request Target
+                key kLGTarget = llList2Key(lLGCmd,3);       // Request Target
+                string sLGCMD = llList2String(lLGCmd,4);    // Request Command
 
                 // check that we are within leash length
                 integer point = llList2Integer(llGetObjectDetails(kLGTarget, [OBJECT_ATTACHED_POINT]),0);
