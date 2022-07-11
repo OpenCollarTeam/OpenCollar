@@ -602,7 +602,7 @@ state active
                 // force the user out of mouse look
                 FormatCommand("camdistmin:1",FALSE);
                 // re enable mouse look
-                FormatCommand("camdistmin:0",TRUE);
+                FormatCommand("camdistmin:1",TRUE);
                 FormatCommand("camdistmax:0",TRUE);
             }
         }
