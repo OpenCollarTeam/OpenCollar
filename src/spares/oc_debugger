@@ -1,4 +1,6 @@
 /*
+This application is not recomended for regular users.
+
 This is a Basic debugger it manages messages fromt he script that don't always need to be seen in three categories
 Info - Basic information like the addons getting kicked for inactivity.
 Warning - Information about problems that won't break the collar but could cause instability.
