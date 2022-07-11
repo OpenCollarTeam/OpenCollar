@@ -745,8 +745,8 @@ state active
             if (llList2String(lLGCmd,0) == "lockguard") {
                 key kLGAv = llList2Key(lLGCmd,1);           // Request Avatar-UUID
                 string sLGPoint = llList2String(lLGCmd,2);  // Request ChainPoint
-                string sLGCMD = llList2String(lLGCmd,3);    // Request Command
-                key kLGTarget = llList2Key(lLGCmd,4);       // Request Target
+                key kLGTarget = llList2Key(lLGCmd,3);       // Request Target
+                string sLGCMD = llList2String(lLGCmd,4);    // Request Command
 
                 // check that we are within leash length
                 integer point = llList2Integer(llGetObjectDetails(kLGTarget, [OBJECT_ATTACHED_POINT]),0);
