@@ -10,6 +10,9 @@
 // Based on a split of OpenCollar - appearance by Romka Swallowtail
 // Virtual Disgrace - Resizer is derivative of OpenCollar - adjustment
 
+// Kristen Mynx July 2022
+// Fix "BACK" buttons
+
 string g_sScriptVersion = "8.1";
 string g_sAddon = "OpenCollar Cuffs";
 
@@ -293,7 +296,7 @@ default
                     else if (sMessage == SIZEMENU) SizeMenu(kAv, iAuth);
                 } else if (sMenuType == POSMENU) {
                     if (sMessage == UPMENU) {
-                        llMessageLinked(LINK_SET, 33, (string)kAv, (key)((string)iAuth));
+                        DoMenu(kAv, iAuth); //llMessageLinked(LINK_SET, 33, (string)kAv, (key)((string)iAuth));
                         return;
                     } else if (llGetAttached()) {
                         if (sMessage == "forward ↳") AdjustPos(<g_fNudge, 0, 0>);
@@ -309,7 +312,7 @@ default
                     PosMenu(kAv, iAuth);
                 } else if (sMenuType == ROTMENU) {
                     if (sMessage == UPMENU) {
-                        llMessageLinked(LINK_SET, 33, (string)kAv, (key)((string)iAuth));
+                        DoMenu(kAv, iAuth); //llMessageLinked(LINK_SET, 33, (string)kAv, (key)((string)iAuth));
                         return;
                     } else if (llGetAttached()) {
                         if (sMessage == "tilt right ↘") AdjustRot(<g_fRotNudge, 0, 0>);
@@ -322,7 +325,7 @@ default
                     RotMenu(kAv, iAuth);
                 } else if (sMenuType == SIZEMENU) {
                     if (sMessage == UPMENU) {
-                        llMessageLinked(LINK_SET, 33, (string)kAv, (key)((string)iAuth));
+                        DoMenu(kAv, iAuth); //llMessageLinked(LINK_SET, 33, (string)kAv, (key)((string)iAuth));
                         return;
                     } else {
                         integer iMenuCommand = llListFindList(SIZEMENU_BUTTONS, [sMessage]);
