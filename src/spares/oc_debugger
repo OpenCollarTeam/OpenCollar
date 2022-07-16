@@ -123,7 +123,7 @@ state active {
     }
     state_entry() {
         if( first_run ){
-            debug("this script is running for the first time since restart we need to create persitence setting for status!",0);
+            debug("Info: from "+g_sSubMenu+" this script is running for the first time since restart we need to create persitence setting for status!",g_iOutputForm);
             first_run = FALSE;
             llMessageLinked(LINK_SET, LM_SETTING_SAVE,"global_debugger="+(string)g_iDebug,"");
         }
@@ -209,11 +209,11 @@ state active {
             string sVal   = llList2String(lPar, 2);
             if( sToken == "global") {
                 if( sVar == "checkboxes") {
-                    debug("recived the checkboxes "+sVal,0);
+                    debug("Info: from "+g_sSubMenu+" Recived the checkboxes "+sVal,g_iOutputForm);
                     b_lCheckBoxes = llParseString2List(sVal,[","],[]);
                 }
                 if( sVar == "debugger"){
-                    debug("updating debugger status!",0);
+                    debug("Info: from "+g_sSubMenu+" Updating debugger status!",g_iOutputForm);
                     g_iDebug = (integer)sVal;
                 }
             }
@@ -224,7 +224,7 @@ state active {
             string sVar   = llList2String(lPar, 1);
             if(sToken == "global"){
                 if(sVar == "debugger"){
-                    debug("debugger status has been deleted from settings this could cause issues, attempting to reassert!",1);
+                    debug("Warn: from debugger Debugger status has been deleted from settings this could cause issues, attempting to reassert!",g_iOutputForm);
                     llMessageLinked(LINK_SET, LM_SETTING_SAVE,"global_debugger="+(string)g_iDebug,"");
                 }
             }
