@@ -32,8 +32,8 @@ list g_lCheckBoxes = ["☐","☑"];
 list b_lCheckBoxes;
 string b_sActive;
 string d_sActive= "Active";
-string outType;
-string outChan;
+string outType = "Info";
+string outChan = "OwnerSay";
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
     key kMenuID = llGenerateKey();
@@ -72,13 +72,13 @@ key g_kWearer;
 list g_lMenuIDs;
 integer g_iMenuStride;
 integer g_iDebug=TRUE;
-integer g_iOutputType = 2;
-integer g_iOutputForm;
+integer g_iOutputType = 0;
+integer g_iOutputForm = 1;
 integer g_iTypeInfo = 0;
 integer g_iTypeWarn = 1;
 integer g_iTypeError = 2;
-integer g_iFormPublic =0;
-integer g_iFormPrivate =1;
+integer g_iFormPublic = 0;
+integer g_iFormPrivate = 1;
 
 integer ALIVE = -55;
 integer READY = -56;
@@ -129,10 +129,6 @@ state active {
         }
         llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "global","");
         g_kWearer = llGetOwner();
-        outType="Info";
-        g_iOutputType = g_iTypeInfo;
-        outChan="OwnerSay";
-        g_iOutputForm = g_iFormPrivate;
     }
     link_message(integer iSender,integer iNum,string sStr,key kID) {
         if(iNum >= CMD_OWNER && iNum <= CMD_WEARER) {
