@@ -30,7 +30,6 @@ integer DEBUG=DEBUG_CHANNEL;
 string UPMENU = "BACK";
 list g_lCheckBoxes = ["☐","☑"];
 list b_lCheckBoxes;
-string b_sStatus;
 string b_sActive;
 string d_sActive= "Active";
 string outType;
@@ -52,7 +51,7 @@ Menu(key kID, integer iAuth) {
     } else {
         b_sActive = llList2String(g_lCheckBoxes,g_iDebug)+d_sActive;
     }
-    list lButtons = [b_sStatus,"Error","Warn","Info","Public","Private"];
+    list lButtons = [b_sActive,"Error","Warn","Info","Public","Private"];
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "Menu~Main");
 }
 
