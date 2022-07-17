@@ -7,7 +7,7 @@ Phidoux (taya.maruti) - (july 2022)
 
 string g_sVersion = "1.0";
 string g_sParentMenu = "Apps";
-string g_sSubMenu = "debugger";
+string g_sSubMenu = "Debugger";
 
 //MESSAGE MAP
 integer CMD_OWNER = 500;
