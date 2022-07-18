@@ -72,10 +72,10 @@ Menu(key kID, integer iAuth) {
     string sPrompt = "\n[Menu "+g_sAddon+"]";
     if(g_lCheckBoxes != []) {
         // check if collar style check boxes are available.
-        b_sLock = llParseList2String(g_lCheckBoxes,lock)+d_sLock;
+        b_sLock = lllist2String(g_lCheckBoxes,lock)+d_sLock;
     } else {
         // fall back to built in check boxes
-        b_sLock = llParseList2String(b_lCheckBoxes,lock)+d_sLock;
+        b_sLock = llList2String(b_lCheckBoxes,lock)+d_sLock;
     }
     list lButtons  = [b_sLock];
     Dialog(kID, sPrompt, lButtons, ["DISCONNECT", UPMENU], 0, iAuth, "Menu~Main");
