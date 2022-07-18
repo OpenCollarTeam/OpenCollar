@@ -4,6 +4,7 @@ This script is released public domain, unlike other OC scripts for a specific an
 -Authors Attribution-
 Aria (tiff589) - (August 2020)
 Lysea - (December 2020)
+Phidoux (taya.maruti) - (july 2022)
 */
 
 integer API_CHANNEL = 0x60b97b5e;
@@ -47,6 +48,11 @@ integer g_iMenuStride;
 integer iLockAuth = 503;
 
 string UPMENU = "BACK";
+list g_lCheckBoxes = [];
+list b_lCheckBoxes = ["☐","☑"]p
+integer lock = FALSE;
+string b_sLock;
+string d_sLock = "Lock";
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
     key kMenuID = llGenerateKey();
@@ -54,42 +60,53 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
     llRegionSayTo(g_kCollar, API_CHANNEL, llList2Json(JSON_OBJECT, [ "pkt_type", "from_addon", "addon_name", g_sAddon, "iNum", DIALOG, "sMsg", (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, "kID", kMenuID ]));
 
     integer iIndex = llListFindList(g_lMenuIDs, [kID]);
-    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [ kID, kMenuID, sName ], iIndex, iIndex + g_iMenuStride - 1);
-    else g_lMenuIDs += [kID, kMenuID, sName];
-}
+    if (~iIndex) {
+        g_lMenuIDs = llListReplaceList(g_lMenuIDs, [ kID, kMenuID, sName ], iIndex, iIndex + g_iMenuStride - 1);
+    } else {
+        g_lMenuIDs += [kID, kMenuID, sName];
+    }
+
 
 Menu(key kID, integer iAuth) {
-    string sPrompt = "\n[Menu App]";
-    list lButtons  = [bLock];
-    //llSay(0, "opening menu");
+    string sPrompt = "\n[Menu "+g_sAddon+"]";
+    if(g_lCheckBoxes != []) {
+        // check if collar style check boxes are available.
+        b_sLock = llParseList2String(g_lCheckBoxes,lock)+d_sLock;
+    } else {
+        // fall back to built in check boxes
+        b_sLock = llParseList2String(b_lCheckBoxes,lock)+d_sLock;
+    }
+    list lButtons  = [b_sLock];
     Dialog(kID, sPrompt, lButtons, ["DISCONNECT", UPMENU], 0, iAuth, "Menu~Main");
 }
 
 UserCommand(integer iNum, string sStr, key kID) {
-    if (iNum<CMD_OWNER || iNum>CMD_WEARER) return;
-    if (llSubStringIndex(llToLower(sStr), llToLower(g_sAddon)) && llToLower(sStr) != "menu " + llToLower(g_sAddon)) return;
+    if (iNum<CMD_OWNER || iNum>CMD_WEARER){
+        return;
+    }
+    if (llSubStringIndex(llToLower(sStr), llToLower(g_sAddon)) && llToLower(sStr) != "menu " + llToLower(g_sAddon)) {
+        return;
+    }
     if (iNum == CMD_OWNER && llToLower(sStr) == "runaway") {
         lock = FALSE;
         check_settings();
         return;
     }
 
-    if (llToLower(sStr) == llToLower(g_sAddon) || llToLower(sStr) == "menu "+llToLower(g_sAddon))
-    {
-        if(lock){
+    if (llToLower(sStr) == llToLower(g_sAddon) || llToLower(sStr) == "menu "+llToLower(g_sAddon)) {
+        if(lock) {
             if(iNum < CMD_WEARER && iNum >= CMD_OWNER){
                 Menu(kID, iNum);
-            }
-            else{
+            } else {
                 llInstantMessage(kID,"Sorry you are not authorized");
             }
-        }
-        else{
+        } else {
+            // if the item is not locked default authorization should apply;
             Menu(kID, iNum);
         }
-    } //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
-    else
-    {
+    /*} else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) }
+        RelayNotify(kID,"Access denied!",0); */
+    } else {
         list lCommands = llParseString2List(llToLower(sStr),[" "],[llToLower(g_sAddon)]);
         string sCommand = llList2String(lCommands,1);
         string sVar = llList2String(lCommands,2);
@@ -101,61 +118,62 @@ UserCommand(integer iNum, string sStr, key kID) {
             */
             llInstantMessage(kID,"Sorry the lock is engaged you have no access!");
             return;
-        }
-        if (sCommand == "unlock" && iNum <= iLockAuth){
+        } else if (sCommand == "unlock" && iNum <= iLockAuth){
             lock = FALSE;
             iLockAuth = CMD_WEARER;
             llInstantMessage(kID,"/me makes a soft click as the lock is disabled");
             llPlaySound("82fa6d06-b494-f97c-2908-84009380c8d1", 1.0);
             check_settings();
-        }
-        else if (sCommand == "lock" && iNum <= iLockAuth){
+        } else if (sCommand == "lock" && iNum <= iLockAuth){
             lock = TRUE;
             iLockAuth = iNum;
             llInstantMessage(kID,"/me makes a soft click as the lock is enabled");
             llPlaySound("dec9fb53-0fef-29ae-a21d-b3047525d312", 1.0);
             check_settings();
-        } else llInstantMessage(kID,"Sorry you are not authorized to unlock this device");
+        } else {
+            llInstantMessage(kID,"Sorry Invalid command or not authorized!");
+        }
     }
 }
 
 Link(string packet, integer iNum, string sStr, key kID){
     list packet_data = [ "pkt_type", packet, "iNum", iNum, "addon_name", g_sAddon, "bridge", FALSE, "sMsg", sStr, "kID", kID ];
 
-    if (packet == "online" || packet == "update") // only add optin if packet type is online or update
-    {
+    if (packet == "online" || packet == "update") {
+        // only add optin if packet type is online or update
         llListInsertList(packet_data, [ "optin", llDumpList2String(g_lOptedLM, "~") ], -1);
     }
 
     string pkt = llList2Json(JSON_OBJECT, packet_data);
-    if (g_kCollar != "" && g_kCollar != NULL_KEY)
-    {
+    if (g_kCollar != "" && g_kCollar != NULL_KEY) {
         llRegionSayTo(g_kCollar, API_CHANNEL, pkt);
-    }
-    else
-    {
+    } else {
         llRegionSay(API_CHANNEL, pkt);
     }
 }
 
 key g_kCollar=NULL_KEY;
+key g_kWearer=NULL_KEY;
+string g_sCollar=""; // we will be using the collar name along with the key to secure things
 integer g_iLMLastRecv;
 integer g_iLMLastSent;
-key g_kWearer;
+integer g_iListen;
+integer g_iJustRezzed;
 
-initialize(){
+softreset() {
+    g_kCollar = NULL_KEY;
     g_kWearer = llGetOwner();
+    if(g_iListen){
+        // just a sanity check for the sake of sims as well as will be needed in the future.
+        llListenRemove(g_iListen);
+    }
     API_CHANNEL = ((integer)("0x" + llGetSubString((string)g_kWearer, 0, 8))) + 0xf6eb - 0xd2;
-    llListen(API_CHANNEL, "", "", "");
+    g_iListen = llListen(API_CHANNEL, "", "", ""); // this is a verry in secure listen i plan to tighten this up later.
     Link("online", 0, "", g_kWearer); // This is the signal to initiate communication between the addon and the collar
     llSetTimerEvent(10);
     g_iLMLastSent = llGetUnixTime();
+    g_iLNLastRecv = llGetUnixTime();
     check_settings();
-}
-
-softreset(){
-    g_kCollar = NULL_KEY;
-    initialize();
 }
 
 shutdown(){
@@ -167,122 +185,113 @@ shutdown(){
 }
 
 integer l_Authorized = 503;
-integer lock = FALSE;
-string bLock;
-string baLock = "☒Lock";
-string biLock = "☐Lock";
 
-check_settings()
-{
+check_settings() {
     if (lock ){
-        bLock=baLock;
         llOwnerSay("@detach=n");
-    }
-    else {
-        bLock=biLock;
+    } else {
         llOwnerSay("@detach=y");
     }
 }
 
-default
-{
-    state_entry()
-    {
-        initialize();
+default {
+    state_entry() {
+        softreset();
     }    
     
     on_rez(integer start_pram){
-        softreset();
-    }
-    attach(key kID) {
-        if (kID == NULL_KEY) llResetScript();
-        else if(kID != g_kWearer){
+        if(g_kCollar == NULL_KEY || g_sCollar == ""){
+            // if the collar cannot be identifid by name or key we need to reset script.
             llResetScript();
         } else {
-            softreset();
+            // other wise this flag 
+            g_iJustRezzed = TRUE;
         }
     }
+    
     changed(integer change){
         if(change & CHANGED_REGION){
             softreset();
         }
     }
 
-    timer()
-    {
-        if (llGetUnixTime() >= (g_iLMLastSent + 30))
-        {
+    timer() {
+        if (llGetUnixTime() >= (g_iLMLastSent + 30)) {
             g_iLMLastSent = llGetUnixTime();
             Link("ping", 0, "", g_kCollar);
         }
 
-        if (llGetUnixTime() > (g_iLMLastRecv + (5 * 60)) && g_kCollar != NULL_KEY)
-        {
-            //shutdown();
+        if (llGetUnixTime() > (g_iLMLastRecv + (5 * 60)) && g_kCollar != NULL_KEY) {
             softreset();
         }
 
-        if (g_kCollar == NULL_KEY) Link("online", 0, "", g_kWearer);
+        if (g_kCollar == NULL_KEY){
+            Link("online", 0, "", g_kWearer);
+        }
     }
 
     listen(integer channel, string name, key id, string msg){
         string sPacketType = llJsonGetValue(msg, ["pkt_type"]);
-        if (sPacketType == "approved" && g_kCollar == NULL_KEY)
-        {
+        if (sPacketType == "approved" && g_kCollar == NULL_KEY) {
             // This signal, indicates the collar has approved the addon and that communication requests will be responded to if the requests are valid collar LMs.
             g_kCollar = id;
+            g_sCollar = name;
+            /* 
+                i need to test this before adding but this will help secure things if it works right.
+                llListenRemove(g_iListen);
+                g_iListen = llListen(API_CHANNEL,name,id,""); // making the listen more secure
+            */
+            g_iLMLastRecv = llGetUnixTime();
             Link("from_addon", LM_SETTING_REQUEST, "ALL", "");
+            g_iLMLastSent = llGetUnixtime();
+            check_settings();
+        } else if (g_iJustRezzed && g_kCollar != NULL_KEY){
+            if( g_kCollar != id && g_nCollar == name){
+                // we have a name so lets try to salvage this connection.
+                g_iJustRezzed = FALSE;
+                g_kCollar = id;
+                softreset();
+            } else {
+                /* 
+                we can find no name or key that associates with the collar time to reset
+                since the name may have changed to.
+                */
+                llResetScript();
+            }
+        } else if (sPacketType == "dc" && g_kCollar == id) { 
+            softreset(); // this may not be nessiary and we could use the reset or shut down option for non perstient items.
+            
+        } else if (sPacketType == "pong" && g_kCollar == id) {
             g_iLMLastRecv = llGetUnixTime();
-        }
-        else if (sPacketType == "dc" && g_kCollar == id)
-        {
-            //shutdown();
-            softreset();
-            //llResetScript(); // This addon is designed to always be connected because it is a test
-        }
-        else if (sPacketType == "pong" && g_kCollar == id)
-        {
-            g_iLMLastRecv = llGetUnixTime();
-        }
-        else if(sPacketType == "from_collar")
-        {
+            check_settings(); // may not be nessisary but you never know with lag.
+        } else if(sPacketType == "from_collar") {
+            g_iLMLastRecv = llGetUnixTime(); // this call should be any where you recive a message from the collar.
             // process link message if in range of addon
-            if (llVecDist(llGetPos(), llList2Vector(llGetObjectDetails(id, [OBJECT_POS]), 0)) <= 10.0)
-            {
+            if (llVecDist(llGetPos(), llList2Vector(llGetObjectDetails(id, [OBJECT_POS]), 0)) <= 10.0) {
                 integer iNum = (integer) llJsonGetValue(msg, ["iNum"]);
                 string sStr  = llJsonGetValue(msg, ["sMsg"]);
                 key kID      = (key) llJsonGetValue(msg, ["kID"]);
 
-                if (iNum == LM_SETTING_RESPONSE)
-                {
+                if (iNum == LM_SETTING_RESPONSE) {
                     list lPar     = llParseString2List(sStr, ["_","="], []);
                     string sToken = llList2String(lPar, 0);
                     string sVar   = llList2String(lPar, 1);
                     string sVal   = llList2String(lPar, 2);
-
-                    if (sToken == "auth")
-                    {
-                        if (sVar == "owner")
-                        {
-                            //llSay(0, "owner values is: " + sVal);
+                    if( sToken == "global"){
+                        if( sVar == "checkboxes"){
+                            g_lCheckBoxes = llParseString2List(sVal,[","],[]);
                         }
                     }
-                }
-                else if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE)
-                {
+                } else if(iNum == RLV_REFRESH || iNum == RLV_VERSION || iNum == RLVA_VERSION) {
+                    check_settings();
+                } else if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) {
                     UserCommand(iNum, sStr, kID);
-
-                }
-                else if (iNum == DIALOG_TIMEOUT)
-                {
+                } else if (iNum == DIALOG_TIMEOUT) {
                     integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
                     g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex + 3);  //remove stride from g_lMenuIDs
-                }
-                else if (iNum == DIALOG_RESPONSE)
-                {
+                } else if (iNum == DIALOG_RESPONSE) {
                     integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-                    if (iMenuIndex != -1)
-                    {
+                    if (iMenuIndex != -1) {
                         string sMenu = llList2String(g_lMenuIDs, iMenuIndex + 1);
                         g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
                         list lMenuParams = llParseString2List(sStr, ["|"], []);
@@ -290,22 +299,17 @@ default
                         string sMsg = llList2String(lMenuParams, 1);
                         integer iAuth = llList2Integer(lMenuParams, 3);
 
-                        if (sMenu == "Menu~Main")
-                        {
-                            if (sMsg == UPMENU)
-                            {
+                        if (sMenu == "Menu~Main") {
+                            if (sMsg == UPMENU) {
                                 Link("from_addon", iAuth, "menu Addons", kAv);
-                            }
-                            if (sMsg == baLock )
-                            {
-                                UserCommand(iAuth,g_sAddon+"unlock",kAv);
-                            }
-                            if (sMsg == biLock )
-                            {
-                                UserCommand(iAuth,g_sAddon+"lock",kAv);
-                            }
-                            else if (sMsg == "DISCONNECT")
-                            {
+                            } else if (sMsg == b_sLock ) {
+                                if(lock){
+                                    UserCommand(iAuth,g_sAddon+"unlock",kAv);
+                                } else {
+                                    UserCommand(iAuth,g_sAddon+"lock",kAv);
+                                }
+                                Menue(kAv,iAuth);
+                            } else if (sMsg == "DISCONNECT") {
                                 shutdown();
                             }
                         }
