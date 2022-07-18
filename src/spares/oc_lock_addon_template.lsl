@@ -29,6 +29,7 @@ integer LM_SETTING_REQUEST  = 2001; //when startup, scripts send requests for se
 integer LM_SETTING_RESPONSE = 2002; //the settings script sends responses on this channel
 //integer LM_SETTING_DELETE   = 2003; //delete token from settings
 //integer LM_SETTING_EMPTY    = 2004; //sent when a token has no value
+integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
 
 integer DIALOG          = -9000;
 integer DIALOG_RESPONSE = -9001;
@@ -65,7 +66,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
     } else {
         g_lMenuIDs += [kID, kMenuID, sName];
     }
-
+}
 
 Menu(key kID, integer iAuth) {
     string sPrompt = "\n[Menu "+g_sAddon+"]";
