@@ -49,7 +49,7 @@ integer iLockAuth = 503;
 
 string UPMENU = "BACK";
 list g_lCheckBoxes = [];
-list b_lCheckBoxes = ["☐","☑"]p
+list b_lCheckBoxes = ["☐","☑"];
 integer lock = FALSE;
 string b_sLock;
 string d_sLock = "Lock";
