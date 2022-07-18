@@ -246,10 +246,10 @@ default {
             */
             g_iLMLastRecv = llGetUnixTime();
             Link("from_addon", LM_SETTING_REQUEST, "ALL", "");
-            g_iLMLastSent = llGetUnixtime();
+            g_iLMLastSent = llGetUnixTime();
             check_settings();
         } else if (g_iJustRezzed && g_kCollar != NULL_KEY){
-            if( g_kCollar != id && g_nCollar == name){
+            if( g_kCollar != id && g_sCollar == name){
                 // we have a name so lets try to salvage this connection.
                 g_iJustRezzed = FALSE;
                 g_kCollar = id;
