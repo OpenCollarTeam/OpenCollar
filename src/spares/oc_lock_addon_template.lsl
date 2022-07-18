@@ -30,6 +30,8 @@ integer LM_SETTING_RESPONSE = 2002; //the settings script sends responses on thi
 //integer LM_SETTING_DELETE   = 2003; //delete token from settings
 //integer LM_SETTING_EMPTY    = 2004; //sent when a token has no value
 integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
+integer RLV_VERSION = 6003; //RLV Plugins can recieve the used RLV viewer version upon receiving this message..
+integer RLVA_VERSION = 6004; //RLV Plugins can recieve the used RLVa viewer version upon receiving this message..
 
 integer DIALOG          = -9000;
 integer DIALOG_RESPONSE = -9001;
@@ -72,7 +74,7 @@ Menu(key kID, integer iAuth) {
     string sPrompt = "\n[Menu "+g_sAddon+"]";
     if(g_lCheckBoxes != []) {
         // check if collar style check boxes are available.
-        b_sLock = lllist2String(g_lCheckBoxes,lock)+d_sLock;
+        b_sLock = llList2String(g_lCheckBoxes,lock)+d_sLock;
     } else {
         // fall back to built in check boxes
         b_sLock = llList2String(b_lCheckBoxes,lock)+d_sLock;
@@ -173,7 +175,7 @@ softreset() {
     Link("online", 0, "", g_kWearer); // This is the signal to initiate communication between the addon and the collar
     llSetTimerEvent(10);
     g_iLMLastSent = llGetUnixTime();
-    g_iLNLastRecv = llGetUnixTime();
+    g_iLMLastRecv = llGetUnixTime();
     check_settings();
 }
 
@@ -309,7 +311,7 @@ default {
                                 } else {
                                     UserCommand(iAuth,g_sAddon+"lock",kAv);
                                 }
-                                Menue(kAv,iAuth);
+                                Menu(kAv,iAuth);
                             } else if (sMsg == "DISCONNECT") {
                                 shutdown();
                             }
