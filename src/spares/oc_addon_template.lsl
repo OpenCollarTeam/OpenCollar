@@ -117,7 +117,6 @@ string g_sCollar = ""; // this will be needed for security and persitence checks
 integer g_iLMLastRecv;
 integer g_iLMLastSent;
 integer g_iListen;
-integer g_iJustRezzed;
 
 softreset() { 
     // this is a must have for persistence.
@@ -145,8 +144,7 @@ default {
             // if the collar cannot be identifid by name or key we need to reset script.
             llResetScript();
         } else {
-            // other wise this flag 
-            g_iJustRezzed = TRUE;
+            softreset();
         }
     }
     
@@ -186,19 +184,6 @@ default {
             g_iLMLastRecv = llGetUnixTime();
             Link("from_addon", LM_SETTING_REQUEST, "ALL", "");
             g_iLMLastSent = llGetUnixTime();
-        } else if (g_iJustRezzed && g_kCollar != NULL_KEY){
-            if( g_kCollar != id && g_sCollar == name){
-                // we have a name so lets try to salvage this connection.
-                g_iJustRezzed = FALSE;
-                g_kCollar = id;
-                softreset();
-            } else {
-                /* 
-                we can find no name or key that associates with the collar time to reset
-                since the name may have changed to.
-                */
-                llResetScript();
-            }
         } else if (sPacketType == "dc" && g_kCollar == id) {
             softreset();
         } else if (sPacketType == "pong" && g_kCollar == id) {
