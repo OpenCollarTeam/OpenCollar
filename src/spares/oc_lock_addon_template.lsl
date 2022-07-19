@@ -207,8 +207,7 @@ default {
             // if the collar cannot be identifid by name or key we need to reset script.
             llResetScript();
         } else {
-            // other wise this flag 
-            g_iJustRezzed = TRUE;
+            softreset();
         }
     }
     
@@ -248,19 +247,6 @@ default {
             Link("from_addon", LM_SETTING_REQUEST, "ALL", "");
             g_iLMLastSent = llGetUnixTime();
             check_settings();
-        } else if (g_iJustRezzed && g_kCollar != NULL_KEY){
-            if( g_kCollar != id && g_sCollar == name){
-                // we have a name so lets try to salvage this connection.
-                g_iJustRezzed = FALSE;
-                g_kCollar = id;
-                softreset();
-            } else {
-                /* 
-                we can find no name or key that associates with the collar time to reset
-                since the name may have changed to.
-                */
-                llResetScript();
-            }
         } else if (sPacketType == "dc" && g_kCollar == id) { 
             softreset(); // this may not be nessiary and we could use the reset or shut down option for non perstient items.
             
