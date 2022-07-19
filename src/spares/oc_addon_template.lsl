@@ -143,7 +143,8 @@ default {
         if(g_kCollar == NULL_KEY || g_sCollar == ""){
             // if the collar cannot be identifid by name or key we need to reset script.
             llResetScript();
-        } else {
+        } else if(llList2String(llGetObjectDetails(g_kCollar,[OBJECT_NAME]), 0) != g_sCollar){
+            // attempt to salvage connection, this will create duplicate menu entries at the moment, but makes addons functionl sooner.
             softreset();
         }
     }
