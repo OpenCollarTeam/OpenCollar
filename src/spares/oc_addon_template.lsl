@@ -140,6 +140,7 @@ default {
     }   
     
     on_rez(integer start_pram){
+        llSleep(30); // give the collar time to boot.
         if(g_kCollar == NULL_KEY || g_sCollar == ""){
             // if the collar cannot be identifid by name or key we need to reset script.
             llResetScript();
