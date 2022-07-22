@@ -147,6 +147,10 @@ default {
         } else if(llList2String(llGetObjectDetails(g_kCollar,[OBJECT_NAME]), 0) != g_sCollar){
             // attempt to salvage connection, this will create duplicate menu entries at the moment, but makes addons functionl sooner.
             softreset();
+        
+        } else {
+            g_iLMLastSent = llGetUnixTime();
+            Link("ping",0,"",g_kCollar);
         }
     }
     
