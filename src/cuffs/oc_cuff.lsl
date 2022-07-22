@@ -13,6 +13,9 @@ Ping (Pingout Duffield)
     * April 2022          -       Remove SyncLock, Clean Up Script Style
 Kristen Mynx
     * May 2022        -       Added resizer support
+Kristen Mynx
+    * July 2022       -       Fix "BACK" buttons on resizer 
+
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
@@ -457,6 +460,8 @@ default
             PosesMenu((key)llList2String(lTmp,0), (integer)llList2String(lTmp,1), 0);
         } else if(iNum == 999) {
             Link(llJsonGetValue(sMsg, ["pkt"]), (integer)llJsonGetValue(sMsg, ["iNum"]), llJsonGetValue(sMsg, ["sMsg"]), (key)llJsonGetValue(sMsg,["kID"]));
+        } else if (iNum == 33) {
+            Menu((key)sMsg, (integer)((string)kID));
         }
     }
 
