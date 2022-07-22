@@ -483,8 +483,13 @@ state active
             if (g_iRlvActive == TRUE) {
                 llSleep(2);
                 llMessageLinked(LINK_SET, RLV_ON, "", NULL_KEY);
-                if (g_iRlvaVersion) llMessageLinked(LINK_SET, RLVA_VERSION, (string) g_iRlvaVersion, NULL_KEY);
-            }
+                if (g_iRlvaVersion) {
+                	llMessageLinked(LINK_SET, RLVA_VERSION, (string) g_iRlvaVersion, NULL_KEY);
+                }
+                else {
+					llMessageLinked(LINK_SET,RLV_VERSION, (string) g_iRlvVersion,NULL_KEY);
+				}
+			}
         } else if(iNum == TIMEOUT_FIRED)
         {
             
