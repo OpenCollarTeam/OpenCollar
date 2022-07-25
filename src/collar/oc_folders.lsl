@@ -296,7 +296,7 @@ integer g_iMenuAuth;
 
 LocksMenu(key kAv, integer iAuth, integer iMask)
 {
-    string sPrompt = "[Folders]\n> Locks\n\nPath: "+g_sPath+"\n\n* The subfolder options will lock/unlock this folder and all subfolders contained. It only affects your current path. To unlock every folder and clear all locks, see the main menu";
+    string sPrompt = "[Folders]\n> Locks\n\nPath: "+g_sPath+"\n\n* The subfolder options will lock/unlock this folder and all subfolders contained. It only affects your current path. To unlock every folder and clear all locks, see the main menu"; //This string should be made more precise to explain the functioning of the locks mechanism, full checkbox = locked, empty checkbox = unlocked
     list lButtons = [];
     if(iMask & 1)lButtons += [Checkbox(TRUE, "det. subfolder")];
     else lButtons += Checkbox(FALSE, "det. subfolder");
