@@ -1,20 +1,19 @@
 /*
 This file is a part of OpenCollar.
 Copyright 2020
-
 : Contributors :
-
 Aria (Tashia Redrose)
     * Aug 2020      -           Rewrote oc_folders for 8.0 Alpha 5
-
 Medea (Medea Destiny)
     * June 2021     -   *Fix issue #570, Allow hiding folders starting with ~ via HideTilde option, defaults to ON. 
                         *Fix issue  #581, filtering input to UserCommand to only folder-auth check actual folder
                         commands rather than folder-authing and processing EVERYTHING THE COLLAR DOES BY ANY USER 
+    * May 2022      -   *Fix issue #775, changed string handling to ensure command is not issued as part of search
+                        term, added sanity checking for chat commands to ensure we don't try to search for nothing,
+                        and no longer operate on empty search results. Issuer of chat command now stored as 
+                        g_kChatUser so they can be notified if findfolder fails.
                          
 et al.
-
-
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
 */
@@ -180,7 +179,7 @@ integer F_REMOVE = 1;
 integer F_RECURSIVE = 2;
 integer F_ADD = 4;
 integer F_WEAR = 8;
-
+key g_kChatUser; // user of a chat command, to notify if nothing found.
 
 UserCommand(integer iNum, string sStr, key kID) {
 
@@ -201,9 +200,13 @@ UserCommand(integer iNum, string sStr, key kID) {
         string sChangetype = llGetSubString(sStr,0,0);
         if(llListFindList(["&","-","+"],[sChangetype])==-1) return;
         sChangetype = llGetSubString(sStr, 0, 1);
-        string sChangevalue = llStringTrim(llGetSubString(sStr, 2, -1), STRING_TRIM);
+        string sChangevalue = llStringTrim(llDeleteSubString(sStr, 0, 1), STRING_TRIM);
         //string sText;
-
+        if(sChangevalue==""){ // don't search for empty strings.
+             llMessageLinked(LINK_SET, NOTIFY, "0You have to supply a string to search for to use add/remove/wear commands.", kID);
+             return; 
+        } 
+        g_kChatUser=kID;
         if(iNum == CMD_TRUSTED && !Bool((g_iAccessBitSet&1)))return R();
         if(iNum == CMD_EVERYONE && !Bool((g_iAccessBitSet&2)))return R();
         if(iNum == CMD_GROUP && !Bool((g_iAccessBitSet&4)))return R();
@@ -229,9 +232,13 @@ UserCommand(integer iNum, string sStr, key kID) {
             llOwnerSay("@findfolder:"+sChangevalue+"="+(string)g_iFindChn);
             return;
         }
-        sChangetype = llGetSubString(sStr,0,0);
-        sChangevalue = llStringTrim(llGetSubString(sStr, 1, -1), STRING_TRIM);
 
+        sChangetype = llGetSubString(sStr,0,0);
+        sChangevalue = llStringTrim(llDeleteSubString(sStr, 0, 0), STRING_TRIM);
+        if(sChangevalue==""){ // don't search for empty strings.
+             llMessageLinked(LINK_SET, NOTIFY, "0You have to supply a string to search for to use add/remove/wear commands.", kID);
+             return; 
+        }
         if(sChangetype == "&"){
             // add folder path
             //llOwnerSay("@attachover:"+sChangevalue+"=force");
@@ -296,7 +303,7 @@ integer g_iMenuAuth;
 
 LocksMenu(key kAv, integer iAuth, integer iMask)
 {
-    string sPrompt = "[Folders]\n> Locks\n\nPath: "+g_sPath+"\n\n* The subfolder options will lock/unlock this folder and all subfolders contained. It only affects your current path. To unlock every folder and clear all locks, see the main menu";
+    string sPrompt = "[Folders]\n> Locks\n\nPath: "+g_sPath+"\n\n* The subfolder options will lock (check) / unlock (uncheck) this folder and all subfolders contained. It only affects your current path. To unlock every folder and clear all locks, see the main menu";
     list lButtons = [];
     if(iMask & 1)lButtons += [Checkbox(TRUE, "det. subfolder")];
     else lButtons += Checkbox(FALSE, "det. subfolder");
@@ -348,12 +355,10 @@ state active
     listen(integer iChan, string sName, key kID, string sMsg){
         if(iChan == g_iTmpLstnChn){
             /*
-
         0 : No item is present in that folder
         1 : Some items are present in that folder, but none of them is worn
         2 : Some items are present in that folder, and some of them are worn
         3 : Some items are present in that folder, and all of them are worn
-
             */
 
             list lFolders = llParseString2List(sMsg, [","],[]);
@@ -392,7 +397,10 @@ state active
             Dialog(g_kMenuUser, sPrompt, lButtons, ["+ Add Items", "- Rem Items", setor((g_sPath == ""), UPMENU, "^ UP")]+lLockOption, 0, g_iMenuUser, "FolderBrowser~");
         } else if(iChan == g_iFindChn)
         {
-            if(g_iCmdMode & F_RECURSIVE){
+            if(llStringTrim(sMsg,STRING_TRIM)==""){
+                 llMessageLinked(LINK_SET, NOTIFY, "0Nothing matching that term was found in #RLV!", g_kChatUser);
+                 return; // don't do anything if 
+            } if(g_iCmdMode & F_RECURSIVE){
                 if(g_iCmdMode & F_ADD){
                     llOwnerSay("@attachallover:"+sMsg+"=force");
                 } else if(g_iCmdMode & F_WEAR){

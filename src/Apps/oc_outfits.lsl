@@ -59,8 +59,13 @@ integer MENUNAME_RESPONSE = 3001;
 integer OUTFITS_ADD = -999901;
 integer OUTFITS_REM = -999902;
 
-//integer RLV_CMD = 6000;
-//integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
+integer RLV_CMD = 6000;
+integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
+integer DO_RLV_REFRESH = 26001;//RLV plugins should reinstate their restrictions upon receiving this message.
+integer RLV_CLEAR = 6002;//RLV plugins should clear their restriction lists upon receiving this message.
+integer RLV_VERSION = 6003; //RLV Plugins can recieve the used RLV viewer version upon receiving this message..
+integer RLVA_VERSION = 6004; //RLV Plugins can recieve the used RLVa viewer version upon receiving this message..
+integer RLV_CMD_OVERRIDE=6010; //RLV Plugins can send one-shot (force) commands with a list of restrictions to temporarily lift if required to ensure that the one-shot commands can be executed
 
 //integer RLV_OFF = 6100; // send to inform plugins that RLV is disabled now, no message or key needed
 //integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no message or key needed
@@ -308,7 +313,7 @@ integer ALIVE = -55;
 integer READY = -56;
 integer STARTUP = -57;
 
-integer g_iRLVa = 0;
+integer g_iRLVa = FALSE;
 
 string RLVA_APPEND=".";
 
@@ -317,8 +322,8 @@ string GetOutfitSystem(integer iCorePath){
         if(iCorePath)return ".outfits/.core";
         else return ".outfits";
     }else{
-        if(iCorePath)return "outfits/core";
-        else return "outfits";
+        if(iCorePath)return "~outfits/~core";
+        else return "~outfits";
     }
 }
 
@@ -327,8 +332,8 @@ string GetFolderName(integer iCore){
         if(iCore)return ".core";
         else return ".outfits";
     }else{
-        if(iCore)return "core";
-        else return "outfits";
+        if(iCore)return "~core";
+        else return "~outfits";
     }
 }
 
@@ -340,14 +345,6 @@ default
     }
     state_entry(){
         llMessageLinked(LINK_SET, ALIVE, llGetScriptName(),"");
-        llListen(999988, "", llGetOwner(), "");
-        llOwnerSay("@version=999988");
-    }
-    listen(integer iChan, string sName, key kID, string sMsg)
-    {
-        if(llSubStringIndex(sMsg, "RLVa")==-1){
-            g_iRLVa=FALSE;
-        }else g_iRLVa=TRUE;
     }
     link_message(integer iSender, integer iNum, string sStr, key kID){
         if(iNum == REBOOT){
@@ -374,6 +371,11 @@ state active
     }
     link_message(integer iSender,integer iNum,string sStr,key kID){
         if(iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID);
+        else if(iNum == RLVA_VERSION ){
+               if(sStr != "0"){
+                  g_iRLVa=TRUE;
+               }else g_iRLVa=FALSE;
+        }
         else if(iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu+"|"+ g_sSubMenu,"");
         else if(iNum == -99999){

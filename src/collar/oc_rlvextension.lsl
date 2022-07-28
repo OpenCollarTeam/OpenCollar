@@ -583,12 +583,19 @@ state active
                     g_sTmpExceptionName=sMsg;
                     MenuAddCustomExceptionID(kAv,iAuth);
                 } else if(sMenu == "Exceptions~AddCustomID"){
-                    g_kTmpExceptionID = (key)sMsg;
-                    llMessageLinked(LINK_SET,NOTIFY,"0Adding exception..", kAv);
-                    g_lCustomExceptions += [g_sTmpExceptionName,g_kTmpExceptionID,0];
+                    if ((key)sMsg) // true if valid UUID, false if not
+                    {
+                        g_kTmpExceptionID = (key)sMsg;
+                        llMessageLinked(LINK_SET,NOTIFY,"0Adding exception..", kAv);
+                        g_lCustomExceptions += [g_sTmpExceptionName,g_kTmpExceptionID,0];
                     
-                    Save(SAVE_CUSTOM);
-                    MenuSetExceptions(kAv, iAuth, "Custom");
+                        Save(SAVE_CUSTOM);
+                        MenuSetExceptions(kAv, iAuth, "Custom");
+                    }
+                    else
+                    {
+                        llMessageLinked(LINK_SET,NOTIFY,"0Invalid UUID "+sMsg, kAv);
+                    }
                 } else if (sMenu == "Exceptions~Set") {
                     if (sMsg == UPMENU) MenuExceptions(kAv,iAuth);
                     else {

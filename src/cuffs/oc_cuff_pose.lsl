@@ -141,7 +141,7 @@ string g_sCurrentPose = "NONE";
 default
 {
     state_entry(){
-        llOwnerSay(llGetScriptName()+" ready ("+(string)llGetFreeMemory()+"b)");
+        //llOwnerSay(llGetScriptName()+" ready ("+(string)llGetFreeMemory()+"b)");
         llRequestPermissions(llGetOwner(), PERMISSION_TRIGGER_ANIMATION);
     }
 
