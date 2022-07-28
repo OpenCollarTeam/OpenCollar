@@ -11,6 +11,15 @@ Aria (Tashia Redrose)
 Felkami (Caraway Ohmai)
     *Dec 2020       -       Fixed #461, Modified runaway language to not assume relay on at runaway
 
+Kristen Mynx,  Phidoux (taya Maruti)
+    *May 2022  - Fixed bug: !release or @clear sent to the relay would clear all
+    restrictions and exceptions from the collar.   Changed the relay to send all RLV 
+    commands through RLV_CMD link messages instead of directly to the viewer.  oc_rlvsys
+    will process them, and arbitrate between collar and relay restrictions and exceptions.
+    Also removed DO_RLV_REFRESH which cleared all restrictions and exceptions.
+
+   *July 2022  - Fixed bug: Ask mode only accepted one RLV command from the object.
+    
 et al.
 
 Licensed under the GPLv2. See LICENSE for full details.
@@ -29,26 +38,6 @@ key Source;
 list Restrictions;
 integer g_iResit_status;
 
-
-Release(){
-
-    llRegionSayTo(Source, RLV_RELAY_CHANNEL, "release,"+(string)Source+",!release,ok");
-
-    integer i=0;
-    integer end=llGetListLength(Restrictions);
-    for(i=0;i<end;i++){
-        // Release restrictions!
-        string stripped = "@clear="+llList2String(Restrictions,i);//llGetSubString(llList2String(Restrictions,i),0,llSubStringIndex(llList2String(Restrictions,i), "=")-1);
-        llOwnerSay(stripped);
-    }
-    Source=NULL_KEY;
-    Restrictions=[];
-    g_lAllowedSources=[];
-    g_kPendingSource=NULL_KEY;
-    g_lPendingRLV=[];
-
-    llMessageLinked(LINK_SET, DO_RLV_REFRESH, "", "");
-}
 
 //MESSAGE MAP
 integer RLV_CLEAR=6002;
@@ -79,9 +68,8 @@ integer MENUNAME_RESPONSE = 3001;
 integer AUTH_REQUEST = 600;
 integer AUTH_REPLY=601;
 
-//integer RLV_CMD = 6000;
+integer RLV_CMD = 6000;
 //integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
-integer DO_RLV_REFRESH = 26001;//RLV plugins should reinstate their restrictions upon receiving this message.
 
 //integer RLV_OFF = 6100; // send to inform plugins that RLV is disabled now, no message or key needed
 //integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no message or key needed
@@ -229,6 +217,40 @@ integer g_iLocked=FALSE;
 //integer TIMEOUT_REGISTER = 30498;
 //integer TIMEOUT_FIRED = 30499;
 
+RLV(string cmd)
+{
+    // send the rlv command to oc_rlvsys
+    llMessageLinked(LINK_THIS, RLV_CMD,
+        llGetSubString(cmd,1,999),  // knock off the "@"
+        "a94c4e13-ff4f-4686-b14f-877c6424d9d8");
+    // we use a UUID as the source because oc_rlvsys determines
+    // if this is an external object or an internal script which sent the RLV_CMD.
+    // since we're sending this internally on behalf of an external object we use a UUID
+    // eventually we should pass the actual object, so oc_relay can then handle multiple relay objects
+    // because oc_rlvsys seems to be able to handle/abritrate/manage multiple sources.
+}
+
+Release(){
+
+    llRegionSayTo(Source, RLV_RELAY_CHANNEL, "release,"+(string)Source+",!release,ok");
+
+    /*
+    integer i=0;
+    integer end=llGetListLength(Restrictions);
+    for(i=0;i<end;i++){
+        // Release restrictions!
+        string stripped = "@clear="+llList2String(Restrictions,i);//llGetSubString(llList2String(Restrictions,i),0,llSubStringIndex(llList2String(Restrictions,i), "=")-1);
+        RLV(stripped);
+    }
+    */
+    // don't need the above, just a clear, as rlvsys handles clearing by source.
+    RLV("@clear");
+    Source=NULL_KEY;
+    Restrictions=[];
+    g_lAllowedSources=[];
+    g_kPendingSource=NULL_KEY;
+    g_lPendingRLV=[];
+}
 
 
 list g_lAllowedSources=[];
@@ -238,7 +260,7 @@ list g_lPendingRLV;
 key g_kObjectOwner;
 
 PromptForSource(key kID, string sPendingCommand){
-    g_lPendingRLV = [sPendingCommand];
+    g_lPendingRLV = [sPendingCommand] + g_lPendingRLV;
     g_kObjectOwner = kID;
     Dialog(llGetOwner(), "[Relay]\n\nObject Name: "+llKey2Name(g_kPendingSource)+"\nObject ID: "+(string)g_kPendingSource+"\nObject Owner: secondlife:///app/agent/"+(string)kID+"/about\n\nIs requesting to use your RLV Relay, do you want to allow it?", ["Yes", "No"], [], 0, CMD_WEARER, "AskPrompt");
 }
@@ -271,7 +293,7 @@ Process(string msg, key id, integer iWillPrompt){
                     Release();
                     return;
                 }
-                llOwnerSay(command);
+                RLV(command);
                 llRegionSayTo(id, RLV_RELAY_CHANNEL, ident+","+(string)id+","+command+",ok");
                 list subargs = llParseString2List(command, ["="], []);
                 string behav = llGetSubString(llList2String(subargs, 0), 1, -1);
@@ -279,7 +301,7 @@ Process(string msg, key id, integer iWillPrompt){
                 string comtype = llList2String(subargs, 1);
                 if (index == -1 && (comtype == "n" || comtype == "add")) {
                     Restrictions += [behav];
-                    llOwnerSay("@detach=n");
+                    //RLV("@detach=n");
                     Source = id;
                     if (behav == "unsit" && llGetAgentInfo(g_kWearer) & AGENT_SITTING) {
                         sitid = llList2Key(llGetObjectDetails(g_kWearer, [OBJECT_ROOT]), 0);
@@ -290,7 +312,6 @@ Process(string msg, key id, integer iWillPrompt){
                     Restrictions = llDeleteSubList(Restrictions, index, index);
                     if (Restrictions == []) {
                         Source = NULL_KEY;
-                        llMessageLinked(LINK_SET, DO_RLV_REFRESH, "","");
                     }
                     if (behav == "unsit") sitid = NULL_KEY;
                 }
@@ -364,7 +385,7 @@ state active
     on_rez(integer i) {
         if(llGetOwner()!=g_kWearer) llResetScript();
         if (Source) {
-            llOwnerSay("@detach=n"); // no escaping before we are sure the former source really is not active anymore
+            //RLV("@detach=n"); // no escaping before we are sure the former source really is not active anymore
             g_iResit_status = 0;
             llSetTimerEvent(30);
             llRegionSayTo(Source, RLV_RELAY_CHANNEL, "ping,"+(string)Source+",ping,ping");
@@ -376,14 +397,14 @@ state active
         if (g_iResit_status == 1) {
             g_iResit_status = 2;
             llSetTimerEvent(20);   //this must be long enough to happen AFTER oc_rlvsys is initialised or restrictions get cleared again
-			//only do the force-sit if the wearer was indeed locked sitting on something
+            //only do the force-sit if the wearer was indeed locked sitting on something
             if( Source == forcesitter && sitid != NULL_KEY ) {
-                llOwnerSay("@sit:"+(string)sitid+"=force");
+                RLV("@sit:"+(string)sitid+"=force");
             }
         } else if (g_iResit_status == 2) {
             llSetTimerEvent(0);
-			// this must also restore detach=n as oc_rlvsys may have cleared it
-            llOwnerSay("@"+llDumpList2String(Restrictions, "=n,")+"=n,detach=n");
+            // this must also restore detach=n as oc_rlvsys may have cleared it
+            RLV("@"+llDumpList2String(Restrictions, "=n,")+"=n");//,detach=n");
         } else {
             llSetTimerEvent(0);
             Release(); // The source is no longer active. Let's forget everything.
@@ -583,7 +604,7 @@ state active
             Release();
             integer iOldMode=g_iMode;
             g_iMode=0;
-            if(!g_iLocked)llOwnerSay("@detach=y");
+            if(!g_iLocked)RLV("@detach=y");
             llMessageLinked(LINK_SET, NOTIFY,"0Relay temporarily suppressed for 30 seconds due to safeword or clear all.", g_kWearer);
             llSleep(30);
             g_iMode=iOldMode;
