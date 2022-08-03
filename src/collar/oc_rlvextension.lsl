@@ -46,6 +46,7 @@ Medea Destiny -
     Feb2021     -   SetAllExes triggered on RLV_REFRESH / RLV_ON was saving values, causing exception
                     settings to be restored to defaults if trigged before settings are received.
                     (fixes #740, #720, #719)
+                    
 */
 string g_sParentMenu = "RLV";
 string g_sSubMenu1 = "Force Sit";
