@@ -25,14 +25,15 @@ Medea (Medea Destiny)
                 -   Efficiency pass, inlined majorminor(), docheckupdate() and docheckdevupdate().
                     Removed g_lTestReports, left over from alpha.
     Nov 2021    -   Auth check for hide didn't account for when wearer tries to use hide with AllowHiding
-                     ticked but access is not CMD_WEARER (i.e. wearer set to trusted). (see #774)     
-    March 2022  -   Stormed Darkshade (StormedStormy)  Added a button for reboot to help/about menu.                      
+                     ticked but access is not CMD_WEARER (i.e. wearer set to trusted). (see #774)                         
     Jun 2021    -   Fixes for #774 (extension to above, allowing for wearer set to trusted). Using 
                     kID == g_kWearer instead of iNum==CMD_WEARER in UserCommad() for:
                     Safeword report, verbosity level, locking
                     And kAv == g_kWearer instead of iAuth == CMD_WEARER in meu dialog responses for:
-                    + / - trusted / blacklist when wearer is permitted, displaying access list, print settigns  
-                  
+                    + / - trusted / blacklist when wearer is permitted, displaying access list, print settings  
+                    
+Stormed Darkshade (StormedStormy)
+    March 2022  -   Added a button for reboot to help/about menu.  
   
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
