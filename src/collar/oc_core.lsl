@@ -686,7 +686,7 @@ state active
                     if(sMsg == UPMENU){
                         iRespring=FALSE;
                         Menu(kAv,iAuth);
-                    } else if(sMsg == "Reboot"){
+                    } else if(sMsg == "Reboot") {
                         llMessageLinked(LINK_SET, iAuth, "Reboot", kAv);
                     } else if(sMsg == "License"){
                         llGiveInventory(kAv, ".license");
