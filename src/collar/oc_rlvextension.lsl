@@ -46,7 +46,10 @@ Medea Destiny -
     Feb2021     -   SetAllExes triggered on RLV_REFRESH / RLV_ON was saving values, causing exception
                     settings to be restored to defaults if trigged before settings are received.
                     (fixes #740, #720, #719)
-                    
+ 
+ 
+Krysten Minx -
+   May2022      - Added check for valid UUID when setting custom exception
 */
 string g_sParentMenu = "RLV";
 string g_sSubMenu1 = "Force Sit";
@@ -588,12 +591,15 @@ state active
                     g_sTmpExceptionName=sMsg;
                     MenuAddCustomExceptionID(kAv,iAuth);
                 } else if(sMenu == "Exceptions~AddCustomID"){
-                    g_kTmpExceptionID = (key)sMsg;
-                    llMessageLinked(LINK_SET,NOTIFY,"0Adding exception..", kAv);
-                    g_lCustomExceptions += [g_sTmpExceptionName,g_kTmpExceptionID,0];
-                    
-                    Save(SAVE_CUSTOM);
-                    MenuSetExceptions(kAv, iAuth, "Custom");
+                    if ((key)sMsg) { // true if valid UUID, false if not
+                         g_kTmpExceptionID = (key)sMsg;
+                         llMessageLinked(LINK_SET,NOTIFY,"0Adding exception..", kAv);
+                         g_lCustomExceptions += [g_sTmpExceptionName,g_kTmpExceptionID,0];
+                         Save(SAVE_CUSTOM);
+                         MenuSetExceptions(kAv, iAuth, "Custom");
+                    } else {
+                         llMessageLinked(LINK_SET,NOTIFY,"0Invalid UUID "+sMsg, kAv);
+                    }
                 } else if (sMenu == "Exceptions~Set") {
                     if (sMsg == UPMENU) MenuExceptions(kAv,iAuth);
                     else {
