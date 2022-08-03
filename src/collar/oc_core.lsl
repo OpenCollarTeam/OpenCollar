@@ -24,8 +24,9 @@ Medea (Medea Destiny)
                 -   Added confirmation messages when group or public access is toggled and fixed a typo
                 -   Efficiency pass, inlined majorminor(), docheckupdate() and docheckdevupdate().
                     Removed g_lTestReports, left over from alpha.
-    Nov 2021    -   Auth check for hide didn't account for situations when wearer tries to use hide with
-                    AllowHiding ticked but access level is not CMD_WEARER (i.e. wearer set to trusted).
+    Nov 2021    -   Auth check for hide didn't account for when wearer tries to use hide with AllowHiding
+                     ticked but access is not CMD_WEARER (i.e. wearer set to trusted). (see #774)     
+    March 2022  -   Stormed Darkshade (StormedStormy)  Added a button for reboot to help/about menu.                      
     Jun 2021    -   Fixes for #774 (extension to above, allowing for wearer set to trusted). Using 
                     kID == g_kWearer instead of iNum==CMD_WEARER in UserCommad() for:
                     Safeword report, verbosity level, locking
@@ -193,7 +194,7 @@ HelpMenu(key kID, integer iAuth){
         llMessageLinked(LINK_SET, NOTIFY, sPrompt, kID);
         return;
     }
-    list lButtons = ["Update", "Support", "License"];
+    list lButtons = ["Update", "Support", "License", "Reboot"];
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "Menu~Help");
 }
 
@@ -685,6 +686,8 @@ state active
                     if(sMsg == UPMENU){
                         iRespring=FALSE;
                         Menu(kAv,iAuth);
+                    } else if(sMsg == "Reboot")
+                        {llMessageLinked(LINK_SET, iAuth, "Reboot", kAv);
                     } else if(sMsg == "License"){
                         llGiveInventory(kAv, ".license");
                     } else if(sMsg == "Support"){
