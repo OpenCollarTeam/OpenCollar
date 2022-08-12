@@ -185,7 +185,7 @@ default
         llSetTimerEvent(1);
         //llScriptProfiler(TRUE);
         if(g_iVerbosityLevel>=1)
-            llOwnerSay("Collar is preparing to startup, please be patient.");
+            llOwnerSay("Collar is preparing to start up, please be patient.");
     }
     
     

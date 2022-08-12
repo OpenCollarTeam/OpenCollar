@@ -23,10 +23,19 @@ Medea (Medea Destiny)
     Sept 2021   -   Added sleep before notify for device name chage, issue #672 
                 -   Added confirmation messages when group or public access is toggled and fixed a typo
                 -   Efficiency pass, inlined majorminor(), docheckupdate() and docheckdevupdate().
-                    Removed g_lTestReports, left over from alpha.a
-    
-    March 2022  -   Stormed Darkshade (StormedStormy)  Added a button for reboot to help/about menu.             
-                  
+
+                    Removed g_lTestReports, left over from alpha.
+    Nov 2021    -   Auth check for hide didn't account for when wearer tries to use hide with AllowHiding
+                     ticked but access is not CMD_WEARER (i.e. wearer set to trusted). (see #774)                         
+    Jun 2021    -   Fixes for #774 (extension to above, allowing for wearer set to trusted). Using 
+                    kID == g_kWearer instead of iNum==CMD_WEARER in UserCommad() for:
+                    Safeword report, verbosity level, locking
+                    And kAv == g_kWearer instead of iAuth == CMD_WEARER in meu dialog responses for:
+                    + / - trusted / blacklist when wearer is permitted, displaying access list, print settings  
+                    
+Stormed Darkshade (StormedStormy)
+    March 2022  -   Added a button for reboot to help/about menu.  
+
   
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
@@ -227,7 +236,7 @@ UserCommand(integer iNum, string sStr, key kID) {
             llMessageLinked(LINK_SET,NOTIFY, "0Fixed menus", kID);
             llMessageLinked(LINK_SET,0,"initialize","");
         } else if(sChangetype == "update"){
-            if(iNum == CMD_OWNER || iNum == CMD_WEARER){
+            if(iNum == CMD_OWNER || kID == g_kWearer){
                 g_iUpdatePin = llRound(llFrand(0x7FFFFFFF))+1; // Maximum integer size
                 llSetRemoteScriptAccessPin(g_iUpdatePin);
 
@@ -262,7 +271,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                     }
                 }
             } else {
-                if(iNum == CMD_OWNER || iNum == CMD_WEARER){
+                if(iNum == CMD_OWNER || kID == g_kWearer){
                     llMessageLinked(LINK_SET, NOTIFY, "0The safeword is current set to: '"+g_sSafeword+"'",kID);
                 }
             }
@@ -330,7 +339,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                 llMessageLinked(LINK_SET,NOTIFY,"0%NOACCESS% to toggling Allow Hide", kID);
                 if(sChangevalue == "remenu")Settings(kID,iNum);
             }
-        } else if(llToLower(sChangetype)=="lock" && !g_iWelded && (iNum == CMD_OWNER || iNum == CMD_WEARER)){
+        } else if(llToLower(sChangetype)=="lock" && !g_iWelded && (iNum == CMD_OWNER || kID == g_kWearer)){
             // allow locking
             g_iLocked=TRUE;
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_locked="+(string)g_iLocked,"");
@@ -537,19 +546,19 @@ state active
                         iRespring=FALSE;
                         Menu(kAv,iAuth);
                     } else if(llGetSubString(sMsg,0,0) == "+"){
-                        if(iAuth == CMD_OWNER || (iAuth==CMD_WEARER && (sMsg=="+ Trust"||sMsg=="+ Block") && g_iAllowWearerSetTrusted==TRUE) ){
+                        if(iAuth == CMD_OWNER || (kAv == g_kWearer && (sMsg=="+ Trust"||sMsg=="+ Block") && g_iAllowWearerSetTrusted==TRUE) ){
                             iRespring=FALSE;
                             llMessageLinked(LINK_SET, iAuth, "add "+llToLower(llGetSubString(sMsg,2,-1)), kAv);
                         }
                         else
                             llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to adding a person", kAv);
                     } else if(llGetSubString(sMsg,0,0)=="-"){
-                        if(iAuth == CMD_OWNER || (iAuth==CMD_WEARER && (sMsg=="- Trust"||sMsg=="-Block") && g_iAllowWearerSetTrusted==TRUE) ){
+                        if(iAuth == CMD_OWNER || (kAv == g_kWearer && (sMsg=="- Trust"||sMsg=="-Block") && g_iAllowWearerSetTrusted==TRUE) ){
                             iRespring=FALSE;
                             llMessageLinked(LINK_SET, iAuth, "rem "+llToLower(llGetSubString(sMsg,2,-1)), kAv);
                         } else llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to removing a person", kAv);
                     } else if(sMsg == "Access List"){
-                        if(iAuth == CMD_OWNER || iAuth == CMD_WEARER ){
+                        if(iAuth == CMD_OWNER || kAv == g_kWearer ){
                         llMessageLinked(LINK_SET, iAuth, "print auth", kAv);}
                     } else if(sMsg == Checkbox(bool((g_kGroup!="")), "Group")){
                         if(iAuth ==CMD_OWNER){
@@ -615,25 +624,21 @@ state active
                             }else{
                                 llMessageLinked(LINK_SET,NOTIFY,"0%NOACCESS% to changing policy on listening to local chat for collar commands.",kAv);}
                     } else if(sMsg == "Print"){
-                         if(iAuth==CMD_OWNER || iAuth==CMD_WEARER) llMessageLinked(LINK_SET, iAuth, "print settings", kAv);
+                         if(iAuth==CMD_OWNER || kAv == g_kWearer) llMessageLinked(LINK_SET, iAuth, "print settings", kAv);
                          else llMessageLinked(LINK_SET,NOTIFY,"0%NOACCESS% to reading settings.",kAv);
                     } else if(sMsg == "Fix Menus"){
                         llMessageLinked(LINK_SET, iAuth, "fix", kAv);
                         llMessageLinked(LINK_SET, NOTIFY, "0Menus have been fixed", kAv);
                     } else if(sMsg == Checkbox(g_iHide,"Hide")){
-
-                        if(!g_iAllowHide && iAuth == CMD_WEARER){
+                        if((kAv == g_kWearer && g_iAllowHide==TRUE)||iAuth==CMD_OWNER){
+                            g_iHide=1-g_iHide;
+                            llMessageLinked(LINK_SET, iAuth, setor(g_iHide, "hide", "show"), kAv);
+                            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_hide="+(string)g_iHide, "");
+                        }
+                        else {
                             llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to hiding the collar", kAv);
                             return;
                         }
-                        if(iAuth != CMD_OWNER && iAuth!= CMD_WEARER){
-                            llMessageLinked(LINK_SET,NOTIFY, "0%NOACCESS% to hiding the collar", kAv);
-                            return;
-                        }
-
-                        g_iHide=1-g_iHide;
-                        llMessageLinked(LINK_SET, iAuth, setor(g_iHide, "hide", "show"), kAv);
-                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_hide="+(string)g_iHide, "");
                     } else if(sMsg == "Load"){
                         llMessageLinked(LINK_SET, iAuth, sMsg, kAv);
                     } else if(sMsg == "Resize"){
