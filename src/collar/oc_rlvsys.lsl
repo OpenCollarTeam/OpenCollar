@@ -11,6 +11,9 @@ Medea Destiny   -
                         not be restricted by wearer restictions. They can unset restrictions manually, perform the function, and then reset
                         the restriction, but that's a lot of hassle. This performs the function automatically. Operator and wearer are notified of 
                         restrictions that have been temporarily restricted to avoid being misled that a restriciton is not present.
+Kristen Mynx -
+        May 2022 - Removed DO_RLV_REFRESH and recheck_lock timer.   Both of these were only used by
+        the relay, which is being changed at the same time.  Check the comments in oc_relay.
 */
 
 string g_sScriptVersion = "8.1";
@@ -65,7 +68,6 @@ integer MENUNAME_REMOVE = 3003;
 
 integer RLV_CMD = 6000;
 integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
-integer DO_RLV_REFRESH = 26001;//RLV plugins should reinstate their restrictions upon receiving this message.
 integer RLV_CLEAR = 6002;//RLV plugins should clear their restriction lists upon receiving this message.
 integer RLV_VERSION = 6003; //RLV Plugins can recieve the used RLV viewer version upon receiving this message..
 integer RLVA_VERSION = 6004; //RLV Plugins can recieve the used RLVa viewer version upon receiving this message..
@@ -483,19 +485,15 @@ state active
             if (g_iRlvActive == TRUE) {
                 llSleep(2);
                 llMessageLinked(LINK_SET, RLV_ON, "", NULL_KEY);
-                if (g_iRlvaVersion) llMessageLinked(LINK_SET, RLVA_VERSION, (string) g_iRlvaVersion, NULL_KEY);
-            }
-        } else if(iNum == TIMEOUT_FIRED)
-        {
-            
-            if(sStr == "recheck_lock"){
-                if(!g_iCollarLocked){
-                    llOwnerSay("@detach=y");
+                if (g_iRlvaVersion) {
+                    llMessageLinked(LINK_SET, RLVA_VERSION, (string) g_iRlvaVersion, NULL_KEY);
                 }
-            }
-        
-        }else if(iNum == LM_SETTING_EMPTY){
-            
+                else {
+                    llMessageLinked(LINK_SET,RLV_VERSION, (string) g_iRlvVersion,NULL_KEY);
+                }
+             }
+        } else if(iNum == LM_SETTING_EMPTY){
+           
             //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
             //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
             
@@ -624,12 +622,6 @@ state active
                     if (kID==g_kSitter) llOwnerSay("@"+"sit:"+(string)g_kSitTarget+"=force");  //if we stored a sitter, sit on it
                     rebakeSourceRestrictions(kID);
                 }
-            } else if(iNum == DO_RLV_REFRESH){
-                llOwnerSay("@clear");
-                llOwnerSay("@detach=n");
-                llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "30", "recheck_lock");
-                llMessageLinked(LINK_SET, RLV_REFRESH, "","");
-                llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "ALL","");
             } else if(iNum == RLV_CMD_OVERRIDE){
                 //New feature! RLV_CMD_OVERRIDE is designed to allow one-shot (force) commands to override current restrictions. This is done by sending the behavior(s) to send as a comma separated list, followed by a ~ and then the restrictions to temporarily lift as another comma separate list as as sMsg. EXAMPLE: llMessageLinked(LINK_THIS,RLV_CMD_OVERRIDE,"unsit~unsit","") will lift the current unsit restriction if present, issue an @unsit=force, then restore the unsit restriction if it was previously present. These commands should ONLY be sent if the issuer has OWNER auth.
                 list lCommands=llParseString2List(llList2String(llParseString2List(sStr,["~"],[]),0),[","],[]);

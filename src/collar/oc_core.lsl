@@ -23,6 +23,7 @@ Medea (Medea Destiny)
     Sept 2021   -   Added sleep before notify for device name chage, issue #672 
                 -   Added confirmation messages when group or public access is toggled and fixed a typo
                 -   Efficiency pass, inlined majorminor(), docheckupdate() and docheckdevupdate().
+
                     Removed g_lTestReports, left over from alpha.
     Nov 2021    -   Auth check for hide didn't account for when wearer tries to use hide with AllowHiding
                      ticked but access is not CMD_WEARER (i.e. wearer set to trusted). (see #774)                         
@@ -34,6 +35,7 @@ Medea (Medea Destiny)
                     
 Stormed Darkshade (StormedStormy)
     March 2022  -   Added a button for reboot to help/about menu.  
+
   
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar

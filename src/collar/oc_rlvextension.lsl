@@ -41,7 +41,7 @@ Medea Destiny -
                     automatically for owners. 
                 -   Added explanatory text to exceptions and force sit menus
                 -   Renamed Refuse TP to Force TP to reflect what the button actually does.                  
-
+    Dec2021     -   Fixed filtering of unsit - > sit unsit for chat command and remote (issue #703 )
 */
 string g_sParentMenu = "RLV";
 string g_sSubMenu1 = "Force Sit";
@@ -401,6 +401,7 @@ integer g_iLastSitAuth = 599;
 UserCommand(integer iNum, string sStr, key kID) {
     if (iNum<CMD_OWNER || iNum>CMD_EVERYONE) return;
     sStr=llToLower(sStr);
+    if(sStr=="unsit") sStr="sit unsit";
    // if ((llSubStringIndex(sStr,"exceptions") && sStr != "menu "+g_sSubMenu1) || (llSubStringIndex(sStr,"exceptions") && sStr != "menu "+g_sSubMenu2)) return;
     if (sStr=="sit" || sStr == "menu "+llToLower(g_sSubMenu1)) MenuForceSit(kID, iNum);
     else if (sStr=="exceptions" || sStr == "menu "+llToLower(g_sSubMenu2)) MenuExceptions(kID,iNum);
@@ -423,10 +424,6 @@ UserCommand(integer iNum, string sStr, key kID) {
     else { 
         string sChangetype = llList2String(llParseString2List(sStr, [" "], []),0);
         string sChangekey = llList2String(llParseString2List(sStr, [" "], []),1);
-        if(sChangetype=="unsit")  {
-            sChangetype="sit";
-            sChangekey="unsit";
-        }
         if (sChangetype == "sit") {
             if ((sChangekey == "[unsit]" || sChangekey == "unsit")) {
                 if(iNum> g_iLastSitAuth ) {
@@ -586,12 +583,19 @@ state active
                     g_sTmpExceptionName=sMsg;
                     MenuAddCustomExceptionID(kAv,iAuth);
                 } else if(sMenu == "Exceptions~AddCustomID"){
-                    g_kTmpExceptionID = (key)sMsg;
-                    llMessageLinked(LINK_SET,NOTIFY,"0Adding exception..", kAv);
-                    g_lCustomExceptions += [g_sTmpExceptionName,g_kTmpExceptionID,0];
+                    if ((key)sMsg) // true if valid UUID, false if not
+                    {
+                        g_kTmpExceptionID = (key)sMsg;
+                        llMessageLinked(LINK_SET,NOTIFY,"0Adding exception..", kAv);
+                        g_lCustomExceptions += [g_sTmpExceptionName,g_kTmpExceptionID,0];
                     
-                    Save(SAVE_CUSTOM);
-                    MenuSetExceptions(kAv, iAuth, "Custom");
+                        Save(SAVE_CUSTOM);
+                        MenuSetExceptions(kAv, iAuth, "Custom");
+                    }
+                    else
+                    {
+                        llMessageLinked(LINK_SET,NOTIFY,"0Invalid UUID "+sMsg, kAv);
+                    }
                 } else if (sMenu == "Exceptions~Set") {
                     if (sMsg == UPMENU) MenuExceptions(kAv,iAuth);
                     else {

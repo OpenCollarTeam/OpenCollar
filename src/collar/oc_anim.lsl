@@ -51,6 +51,8 @@ integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
 integer MENUNAME_REMOVE = 3003;
 
+integer AO_SETOVERRIDE=40501;
+
 integer RLV_CMD = 6000;
 //integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
 
@@ -78,6 +80,7 @@ string UPMENU = "BACK";
 //integer TIMEOUT_READY = 30497;
 //integer TIMEOUT_REGISTER = 30498;
 //integer TIMEOUT_FIRED = 30499;
+
 
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
@@ -312,7 +315,8 @@ integer g_iStoppedAdjust;
 string g_sPose = "";
 
 MessageAOs(string sONOFF) { // send string as "ON" / "OFF" saves 2 llToUpper
-    llRegionSayTo(g_kWearer, -8888, (string)g_kWearer + "boot" + llToLower(sONOFF)); // for Firestorm AO
+    llMessageLinked(LINK_SET,AO_SETOVERRIDE, llToLower(sONOFF), g_kWearer);
+    //llRegionSayTo(g_kWearer, -8888, (string)g_kWearer + "boot" + llToLower(sONOFF)); // for Firestorm AO
 }
 
 integer g_iTimerMode;
@@ -472,7 +476,6 @@ state active
                 CONTROL_ROT_RIGHT |
                 CONTROL_UP |
                 CONTROL_DOWN |
-                CONTROL_ML_LBUTTON | 
                 0x02 |
                 0x04,
                 TRUE,TRUE);
