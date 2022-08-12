@@ -42,6 +42,15 @@ Medea Destiny -
                 -   Added explanatory text to exceptions and force sit menus
                 -   Renamed Refuse TP to Force TP to reflect what the button actually does.                  
     Dec2021     -   Fixed filtering of unsit - > sit unsit for chat command and remote (issue #703 )
+                -   Fix to disengaging strict sit when disabled via menu when already sitting.
+    Feb2021     -   SetAllExes triggered on RLV_REFRESH / RLV_ON was saving values, causing exception
+                    settings to be restored to defaults if trigged before settings are received.
+                    (fixes #740, #720, #719)
+ 
+ 
+Krysten Minx -
+   May2022      - Added check for valid UUID when setting custom exception
+
 */
 string g_sParentMenu = "RLV";
 string g_sSubMenu1 = "Force Sit";
@@ -583,18 +592,14 @@ state active
                     g_sTmpExceptionName=sMsg;
                     MenuAddCustomExceptionID(kAv,iAuth);
                 } else if(sMenu == "Exceptions~AddCustomID"){
-                    if ((key)sMsg) // true if valid UUID, false if not
-                    {
-                        g_kTmpExceptionID = (key)sMsg;
-                        llMessageLinked(LINK_SET,NOTIFY,"0Adding exception..", kAv);
-                        g_lCustomExceptions += [g_sTmpExceptionName,g_kTmpExceptionID,0];
-                    
-                        Save(SAVE_CUSTOM);
-                        MenuSetExceptions(kAv, iAuth, "Custom");
-                    }
-                    else
-                    {
-                        llMessageLinked(LINK_SET,NOTIFY,"0Invalid UUID "+sMsg, kAv);
+                    if ((key)sMsg) { // true if valid UUID, false if not
+                         g_kTmpExceptionID = (key)sMsg;
+                         llMessageLinked(LINK_SET,NOTIFY,"0Adding exception..", kAv);
+                         g_lCustomExceptions += [g_sTmpExceptionName,g_kTmpExceptionID,0];
+                         Save(SAVE_CUSTOM);
+                         MenuSetExceptions(kAv, iAuth, "Custom");
+                    } else {
+                         llMessageLinked(LINK_SET,NOTIFY,"0Invalid UUID "+sMsg, kAv);
                     }
                 } else if (sMenu == "Exceptions~Set") {
                     if (sMsg == UPMENU) MenuExceptions(kAv,iAuth);
@@ -633,6 +638,7 @@ state active
                             MenuForceSit(kAv,iAuth);
                         } else{
                             g_iStrictSit=1-g_iStrictSit;
+                            if(!g_iStrictSit) llMessageLinked(LINK_SET,RLV_CMD,"unsit=y","strictsit");
                             llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvext_strict="+(string)g_iStrictSit, "");
                             MenuForceSit(kAv,iAuth);
                         }
@@ -832,7 +838,7 @@ state active
             g_iRLV = FALSE;
         } else if (iNum == RLV_REFRESH || iNum == RLV_ON) {
             g_iRLV = TRUE;
-            SetAllExes(FALSE,EX_TYPE_OWNER|EX_TYPE_TRUSTED|EX_TYPE_CUSTOM,TRUE);
+            SetAllExes(FALSE,EX_TYPE_OWNER|EX_TYPE_TRUSTED|EX_TYPE_CUSTOM,FALSE);
             SetMuffle(g_bMuffle);
             llSleep(1);
             llMessageLinked(LINK_SET,LINK_CMD_RESTDATA,"MinCamDist="+(string)g_fMinCamDist,kID);
