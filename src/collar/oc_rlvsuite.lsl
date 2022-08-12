@@ -33,7 +33,9 @@ medea (medea destiny)
                     requirements of setting individual restrictions as short-term solution to issue #656. 
                 -   Added Restore function to Customize menu to restore presets to defaults, per issue #663
                 -   Rewritten dialog code to set individual restrictions, 'cos it was badly broken. Issue #664
-                    
+    Feb 2022    -   Fix for #732: Empty g_lMacros list returned via LM_SETTING_RESPONSE parses as a list with a single 
+                    empty element, thus messing up the list stride. Not sure why we're keeping nulls here, but setting
+                    to empty list if list length is too short works.                   
                 
                              
                              
@@ -766,7 +768,10 @@ state active
                     g_iRestrictions1 = llList2Integer(lMasks, 0);
                     g_iRestrictions2 = llList2Integer(lMasks, 1);
                 }
-            } else if (llList2String(lParams, 0) == "rlvsuite_macros") g_lMacros = llParseStringKeepNulls(llList2String(lParams, 1), ["^"],[]);
+            } else if (llList2String(lParams, 0) == "rlvsuite_macros") {
+                g_lMacros = llParseStringKeepNulls(llList2String(lParams, 1), ["^"],[]);
+                if(llGetListLength(g_lMacros)<3) g_lMacros=[];  
+            }
             else if(llList2String(lParams,0) == "global_checkboxes") g_lCheckboxes = llCSV2List(llList2String(lParams,1));
         } else if (iNum == CMD_SAFEWORD || iNum == RLV_CLEAR || iNum == RLV_OFF){
             g_iRLV = FALSE;

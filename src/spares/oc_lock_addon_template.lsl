@@ -4,13 +4,12 @@ This script is released public domain, unlike other OC scripts for a specific an
 -Authors Attribution-
 Aria (tiff589) - (August 2020)
 Lysea - (December 2020)
-Taya Maruti - (May 2021)
 */
 
 integer API_CHANNEL = 0x60b97b5e;
 
 //list g_lCollars;
-string g_sAddon = "AO";
+string g_sAddon = "Addon Name Here";
 
 //integer CMD_ZERO            = 0;
 integer CMD_OWNER           = 500;
@@ -45,6 +44,7 @@ list g_lOptedLM     = [];
 
 list g_lMenuIDs;
 integer g_iMenuStride;
+integer iLockAuth = 503;
 
 string UPMENU = "BACK";
 
@@ -60,8 +60,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 
 Menu(key kID, integer iAuth) {
     string sPrompt = "\n[Menu App]";
-    list lButtons  = ["Menu"];
-
+    list lButtons  = [bLock];
     //llSay(0, "opening menu");
     Dialog(kID, sPrompt, lButtons, ["DISCONNECT", UPMENU], 0, iAuth, "Menu~Main");
 }
@@ -70,19 +69,53 @@ UserCommand(integer iNum, string sStr, key kID) {
     if (iNum<CMD_OWNER || iNum>CMD_WEARER) return;
     if (llSubStringIndex(llToLower(sStr), llToLower(g_sAddon)) && llToLower(sStr) != "menu " + llToLower(g_sAddon)) return;
     if (iNum == CMD_OWNER && llToLower(sStr) == "runaway") {
+        lock = FALSE;
+        check_settings();
         return;
     }
 
     if (llToLower(sStr) == llToLower(g_sAddon) || llToLower(sStr) == "menu "+llToLower(g_sAddon))
     {
-        Menu(kID, iNum);
+        if(lock){
+            if(iNum < CMD_WEARER && iNum >= CMD_OWNER){
+                Menu(kID, iNum);
+            }
+            else{
+                llInstantMessage(kID,"Sorry you are not authorized");
+            }
+        }
+        else{
+            Menu(kID, iNum);
+        }
     } //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else
     {
-        //integer iWSuccess   = 0;
-        //string sChangetype  = llList2String(llParseString2List(sStr, [" "], []),0);
-        //string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),1);
-        //string sText;
+        list lCommands = llParseString2List(llToLower(sStr),[" "],[llToLower(g_sAddon)]);
+        string sCommand = llList2String(lCommands,1);
+        string sVar = llList2String(lCommands,2);
+        string sVal = llList2String(lCommands,3);
+        if( iNum == CMD_WEARER  && lock) {
+            /* we lock out the wearer from access even if they are the one who locked it.
+               This Section can be commented out for it to be possible for the wearer to
+               unlock them self if they lock it.
+            */
+            llInstantMessage(kID,"Sorry the lock is engaged you have no access!");
+            return;
+        }
+        if (sCommand == "unlock" && iNum <= iLockAuth){
+            lock = FALSE;
+            iLockAuth = CMD_WEARER;
+            llInstantMessage(kID,"/me makes a soft click as the lock is disabled");
+            llPlaySound("82fa6d06-b494-f97c-2908-84009380c8d1", 1.0);
+            check_settings();
+        }
+        else if (sCommand == "lock" && iNum <= iLockAuth){
+            lock = TRUE;
+            iLockAuth = iNum;
+            llInstantMessage(kID,"/me makes a soft click as the lock is enabled");
+            llPlaySound("dec9fb53-0fef-29ae-a21d-b3047525d312", 1.0);
+            check_settings();
+        } else llInstantMessage(kID,"Sorry you are not authorized to unlock this device");
     }
 }
 
@@ -109,32 +142,69 @@ key g_kCollar=NULL_KEY;
 integer g_iLMLastRecv;
 integer g_iLMLastSent;
 key g_kWearer;
+
+initialize(){
+    g_kWearer = llGetOwner();
+    API_CHANNEL = ((integer)("0x" + llGetSubString((string)g_kWearer, 0, 8))) + 0xf6eb - 0xd2;
+    llListen(API_CHANNEL, "", "", "");
+    Link("online", 0, "", g_kWearer); // This is the signal to initiate communication between the addon and the collar
+    llSetTimerEvent(10);
+    g_iLMLastSent = llGetUnixTime();
+    check_settings();
+}
+
+softreset(){
+    g_kCollar = NULL_KEY;
+    initialize();
+}
+
+shutdown(){
+    lock=FALSE;
+    llOwnerSay("@detach=y");
+    g_lMenuIDs = [];
+    g_kCollar = NULL_KEY;
+    Link("offline", 0, "", llGetOwnerKey(g_kCollar));
+}
+
+integer l_Authorized = 503;
+integer lock = FALSE;
+string bLock;
+string baLock = "☒Lock";
+string biLock = "☐Lock";
+
+check_settings()
+{
+    if (lock ){
+        bLock=baLock;
+        llOwnerSay("@detach=n");
+    }
+    else {
+        bLock=biLock;
+        llOwnerSay("@detach=y");
+    }
+}
+
 default
 {
     state_entry()
     {
-        g_kWearer = llGetOwner();
-        API_CHANNEL = ((integer)("0x" + llGetSubString((string)llGetOwner(), 0, 8))) + 0xf6eb - 0xd2;
-        llListen(API_CHANNEL, "", "", "");
-        Link("online", 0, "", llGetOwner()); // This is the signal to initiate communication between the addon and the collar
-        llSetTimerEvent(60);
-        g_iLMLastRecv = llGetUnixTime();
+        initialize();
+    }    
+    
+    on_rez(integer start_pram){
+        softreset();
     }
-    on_rez(integer start_param)
-    {
-        if (g_kWearer != llGetOwner()) llResetScript();
-    }
-    attach(key id)
-    {
-        // update the collar on attach and detach.
-        if(id)
-        {
-            Link("online", 0, "", llGetOwner());
+    attach(key kID) {
+        if (kID == NULL_KEY) llResetScript();
+        else if(kID != g_kWearer){
+            llResetScript();
+        } else {
+            softreset();
         }
-        else
-        {
-
-            Link("offline", 0, "", llGetOwnerKey(g_kCollar));
+    }
+    changed(integer change){
+        if(change & CHANGED_REGION){
+            softreset();
         }
     }
 
@@ -148,12 +218,11 @@ default
 
         if (llGetUnixTime() > (g_iLMLastRecv + (5 * 60)) && g_kCollar != NULL_KEY)
         {
-            g_kCollar = NULL_KEY;
-            //Link("online", 0, "", llGetOwner()); // stay connected by refreshing the connection without this the addon disapears from the menu and resetting script all the time can break things.
-            llResetScript(); // perform our action on disconnect
+            //shutdown();
+            softreset();
         }
 
-        if (g_kCollar == NULL_KEY) Link("online", 0, "", llGetOwner());
+        if (g_kCollar == NULL_KEY) Link("online", 0, "", g_kWearer);
     }
 
     listen(integer channel, string name, key id, string msg){
@@ -162,14 +231,14 @@ default
         {
             // This signal, indicates the collar has approved the addon and that communication requests will be responded to if the requests are valid collar LMs.
             g_kCollar = id;
-            g_iLMLastRecv = llGetUnixTime();
             Link("from_addon", LM_SETTING_REQUEST, "ALL", "");
+            g_iLMLastRecv = llGetUnixTime();
         }
         else if (sPacketType == "dc" && g_kCollar == id)
         {
-            g_kCollar = NULL_KEY;
-            //Link("online", 0, "", llGetOwner()); // stay connected by refreshing the connection without this the addon disapears from the menu and resetting script all the time can break things.
-            llResetScript(); // This addon is designed to always be connected because it is a test
+            //shutdown();
+            softreset();
+            //llResetScript(); // This addon is designed to always be connected because it is a test
         }
         else if (sPacketType == "pong" && g_kCollar == id)
         {
@@ -191,13 +260,13 @@ default
                     string sVar   = llList2String(lPar, 1);
                     string sVal   = llList2String(lPar, 2);
 
-                    /*if (sToken == "auth")
+                    if (sToken == "auth")
                     {
                         if (sVar == "owner")
                         {
-                            llSay(0, "owner values is: " + sVal);
+                            //llSay(0, "owner values is: " + sVal);
                         }
-                    }*/
+                    }
                 }
                 else if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE)
                 {
@@ -227,29 +296,22 @@ default
                             {
                                 Link("from_addon", iAuth, "menu Addons", kAv);
                             }
-                            else if (sMsg == "Menu")
+                            if (sMsg == baLock )
                             {
-                                // interface with the ao to allow owners and others to access it from the collar menu.
-                                llMessageLinked(LINK_THIS, iAuth, "MenuAO", kAv);
+                                UserCommand(iAuth,g_sAddon+"unlock",kAv);
+                            }
+                            if (sMsg == biLock )
+                            {
+                                UserCommand(iAuth,g_sAddon+"lock",kAv);
                             }
                             else if (sMsg == "DISCONNECT")
                             {
-                                Link("offline", 0, "", llGetOwnerKey(g_kCollar));
-                                g_lMenuIDs = [];
-                                g_kCollar = NULL_KEY;
+                                shutdown();
                             }
                         }
                     }
                 }
             }
-        }
-    }
-    link_message(integer sNum, integer iNum, string sStr, key kID)
-    {
-        //return to collars menu when the ao requests it going through this script keeps the addon alive.
-        if( sStr == "CollarMenu")
-        {
-            Link("from_addon", iNum, "menu", kID);
         }
     }
 }
