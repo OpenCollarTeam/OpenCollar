@@ -456,10 +456,9 @@ state active
         g_kWearer = llGetOwner();
         g_sPrefix = llToLower(llGetSubString(llKey2Name(llGetOwner()),0,1));
         // make the API Channel be per user
-        while(g_iInterfaceChannel==0){
-            g_iInterfaceChannel = (integer)("0x" + llGetSubString(g_kWearer,30,-1));
-            if (g_iInterfaceChannel > 0) g_iInterfaceChannel = -g_iInterfaceChannel;
-        }
+        g_iInterfaceChannel = (integer)("0x" + llGetSubString(g_kWearer,30,-1));
+        if (g_iInterfaceChannel == 0) { g_iInterfaceChannel = -83579; }
+        if (g_iInterfaceChannel > 0) { g_iInterfaceChannel = -g_iInterfaceChannel; }
         llListen(g_iInterfaceChannel, "","","");
         llSleep(0.5);
         llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar=Yes");
