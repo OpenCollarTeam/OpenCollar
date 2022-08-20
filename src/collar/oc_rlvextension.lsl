@@ -3,7 +3,6 @@
 This file is part of OpenCollar.
 Copyright (c) 2018 - 2019 Tashia Redrose, Silkie Sabra, lillith xue, Medea Destiny, Nirea Mercury et al.                           
 Licensed under the GPLv2.  See LICENSE for full details. 
-
 Medea Destiny -
     Sept 2021   -   Moved Exceptions menu into RLV as a main directory, and folded Menu Settings into
                     RLVSuite menu customize
@@ -43,14 +42,13 @@ Medea Destiny -
                 -   Renamed Refuse TP to Force TP to reflect what the button actually does.                  
     Dec2021     -   Fixed filtering of unsit - > sit unsit for chat command and remote (issue #703 )
                 -   Fix to disengaging strict sit when disabled via menu when already sitting.
-    Feb2021     -   SetAllExes triggered on RLV_REFRESH / RLV_ON was saving values, causing exception
+    Feb2022     -   SetAllExes triggered on RLV_REFRESH / RLV_ON was saving values, causing exception
                     settings to be restored to defaults if trigged before settings are received.
                     (fixes #740, #720, #719)
- 
+    Aug2022     -   Fix auth filtering for changing exceptions. Issue #844 & #848
  
 Krysten Minx -
    May2022      - Added check for valid UUID when setting custom exception
-
 */
 string g_sParentMenu = "RLV";
 string g_sSubMenu1 = "Force Sit";
@@ -563,6 +561,12 @@ state active
                 
                 if(sMenu == "Exceptions~Main"){
                     if(sMsg == UPMENU)  llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
+                    else if (iAuth!=CMD_OWNER)
+                    {
+                        llMessageLinked(LINK_SET,NOTIFY,"0No access to changing exceptions!", kAv);
+                        llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
+                        return;
+                    }
                     else if(sMsg == "Custom")MenuCustomExceptionsSelect(kAv,iAuth);
                     else MenuSetExceptions(kAv,iAuth,sMsg);
                 } else if(sMenu == "Exceptions~Custom"){
