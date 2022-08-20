@@ -14,7 +14,10 @@ Medea (Medea Destiny)
                 -   Issue #579 Restored menuto function to interface channel for backwards compatibility
                 -   Issue #579 Added control of channel 0 listening via settings menu
                 -   Fix issue 585 give wearer accept/deny dialog to confirm runaway disable setting
-                            
+    *Aug 2022   -   Issue #843 & #774 fixes to check g_kOwner rather than CMD_WEARER. This fixes runaway
+                    menu for wearers set as trusted (fix typo in menu too). Also wearer adding to trusted/
+                    blacklist when permitted when also trusted (issue #849)
+                -   Fixed instance where interface channel is 0, also streamlined function, fix issue #819                        
 Yosty7b3        
     *Oct 2021   -   Remove unused StrideOfList() function.
                                    
@@ -191,15 +194,15 @@ DoListeners(){
 integer g_iRunaway=TRUE;
 key g_kDenyRunawayRequester;
 RunawayMenu(key kID, integer iAuth){
-    if(iAuth == CMD_OWNER || iAuth==CMD_WEARER){
+    if(iAuth == CMD_OWNER || kID == g_kWearer){
         string sPrompt = "\n[Runaway]\n\nAre you sure you want to runaway from all owners?\n\n* This action will reset your owners list, trusted list, and your blocked avatars list.";
         list lButtons = ["Yes", "No"];
         
         if(iAuth == CMD_OWNER){
-            sPrompt+="\n\nAs the owner you have the abliity to disable or enable runaway.";
+            sPrompt+="\n\nAs the owner you have the ability to disable or enable runaway.";
             if(g_iRunaway)lButtons+=["Disable"];
             else lButtons += ["Enable"];
-        } else if(iAuth == CMD_WEARER){
+        } else if(kID == g_kWearer){
             if(g_iRunaway){
                 sPrompt += "\n\nAs the wearer, you can choose to disable your ability to runaway, this action cannot be reversed by you";
                 lButtons += ["Disable"];
@@ -329,7 +332,7 @@ UserCommand(integer iAuth, string sCmd, key kID){
         RunawayMenu(kID,iAuth);
     }
     
-    if(iAuth == CMD_OWNER || (iAuth==CMD_WEARER && g_iAllowWearerSetTrusted==TRUE) ){
+    if(iAuth == CMD_OWNER || (kID==g_kWearer && g_iAllowWearerSetTrusted==TRUE) ){
           
         list lCmd = llParseString2List(sCmd, [" "],[]);
         string sCmdx = llToLower(llList2String(lCmd,0));
@@ -456,10 +459,8 @@ state active
         g_kWearer = llGetOwner();
         g_sPrefix = llToLower(llGetSubString(llKey2Name(llGetOwner()),0,1));
         // make the API Channel be per user
-        while(g_iInterfaceChannel==0){
-            g_iInterfaceChannel = (integer)("0x" + llGetSubString(g_kWearer,30,-1));
-            if (g_iInterfaceChannel > 0) g_iInterfaceChannel = -g_iInterfaceChannel;
-        }
+        if (g_iInterfaceChannel==0) g_iInterfaceChannel = -llAbs((integer)("0x" + llGetSubString(g_kWearer,30,-1)));
+        if (g_iInterfaceChannel==0) g_iInterfaceChannel = -9876; //I mean it COULD happen. should have an offset value here, but it's too late now so just assigning a random chan.
         llListen(g_iInterfaceChannel, "","","");
         llSleep(0.5);
         llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar=Yes");
@@ -737,7 +738,7 @@ state active
                         return;
                     } else if(sMsg == "Yes"){
                         // trigger runaway
-                        if((iAuth == CMD_WEARER || iAuth == CMD_OWNER ) && g_iRunaway){
+                        if((kAv == g_kWearer || iAuth == CMD_OWNER ) && g_iRunaway){
                             g_iRunawayMode=2;
                             llMessageLinked(LINK_SET, NOTIFY_OWNERS, "%WEARERNAME% has runaway.", "");
                             llMessageLinked(LINK_SET, CMD_OWNER, "runaway", g_kWearer);
