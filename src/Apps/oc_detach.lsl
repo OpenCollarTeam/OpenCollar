@@ -99,7 +99,7 @@ UserCommand(integer iNum, string sStr, key kID) {
 
 key g_kWearer;
 list g_lMenuIDs;
-integer g_iMenuStride;
+integer g_iMenuStride = 3;
 integer g_iLocked=FALSE;
 integer ALIVE = -55;
 integer READY = -56;
