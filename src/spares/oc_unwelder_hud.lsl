@@ -228,12 +228,12 @@ default
                     
                     if(sStr == "settings=sent"){
                         if(g_iAddonLimitation){
-                            llOwnerSay("Error: Addon limitations are in place. Unweld tool cannot continue. To disable the addon limitation, please see the setitngs menu of your collar, inside the Addon.. submenu you will find the Limiter which must be disabled.");
+                            llOwnerSay("Addons Limited is checked. To unweld, someone with Owner access (including wearer if they are Owner) must: 1) Open the collar menu. 2)Click Settings. 3) Click the Addons button in Settings. UNCHECK AddOns Limited. Leave WearerAdd and Addons CHECKED. The Wearer can then proceed to unweld.");
                             Link("offline", 0, "", g_kUser);
                             llSleep(2);
                             llResetScript();
                         } else {
-                            llOwnerSay("Checking for a existing collar weld");
+                            llOwnerSay("Checking for an existing collar weld");
                             if(g_iWelded){
                                 llOwnerSay("Unweld tool now ready.");
                                 llOwnerSay("Building consent prompt");
