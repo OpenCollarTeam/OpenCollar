@@ -241,7 +241,7 @@ default
                     
                     if(sStr == "settings=sent"){
                         if(g_iAddonLimitation){
-                            llSay(0, "Addons Limited is checked. To unweld, someone with Owner rights (including wearer if they are Owner) must: 1) Open the collar menu. 2)Click the Settings button -- not the Addons button. 3) Click the Addons button. Deselect (uncheck) AddOns Limited and then proceed to unweld. NOTE: The unwelder is an AddOn. WearerAdd and Addons must both be checked and only AddOns Limit should be unchecked for the Unwelder to connect.");
+                            llSay(0, "Addons Limited is checked. To unweld, someone with Owner access (including wearer if they are Owner) must: 1) Open the collar menu. 2)Click Settings. 3) Click the Addons button in Settings. UNCHECK AddOns Limited. Leave WearerAdd and Addons CHECKED. The Wearer can then proceed to unweld.");
                             Link("offline", 0, "", g_kUser);
                             llSleep(2);
                             llResetScript();
