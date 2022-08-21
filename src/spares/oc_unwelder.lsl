@@ -4,6 +4,8 @@ Copyright ©2021
 : Contributors :
 Aria (Tashia Redrose)
     * Feb 2021       -       Created oc_unwelder
+Autumn Jersey (autumnerilyx.littlepaws)
+    * Aug 2022   -    Edited wording of local chat messages to improve user comprehension 
     
     
 et al.
