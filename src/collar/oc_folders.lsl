@@ -12,6 +12,9 @@ Medea (Medea Destiny)
                         term, added sanity checking for chat commands to ensure we don't try to search for nothing,
                         and no longer operate on empty search results. Issuer of chat command now stored as 
                         g_kChatUser so they can be notified if findfolder fails.
+Phidoux (taya.Maaruti)
+    * Aug 2022      -   * Add the ability to set custom root folders using a notecard and disable Browse button
+                        effectivly removing #RLV as root folder for browsing.
                          
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
@@ -21,6 +24,8 @@ https://github.com/OpenCollarTeam/OpenCollar
 
 string g_sParentMenu = "RLV";
 string g_sSubMenu = "# Folders";
+string g_sRootFolder=""; // this allows you to customize this script to allow for custom directory management, i recomend using ~ before the name to hide it from #Folders.
+string g_sRootsNotecard=".folders";
 
 
 //MESSAGE MAP
@@ -64,6 +69,22 @@ integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 string UPMENU = "BACK";
+list g_lRootsFolders=[];
+list g_lRootsButtons=[];
+integer g_iRoot = TRUE;
+
+string getRootsPath(string Button){
+    integer iLen = llGetListLength(g_lRootsFolders);'
+    integer iIndex;
+    for(iIndex=0; iIndex<iLen; ++iIndex){
+        if(~llSubStringIndex(llList2String(g_lRootsFolders,iIndex),llToLower(Button))){
+            return llList2String(g_lRootsFolders,iIndex);
+        } else if(~llSubStringIndex(llList2String(g_lRootsFolders,iIndex),Button)){
+            return llList2String(g_lRootsFolders,iIndex);
+        }
+    }
+    return "";
+}
 //string ALL = "ALL";
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
@@ -75,7 +96,6 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
     else g_lMenuIDs += [kID, kMenuID, sName];
 }
 
-
 integer g_iHideTilde=TRUE;
 
 integer g_iTmpLstnChn;
@@ -83,7 +103,17 @@ integer g_iTmpLstn;
 string CONFIG = "◌ Configure";
 Menu(key kID, integer iAuth) {
     string sPrompt = "\n[Folders]";
-    list lButtons = ["Browse", CONFIG, "Clear Locks"];
+    list lButtons = [];
+    if( g_lRootsButtons != []  && g_lRootsFolders != []){
+        if(g_iRoot){
+            lButtons = g_lRootsButtons+["Browse", CONFIG, "Clear Locks"];
+        } else {
+            lButtons = g_lRootsButtons+[CONFIG, "Clear Locks"];
+        }
+    } else {
+        g_iRoot = TRUE;
+        lButtons = ["Browse", CONFIG, "Clear Locks"];
+    }
 
     Dialog(kID,sPrompt,lButtons, [UPMENU], 0, iAuth, "Menu~Folders");
     //Browser(kID, iAuth, "");
@@ -115,12 +145,22 @@ ConfigureMenu(key kID, integer iAuth){
         string sPublic = TrueOrFalse(iPublic);
         string sGroup = TrueOrFalse(iGroup);
         string sWearer = TrueOrFalse(iWearer);
-        Dialog(kID, sPrompt+"\n * Hide folders that start with '~': "+TrueOrFalse(g_iHideTilde)+"\n * Owner: ALWAYS\n * Trusted: "+sTrusted+"\n * Public: "+sPublic+"\n * Group: "+sGroup+"\n * Wearer: "+sWearer+"\n", [Checkbox(g_iHideTilde,"Hide ~"),Checkbox(iTrusted, "Trusted"), Checkbox(iPublic, "Public") ,Checkbox(iGroup, "Group"), Checkbox(iWearer, "Wearer")], [UPMENU], 0, iAuth, "Folders~Configure");
+        list lButtons=[Checkbox(g_iHideTilde,"Hide ~"),Checkbox(iTrusted, "Trusted"), Checkbox(iPublic, "Public") ,Checkbox(iGroup, "Group"), Checkbox(iWearer, "Wearer")];
+        if(g_lRootsFolders != [] && g_lRootsButtons != []){
+            lButtons += [Checkbox(g_iRoot,"Default Root")];
+        }
+        Dialog(kID, sPrompt+"\n * Hide folders that start with '~': "+TrueOrFalse(g_iHideTilde)+"\n * Owner: ALWAYS\n * Trusted: "+sTrusted+"\n * Public: "+sPublic+"\n * Group: "+sGroup+"\n * Wearer: "+sWearer+"\n", lButtons, [UPMENU], 0, iAuth, "Folders~Configure");
 
 
     }else {
-        llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to folders configuration", kID);
-        Menu(kID,iAuth);
+        if(g_lRootsFolders != [] && g_lRootsButtons != []){
+            string sPrompt = "\n[Folders Configuration]\n\n";
+            list lButtons = [Checkbox(g_iRoot,"Default Root")];
+            Dialog(kID, sPrompt+"\n", lButtons, [UPMENU], 0, iAuth, "Folders~Configure");
+        } else {
+            llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to folders configuration", kID);
+            Menu(kID,iAuth);
+        }
     }
 }
 
@@ -182,10 +222,7 @@ integer F_WEAR = 8;
 key g_kChatUser; // user of a chat command, to notify if nothing found.
 
 UserCommand(integer iNum, string sStr, key kID) {
-
-
-
-    if (iNum<CMD_OWNER || iNum>CMD_EVERYONE) return;
+    if (iNum<CMD_OWNER || iNum>CMD_WEARER) return;
     if (iNum == CMD_OWNER && llToLower(sStr) == "runaway") {
         g_lOwner=[];
         g_lTrust=[];
@@ -193,7 +230,7 @@ UserCommand(integer iNum, string sStr, key kID) {
         return;
     }
     if (llToLower(sStr)==llToLower(g_sSubMenu) || llToLower(sStr) == "menu "+llToLower(g_sSubMenu)) Menu(kID, iNum);
-    else if(llToLower(sStr) == "folders" || llToLower(sStr) == "menu folders")Menu(kID, iNum);
+    else if(llToLower(sStr) == "folders" || llToLower(sStr) == "menu folders") Menu(kID, iNum);
     //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else {
         //integer iWSuccess = 0;
@@ -273,6 +310,8 @@ list g_lOwner;
 list g_lTrust;
 list g_lBlock;
 integer g_iLocked=FALSE;
+integer g_iRootsLine;
+key g_kQueryNC;
 
 
 list g_lFolderCheckboxes = ["▢", "▣", "◑"];
@@ -344,6 +383,20 @@ state active
     state_entry()
     {
         g_kWearer = llGetOwner();
+        if(llGetInventoryType(g_sRootsNotecard) == INVENTORY_NOTECARD) {
+            llMessageLinked(LINK_SET,NOTIFY,"0Found "+g_sRootsNotecard+" generating folders list",llGetOwner());
+            g_iRootsLine = 0;
+            g_kQueryNC = llGetNotecardLine(g_sRootsNotecard, g_iRootsLine);
+        }
+    }
+    changed(integer change){
+        if(change & CHANGED_INVENTORY){
+            if(llGetInventoryType(g_sRootsNotecard) == INVENTORY_NOTECARD) {
+                llMessageLinked(LINK_SET,NOTIFY,"0Found "+g_sRootsNotecard+" generating folders list",llGetOwner());
+                g_iRootsLine = 0;
+                g_kQueryNC = llGetNotecardLine(g_sRootsNotecard, g_iRootsLine);
+            }
+        }
     }
     timer(){
         if(llGetTime()>=60.0){
@@ -458,8 +511,13 @@ state active
                         g_iMenuAuth = iAuth;
                         llMessageLinked(LINK_SET, QUERY_FOLDER_LOCKS, g_sPath, "");
                     } else if(sMsg == "^ UP"){
-                        iRespring=FALSE;
-                        Browser(kAv,iAuth, GoBackOneFolder(g_sPath));
+                        if(g_sPath != g_sRootFolder){
+                            iRespring=FALSE;
+                            Browser(kAv,iAuth, GoBackOneFolder(g_sPath));
+                        } else {
+                            iRespring=FALSE;
+                            Menu(kAv,iAuth);
+                        }
                     } else {
                         list lTmpBtn = llParseString2List(sMsg, [" "], []);
                         string TheButton = llDumpList2String(llList2List(lTmpBtn,1,-1), " ");
@@ -487,7 +545,8 @@ state active
                     if(iRespring)llMessageLinked(LINK_SET, QUERY_FOLDER_LOCKS, g_sPath, "");
                 } else if(sMenu == "Menu~Folders"){
                     if(sMsg == "Browse"){
-                        Browser(kAv,iAuth,"");
+                        g_sRootFolder="";
+                        Browser(kAv,iAuth,g_sRootFolder);
                         iRespring=FALSE;
                     } else if(sMsg == CONFIG){
                         ConfigureMenu(kAv,iAuth);
@@ -498,6 +557,10 @@ state active
                         iRespring=FALSE;
 
                         llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
+                    } else if(llListFindList(g_lRootsButtons,[sMsg]) != -1){
+                        g_sRootFolder=getRootsPath(sMsg);
+                        Browser(kAv,iAuth,g_sRootFolder);                  
+                        iRespring=FALSE;
                     }
 
 
@@ -509,7 +572,6 @@ state active
                         iRespring=FALSE;
                         Menu(kAv,iAuth);
                     } else {
-
                         list ButtonFlags = llParseString2List(sMsg,[" "],[]);
                         string ButtonLabel = llDumpList2String(llList2List(ButtonFlags,1,-1), " ");
                         integer Enabled = llListFindList(g_lFolderCheckboxes, [llList2String(ButtonFlags,0)]);
@@ -517,8 +579,11 @@ state active
                         {
                             g_iHideTilde=!g_iHideTilde;
                             llMessageLinked(LINK_SET, LM_SETTING_SAVE, "folders_hidetilde="+(string)g_iHideTilde,"");
-                        }
-                        else if(Enabled){
+                        } else if(ButtonLabel=="Default Root"){
+                            if(g_lRootsFolders != []){
+                                g_iRoot=!g_iRoot;
+                            }
+                        } else if(Enabled){
                             // Disable flag
                             if(ButtonLabel == "Trusted")g_iAccessBitSet -=1;
                             else if(ButtonLabel == "Public")g_iAccessBitSet-=2;
@@ -569,5 +634,67 @@ state active
             LocksMenu(g_kMenuUser, g_iMenuAuth, iMask);
         }
         //llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
+    }
+    dataserver(key kRequest,string sData){
+        
+        if (kRequest == g_kQueryNC) {
+            if (sData == EOF) {
+                 llMessageLinked(LINK_SET, NOTIFY, "0"+g_sRootsNotecard+" notecard read", g_kChatUser);
+            } else {
+                g_kQueryNC = llGetNotecardLine(g_sRootsNotecard, ++g_iRootsLine);
+                if (llGetSubString (sData, 0, 0) != "#" && llGetSubString(sData,0,1) != "//"){
+                    if(~llSubStringIndex(sData,"/")) {
+                        if( llListFindList(g_lRootsFolders,[sData]) == -1){
+                            /*
+                                if path not already added add it.
+                                the path should only be one per line.
+                            */
+                            g_lRootsFolders += [sData];
+                            // convert long path to single button
+                            list lData = llParseString2List(sData,["/"],[]);
+                            sData = llList2String(lData,llGetListLength(lData));
+                            // now create a button list
+                            if(llGetSubString(sData,0,0) == "~" || llGetSubString(sData,0,0) == "."){
+                                // remove the Tidle
+                                sData = llDeleteSubString(sData,0,0);
+                            }
+                            // get the first letter and upercase it
+                            string sFirst = llToUpper(llGetSubString(sData,0,0));
+                            // delete the lower case leter
+                            sData = llDeleteSubString(sData,0,0);
+                            // insert upercase
+                            sData = sFirst+sData;
+                            // add to list if it don't exist
+                            if( llListFindList(g_lRootsButtons,[sData]) == -1){
+                                g_lRootsButtons += [sData];
+                            }
+                        }
+                    } else {
+                        if( llListFindList(g_lRootsFolders,[sData]) == -1){
+                            /*
+                                if path not already added add it.
+                                the path should only be one per line.
+                            */
+                            g_lRootsFolders += [sData];
+                            // now create a button list
+                            if(llGetSubString(sData,0,0) == "~" || llGetSubString(sData,0,0) == "."){
+                                // remove the Tidle
+                                sData = llDeleteSubString(sData,0,0);
+                            }
+                            // get the first letter and upercase it
+                            string sFirst = llToUpper(llGetSubString(sData,0,0));
+                            // delete the lower case leter
+                            sData = llDeleteSubString(sData,0,0);
+                            // insert upercase
+                            sData = sFirst+sData;
+                            // add to list if it don't exist
+                            if( llListFindList(g_lRootsButtons,[sData]) == -1){
+                                g_lRootsButtons += [sData];
+                            }
+                        }
+                    }
+                }   
+            }
+        }
     }
 }
