@@ -191,8 +191,8 @@ setRlvState(){
         //Debug("RLV went inactive");
         g_iRlvActive=FALSE;
         integer relockcheck;
+        if(llListFindList(g_lBaked,["detach"])!=-1) relockcheck=TRUE;
         while (llGetListLength(g_lBaked)){
-            if(llList2String(g_lBaked,-1)=="detach") relockcheck=TRUE;
             llOwnerSay("@"+llList2String(g_lBaked,-1)+"=y"); //remove restriction
             g_lBaked=llDeleteSubList(g_lBaked,-1,-1);
         }
