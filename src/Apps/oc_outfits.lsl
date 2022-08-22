@@ -150,6 +150,10 @@ FolderBrowser (key kID, integer iAuth){
 }
 
 CoreBrowser(key kID, integer iAuth){
+    if(iAuth <= CMD_OWNER && iAuth >= CMD_WEARER) {
+        llMessageLinked(LINK_SET,NOTIFY, "0%NOACCESS% to core", kID);
+        return;
+    }
     g_sPath = GetOutfitSystem(TRUE);
     g_kListenTo = kID;
     g_iListenToAuth = iAuth;
