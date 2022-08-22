@@ -190,10 +190,13 @@ setRlvState(){
     } else if (g_iRlvActive) {  //Both were true, but not now. g_iViewerCheck must still be TRUE (as it was once true), so g_iRLVOn must have just been set FALSE
         //Debug("RLV went inactive");
         g_iRlvActive=FALSE;
+        integer relockcheck;
         while (llGetListLength(g_lBaked)){
+            if(llList2String(g_lBaked,-1)=="detach") relockcheck=TRUE;
             llOwnerSay("@"+llList2String(g_lBaked,-1)+"=y"); //remove restriction
             g_lBaked=llDeleteSubList(g_lBaked,-1,-1);
         }
+        if(relockcheck==TRUE && g_iCollarLocked==TRUE) llOwnerSay("@detach=n");
         llMessageLinked(LINK_SET, RLV_OFF, "", NULL_KEY);
     } else if (g_iRLVOn){  //g_iViewerCheck must be FALSE (see above 2 cases), so g_iRLVOn must have just been set to TRUE, so do viewer check
         if (g_iListener) llListenRemove(g_iListener);
