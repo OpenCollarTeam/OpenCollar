@@ -291,7 +291,7 @@ default
                             }
                             else if (sMsg == "UNWELD NOW")
                             {
-                                if(iAuth == CMD_OWNER || iAuth == CMD_WEARER){
+                                if(iAuth == CMD_OWNER || g_kUser == llGetOwnerKey(id){
                                     Link("from_addon", NOTIFY_OWNERS, "The unweld tool was used.", "");
                                     llSay(0, "Consent : Valid");
                                     Link("from_addon", LM_SETTING_DELETE, "intern_weld","origin");
