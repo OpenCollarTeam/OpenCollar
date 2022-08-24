@@ -150,7 +150,7 @@ FolderBrowser (key kID, integer iAuth){
 }
 
 CoreBrowser(key kID, integer iAuth){
-    if(iAuth != CMD_OWNER || iAuth != CMD_WEARER) {
+    if(iAuth != CMD_OWNER || kID != g_kWearer) {
         llMessageLinked(LINK_SET,NOTIFY, "0%NOACCESS% to core", kID);
         return;
     }
