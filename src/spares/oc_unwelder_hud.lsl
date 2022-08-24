@@ -4,7 +4,8 @@ Copyright ©2021
 : Contributors :
 Aria (Tashia Redrose)
     * Feb 2021       -       Created oc_unwelder_hud
-    
+Medea (Medea Destiny)
+      Aug 2022    -  Fix for issue #862, allow wearer with trusted perm to operate    
     
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
