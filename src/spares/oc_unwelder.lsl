@@ -6,7 +6,8 @@ Aria (Tashia Redrose)
     * Feb 2021       -       Created oc_unwelder
 Autumn Jersey (autumnerilyx.littlepaws)
     * Aug 2022   -    Edited wording of local chat messages to improve user comprehension 
-    
+Medea (Medea Destiny)
+      Aug 2022    -  Fix for issue #862, allow wearer with trusted perm to operate
     
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
