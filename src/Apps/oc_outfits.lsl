@@ -418,6 +418,10 @@ state active
                         llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
                     }
                     else if(sMsg == TickBox(g_iLockCore, "Lock Core")){
+                        if(iAuth != CMD_OWNER || kID != g_kWearer) {
+                           llMessageLinked(LINK_SET,NOTIFY, "0%NOACCESS% to core", kID);
+                           return;
+                        }
                         g_iLockCore=1-g_iLockCore;
                         llSetTimerEvent(120);
                         Commit();
