@@ -17,7 +17,8 @@ Medea (Medea Destiny)
     *Aug 2022   -   Issue #843 & #774 fixes to check g_kOwner rather than CMD_WEARER. This fixes runaway
                     menu for wearers set as trusted (fix typo in menu too). Also wearer adding to trusted/
                     blacklist when permitted when also trusted (issue #849)
-                -   Fixed instance where interface channel is 0, also streamlined function, fix issue #819                        
+                -   Fixed instance where interface channel is 0, also streamlined function, fix issue #819 
+                -   Prefix reset now works, and notifications sent when changing prefix.
 Yosty7b3        
     *Oct 2021   -   Remove unused StrideOfList() function.
                                    
@@ -380,7 +381,10 @@ UserCommand(integer iAuth, string sCmd, key kID){
                     return;
                 }
                 g_sPrefix = llList2String(lCmd,1);
+                _sPrefix = llList2String(lCmd,1);
+                if(llToLower(g_sPrefix)=="reset") g_sPrefix = llToLower(llGetSubString(llKey2Name(llGetOwner()),0,1));
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_prefix="+g_sPrefix,kID);
+                llMessageLinked(LINK_SET,NOTIFY,"1Prefix has been set to "+g_sPrefix+".",kID);
             } 
         } 
     }
