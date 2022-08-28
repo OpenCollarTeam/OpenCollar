@@ -381,7 +381,6 @@ UserCommand(integer iAuth, string sCmd, key kID){
                     return;
                 }
                 g_sPrefix = llList2String(lCmd,1);
-                _sPrefix = llList2String(lCmd,1);
                 if(llToLower(g_sPrefix)=="reset") g_sPrefix = llToLower(llGetSubString(llKey2Name(llGetOwner()),0,1));
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_prefix="+g_sPrefix,kID);
                 llMessageLinked(LINK_SET,NOTIFY,"1Prefix has been set to "+g_sPrefix+".",kID);
