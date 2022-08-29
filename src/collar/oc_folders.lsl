@@ -654,7 +654,7 @@ state active
                             list lData = llParseString2List(sData,["/"],[]);
                             sData = llList2String(lData,llGetListLength(lData));
                             // now create a button list
-                            if(llGetSubString(sData,0,0) == "~" || llGetSubString(sData,0,0) == "."){
+                            if(llGetSubString(sData,0,0) == "~"){
                                 // remove the Tidle
                                 sData = llDeleteSubString(sData,0,0);
                             }
@@ -677,7 +677,7 @@ state active
                             */
                             g_lRootsFolders += [sData];
                             // now create a button list
-                            if(llGetSubString(sData,0,0) == "~" || llGetSubString(sData,0,0) == "."){
+                            if(llGetSubString(sData,0,0) == "~"){
                                 // remove the Tidle
                                 sData = llDeleteSubString(sData,0,0);
                             }
