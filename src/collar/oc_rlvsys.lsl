@@ -4,13 +4,15 @@ Copyright (c) 2008 - 2016 Satomi Ahn, Nandana Singh, Wendy Starfall,
 Medea Destiny, littlemousy, Romka Swallowtail, Garvin Twine,
 Sumi Perl et al.
 Licensed under the GPLv2.  See LICENSE for full details.
-
 Medea Destiny   -
-        Sept 20201  -   Added RLV_CMD_OVERRIDE function. This allows one shot (=force) commands to be sent that will override any restrictions. 
-                        This command should only be used where operator has owner permission. The notion behind it is that owners should
-                        not be restricted by wearer restictions. They can unset restrictions manually, perform the function, and then reset
-                        the restriction, but that's a lot of hassle. This performs the function automatically. Operator and wearer are notified of 
-                        restrictions that have been temporarily restricted to avoid being misled that a restriciton is not present.
+        Sept 2021  -    Added RLV_CMD_OVERRIDE function. This allows one shot (=force) commands to be sent that will override any
+                        restrictions. This command should only be used where operator has owner permission. The notion behind it 
+                        is that owners should not be restricted by wearer restictions. They can unset restrictions manually, 
+                        perform the function, and then reset the restriction, but that's a lot of hassle. This performs the 
+                        function automatically. Operator and wearer are notified of restrictions that have been temporarily 
+                        restricted to avoid being misled that a restriciton is not present.
+        Aug 2022    -   Ensure applyrem() restores a detach=n when the collar is locked, otherwise new methodology with relay would cause a 
+                        locked collar to unlock when there are no more relay sources. Fix for issue #842
 Kristen Mynx -
         May 2022 - Removed DO_RLV_REFRESH and recheck_lock timer.   Both of these were only used by
         the relay, which is being changed at the same time.  Check the comments in oc_relay.
@@ -188,10 +190,13 @@ setRlvState(){
     } else if (g_iRlvActive) {  //Both were true, but not now. g_iViewerCheck must still be TRUE (as it was once true), so g_iRLVOn must have just been set FALSE
         //Debug("RLV went inactive");
         g_iRlvActive=FALSE;
+        integer relockcheck;
+        if(llListFindList(g_lBaked,["detach"])!=-1) relockcheck=TRUE;
         while (llGetListLength(g_lBaked)){
             llOwnerSay("@"+llList2String(g_lBaked,-1)+"=y"); //remove restriction
             g_lBaked=llDeleteSubList(g_lBaked,-1,-1);
         }
+        if(relockcheck==TRUE && g_iCollarLocked==TRUE) llOwnerSay("@detach=n");
         llMessageLinked(LINK_SET, RLV_OFF, "", NULL_KEY);
     } else if (g_iRLVOn){  //g_iViewerCheck must be FALSE (see above 2 cases), so g_iRLVOn must have just been set to TRUE, so do viewer check
         if (g_iListener) llListenRemove(g_iListener);
@@ -276,6 +281,7 @@ ApplyRem(string sBehav) {
         //also check the exceptions list, in case its an exception
         g_lBaked=llDeleteSubList(g_lBaked,iRestr,iRestr); //delete it from the baked list
         llOwnerSay("@"+sBehav+"=y"); //remove restriction
+        if(sBehav=="detach" && g_iCollarLocked == TRUE) llOwnerSay("@detach=n"); //ensure we're not unlocking a locked collar
     }
 }
 
@@ -393,7 +399,7 @@ state active
         g_lBaked=[];    //just been rezzed, so should have no baked restrictions
         */
         // Begin to detect RLV
-        llOwnerSay("@clear");
+       //llOwnerSay("@clear"); //not needed, & we're about to reset and issue the command in state entry anyway.
         //setRlvState();
         llResetScript();
     }
@@ -499,6 +505,7 @@ state active
             
         } else if(iNum == LM_SETTING_DELETE){
             
+            if(sStr=="global_locked") g_iCollarLocked=0;
             //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
             //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
             
@@ -516,6 +523,7 @@ state active
             if (sToken+"_"+sVar == "auth_owner") g_lOwners = llParseString2List(sValue, [","], []);
             else if(sToken == "global"){
                 if(sVar == "locked") g_iCollarLocked=(integer)sValue;
+ 
                 else if (sVar=="handshakes") g_iMaxViewerChecks=(integer)sValue;
             }
             else if (sToken=="rlvsys"){
