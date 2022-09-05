@@ -15,7 +15,8 @@ Felkami (Caraway Ohmai)
     * Jan 2021      - #461, Made menu call case insensitive
 Lillith (Lillith Xue)
     * Dec 2019      - Fixed bug: Outfits not working for non-wearer as menu user due to listen typo
-
+Phidoux (Taya Maruti)
+    *Sept 2022      - Limited core lock/unlock to wearer and owner (issue #855)
 et al.
 
 
