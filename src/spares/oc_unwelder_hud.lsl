@@ -4,7 +4,8 @@ Copyright ©2021
 : Contributors :
 Aria (Tashia Redrose)
     * Feb 2021       -       Created oc_unwelder_hud
-    
+Medea (Medea Destiny)
+      Aug 2022    -  Fix for issue #862, allow wearer with trusted perm to operate    
     
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
@@ -278,7 +279,7 @@ default
                             }
                             else if (sMsg == "UNWELD NOW")
                             {
-                                if(iAuth == CMD_OWNER || iAuth == CMD_WEARER){
+                                if(iAuth == CMD_OWNER || llGetOwnerKey(id)==llGetOwner()){
                                     Link("from_addon", NOTIFY_OWNERS, "The unweld tool was used.", "");
                                     llOwnerSay("Consent : Valid");
                                     Link("from_addon", LM_SETTING_DELETE, "intern_weld","origin");
