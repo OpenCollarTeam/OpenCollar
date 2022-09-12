@@ -11,7 +11,9 @@ Medea (Medea Destiny)
     *July 2021          -       *See issue #587: Added warning when script resets folders script that user should consider cleaning
                                 up their #RLV 
     Sept 2021           -       Tighten timings and number of passes on reboot process and reduced sleep padding.                               
-                                            
+     
+Yosty7B3
+    Feb 2022            -       Only reset when needed to speed up boot process.                                           
     
     
 et al.
@@ -439,3 +441,4 @@ state inUpdate
         llResetScript();
     }
 }
+
