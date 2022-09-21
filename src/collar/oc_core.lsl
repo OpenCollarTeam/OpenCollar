@@ -27,7 +27,7 @@ Medea (Medea Destiny)
                     Removed g_lTestReports, left over from alpha.
     Nov 2021    -   Auth check for hide didn't account for when wearer tries to use hide with AllowHiding
                      ticked but access is not CMD_WEARER (i.e. wearer set to trusted). (see #774)                         
-    Jun 2021    -   Fixes for #774 (extension to above, allowing for wearer set to trusted). Using 
+    Jun 2022    -   Fixes for #774 (extension to above, allowing for wearer set to trusted). Using 
                     kID == g_kWearer instead of iNum==CMD_WEARER in UserCommad() for:
                     Safeword report, verbosity level, locking
                     And kAv == g_kWearer instead of iAuth == CMD_WEARER in meu dialog responses for:
@@ -36,7 +36,8 @@ Medea (Medea Destiny)
 Stormed Darkshade (StormedStormy)
     March 2022  -   Added a button for reboot to help/about menu.  
 
-  
+Yosty7B3
+    Nov 2022  - Removed Setor() and bool() functions for streamlining.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
 */
@@ -45,7 +46,7 @@ integer NOTIFY_OWNERS=1003;
 
 //string g_sParentMenu = "";
 string g_sSubMenu = "Main";
-string COLLAR_VERSION = "8.2.1000"; // Provide enough room
+string COLLAR_VERSION = "8.2.2020"; // Provide enough room
 // LEGEND: Major.Minor.Build RC Beta Alpha
 integer UPDATE_AVAILABLE=FALSE;
 string NEW_VERSION = "";
@@ -177,18 +178,19 @@ AccessMenu(key kID, integer iAuth){
         return;
     }
     string sPrompt = "\nOpenCollar Access Controls\n+/- buttons to control access lists.\nGroup allows access to current group, Public allows access to all. Wearer trust allows an owned wearer to add/remove from trusted list.\nRunaway removes all owners, access list prints out who has access.";
-    list lButtons = ["+ Owner", "+ Trust", "+ Block", "- Owner", "- Trust", "- Block", Checkbox(bool((g_kGroup!="")), "Group"), Checkbox(g_iPublic, "Public")];
+    list lButtons = ["+ Owner", "+ Trust", "+ Block", "- Owner", "- Trust", "- Block", Checkbox(g_kGroup!="", "Group"), Checkbox(g_iPublic, "Public")];
 
     lButtons += [Checkbox(g_iAllowWearerSetTrusted, "Wearer Trust"), "Runaway", "Access List"];
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "Menu~Auth");
 }
 
 HelpMenu(key kID, integer iAuth){
-    string EXTRA_VER_TXT = setor(bool((llGetSubString(COLLAR_VERSION,-1,-1)=="0")), "", " (ALPHA "+llGetSubString(COLLAR_VERSION,-1,-1)+") ");
-    EXTRA_VER_TXT += setor(bool((llGetSubString(COLLAR_VERSION,-2,-2)=="0")), "", " (BETA "+llGetSubString(COLLAR_VERSION,-2,-2)+") ");
-    EXTRA_VER_TXT += setor(bool((llGetSubString(COLLAR_VERSION,-3,-3) == "0")), "", " (RC "+llGetSubString(COLLAR_VERSION,-3,-3)+") ");
+    string EXTRA_VER_TXT;
+    if(llGetSubString(COLLAR_VERSION,-1,-1)!="0") EXTRA_VER_TXT = " (ALPHA "+llGetSubString(COLLAR_VERSION,-1,-1)+") ";
+    if(llGetSubString(COLLAR_VERSION,-2,-2)!="0") EXTRA_VER_TXT += " (BETA "+llGetSubString(COLLAR_VERSION,-2,-2)+") ";
+    if(llGetSubString(COLLAR_VERSION,-3,-3)!="0") EXTRA_VER_TXT += " (RC " + llGetSubString(COLLAR_VERSION,-3,-3)+") ";  
 
-    string sPrompt = "\nOpenCollar "+COLLAR_VERSION+" "+EXTRA_VER_TXT+"\nVersion: "+setor(g_iAmNewer, "(Newer than release)", "")+" "+setor(UPDATE_AVAILABLE, "(Update Available)", "(Most Current Version)");
+    string sPrompt = "\nOpenCollar "+COLLAR_VERSION+" "+EXTRA_VER_TXT+"\nVersion: "+llList2String(["","(Newer than release)"],g_iAmNewer)+" "+llList2String(["(Most Current Version)","(Update Available)"],UPDATE_AVAILABLE);
     sPrompt += "\n\nDocumentation https://opencollar.cc";
     sPrompt += "\nPrefix: "+g_sPrefix+"\nChannel: "+(string)g_iChannel;
     sPrompt += "\nSafeword: "+g_sSafeword;
@@ -201,13 +203,9 @@ HelpMenu(key kID, integer iAuth){
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "Menu~Help");
 }
 
-integer bool(integer a){
-    if(a)return TRUE;
-    else return FALSE;
-}
 list g_lCheckboxes=["▢", "▣"];
 string Checkbox(integer iValue, string sLabel) {
-    return llList2String(g_lCheckboxes, bool(iValue))+" "+sLabel;
+    return llList2String(g_lCheckboxes, (iValue>0))+" "+sLabel;
 }
 integer g_iUpdatePin = 0;
 //string g_sDeviceName;
@@ -398,19 +396,6 @@ Compare(string V1, string V2){
 key g_kUpdateCheck = NULL_KEY;
 key g_kCheckDev;
 
-///The setor method is derived from a similar PHP proposed function, though it was denied,
-///https://wiki.php.net/rfc/ifsetor
-///The concept is roughly the same though we're not dealing with lists in this method, so is just modified
-///The ifsetor proposal would give a function which would be more like
-///ifsetor(list[index], sTrue, sFalse)
-///LSL can't check if a list item is set without a stack heap if it is out of range, this is significantly easier for us to just check for a integer boolean
-string setor(integer iTest, string sTrue, string sFalse){
-    if(iTest)return sTrue;
-    else return sFalse;
-}
-
-
-
 integer g_iDoTriggerUpdate=FALSE;
 key g_kWelder = NULL_KEY;
 StartUpdate(){
@@ -560,7 +545,7 @@ state active
                     } else if(sMsg == "Access List"){
                         if(iAuth == CMD_OWNER || kAv == g_kWearer ){
                         llMessageLinked(LINK_SET, iAuth, "print auth", kAv);}
-                    } else if(sMsg == Checkbox(bool((g_kGroup!="")), "Group")){
+                    } else if(sMsg == Checkbox((g_kGroup!=""), "Group")){
                         if(iAuth ==CMD_OWNER){
                             if(g_kGroup!=""){
                                 g_kGroup="";
@@ -632,7 +617,7 @@ state active
                     } else if(sMsg == Checkbox(g_iHide,"Hide")){
                         if((kAv == g_kWearer && g_iAllowHide==TRUE)||iAuth==CMD_OWNER){
                             g_iHide=1-g_iHide;
-                            llMessageLinked(LINK_SET, iAuth, setor(g_iHide, "hide", "show"), kAv);
+                            llMessageLinked(LINK_SET, iAuth, llList2String(["show","hide"],g_iHide), kAv);
                             llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_hide="+(string)g_iHide, "");
                         }
                         else {
@@ -959,3 +944,4 @@ state active
         }
     }
 }
+
