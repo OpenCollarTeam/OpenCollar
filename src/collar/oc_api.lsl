@@ -21,7 +21,7 @@ Medea (Medea Destiny)
                 -   Prefix reset now works, and notifications sent when changing prefix.
 Yosty7b3        
     *Oct 2021   -   Remove unused StrideOfList() function.
-                                   
+    *Feb 2022   -   Only reset when needed (part of boot speedup project).                              
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
@@ -442,7 +442,7 @@ default
     link_message(integer iSender, integer iNum, string sStr, key kID){
         if(iNum == REBOOT){
             if(sStr == "reboot"){
-                llResetScript();
+                llMessageLinked(LINK_SET, ALIVE, llGetScriptName(),"");
             }
         } else if(iNum == READY){
             llMessageLinked(LINK_SET, ALIVE, llGetScriptName(), "");
@@ -454,9 +454,11 @@ default
 state active
 {
     on_rez(integer iNum){
-        llResetScript();
+        llMessageLinked(LINK_SET, ALIVE, llGetScriptName(),"");
     }
-    
+    changed(integer change){
+        if (change & CHANGED_OWNER) llResetScript();
+    }
     state_entry(){
         if(llGetStartParameter()!=0)llResetScript();
         g_kWearer = llGetOwner();
@@ -664,10 +666,11 @@ state active
             }
         } else if(iNum == REBOOT){
             if(sStr=="reboot"){
-                llResetScript();
+                llMessageLinked(LINK_SET, ALIVE, llGetScriptName(),"");
             }
-        } 
-        else if(iNum == DIALOG_RESPONSE){
+        } else if(iNum == STARTUP && sStr=="ALL"){
+            llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "ALL","");
+        } else if(iNum == DIALOG_RESPONSE){
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if(iMenuIndex!=-1){
                 string sMenu = llList2String(g_lMenuIDs, iMenuIndex+1);
