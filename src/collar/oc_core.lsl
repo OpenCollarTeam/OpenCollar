@@ -33,6 +33,10 @@ Medea (Medea Destiny)
                     And kAv == g_kWearer instead of iAuth == CMD_WEARER in meu dialog responses for:
                     + / - trusted / blacklist when wearer is permitted, displaying access list, print settings  
                     
+Phidoux (Taya.Maruti)
+   October 19 2022 - Modify the update version checking so the next versions only take into account 
+                     #.#.# instead of #.#.####.
+
 Stormed Darkshade (StormedStormy)
     March 2022  -   Added a button for reboot to help/about menu.  
 
@@ -376,8 +380,12 @@ Compare(string V1, string V2){
         UPDATE_AVAILABLE=FALSE;
         return;
     }
-    V1 = llDumpList2String(llParseString2List(V1, ["."],[]),"");
-    V2 = llDumpList2String(llParseString2List(V2, ["."],[]), "");
+    list lVer1 = llParseString2List(V1,["."],[]);
+    list lVer2 = llParseString2List(V2,["."],[]);
+    //V1 = llDumpList2String(llParseString2List(V1, ["."],[]),"");
+    V1 = llList2String(lVer1,0)+llList2String(lVer1,1)+llGetSubString(llList2String(lVer1,2),0,0);
+    //V2 = llDumpList2String(llParseString2List(V2, ["."],[]), "");
+    V2 = llList2String(lVer2,0)+llList2String(lVer2,1)+llGetSubString(llList2String(lVer2,2),0,0);
     integer iV1 = (integer)V1;
     integer iV2 = (integer)V2;
 
