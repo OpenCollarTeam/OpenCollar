@@ -3,7 +3,11 @@
 // littlemousy, Romka Swallowtail, Garvin Twine et al.
 // Licensed under the GPLv2.  See LICENSE for full details.
 /*-Authors Attribution-
-Taya Maruti - (May 2021)
+Taya Maruti
+    (May 2021) - combined oc_addon updates and split oc_ao_animator to reduce stack heap collisions and improve script time.
+    oct 20 2022 - fixed the load default card issue when default not available.
+                    fixed permission error when passed from one user to the other.
+                    fixed reset on removal without turning off.
 */
 
 integer API_CHANNEL = 0x60b97b5e;
@@ -573,7 +577,6 @@ default {
     }
 
     on_rez(integer iStart) {
-        if (g_kWearer != llGetOwner()) llResetScript();
         if (g_iLocked) llOwnerSay("@detach=n");
         g_iReady = FALSE;
         llMessageLinked(LINK_THIS,AO_SETTINGS,"UPDATE",g_kWearer);
@@ -583,8 +586,12 @@ default {
     }
 
     attach(key kID) {
-        if (kID == NULL_KEY) llMessageLinked(LINK_THIS,AO_SETOVERRIDE,"RESET_ALL",kID);//llResetAnimationOverride("ALL");
-        else if (llGetAttached() <= 30) {
+        if (kID == NULL_KEY ){
+            llMessageLinked(LINK_THIS,AO_SETOVERRIDE,"RESET_ALL",kID);//llResetAnimationOverride("ALL");
+        } else if (kID != g_kWearer){
+            llMessageLinked(LINK_THIS,AO_SETOVERRIDE,"RESET_ALL",kID);//llResetAnimationOverride("ALL");
+            llResetScript();
+        } else if (llGetAttached() <= 30) {
             llOwnerSay("Sorry, this device can only be attached to the HUD.");
             llRequestPermissions(kID, PERMISSION_ATTACH);
             llDetachFromAvatar();
@@ -598,7 +605,7 @@ default {
     touch_start(integer total_number) {
         if(llGetAttached()) {
             if (!g_iReady) {
-                //MenuLoad(g_kWearer,0,CMD_WEARER);
+                MenuLoad(g_kWearer,0,CMD_WEARER);
                 //llOwnerSay("Please load an animation set first.");
                 llOwnerSay("system not loaded yet!");
                 return;
