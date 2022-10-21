@@ -3,7 +3,9 @@
 // littlemousy, Romka Swallowtail, Garvin Twine et al.
 // Licensed under the GPLv2.  See LICENSE for full details.
 /*-Authors Attribution-
-Taya Maruti - (May 2021)
+Taya Maruti:
+    May 2021 - split this script form oc_ao to reduse stack heap and improve script time.
+    Oct 20 2022 - Modified the reset to include removing while on.
 */
 
 
@@ -255,7 +257,11 @@ default {
         }
         if (iChange & CHANGED_INVENTORY) PermsCheck();
     }
-    
+    attach(key kID){
+        if(kID == NULL_KEY || g_kWearer != kID){
+            llResetAnimationOverride("ALL");
+        }
+    }
     
     dataserver(key kRequest, string sData) {
         if (kRequest == g_kCard) {
