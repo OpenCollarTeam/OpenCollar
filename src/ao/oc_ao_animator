@@ -8,6 +8,7 @@ Taya Maruti:
     Oct 20 2022 - Modified the reset to include removing while on.
     oct 22 2022 - changes to make the loading sequence more informative to aid in finding ways to make it faster
                     and less confusing for the team.
+    oct 22 2022 - change speed up the load time by removing the else if block on the state check.
 */
 
 
@@ -280,53 +281,73 @@ default {
                 // Translate common ZHAOII, Oracul and AX anim state values
                 if (sAnimationState == "Stand.1" || sAnimationState == "Stand.2" || sAnimationState == "Stand.3") {
                     sAnimationState = "Standing";
-                } else if (sAnimationState == "Walk.N") {
+                }
+                if (sAnimationState == "Walk.N") {
                     sAnimationState = "Walking";
-                } else if (sAnimationState == "Running") {
+                }
+                if (sAnimationState == "Running") {
                     sAnimationState = "Running";
-                } else if (sAnimationState == "Turn.L") {
+                }
+                if (sAnimationState == "Turn.L") {
                     sAnimationState = "Turning Left";
-                } else if (sAnimationState == "Turn.R") {
+                }
+                if (sAnimationState == "Turn.R") {
                     sAnimationState = "Turning Right";
-                } else if (sAnimationState == "Sit.N") {
+                }
+                if (sAnimationState == "Sit.N") {
                     sAnimationState = "Sitting";
-                } else if (sAnimationState == "Sit.G" || sAnimationState == "Sitting On Ground") {
+                }
+                if (sAnimationState == "Sit.G" || sAnimationState == "Sitting On Ground") {
                     sAnimationState = "Sitting on Ground";
-                } else if (sAnimationState == "Crouch") {
+                }
+                if (sAnimationState == "Crouch") {
                     sAnimationState = "Crouching";
-                } else if (sAnimationState == "Walk.C" || sAnimationState == "Crouch Walking") {
+                }
+                if (sAnimationState == "Walk.C" || sAnimationState == "Crouch Walking") {
                     sAnimationState = "CrouchWalking";
-                } else if (sAnimationState == "Jump.N" || sAnimationState == "Jumping") {
+                }
+                if (sAnimationState == "Jump.N" || sAnimationState == "Jumping") {
                     sAnimationState = "Jumping";
-                /*} else if (sAnimationState == "Takeoff") {
+                }
+                if (sAnimationState == "Takeoff") {
                     sAnimationState = "Taking Off";
-                */
-                } else if (sAnimationState == "Hover.N") {
+                }
+                if (sAnimationState == "Hover.N") {
                     sAnimationState = "Hovering";
-                } else if (sAnimationState == "Hover.U" || sAnimationState == "Flying Up") {
+                }
+                if (sAnimationState == "Hover.U" || sAnimationState == "Flying Up") {
                     sAnimationState = "Hovering Up";
-                } else if (sAnimationState == "Hover.D" || sAnimationState == "Flying Down") {
+                }
+                if (sAnimationState == "Hover.D" || sAnimationState == "Flying Down") {
                     sAnimationState = "Hovering Down";
-                } else if (sAnimationState == "Fly.N") {
+                }
+                if (sAnimationState == "Fly.N") {
                     sAnimationState = "Flying";
-                } else if (sAnimationState == "Flying Slow") {
+                }
+                if (sAnimationState == "Flying Slow") {
                     sAnimationState = "FlyingSlow";
-                } else if (sAnimationState == "Land.N") {
+                }
+                if (sAnimationState == "Land.N") {
                     sAnimationState = "Landing";
-                } else if (sAnimationState == "Falling") {
+                }
+                if (sAnimationState == "Falling") {
                     sAnimationState = "Falling Down";
                 /* ----------------------------------------------------------------------- */
                 // Meeded for competition events like those held in pony play
-                } else if (sAnimationState == "Striding") {
-                    sAnimationState = "Striding";
-                } else if (sAnimationState == "Soft Landing") {
-                    sAnimationState = "Soft Landing";
-                } else if (sAnimationState == "Jump.P" || sAnimationState == "Pre Jumping") {
-                    sAnimationState = "PreJumping";
-                } else if (sAnimationState == "Stand.U") {
-                    sAnimationState = "Standing Up";
                 }
+                if (sAnimationState == "Striding") {
+                    sAnimationState = "Striding";
+                }
+                if (sAnimationState == "Soft Landing") {
+                    sAnimationState = "Soft Landing";
+                }
+                if (sAnimationState == "Jump.P" || sAnimationState == "Pre Jumping") {
+                    sAnimationState = "PreJumping";
+                }
+                if (sAnimationState == "Stand.U") {
+                    sAnimationState = "Standing Up";
                 /* ----------------------------------------------------------------------- */
+                }
                 if (!~llListFindList(g_lAnimStates,[sAnimationState])) {
                     jump next;
                 }
@@ -334,7 +355,7 @@ default {
                     sData = llGetSubString(sData,llSubStringIndex(sData,"]")+1,-1);
                     list lTemp = llParseString2List(sData, ["|",","],[]);
                     integer i = llGetListLength(lTemp);
-                    g_iAnimCount = i;
+                    g_iAnimCount += i;
                     while(i--) {
                         if (llGetInventoryType(llList2String(lTemp,i)) != INVENTORY_ANIMATION) {
                             ++g_iAnimFail;
@@ -385,6 +406,8 @@ default {
                 }
                 llRequestPermissions(g_kWearer,PERMISSION_OVERRIDE_ANIMATIONS);
                 g_iCardLine = 0;
+                g_iAnimCount = 0;
+                g_iAnimFail =0;
                 g_kCard = "";
             }
         }
