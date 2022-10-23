@@ -8,6 +8,8 @@ Taya Maruti
     oct 20 2022 - fixed the load default card issue when default not available.
                     fixed permission error when passed from one user to the other.
                     fixed reset on removal without turning off.
+    oct 22 2022 - changes to make the loading sequence more informative to aid in finding ways to make it faster
+                    and less confusing for the team.
 */
 
 integer API_CHANNEL = 0x60b97b5e;
@@ -25,7 +27,7 @@ integer CMD_EVERYONE        = 504;
 //integer CMD_RLV_RELAY       = 507;
 //integer CMD_SAFEWORD        = 510;
 //integer CMD_RELAY_SAFEWORD  = 511;
-//integer CMD_NOACCESS        = 599;
+//integer CMD_NOACCESS        = 599; 
 
 //integer LM_SETTING_SAVE     = 2000; //scripts send messages on this channel to have settings saved, <string> must be in form of "token=value"
 integer LM_SETTING_REQUEST  = 2001; //when startup, scripts send requests for settings on this channel
@@ -714,15 +716,23 @@ default {
             g_lMenuIDs = llDeleteSubList(g_lMenuIDs,iMenuIndex, iMenuIndex+4);
             //if (llGetListLength(g_lMenuIDs) == 0 && (!g_iAO_ON || !g_iChangeInterval)) llSetTimerEvent(0.0);
             if (sMenuType == "AO") {
-                if (sMessage == "Cancel") return;
-                else if (sMessage == "-") MenuAO(kID,iAuth);
-                else if (sMessage == "Admin Menu") MenuAdmin(kID,iAuth);
-                else if (sMessage == "HUD Style") MenuOptions(kID,iAuth);
-                else if (sMessage == "Load") MenuLoad(kID,0,iAuth);
-                else if (sMessage == "Sits") MenuChooseAnim(kID,"Sitting",iAuth);
-                else if (sMessage == "Walks") MenuChooseAnim(kID,"Walking",iAuth);
-                else if (sMessage == "Ground Sits") MenuChooseAnim(kID,"Sitting on Ground",iAuth);
-                else if (!llSubStringIndex(sMessage,"Sits")) {
+                if (sMessage == "Cancel"){
+                    return;
+                } else if (sMessage == "-") {
+                    MenuAO(kID,iAuth);
+                } else if (sMessage == "Admin Menu") {
+                    MenuAdmin(kID,iAuth);
+                } else if (sMessage == "HUD Style") {
+                    MenuOptions(kID,iAuth);
+                } else if (sMessage == "Load") {
+                    MenuLoad(kID,0,iAuth);
+                } else if (sMessage == "Sits") {
+                    MenuChooseAnim(kID,"Sitting",iAuth);
+                } else if (sMessage == "Walks") {
+                    MenuChooseAnim(kID,"Walking",iAuth);
+                } else if (sMessage == "Ground Sits") {
+                    MenuChooseAnim(kID,"Sitting on Ground",iAuth);
+                } else if (!llSubStringIndex(sMessage,"Sits")) {
                     if (~llSubStringIndex(sMessage,"☑")) {
                         g_iSitAnimOn = FALSE;
                         llMessageLinked(LINK_THIS,AO_SETTINGS,"iSitAnimOn="+(string)g_iSitAnimOn,kID);
@@ -732,8 +742,9 @@ default {
                         if (g_iAO_ON) llMessageLinked(LINK_THIS,AO_SETOVERRIDE,"set:Sitting="+g_sSitAnim,kID);
                     } else Notify(kID,"Sorry, the currently loaded animation set doesn't have any sits.",TRUE);
                     MenuAO(kID,iAuth);
-                } else if (sMessage == "Stand Time") MenuInterval(kID,iAuth);
-                else if (sMessage == "Next Stand") {
+                } else if (sMessage == "Stand Time"){
+                     MenuInterval(kID,iAuth);
+                } else if (sMessage == "Next Stand") {
                     if (g_iAO_ON) llMessageLinked(LINK_THIS,AO_SETOVERRIDE,"switchstand",llGetOwner());
                     MenuAO(kID,iAuth);
                 } else if (!llSubStringIndex(sMessage,"Shuffle")) {
@@ -744,12 +755,15 @@ default {
                 }
             } else if (sMenuType == "Load") {
                 integer index = llListFindList(g_lCustomCards,[sMessage]);
-                if (~index) sMessage = llList2String(g_lCustomCards,index-1);
+                if (~index) {
+                    sMessage = llList2String(g_lCustomCards,index-1);
+                }
                 if (llGetInventoryType(sMessage) == INVENTORY_NOTECARD) {
+                    llOwnerSay("Selecting note card "+sMessage);
                     g_sCard = sMessage;
                     g_iCardLine = 0;
                     g_sJson_Anims = "{}";
-                    llMessageLinked(LINK_THIS,AO_NOTECARD,g_sCard+"|"+(string)g_iCardLine,kID);
+                    llMessageLinked(LINK_THIS,AO_NOTECARD,g_sCard,kID);
                     return;
                 } else if (g_iReady && sMessage == "BACK") {
                     MenuAO(kID,iAuth);
@@ -758,8 +772,11 @@ default {
                     if (++g_iPage > g_iNumberOfPages) g_iPage = 0;
                 } else if (sMessage == "◄") {
                     if (--g_iPage < 0) g_iPage = g_iNumberOfPages;
-                } else if (!g_iReady) llOwnerSay("Please load an animation set first.");
-                else llOwnerSay("Could not find animation set: "+sMessage);
+                } else if (!g_iReady){
+                     llOwnerSay("Please load an animation set first.");
+                } else {
+                    llOwnerSay("Could not find animation set: "+sMessage);
+                }
                 MenuLoad(kID,g_iPage,iAuth);
             } else if (sMenuType == "Interval") {
                 if (sMessage == "BACK") {
