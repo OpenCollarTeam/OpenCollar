@@ -13,6 +13,7 @@ Taya Maruti
     oct 23 2022 - Changes to make the whole script a bit more readable by converting to style guide recommendations of oc and sl 
                   fixed issue where the load command from /1prefixao load notecardname was not working.
                   captialized D in g_sCard = "Default";
+    oct 23 2022 - Change oc_ao addon configuration to utilize more stable and always connected functionality.
 */
 
 integer API_CHANNEL = 0x60b97b5e;
@@ -62,7 +63,11 @@ string g_sVersion = "2.2";
 integer g_iUpdateAvailable;
 key g_kWebLookup;
 
-key g_kWearer;
+key g_kWearer = NULL_KEY;
+key g_kCollar = NULL_KEY;
+string g_sCollar = "";
+integer g_iListen;
+integer g_iJustRezzed;
 string g_sCard = "Default";
 integer g_iCardLine;
 key g_kCard;
@@ -76,14 +81,14 @@ list g_lAnimStates = [ //http://wiki.secondlife.com/wiki/LlSetAnimationOverride
         ];
 
 string g_sJson_Anims = "{}";
-integer g_iAO_ON;
-integer g_iSitAnimOn;
+integer g_iAO_ON = TRUE;
+integer g_iSitAnimOn = TRUE;
 string g_sSitAnim;
-integer g_iSitAnywhereOn;
+integer g_iSitAnywhereOn = FALSE;
 string g_sSitAnywhereAnim;
 string g_sWalkAnim;
 integer g_iChangeInterval = 45;
-integer g_iLocked;
+integer g_iLocked = FALSE;
 integer g_iShuffle;
 integer g_iStandPause;
 
@@ -92,7 +97,6 @@ list g_lAnims2Choose;
 list g_lCustomCards;
 integer g_iPage;
 integer g_iNumberOfPages;
-key g_kCollar=NULL_KEY;
 integer g_iLMLastRecv;
 integer g_iLMLastSent;
 /*
@@ -122,6 +126,8 @@ list BTNS = [
     "Menu",
     "SitAny"
 ];
+list g_lCheckBoxes = [];
+list b_lCheckBoxes = ["☐","☑"];
 
 float g_fGap = 0.001; // This is the space between buttons
 float g_Yoff = 0.002; // space between buttons and screen top/bottom border
@@ -599,38 +605,30 @@ Link(string packet, integer iNum, string sStr, key kID){
     }
 }
 
-initialize(){
-    if (llGetInventoryType("oc_installer_sys")==INVENTORY_SCRIPT) {
-        return;
-    }
-    g_kWearer = llGetOwner();
-    PermsCheck();
-    API_CHANNEL = ((integer)("0x" + llGetSubString((string)llGetOwner(), 0, 8))) + 0xf6eb - 0xd2;
-    llListen(API_CHANNEL, "", "", "");
-    FindButtons();
-    PositionButtons();
-    TextureButtons();
-    DetermineColors();
-    //g_kCard = llGetNotecardLine(g_sCard, g_iCardLine);
-    llMessageLinked(LINK_THIS,AO_NOTECARD,g_sCard+"|"+(string)g_iCardLine,g_kWearer);
-    Link("online", 0, "", llGetOwner()); // This is the signal to initiate communication between the addon and the collar
-    llSetTimerEvent(5);
-    g_iLMLastRecv = llGetUnixTime();
-}
-
 softreset(){
     g_kCollar = NULL_KEY;
-    API_CHANNEL = ((integer)("0x" + llGetSubString((string)llGetOwner(), 0, 8))) + 0xf6eb - 0xd2;
-    llListen(API_CHANNEL, "", "", "");
-    Link("online", 0, "", llGetOwner()); // This is the signal to initiate communication between the addon and the collar
+    g_kWearer = llGetOwner();
+    if(g_iListen){
+        llListenRemove(g_iListen);
+    }
+    API_CHANNEL = ((integer)("0x" + llGetSubString((string)g_kWearer, 0, 8))) + 0xf6eb - 0xd2;
+    g_iListen = llListen(API_CHANNEL, "", "", "");
+    Link("online", 0, "", g_kWearer); // This is the signal to initiate communication between the addon and the collar
+    if(llGetInventoryType(g_sCard) == INVENTORY_NOTECARD){
+        llMessageLinked(LINK_THIS,AO_NOTECARD,g_sCard+"|"+(string)g_iCardLine,g_kWearer);
+    } else {
+        MenuLoad(g_kWearer,0,CMD_WEARER);
+    }
+    llSetTimerEvent(5);
     g_iLMLastRecv = llGetUnixTime();
+    g_iLMLastSent = llGetUnixTime();
     FindButtons();
     PositionButtons();
     TextureButtons();
     DetermineColors();
 }
 
-shutdown(){
+shutdown() {
     Link("offline", 0, "", llGetOwnerKey(g_kCollar));
     g_lMenuIDs = [];
     g_kCollar = NULL_KEY;
@@ -638,27 +636,14 @@ shutdown(){
 
 default {
     state_entry() {
-        initialize();
-        //MenuLoad(g_kWearer,0,CMD_WEARER);
-    }
-
-    on_rez(integer iStart) {
-        if (g_iLocked) {
-            llOwnerSay("@detach=n");
-        }
-        g_iReady = FALSE;
-        llMessageLinked(LINK_THIS,AO_SETTINGS,"UPDATE",g_kWearer);
-        llMessageLinked(LINK_THIS,AO_GETOVERRIDE,"all",g_kWearer);
-        g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/web/ao.txt", [HTTP_METHOD, "GET"],"");
-        //llRequestPermissions(g_kWearer,PERMISSION_OVERRIDE_ANIMATIONS);
+        softreset();
     }
 
     attach(key kID) {
-        if (kID == NULL_KEY ) {
-            llMessageLinked(LINK_THIS,AO_SETOVERRIDE,"RESET_ALL",kID);//llResetAnimationOverride("ALL");
-        } else if (kID != g_kWearer) {
-            llMessageLinked(LINK_THIS,AO_SETOVERRIDE,"RESET_ALL",kID);//llResetAnimationOverride("ALL");
-            llResetScript();
+        if (kID == NULL_KEY) {
+            llMessageLinked(LINK_THIS,AO_SETOVERRIDE,"RESET:ALL",kID);//llResetAnimationOverride("ALL");
+            g_iJustRezzed = TRUE;
+            softreset();
         } else if (llGetAttached() <= 30) {
             llOwnerSay("Sorry, this device can only be attached to the HUD.");
             llRequestPermissions(kID, PERMISSION_ATTACH);
@@ -667,6 +652,54 @@ default {
             PositionButtons();
             llMessageLinked(LINK_THIS,AO_GETOVERRIDE,"all",g_kWearer);
             llMessageLinked(LINK_THIS,AO_SETTINGS,"UPDATE",g_kWearer);
+        }
+    }
+
+    changed(integer iChange) {
+        if(iChange & CHANGED_REGION){
+            Link("update", 0, "", g_kCollar);
+        }
+        if (iChange & CHANGED_COLOR) {
+            if (llGetColor(0) != g_vAOoncolor) {
+                DetermineColors();
+            }
+        }
+        if (iChange & CHANGED_LINK) {
+            softreset();
+        }
+        if (iChange & CHANGED_INVENTORY) {
+            /*llMessageLinked(LINK_THIS,AO_NOTECARD,g_sCard+"|"+(string)g_iCardLine,g_kWearer);
+            softreset();
+            PermsCheck();*/
+            llResetScript();
+        }
+    }
+
+    timer() {
+        if( g_iJustRezzed ){
+            softreset();
+        } else {
+            if (llGetUnixTime() >= (g_iLMLastSent + 30)) {
+                g_iLMLastSent = llGetUnixTime();
+                Link("ping", 0, "", g_kCollar);
+            }
+
+            if (llGetUnixTime() > (g_iLMLastRecv + (5 * 60)) && g_kCollar != NULL_KEY) {
+                softreset();
+            }
+
+            if (g_kCollar == NULL_KEY) {
+                Link("online", 0, "", llGetOwner());
+            }
+            integer n = llGetListLength(g_lMenuIDs)-6;
+            integer iNow = llGetUnixTime();
+            for (n; n>=0; n=n-6) {
+                integer iDieTime = llList2Integer(g_lMenuIDs,n+3);
+                if (iNow > iDieTime) {
+                    llListenRemove(llList2Integer(g_lMenuIDs,n+2));
+                    g_lMenuIDs = llDeleteSubList(g_lMenuIDs,n,n+4);
+                }
+            }
         }
     }
 
@@ -738,26 +771,48 @@ default {
     }
 
     listen(integer iChannel, string sName, key kID, string sMessage) {
+        if(g_sCollar == sName && llGetOwnerKey(kID) != g_kWearer){
+            // this check only works on addons owned by the collar wearer, like clothing or personal furnature.
+            return;
+        }
         if(JsonValid(sMessage)) {
             string sPacketType = llJsonGetValue(sMessage, ["pkt_type"]);
             if (sPacketType == "approved" && g_kCollar == NULL_KEY) {
                 // This signal, indicates the collar has approved the addon and that communication requests will be responded to if the requests are valid collar LMs.
+                if(g_iJustRezzed){
+                    g_iJustRezzed = FALSE;
+                }
                 g_kCollar = kID;
-                g_iLMLastRecv = llGetUnixTime();
+                g_sCollar = sName;
+                llListenRemove(g_iListen);
+                g_iListen = llListen(API_CHANNEL, sName, kID, "");
+                g_iLMLastRecv = llGetUnixTime(); // Initial message should also count as a pong for timing reasons
                 Link("from_addon", LM_SETTING_REQUEST, "ALL", "");
+                g_iLMLastSent = llGetUnixTime();
+                llSetTimerEvent(10);// move the timer here in order to wait for collar responce.
             } else if (sPacketType == "dc" && g_kCollar == kID) {
                 softreset();
             } else if (sPacketType == "pong" && g_kCollar == kID) {
                 g_iLMLastRecv = llGetUnixTime();
             } else if(sPacketType == "from_collar") {
+                g_iLMLastRecv = llGetUnixTime(); // this call should be any where you recive a message from the collar.
                 // process link message if in range of addon
                 if (llVecDist(llGetPos(), llList2Vector(llGetObjectDetails(kID, [OBJECT_POS]), 0)) <= 10.0) {
                     integer iNum = (integer) llJsonGetValue(sMessage, ["iNum"]);
                     string sStr  = llJsonGetValue(sMessage, ["sMsg"]);
                     key kID      = (key) llJsonGetValue(sMessage, ["kID"]);
-                    if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) {
-                        Command(kID, sStr, iNum);
-                    } else if ( iNum == AO_SETOVERRIDE) {
+                    
+                    if (iNum == LM_SETTING_RESPONSE) {
+                        list lPar     = llParseString2List(sStr, ["_","="], []);
+                        string sToken = llList2String(lPar, 0);
+                        string sVar   = llList2String(lPar, 1);
+                        string sVal   = llList2String(lPar, 2);
+                        if (sToken == "global"){
+                            if( sVar == "checkboxes"){
+                                b_lCheckBoxes =llParseString2List(sVal,[","],[]);
+                            }
+                        }
+                    } else if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) {
                         Command(kID, sStr, iNum);
                     }
                 }
@@ -939,45 +994,10 @@ default {
         }
     }
 
-    timer() {
-        if (llGetUnixTime() >= (g_iLMLastSent + 30))
-        {
-            g_iLMLastSent = llGetUnixTime();
-            Link("ping", 0, "", g_kCollar);
-        }
-
-        if (llGetUnixTime() > (g_iLMLastRecv + (5 * 60)) && g_kCollar != NULL_KEY)
-        {
-            softreset();
-        }
-
-        if (g_kCollar == NULL_KEY) Link("online", 0, "", llGetOwner());
-        integer n = llGetListLength(g_lMenuIDs)-6;
-        integer iNow = llGetUnixTime();
-        for (n; n>=0; n=n-6) {
-            integer iDieTime = llList2Integer(g_lMenuIDs,n+3);
-            if (iNow > iDieTime) {
-                llListenRemove(llList2Integer(g_lMenuIDs,n+2));
-                g_lMenuIDs = llDeleteSubList(g_lMenuIDs,n,n+4);
-            }
-        }
-    }
-
     http_response(key kRequestID, integer iStatus, list lMeta, string sBody) {
         if (kRequestID == g_kWebLookup && iStatus == 200)  {
             if ((float)sBody > (float)g_sVersion) g_iUpdateAvailable = TRUE;
             else g_iUpdateAvailable = FALSE;
-        }
-    }
-
-    changed(integer iChange) {
-        if (iChange & CHANGED_COLOR) {
-            if (llGetColor(0) != g_vAOoncolor) DetermineColors();
-        } else if (iChange & CHANGED_LINK) initialize();
-        if (iChange & CHANGED_INVENTORY) {
-            llMessageLinked(LINK_THIS,AO_NOTECARD,g_sCard+"|"+(string)g_iCardLine,g_kWearer);
-            softreset();
-            PermsCheck();
         }
     }
 }
