@@ -16,6 +16,7 @@ Taya Maruti
                 - Change oc_ao addon configuration to utilize more stable and always connected functionality.
                 - Fix a with Sit menu option toggle, and unify the check boxes with the collar.
                 - Fix not loading Default on startup.
+                - Fix Shuffle Toggle.
 
 */
 
@@ -871,7 +872,7 @@ default {
                         llMessageLinked(LINK_THIS,AO_SETOVERRIDE,"switchstand",llGetOwner());
                     }
                     MenuAO(kID,iAuth);
-                } else if (sMessage == "b_sShuffle"){
+                } else if (sMessage == b_sShuffle){
                     if( g_iShuffle ){
                         g_iShuffle = FALSE;
                     } else {
