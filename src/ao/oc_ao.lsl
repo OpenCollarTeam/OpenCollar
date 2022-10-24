@@ -13,7 +13,9 @@ Taya Maruti
     oct 23 2022 - Changes to make the whole script a bit more readable by converting to style guide recommendations of oc and sl 
                   fixed issue where the load command from /1prefixao load notecardname was not working.
                   captialized D in g_sCard = "Default";
-    oct 23 2022 - Change oc_ao addon configuration to utilize more stable and always connected functionality.
+                - Change oc_ao addon configuration to utilize more stable and always connected functionality.
+                - Fix a with Sit menu option toggle, and unify the check boxes with the collar.
+
 */
 
 integer API_CHANNEL = 0x60b97b5e;
@@ -357,37 +359,40 @@ list SortButtons(list lButtons, list lStaticButtons) {
     return lOut;
 }
 
+string d_sSits = "Sits";
+string b_sSits;
+string d_sShuffle = "Shuffle";
+string b_sShuffle;
+
 MenuAO(key kID,integer iAuth) {
     string sPrompt = "\n[OpenCollar AO]\t"+g_sVersion+g_sDevStage;
-    if (g_iUpdateAvailable) {
-        sPrompt+= "\n\nUPDATE AVAILABLE: A new patch has been released.\nPlease install at your earliest convenience. Thanks!";
-    }
+    if (g_iUpdateAvailable) sPrompt+= "\n\nUPDATE AVAILABLE: A new patch has been released.\nPlease install at your earliest convenience. Thanks!";
     list lButtons = ["Load","Sits","Ground Sits","Walks"];
-    if (g_iSitAnimOn) {
-        lButtons += ["Sits ☑"];
+    if(g_lCheckBoxes != []) {
+        b_sSits = llList2String(g_lCheckBoxes,g_iSitAnimOn)+d_sSits;
+        b_sShuffle = llList2String(g_lCheckBoxes,g_iShuffle)+d_sShuffle;
     } else {
-        lButtons += ["Sits ☐"];
+        b_sSits = llList2String(b_lCheckBoxes,g_iSitAnimOn)+d_sSits;
+        b_sShuffle = llList2String(b_lCheckBoxes,g_iShuffle)+d_sShuffle;
     }
-    if (g_iShuffle) {
-        lButtons += "Shuffle ☑";
-    } else {
-        lButtons += "Shuffle ☐";
-    }
-    lButtons += ["Stand Time","Next Stand","Admin Menu"];
+    lButtons += [b_sSits,b_sShuffle,"Stand Time","Next Stand","Admin Menu"];
     if (kID == g_kWearer) {
         lButtons += "HUD Style";
     }
     Dialog(kID, sPrompt, lButtons, ["Cancel"], iAuth, "AO");
 }
 
+string b_sLock;
+string d_sLock = "Lock";
+
 MenuAdmin(key kID,integer iAuth) {
     string sPrompt = "\n[OpenCollar AO]\t"+g_sVersion+g_sDevStage;
-    list lButtons = ["LOCK"];
-    if (g_iLocked) {
-        lButtons = ["UNLOCK"];
+    if(g_lCheckBoxes != []) {
+        b_sLock = llList2String(g_lCheckBoxes,g_iLocked)+d_sLock;
     } else {
-        lButtons += "-";
+        b_sLock = llList2String(b_lCheckBoxes,g_iLocked)+d_sLock;
     }
+    list lButtons = [b_sLock];
     if (g_kCollar != NULL_KEY) {
         lButtons += ["Collar Menu","DISCONNECT"];
     }
@@ -826,7 +831,7 @@ default {
             g_lMenuIDs = llDeleteSubList(g_lMenuIDs,iMenuIndex, iMenuIndex+4);
             //if (llGetListLength(g_lMenuIDs) == 0 && (!g_iAO_ON || !g_iChangeInterval)) llSetTimerEvent(0.0);
             if (sMenuType == "AO") {
-                if (sMessage == "Cancel"){
+                if (sMessage == "Cancel") {
                     return;
                 } else if (sMessage == "-") {
                     MenuAO(kID,iAuth);
@@ -842,11 +847,11 @@ default {
                     MenuChooseAnim(kID,"Walking",iAuth);
                 } else if (sMessage == "Ground Sits") {
                     MenuChooseAnim(kID,"Sitting on Ground",iAuth);
-                } else if (!llSubStringIndex(sMessage,"Sits")) {
-                    if (~llSubStringIndex(sMessage,"☑")) {
+                } else if (sMessage == b_sSits){
+                    if(g_iSitAnimOn){
                         g_iSitAnimOn = FALSE;
                         llMessageLinked(LINK_THIS,AO_SETTINGS,"iSitAnimOn="+(string)g_iSitAnimOn,kID);
-                        llMessageLinked(LINK_THIS,AO_SETOVERRIDE,"RESET:Sitting",kID);
+                        llMessageLinked(LINK_THIS,AO_SETOVERRIDE,"reset_Sitting",kID);
                     } else if (g_sSitAnim != "") {
                         g_iSitAnimOn = TRUE;
                         if (g_iAO_ON) {
@@ -856,15 +861,15 @@ default {
                         Notify(kID,"Sorry, the currently loaded animation set doesn't have any sits.",TRUE);
                     }
                     MenuAO(kID,iAuth);
-                } else if (sMessage == "Stand Time"){
-                     MenuInterval(kID,iAuth);
+                } else if (sMessage == "Stand Time") {
+                    MenuInterval(kID,iAuth);
                 } else if (sMessage == "Next Stand") {
                     if (g_iAO_ON) {
                         llMessageLinked(LINK_THIS,AO_SETOVERRIDE,"switchstand",llGetOwner());
                     }
                     MenuAO(kID,iAuth);
-                } else if (!llSubStringIndex(sMessage,"Shuffle")) {
-                    if (~llSubStringIndex(sMessage,"☑")) {
+                } else if (sMessage == "b_sShuffle"){
+                    if( g_iShuffle ){
                         g_iShuffle = FALSE;
                     } else {
                         g_iShuffle = TRUE;
