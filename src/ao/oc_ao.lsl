@@ -15,6 +15,7 @@ Taya Maruti
                   captialized D in g_sCard = "Default";
                 - Change oc_ao addon configuration to utilize more stable and always connected functionality.
                 - Fix a with Sit menu option toggle, and unify the check boxes with the collar.
+                - Fix not loading Default on startup.
 
 */
 
@@ -620,7 +621,7 @@ softreset(){
     g_iListen = llListen(API_CHANNEL, "", "", "");
     Link("online", 0, "", g_kWearer); // This is the signal to initiate communication between the addon and the collar
     if(llGetInventoryType(g_sCard) == INVENTORY_NOTECARD){
-        llMessageLinked(LINK_THIS,AO_NOTECARD,g_sCard+"|"+(string)g_iCardLine,g_kWearer);
+        Command(g_kWearer,g_sAddon+" load "+g_sCard, CMD_WEARER);
     } else {
         MenuLoad(g_kWearer,0,CMD_WEARER);
     }
@@ -649,6 +650,8 @@ default {
             llMessageLinked(LINK_THIS,AO_SETOVERRIDE,"RESET:ALL",kID);//llResetAnimationOverride("ALL");
             g_iJustRezzed = TRUE;
             softreset();
+        } else if (kID != g_kWearer){
+            llResetScript();
         } else if (llGetAttached() <= 30) {
             llOwnerSay("Sorry, this device can only be attached to the HUD.");
             llRequestPermissions(kID, PERMISSION_ATTACH);
