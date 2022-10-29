@@ -11,14 +11,14 @@ Medea Destiny   -
                         perform the function, and then reset the restriction, but that's a lot of hassle. This performs the 
                         function automatically. Operator and wearer are notified of restrictions that have been temporarily 
                         restricted to avoid being misled that a restriciton is not present.
-        Aug 2022    -   Ensure applyrem() restores a detach=n when the collar is locked, otherwise new methodology with relay would cause a 
-                        locked collar to unlock when there are no more relay sources. Fix for issue #842
+        Aug 2022    -   Ensure applyrem() restores a detach=n when the collar is locked, otherwise new methodology with relay 
+                        would cause a locked collar to unlock when there are no more relay sources. Fix for issue #842
 Kristen Mynx -
         May 2022 - Removed DO_RLV_REFRESH and recheck_lock timer.   Both of these were only used by
         the relay, which is being changed at the same time.  Check the comments in oc_relay.
 */
 
-string g_sScriptVersion = "8.1";
+string g_sScriptVersion = "8.2";
 integer g_iRLVOn = TRUE;
 integer g_iRLVOff = FALSE;
 integer g_iViewerCheck = FALSE;
@@ -752,3 +752,4 @@ state inUpdate{
         }
     }
 }
+
