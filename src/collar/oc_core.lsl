@@ -32,7 +32,7 @@ Medea (Medea Destiny)
                     Safeword report, verbosity level, locking
                     And kAv == g_kWearer instead of iAuth == CMD_WEARER in meu dialog responses for:
                     + / - trusted / blacklist when wearer is permitted, displaying access list, print settings  
-    Oct 2022    -   Fix for full version>beta version checking 
+    Oct 2022    -   Fix for full version>beta version checking. Added menu text to clarify versioning for beta users.
                     
 Stormed Darkshade (StormedStormy)
     March 2022  -   Added a button for reboot to help/about menu.  
@@ -52,6 +52,7 @@ string COLLAR_VERSION = "8.2.3000"; // Provide enough room
 integer UPDATE_AVAILABLE=FALSE;
 string NEW_VERSION = "";
 integer g_iAmNewer=FALSE;
+integer g_iIsBeta;
 integer g_iChannel=1;
 string g_sPrefix;
 
@@ -158,6 +159,7 @@ Menu(key kID, integer iAuth) {
 
     if(UPDATE_AVAILABLE ) sPrompt += "\n\nUPDATE AVAILABLE: Your version is: "+COLLAR_VERSION+", The current release version is: "+NEW_VERSION;
     if(g_iAmNewer)sPrompt+="\n\nYour collar version is newer than the public release. This may happen if you are using a beta or pre-release copy.\nNote: Pre-Releases may have bugs. Ensure you report any bugs to [https://github.com/OpenCollarTeam/OpenCollar Github]";
+    if(g_iIsBeta)sPrompt+="\n(The last 3 digits indicate a pre-release version, which is superseded by 000 for a release version).";
 
     if(g_iWelded)sPrompt+="\n\n* The Collar is Welded by secondlife:///app/agent/"+(string)g_kWeldBy+"/about *";
     if(iAuth==CMD_OWNER && g_iLocked && !g_iWelded)lButtons+=["Weld"];
@@ -371,8 +373,9 @@ list g_lMenuIDs;
 integer g_iMenuStride;
 integer g_iLocked=FALSE;
 Compare(string V1, string V2){
+    V2=llStringTrim(V2,STRING_TRIM);
     NEW_VERSION=V2;
-
+    if(llGetSubString(V1,-3,-1)!="000") g_iIsBeta=TRUE;
     if(V1==V2){
         UPDATE_AVAILABLE=FALSE;
         return;
