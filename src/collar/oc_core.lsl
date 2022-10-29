@@ -32,12 +32,13 @@ Medea (Medea Destiny)
                     Safeword report, verbosity level, locking
                     And kAv == g_kWearer instead of iAuth == CMD_WEARER in meu dialog responses for:
                     + / - trusted / blacklist when wearer is permitted, displaying access list, print settings  
+    Oct 2022    -   Fix for full version>beta version checking 
                     
 Stormed Darkshade (StormedStormy)
     March 2022  -   Added a button for reboot to help/about menu.  
 
 Yosty7B3
-    Nov 2022  - Removed Setor() and bool() functions for streamlining.
+    Nov 2022  -     Removed Setor() and bool() functions for streamlining.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
 */
@@ -46,7 +47,7 @@ integer NOTIFY_OWNERS=1003;
 
 //string g_sParentMenu = "";
 string g_sSubMenu = "Main";
-string COLLAR_VERSION = "8.2.2000"; // Provide enough room
+string COLLAR_VERSION = "8.2.3000"; // Provide enough room
 // LEGEND: Major.Minor.Build RC Beta Alpha
 integer UPDATE_AVAILABLE=FALSE;
 string NEW_VERSION = "";
@@ -386,6 +387,11 @@ Compare(string V1, string V2){
         g_iAmNewer=FALSE;
     } else if(iV1 == iV2) return;
     else if(iV1 > iV2){
+        if(llGetSubString(V2,-3,-1)=="000" && llGetSubString(V1,0,-4)==llGetSubString(V2,0,-4)){
+            UPDATE_AVAILABLE=TRUE;
+            g_iAmNewer=FALSE;
+            return;
+        }
         UPDATE_AVAILABLE=FALSE;
         g_iAmNewer=TRUE;
 
