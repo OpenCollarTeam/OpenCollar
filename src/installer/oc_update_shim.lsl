@@ -176,8 +176,8 @@ default {
                     } else {
                         // it's in our list.  Check UUID.
                         if (llGetInventoryKey(sName) == kUUID  && kUUID != NULL_KEY && sName != "oc_sys") {
-                            // already have script.  skip
-                            sCmd = "SKIP";
+                            // already have script.  Keep.
+                            sCmd = "KEEP";
                         } else {
                             // we have the script but it's the wrong version.  delete and get new one.
                             llRemoveInventory(sName);
