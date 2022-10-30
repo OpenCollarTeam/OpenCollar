@@ -5,15 +5,21 @@ Copyright 2021
 : Contributors :
 
 Aria (Tashia Redrose)
-    * July 2020         - Rewrote oc_anim
-    * Dec 2020          - Fix bug where animations were not treated case insensitive, and where animations with a space in the name could not be played by chat command or menu button
-    * Feb 2021          - Fix Public Access
+    July 2020 - Rewrote oc_anim
+    Dec 2020  - Fix bug where animations were not treated case insensitive, and where animations
+                     with a space in the name could not be played by chat command or menu button
+    Feb 2021  - Fix Public Access
     
 Felkami (Caraway Ohmai)
-    * Dec 2020          - Fixed #456, #462, #461, added LockMeister AO suppress
+    Dec 2020  - Fixed #456, #462, #461, added LockMeister AO suppress
 
 et al.
 
+K9K8E
+    Apr 2022    - Remove CONTROL_ML_LBUTTON from take controls to allow left mouse in mouselook.
+
+Tayaphidoux
+    Jun 2022    - Restore AO pause functionality
 
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
@@ -726,3 +732,4 @@ state inUpdate{
         }
     }
 }
+

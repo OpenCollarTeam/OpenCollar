@@ -9,6 +9,14 @@ Medea (medea.destiny)
     Sept 2021           -   Provided auth failure mode for menu. Insufficient auth now
                             provides suitable notification to user and respawns main menu. 
                             Fixes issue #665   
+
+KristenMynx
+    Dec 2021            -   Fix timeout removal stride
+    May 2022            -   Fix offline removal stride
+                        -   Reduce chatter
+    Jun 2022            -   Reduce chatter more
+    
+    
     
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
@@ -18,7 +26,7 @@ https://github.com/OpenCollarTeam/OpenCollar
 string g_sParentMenu = "Main";
 string g_sSubMenu = "Addons";
 
-string COLLAR_VERSION = "8.1.0000";
+string COLLAR_VERSION = "8.2.3000";
 
 string Auth2Str(integer iAuth){
     if(iAuth == CMD_OWNER)return "Owner";
@@ -550,3 +558,4 @@ state active
         //llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
     }
 }
+
