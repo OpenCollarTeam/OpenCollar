@@ -15,7 +15,6 @@ Kristen Mynx
     * May 2022        -       Added resizer support
 Kristen Mynx
     * July 2022       -       Fix "BACK" buttons on resizer 
-
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
@@ -76,7 +75,7 @@ string Checkbox(integer iValue, string sLabel) {
 //list g_lCollars;
 string g_sAddon = "OpenCollar Cuffs";
 
-string g_sVersion = "2.0.0";
+string g_sVersion = "2.2.0";
 
 //integer CMD_ZERO            = 0;
 integer CMD_OWNER           = 500;
@@ -172,8 +171,8 @@ Menu(key kID, integer iAuth) {
         if(!g_iHidden)
             lButtons+=["Pose"];
         else sPrompt +="\nPoses not available while the Collar is hidden";
-	 if(llGetInventoryType("oc_cuff_themes")==INVENTORY_SCRIPT
-	 && (llGetObjectPermMask(MASK_OWNER) & (PERM_COPY | PERM_MODIFY | PERM_TRANSFER))  == (PERM_COPY | PERM_MODIFY | PERM_TRANSFER)){
+     if(llGetInventoryType("oc_cuff_themes")==INVENTORY_SCRIPT
+     && (llGetObjectPermMask(MASK_OWNER) & (PERM_COPY | PERM_MODIFY | PERM_TRANSFER))  == (PERM_COPY | PERM_MODIFY | PERM_TRANSFER)){
         if(!g_iHidden)
             lButtons+=["New Theme"];
         }        
