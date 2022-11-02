@@ -269,7 +269,7 @@ default
         if(iNum == -1){ // oc_cuff sends this when it starts (which is also on_rez)
             llResetScript();
         }
-        if (iNum == 32) // [New Theme] from oc_cuff script
+        if (iNum == 33) // [New Theme] from oc_cuff script
         {
             PrintCurrentProperties(kID);
         }
