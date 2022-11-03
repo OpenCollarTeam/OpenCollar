@@ -15,6 +15,8 @@ Kristen Mynx
     * May 2022        -       Added resizer support
 Kristen Mynx
     * July 2022       -       Fix "BACK" buttons on resizer 
+Ping (Pingout Duffield)
+    * Nov 2022        -       Add in link message for cuff [New Theme] button using iNum == 32
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
@@ -75,7 +77,7 @@ string Checkbox(integer iValue, string sLabel) {
 //list g_lCollars;
 string g_sAddon = "OpenCollar Cuffs";
 
-string g_sVersion = "2.2.0";
+string g_sVersion = "2.2.1";
 
 //integer CMD_ZERO            = 0;
 integer CMD_OWNER           = 500;
@@ -102,6 +104,7 @@ integer DIALOG_TIMEOUT  = -9002;
 
 integer NOTIFY=-1002;
 
+integer LINK_NEWTHEME=32;
 
 integer SUMMON_PARTICLES = -58931; // Used only for cuffs to summon particles from one NAMED leash point to another NAMED anchor point
 // SUMMON_PARTICLES should follow this message format: <From Name>|<To Name>|<Age>|<Gravity>
@@ -738,6 +741,9 @@ default
                                 } else if(sMsg == "Cuff Resize"){
                                     iRespring=FALSE;
                                     llMessageLinked(LINK_SET,31, (string)kAv, (string)iAuth);
+                                } else if(sMsg == "New Theme"){
+                                    iRespring=FALSE;
+                                    llMessageLinked(LINK_SET,32, (string)kAv, (string)iAuth);
                                 } else if(sMsg == "TEST CHAINS"){
                                     //llSay(0, "Chain Test Program");
                                     //llSay(0, "Chaining frlac > fllac | bllac > brlac");
