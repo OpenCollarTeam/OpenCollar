@@ -1,8 +1,8 @@
 // This file is part of OpenCollar.
-// Copyright (c) 2008 - 2016 Lulu Pink, Nandana Singh, Garvin Twine,    
-// Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, Romka Swallowtail, 
-// littlemousy, Karo Weirsider, Nori Ovis, Ray Zopf et al.         
-// Licensed under the GPLv2.  See LICENSE for full details. 
+// Copyright (c) 2008 - 2016 Lulu Pink, Nandana Singh, Garvin Twine,
+// Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, Romka Swallowtail,
+// littlemousy, Karo Weirsider, Nori Ovis, Ray Zopf et al.
+// Licensed under the GPLv2.  See LICENSE for full details.
 
 
 string g_sAppVersion = "¹⋅³";
@@ -54,7 +54,6 @@ integer g_iListenerHandle;
 
 key g_kWearer;
 list g_lMenuIDs;
-integer g_iMenuStride=3;
 integer g_iIsEnabled=0;
 
 integer g_iHasSworn = FALSE;
@@ -81,7 +80,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
     llMessageLinked(LINK_THIS, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
 
     integer iIndex = llListFindList(g_lMenuIDs, [kID]);
-    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
+    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + 2);
     else g_lMenuIDs += [kID, kMenuID, sName];
     //Debug("Made "+sName+" menu.");
 }
@@ -373,7 +372,7 @@ default {
                 string sMessage = llList2String(lMenuParams, 1);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
                 string sMenu=llList2String(g_lMenuIDs, iMenuIndex + 1);
-                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
+                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex + 1);
                 if (sMenu=="BadwordsMenu") {
                     if (sMessage == "BACK") llMessageLinked(LINK_ROOT, iAuth, "menu apps", kAv);
                     else UserCommand(iAuth, "badwords "+sMessage, kAv, TRUE);
@@ -405,7 +404,7 @@ default {
             }
         } else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
+            if (~iMenuIndex) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex + 1);
         } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
     }
 

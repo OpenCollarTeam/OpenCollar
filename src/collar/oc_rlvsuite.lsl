@@ -1,9 +1,9 @@
 /*// This file is part of OpenCollar.
-//  Copyright (c) 2018 - 2019 Tashia Redrose, Silkie Sabra, lillith xue                            
-// Licensed under the GPLv2.  See LICENSE for full details. 
+//  Copyright (c) 2018 - 2019 Tashia Redrose, Silkie Sabra, lillith xue
+// Licensed under the GPLv2.  See LICENSE for full details.
 medea (medea destiny)
     June 2021   -   Fix for issue #492 / issue #432, command to update camera settings (blur amount, maxcamera and mincamera)
-                    when numeric value changed via RLV/RLV settings/Camera used insufficent auth level and incorrect 
+                    when numeric value changed via RLV/RLV settings/Camera used insufficent auth level and incorrect
                     bitmask values to alter restriction while active even though the setting was altered.
                 -   Fix for issue #586, Dazzle set wrong restriction (was setting camunlock instead of renderresolutiondivisor)
                     Added comments explaining the restrictions settings to make life easier for future
@@ -11,12 +11,12 @@ medea (medea destiny)
     Sept 2021   -   Fixes to comments above
                 -   Corrected values for Rummage and Dress restrictions, added @emote=n to Talk restrictions #649
                 -   Restored SetDebug, SetEnv and Mouselook restrictions which had gone missing.
-                -   Added Camera settings & Muffle to restriction settings. Created shortcut to camera settings 
-                    from camera restrictions category, and support correct BACK button behavior so it returns 
+                -   Added Camera settings & Muffle to restriction settings. Created shortcut to camera settings
+                    from camera restrictions category, and support correct BACK button behavior so it returns
                     the user to whichever menu they arrived at that from #649
-                -   MENU REDESIGN. At time of writing this is still being discussed, but at this moment the 
-                    individual restrictions subcategory menus are placed below the presets, on the basis that 
-                    standard UI design principles call for detailed, multi-page functions to go lower in the 
+                -   MENU REDESIGN. At time of writing this is still being discussed, but at this moment the
+                    individual restrictions subcategory menus are placed below the presets, on the basis that
+                    standard UI design principles call for detailed, multi-page functions to go lower in the
                     attention hierarchy that quick, single-click preset functions. Various buttons/terminologies
                     have been changed to try to make the whole thing more user-friendly. Also "macro" terminology
                     has been removed, and preset used only where necessary to differentiate. issues #649 & # 654
@@ -24,23 +24,23 @@ medea (medea destiny)
                     lists of restrictions and given chat command "(prefix)restriction list". Also used by List Presets
                     button, which lists what the preset restriction buttons actually do. #649
                 -   Given extensive explanatory text in menus. ListRestrictions() function is used to print out all
-                    restrictions the wearer is currently under, rather than requiring menu user to visit every 
+                    restrictions the wearer is currently under, rather than requiring menu user to visit every
                     category menu to find out.  #649
                 -   "Daze" preset renamed to "Names/Map", "Dazzle" to "Blur", and "Rummage" to "Inventory" because
                     older names were downright confusing.  #649
                 -   Changed some names in g_lRLVlist to be clearer #649
-                -   Changed auth for adding/removing presets to CMD_OWNER AND CMD_TRUSTED to match the auth 
-                    requirements of setting individual restrictions as short-term solution to issue #656. 
+                -   Changed auth for adding/removing presets to CMD_OWNER AND CMD_TRUSTED to match the auth
+                    requirements of setting individual restrictions as short-term solution to issue #656.
                 -   Added Restore function to Customize menu to restore presets to defaults, per issue #663
                 -   Rewritten dialog code to set individual restrictions, 'cos it was badly broken. Issue #664
-    Feb 2022    -   Fix for #732: Empty g_lMacros list returned via LM_SETTING_RESPONSE parses as a list with a single 
+    Feb 2022    -   Fix for #732: Empty g_lMacros list returned via LM_SETTING_RESPONSE parses as a list with a single
                     empty element, thus messing up the list stride. Not sure why we're keeping nulls here, but setting
-                    to empty list if list length is too short works.                   
-                
-                             
-                             
-                             
-*/        
+                    to empty list if list length is too short works.
+
+
+
+
+*/
 string g_sScriptVersion = "8.2";
 
 string g_sParentMenu = "RLV";
@@ -95,7 +95,7 @@ integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no mes
 
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
-//integer DIALOG_TIMEOUT = -9002;
+integer DIALOG_TIMEOUT = -9002;
 
 
 
@@ -132,16 +132,16 @@ list g_lCategory = ["Chat",
 list g_lUtilityNone = ["BACK"];
 /*
  ****Understanding g_lRLVList and the restrictions mask****
-All RLV restrictions are stored as a pair of bitmasks, g_iRestrictions1 and g_iRestrictions 2. 
+All RLV restrictions are stored as a pair of bitmasks, g_iRestrictions1 and g_iRestrictions 2.
 If you look at g_lRLVList below, you will see this list forms a strided list in the format:
 Button name, Category Value, RLV Command
 The Category Value determines which subcategory of the restrictions menu the restriction will be listen in.
 0=chat, 1= show/hide, 2=teleport, 3=misc, 4=edit/mod, 5=Interact, 6=movement, 7=camera and 8=outfit
 Each restriction is given a binary value, which will be 2^index/3 -- divided by three because this is a list with a stride of 3, so each group of 3 values represents one restriction. The index used to provide the power value is listed
-in the comments beside each group of 3 entries below. For example the sendIM restriction has the number 8 next to it, and so the binary value of sendim is 2^8, or 256. 
-We can store 31 different restrictions in each of the two restrictions integers. Thus g_iRestrictions1 is the combined bitmask of all restrictions from emote (0) to rez (30). Restrictions above this value are stored in g_iRestrictions2,  starting from 2^0 (1). Thus the index is no longer 2^index/3, but 2^index/3-31. For example a list index of 93 (addattach) gives us 93/3-31 =0. 
+in the comments beside each group of 3 entries below. For example the sendIM restriction has the number 8 next to it, and so the binary value of sendim is 2^8, or 256.
+We can store 31 different restrictions in each of the two restrictions integers. Thus g_iRestrictions1 is the combined bitmask of all restrictions from emote (0) to rez (30). Restrictions above this value are stored in g_iRestrictions2,  starting from 2^0 (1). Thus the index is no longer 2^index/3, but 2^index/3-31. For example a list index of 93 (addattach) gives us 93/3-31 =0.
 The number in the comment beside the restriction line in g_lRLVList (i.e. See IM for the recim restriction we have 25 26) gives the index/3 value, and the bit that's used to store this. For calculating the integer value that represents a mask, you'd do (integer)llPow(2,bit-1); i.e. for bit 1 we get 2^0=1, for bit 2 we get 2^1=2 and so on.
-Putting it all together: 
+Putting it all together:
 Imagine we have the restrictions sendIM, See IM, Start IM and Notecard in place.
 The bit values for these are:
 Send IM  = 8
@@ -155,7 +155,7 @@ g_iRestrictions2= 2^4 = 16
 We can test if a particular restiction is set with an AND conditional.
 For example, to check if whisper restriction (Power value 4) we would do:
 if(g_iRestrictions1 & llPow(2,4))
-We can set a bit simply by adding the value of the power if not set or subtracting the value if set, or we can toggle the bit by XORing the integer with the bitmask value. NOTE that LSL uses ^ for XOR, not for powers. So 
+We can set a bit simply by adding the value of the power if not set or subtracting the value if set, or we can toggle the bit by XORing the integer with the bitmask value. NOTE that LSL uses ^ for XOR, not for powers. So
 g_iRestrictions1=g_iRestrictions1^llPow(2,5) will toggle the chatnormal restriction.
 */
 integer g_iRestrictions1 = 0;
@@ -219,14 +219,14 @@ list g_lRLVList = [   // ButtonText, CategoryIndex, RLVCMD          index | bit
     "Blur View"     , 7 , "setdebug_renderresolutiondivisor"    ,    // 55  25
     "MaxDistance"   , 7 , "setcam_avdistmax"                    ,    // 56  26
     "MinDistance"   , 7 , "setcam_avdistmin"                    ,    // 57  27
-    "Send Emote"    , 0 , "rediremote"                          ,    // 58  28 
+    "Send Emote"    , 0 , "rediremote"                          ,    // 58  28
     "Set Debug"     , 3 , "setdebug"                            ,    // 59  29
     "Environment"   , 3 , "setenv"                              ,    // 60  30
     "Mouselook"     , 7 , "camdistmax:0"                            // 61  31
 //    "Idle"          , 3 , "allowidle"                           ,  // Unofficial command Not supported in all viewers
-]; 
+];
 
-   
+
 
 integer g_iBlurAmount = 5;
 float g_fMaxCamDist = 2.0;
@@ -236,14 +236,13 @@ integer g_bForceMouselook = FALSE;
 integer g_iRLV = FALSE;
 
 list g_lMenuIDs;
-integer g_iMenuStride;
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
     key kMenuID = llGenerateKey();
     llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
 
     integer iIndex = llListFindList(g_lMenuIDs, [kID]);
-    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
+    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + 2);
     else g_lMenuIDs += [kID, kMenuID, sName];
 }
 
@@ -265,7 +264,7 @@ list ListRestrictions(integer r1, integer r2)
 }
 
 Menu(key kID, integer iAuth) {
-    
+
     list lButtons =[];
     integer i;
     for(i=0;i<llGetListLength(g_lMacros);i+=3){
@@ -285,7 +284,7 @@ MenuManage(key kID, integer iAuth)
 MenuDetailed(key kID, integer iAuth){
     string sPrompt = "\n[Restriction Categories]\nSet anyRLV restrictions individually from these category menus.\n Current Restrictions:\n"+llDumpList2String(ListRestrictions(g_iRestrictions1,g_iRestrictions2),", ");
     Dialog(kID, sPrompt, g_lCategory, ["[Clear All]"]+g_lUtilityNone, 0, iAuth, "Restrictions~Restrictions");
-    
+
 }
 
 MenuCategory(key kID, integer iAuth, string sCategory)
@@ -295,13 +294,13 @@ MenuCategory(key kID, integer iAuth, string sCategory)
     if(sCategory=="Camera") lUtility=["Settings"]+lUtility;
 
     integer iCatIndex = llListFindList(g_lCategory,[sCategory]);
-    
+
     list lMenu = [];
     integer i;
-    
+
     for(i=0; i<llGetListLength(g_lRLVList); i+= 3){
         if(llList2Integer(g_lRLVList,i+1) == iCatIndex){
-            
+
             integer Flag1 = llRound(llPow(2,(i/3)));
             integer Flag2 = 0;
             if((i/3)>=31){
@@ -312,7 +311,7 @@ MenuCategory(key kID, integer iAuth, string sCategory)
                 if((g_iRestrictions1 & Flag1) || (g_iRestrictions2 & Flag2)) lMenu+= [Checkbox(TRUE, llList2String(g_lRLVList, i))];
                 else lMenu += [Checkbox(FALSE, llList2String(g_lRLVList,i))];
             }
-            
+
         }
     }
     Dialog(kID, sPrompt, lMenu,lUtility, 0, iAuth, "Restrictions~Category");
@@ -336,26 +335,26 @@ MenuDelete(key kID, integer iAuth)
 
 list bitpos (integer flag1,integer flag2){
     list ret=[0,0];
-    
+
     if(flag1>0){
         ret=llListReplaceList(ret,[llRound(llLog10(flag1)/llLog10(2))],0,0);
     }
-    
+
     if(flag2>0){
         ret = llListReplaceList(ret,[llRound(llLog10(flag2)/llLog10(2))],1,1);
     }
-    
-    
+
+
     return ret;
 }
-        
-        
+
+
 string FormatCommand(string sCommand,integer bEnable)
 {
     string sMod;
     if (bEnable) sMod = "=n";
     else sMod = "=y";
-    
+
     if (sCommand == "setdebug_renderresolutiondivisor") {
         if (bEnable) sMod = ":"+(string)g_iBlurAmount+"=force";
         else sMod = ":1=force";
@@ -372,10 +371,10 @@ string FormatCommand(string sCommand,integer bEnable)
     {
         sMod = ":38322"+sMod;
     }
-       
+
     //llOwnerSay("Restriction '"+sCommand+"' has changed, sending message");
     llMessageLinked(LINK_SET, LINK_CMD_RESTRICTIONS, sCommand+"="+(string)bEnable+"=-1","");
-    
+
     return sCommand+sMod;
 }
 
@@ -387,15 +386,15 @@ ApplyAll(integer iMask1, integer iMask2, integer iBoot)
     while (iMax1 > 0) {
         list pos = bitpos(iMax1, 0);
         integer iIndex = (llList2Integer(pos,0)*3)+2;
-        
-        
+
+
         if (iIndex > -1 && bool(iMax1 & iMask1) != bool(iMax1 & g_iRestrictions1)) {
             lResult += [FormatCommand(llList2String(g_lRLVList,iIndex), bool(iMax1 & iMask1))];
            // llSay(0, "lRLVListPart1.\npos: "+(string)pos+"\niIndex: "+(string)iIndex+"\nlResult[-1]: "+llList2String(lResult,-1));
         }
         iMax1 = iMax1 >> 1;
     }
-    
+
     while (iMax2 > 0) {
         list pos = bitpos(0,iMax2);
         integer iIndex = ((llList2Integer(pos,1)+30)*3)+2;
@@ -404,8 +403,8 @@ ApplyAll(integer iMask1, integer iMask2, integer iBoot)
           //  llSay(0, "lRLVListPart2.\npos: "+(string)pos+"\niIndex: "+(string)iIndex+"\nlResult[-1]: "+llList2String(lResult,-1));
         }
         iMax2 = iMax2 >> 1;
-        
-        
+
+
     }
     string sCommandList = llDumpList2String(lResult,",");
     lResult=[];
@@ -413,7 +412,7 @@ ApplyAll(integer iMask1, integer iMask2, integer iBoot)
     llMessageLinked(LINK_SET,RLV_CMD,sCommandList,"Macros");
     g_iRestrictions1 = iMask1;
     g_iRestrictions2 = iMask2;
-    
+
     if(!iBoot){
         llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvsuite_masks=" + (string)g_iRestrictions1+","+(string)g_iRestrictions2, "");
     }
@@ -436,7 +435,7 @@ ApplyCommand(string sCommand, integer iAdd,key kID, integer iAuth)
     if (iActualIndex > -1) {
         integer allow=FALSE;
         if(iAuth==CMD_OWNER||iAuth==CMD_TRUSTED)allow=TRUE;
-        
+
         if (allow){
             if (!iAdd) {
                 if(iMenuIndex==0){
@@ -454,11 +453,11 @@ ApplyCommand(string sCommand, integer iAdd,key kID, integer iAuth)
                 }
                 g_iRestrictions1 -= iMenuIndex;
                 g_iRestrictions2 -= iMenuIndex2;
-                
+
                 llMessageLinked(LINK_SET,RLV_CMD,FormatCommand(llList2String(g_lRLVList,iActualIndex+2),FALSE),"Macros");
                 if (kID != NULL_KEY) llOwnerSay(llList2String(g_lCategory, llList2Integer(g_lRLVList,iActualIndex+1))+" - "+llList2String(g_lRLVList,iActualIndex)+" is not restricted anymore!");
             } else {
-                
+
                 if(iMenuIndex==0){
                     if((g_iRestrictions2 & iMenuIndex2)){
                         // STOP
@@ -474,7 +473,7 @@ ApplyCommand(string sCommand, integer iAdd,key kID, integer iAuth)
                 }
                 g_iRestrictions1 += iMenuIndex;
                 g_iRestrictions2 += iMenuIndex2;
-                
+
                 llMessageLinked(LINK_SET,RLV_CMD,FormatCommand(llList2String(g_lRLVList,iActualIndex+2),TRUE),"Macros");
                 if (kID != NULL_KEY) llOwnerSay(llList2String(g_lCategory, llList2Integer(g_lRLVList,iActualIndex+1))+" - "+llList2String(g_lRLVList,iActualIndex)+" is now restricted!");
             }
@@ -486,7 +485,7 @@ ApplyCommand(string sCommand, integer iAdd,key kID, integer iAuth)
 
 UserCommand(integer iNum, string sStr, key kID) {
     if (iNum<CMD_OWNER || iNum>CMD_EVERYONE) return;
-    
+
     if (llToLower(sStr)=="restrictions" || llToLower(sStr) == "menu restrictions") Menu(kID, iNum);
     else if(llToLower(sStr)=="advanced" || llToLower(sStr) == "menu [advanced]")MenuDetailed(kID, iNum);
     else if(llToLower(sStr)=="customize" || llToLower(sStr) == "menu customize") MenuManage(kID,iNum);
@@ -504,7 +503,7 @@ UserCommand(integer iNum, string sStr, key kID) {
         if(~llListFindList(g_lCategory,[sStr])) MenuCategory(kID,iNum,sStr);
     }
     if (llSubStringIndex(sStr,"preset") && llSubStringIndex(sStr,"restriction") && llSubStringIndex(sStr,"restrictions") && llSubStringIndex(sStr,"sit")) return;
-    else { 
+    else {
         string sChangetype = llList2String(llParseString2List(sStr, [" "], []),0);
         string sChangekey = llList2String(llParseString2List(sStr, [" "], []),1);
         string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),2);
@@ -525,7 +524,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                         llMessageLinked(LINK_SET, NOTIFY, "0"+"Restriction presets cleared '"+sChangevalue+"'", kID);
                         ApplyAll(g_iRestrictions1 ^ (g_iRestrictions1 & llList2Integer(g_lMacros,iIndex+1)),g_iRestrictions2 ^ (g_iRestrictions2 & llList2Integer(g_lMacros,iIndex+2)),FALSE);
                         llOwnerSay("Restriction preset '"+llList2String(g_lMacros,iIndex)+"' has been cleared!");
-                    } 
+                    }
                 } else llMessageLinked(LINK_SET, NOTIFY, "0"+"Insufficient authority to set restrictions!", kID);
             } else llInstantMessage(kID,"Restriction preset '"+sChangevalue+"' does not exist!");
         } else if (sChangetype == "restriction" || sChangetype == "rlv") {
@@ -585,9 +584,9 @@ state active
         g_iRLV = FALSE;
         //llSetTimerEvent(1);
 
-        
+
     }
-    
+
     on_rez(integer iRez){
         //g_iJustRezzed=TRUE;
         // Restrictions are likely not applied at the moment, reinit the variables
@@ -595,40 +594,40 @@ state active
         llResetScript();
         //llSetTimerEvent(1);
     }
-    
+
     timer(){
         if(llGetTime()>=20 && g_iJustRezzed){
             llMessageLinked(LINK_SET, RLV_REFRESH, "",""); // refreshes rlvsuite restrictions
         }
-        
+
         //llSetText("rlvsuite\n\n=> Free Memory: "+(string)llGetFreeMemory()+"\nProfiler Max used: "+(string)llGetSPMaxMemory()+"\nUsed Memory: "+(string)llGetUsedMemory()+"\nTotal Mem: "+(string)llGetMemoryLimit()+"\n \n \n \n \n \n \n \n \n", <0,1,0>,1);
     }
-        
+
     link_message(integer iSender,integer iNum,string sStr,key kID){
        // llOwnerSay(llDumpList2String([iSender, iNum, llGetSPMaxMemory(), llGetFreeMemory()], " ^ "));
         // llOwnerSay("inum="+(string)iNum+" | kID="+(string)kID+"| sStr="+sStr);
         if(iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID);
         else if(iNum == MENUNAME_REQUEST) {
             if(sStr == g_sParentMenu){
-                
-                
+
+
                 llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu+"|"+ g_sSubMenu,"");  // Register menu "Restrictions"
             }
         } else if(iNum == DIALOG_RESPONSE){
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if(iMenuIndex!=-1){
                 string sMenu = llList2String(g_lMenuIDs, iMenuIndex+1);
-                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
+                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex+1);
                 list lMenuParams = llParseString2List(sStr, ["|"],[]);
                 key kAv = llList2Key(lMenuParams,0);
                 string sMsg = llList2String(lMenuParams,1);
                 integer iAuth = llList2Integer(lMenuParams,3);
-                
+
                 //llOwnerSay("Memory Free: "+(string)llGetFreeMemory());
                 //llOwnerSay("Memory Used: "+(string)llGetUsedMemory());
-                
-                
-                if(sMenu == "Restrictions~Main"){ 
+
+
+                if(sMenu == "Restrictions~Main"){
                     if(sMsg == "BACK") llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
                     else if (sMsg == "[CUSTOMIZE]") MenuManage(kAv,iAuth);
                     else if(sMsg == "[ADVANCED]") MenuDetailed(kAv,iAuth);
@@ -638,7 +637,7 @@ state active
                     } else {
                         integer iChkbxState = CheckboxState(sMsg);
                         string sChkbxLbl = CheckboxText(sMsg);
-                        
+
                         if(!iChkbxState){
                             // toggle the macro
                             UserCommand(iAuth, "preset add "+sChkbxLbl, kAv);
@@ -672,7 +671,7 @@ state active
                            g_lMacros = ["Hear", 4, 0, "Talk" , 3, 0, "Touch", 0, 16384, "Stray", 29360128, 524288, "Inventory", 1342179328, 96, "Dress", 0, 30, "IM", 384, 0, "Names/Map", 323584, 0, "Blur", 0, 33554432];
                             llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvsuite_macros=" + llDumpList2String(g_lMacros,"^"), "");
                         }
-                    }MenuManage(kAv,iAuth);    
+                    }MenuManage(kAv,iAuth);
                 } else if (sMenu == "Restrictions~Restrictions"){
                     if(sMsg == "BACK") Menu(kAv,iAuth);
                     else if (sMsg == "[Clear All]") {
@@ -685,19 +684,19 @@ state active
                         }
                     }
                     else MenuCategory(kAv, iAuth, sMsg);
-                
-                } 
+
+                }
                 else if (sMenu == "Restrictions~Category")
                 {
                     if(sMsg == "BACK") MenuDetailed(kAv,iAuth);
                     else if(sMsg == "Settings") llMessageLinked(LINK_SET,iAuth,"menu managecamera2",kAv);
-                    else 
+                    else
                     {
                         integer iVal=CheckboxState(sMsg);
                         sMsg = llGetSubString( sMsg, llStringLength(llList2String(g_lCheckboxes,0))+1, -1);
-                        if(llListFindList(g_lRLVList,[sMsg])>-1) 
+                        if(llListFindList(g_lRLVList,[sMsg])>-1)
                         {
-                            if(iVal) 
+                            if(iVal)
                             {
                                 if (iAuth != CMD_WEARER) ApplyCommand(sMsg,FALSE,kAv, iAuth);
                                 else llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS%", kAv);
@@ -747,15 +746,19 @@ state active
                     }
                 }
             }
+        } else if (iNum == DIALOG_TIMEOUT) {
+            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
+            if (~iMenuIndex) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex+1);
+                //remove stride from g_lMenuIDs
         } else if(iNum == -99999){
             if(sStr == "update_active")llResetScript();
         } else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["="], []);
-            
+
             //integer ind = llListFindList(g_lSettingsReqs, [llList2String(lParams,0)]);
             //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
-            
-            
+
+
             if (llList2String(lParams, 0) == "rlvsuite_masks") {
                 list lMasks = llParseString2List(llList2String(lParams, 1),[","],[]);
                 if (g_iRLV) { // bad timing, RLV_ON was already called
@@ -770,7 +773,7 @@ state active
                 }
             } else if (llList2String(lParams, 0) == "rlvsuite_macros") {
                 g_lMacros = llParseStringKeepNulls(llList2String(lParams, 1), ["^"],[]);
-                if(llGetListLength(g_lMacros)<3) g_lMacros=[];  
+                if(llGetListLength(g_lMacros)<3) g_lMacros=[];
             }
             else if(llList2String(lParams,0) == "global_checkboxes") g_lCheckboxes = llCSV2List(llList2String(lParams,1));
         } else if (iNum == CMD_SAFEWORD || iNum == RLV_CLEAR || iNum == RLV_OFF){
@@ -790,7 +793,7 @@ state active
             if(sStr == "ver")onlyver=1;
             llInstantMessage(kID, llGetScriptName() +" SCRIPT VERSION: "+g_sScriptVersion);
             if(onlyver)return; // basically this command was: <prefix> versions
-            
+
             llInstantMessage(kID, llGetScriptName() +" MEMORY USED: "+(string)llGetUsedMemory());
             llInstantMessage(kID, llGetScriptName() +" MEMORY FREE: "+(string)llGetFreeMemory());
             //Commenting this out for general release 'cos memory is tight.
@@ -810,14 +813,14 @@ state active
                 if (bWasTrue) ApplyCommand("MaxDistance",FALSE, NULL_KEY, 500);
                 g_fMaxCamDist = llList2Float(lCMD,1);
                 if (bWasTrue) ApplyCommand("MaxDistance",TRUE, NULL_KEY, 500);
-            } else if (llList2String(lCMD,0) == "MinCamDist") { 
+            } else if (llList2String(lCMD,0) == "MinCamDist") {
                 integer bWasTrue = g_iRestrictions2 & (integer)(llPow(2,27));
                 if (bWasTrue) ApplyCommand("MinDistance",FALSE, NULL_KEY, 500);
                 g_fMinCamDist = llList2Float(lCMD,1);
                 if (bWasTrue) ApplyCommand("MinDistance",TRUE, NULL_KEY, 500);
             }
-        
+
         }
     }
-    
+
 }

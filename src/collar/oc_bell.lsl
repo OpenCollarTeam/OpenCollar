@@ -1,8 +1,8 @@
 // This file is part of OpenCollar.
-// Copyright (c) 2009 - 2016 Cleo Collins, Nandana Singh, Satomi Ahn,   
-// Joy Stipe, Wendy Starfall, Medea Destiny, littlemousy,         
-// Romka Swallowtail, Garvin Twine et al.  
-// Licensed under the GPLv2.  See LICENSE for full details. 
+// Copyright (c) 2009 - 2016 Cleo Collins, Nandana Singh, Satomi Ahn,
+// Joy Stipe, Wendy Starfall, Medea Destiny, littlemousy,
+// Romka Swallowtail, Garvin Twine et al.
+// Licensed under the GPLv2.  See LICENSE for full details.
 
 
 //scans for sounds starting with: bell_
@@ -33,7 +33,6 @@ integer TIMEOUT_FIRED = 30499;
 string g_sSubMenu = "Bell";
 string g_sParentMenu = "Apps";
 list g_lMenuIDs;  //three strided list of avkey, dialogid, and menuname
-integer g_iMenuStride = 3;
 
 float g_fVolume=0.5; // volume of the bell
 float g_fVolumeStep=0.1; // stepping for volume
@@ -117,7 +116,7 @@ Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer i
     key kMenuID = llGenerateKey();
     llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
     integer iIndex = llListFindList(g_lMenuIDs, [kRCPT]);
-    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kRCPT, kMenuID, iMenuType], iIndex, iIndex + g_iMenuStride - 1);
+    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kRCPT, kMenuID, iMenuType], iIndex, iIndex + 2);
     else g_lMenuIDs += [kRCPT, kMenuID, iMenuType];
 }
 
@@ -332,7 +331,7 @@ state active
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (~iMenuIndex) {
                 string sMenuType = llList2String(g_lMenuIDs, iMenuIndex + 1);
-                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
+                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex + 1);
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAV = llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
@@ -377,15 +376,15 @@ state active
             }
         } else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
-        
+            if (~iMenuIndex) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex+1);  //remove stride from g_lMenuIDs
+
         } else if (iNum == LM_SETTING_RESPONSE) {
             list lParam = llParseString2List(sStr,["_","="],[]);
             string sToken = llList2String(lParam,0);
             string sVar = llList2String(lParam,1);
             string sValue = llList2String(lParam,2);
-            
-            
+
+
             if (sToken == "bell") {
                 //llOwnerSay("Process bell settings: "+sStr);
                 if (sVar == "on") {
@@ -411,7 +410,7 @@ state active
                     SetBellElementAlpha();
                 }
             }
-        
+
         } else if(iNum == CMD_OWNER && sStr == "runaway") {
             llSleep(4);
             SetBellElementAlpha();
@@ -424,7 +423,7 @@ state active
             DebugOutput(kID, [" HAS BELL PRIMS:", g_iHasBellPrims]);
             DebugOutput(kID, [" BELL VISIBLE:", g_iBellShow]);
             DebugOutput(kID, [" BELL ON:", g_iBellOn]);
-        } 
+        }
     }
 
     control( key kID, integer nHeld, integer nChange ) {

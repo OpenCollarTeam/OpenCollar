@@ -23,7 +23,6 @@ string g_sParentMenu = "Cuff Resize";
 integer API_CHANNEL = 0x60b97b5e;
 
 list g_lMenuIDs;//3-strided list of avkey, dialogid, menuname
-integer g_iMenuStride = 3;
 
 string POSMENU = "Position";
 string ROTMENU = "Rotation";
@@ -98,7 +97,7 @@ Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer i
     llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
     //Debug("Made menu.");
     integer iIndex = llListFindList(g_lMenuIDs, [kRCPT]);
-    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kRCPT, kMenuID, sMenuType], iIndex, iIndex + g_iMenuStride - 1);
+    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kRCPT, kMenuID, sMenuType], iIndex, iIndex + 2);
     else g_lMenuIDs += [kRCPT, kMenuID, sMenuType];
 }
 */
@@ -108,7 +107,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
     llRegionSayTo(g_kCollar,API_CHANNEL, llList2Json(JSON_OBJECT, [ "pkt_type", "from_addon", "addon_name", g_sAddon, "iNum", DIALOG, "sMsg", (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, "kID", kMenuID ]));
 
     integer iIndex = llListFindList(g_lMenuIDs, [kID]);
-    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [ kID, kMenuID, sName ], iIndex, iIndex + g_iMenuStride - 1);
+    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [ kID, kMenuID, sName ], iIndex, iIndex + 2);
     else g_lMenuIDs += [kID, kMenuID, sName];
 }
 
@@ -270,7 +269,7 @@ default
                     string sStr  = llJsonGetValue(msg, ["sMsg"]);
                     key kID      = (key) llJsonGetValue(msg, ["kID"]);
 
-                    
+
 //------------
 
         if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
@@ -288,7 +287,7 @@ default
                 string sMenuType = llList2String(g_lMenuIDs, iMenuIndex + 1);
                 //remove stride from g_lMenuIDs
                 //we have to subtract from the index because the dialog id comes in the middle of the stride
-                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
+                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 1);
                 if (sMenuType == g_sSubMenu) {
                     if (sMessage == UPMENU) llMessageLinked(LINK_SET, 33, (string)kAv, (key)((string)iAuth));
                     else if (sMessage == POSMENU) PosMenu(kAv, iAuth);
@@ -354,7 +353,7 @@ default
             if (iMenuIndex != -1) {
                 //remove stride from g_lMenuIDs
                 //we have to subtract from the index because the dialog id comes in the middle of the stride
-                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
+                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 1);
             }
         }
         else if (iNum == REBOOT && sStr == "reboot") llResetScript();
@@ -370,9 +369,9 @@ default
 
 
 //------------
-                    
+
                 }
-            }                                
+            }
         }
     }
     link_message(integer iSender, integer iNum, string sStr, key kID) {

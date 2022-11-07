@@ -1,8 +1,8 @@
 // This file is part of OpenCollar.
-// Copyright (c) 2004 - 2021 Francis Chung, Ilse Mannonen, Nandana Singh, 
-// Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, Garvin Twine,   
-// littlemousy, Romka Swallowtail, Sumi Perl et al. 
-// Licensed under the GPLv2.  See LICENSE for full details. 
+// Copyright (c) 2004 - 2021 Francis Chung, Ilse Mannonen, Nandana Singh,
+// Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, Garvin Twine,
+// littlemousy, Romka Swallowtail, Sumi Perl et al.
+// Licensed under the GPLv2.  See LICENSE for full details.
 string g_sScriptVersion="8.1";
 integer LINK_CMD_DEBUG=1999;
 DebugOutput(key kID, list ITEMS){
@@ -18,8 +18,7 @@ DebugOutput(key kID, list ITEMS){
 string g_sParentMenu = "Animations";
 string g_sSubMenu = "Couples";
 string UPMENU = "BACK";
-list     g_lMenuIDs;
-integer g_iMenuStride = 3;
+list   g_lMenuIDs;
 
 integer g_iAnimTimeout;
 integer g_iPermissionTimeout;
@@ -135,7 +134,7 @@ Dialog(key kRCPT, string sPrompt, list lButtons, list lUtilityButtons, integer i
     } else
         llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lButtons, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
     integer iIndex = llListFindList(g_lMenuIDs, [kRCPT]);
-    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kRCPT, kMenuID, sMenuID], iIndex, iIndex + g_iMenuStride - 1);
+    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kRCPT, kMenuID, sMenuID], iIndex, iIndex + 2);
     else g_lMenuIDs += [kRCPT, kMenuID, sMenuID];
 }
 
@@ -260,7 +259,7 @@ default
 }
 state active
 {
-    on_rez(integer iStart) 
+    on_rez(integer iStart)
     {
         //added to stop anims after relog when you logged off while in an endless couple anim
         if (g_sSubAnim != "" && g_sDomAnim != "") {
@@ -288,7 +287,7 @@ state active
         if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) {
             //the command was given by either owner, secowner, group member, wearer, or public user
             list lParams = llParseString2List(sStr, [" "], []);
-            g_kCmdGiver = kID; 
+            g_kCmdGiver = kID;
             g_iCmdAuth = iNum;
             string sCommand = llToLower(llList2String(lParams, 0));
             string sValue = llToLower(llList2String(lParams, 1));
@@ -304,7 +303,7 @@ state active
                     Dialog(g_kCmdGiver, "\nChoose a partner:\n", [sTmpName], ["BACK"], 0, iNum, "sensor");
                 } else {       //no name given.
                     if (kID == g_kWearer) {                   //if commander is not sub, then treat commander as partner
-                        llMessageLinked(LINK_SET, NOTIFY, 
+                        llMessageLinked(LINK_SET, NOTIFY,
                                                         "0"+"\n\nYou didn't give the name of the person you want to animate. To " + sCommand +
                                                         " Alice Mannonen, for example, you could say:\n\n /%CHANNEL% %PREFIX%" + sCommand + " ali\n", g_kWearer);
                     } else {               //else set partner to commander
@@ -335,10 +334,10 @@ state active
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
-            
+
             //integer ind = llListFindList(g_lSettingsReqs, [sToken]);
             //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
-            
+
             if(sToken == g_sSettingToken + "timeout")
                 g_fTimeOut = (float)sValue;
             else if (sToken == g_sSettingToken + "verbose")
@@ -346,15 +345,15 @@ state active
             else if (sToken == g_sGlobalToken+"devicename")
                 g_sDeviceName = sValue;
         } else if(iNum == LM_SETTING_EMPTY){
-            
+
             //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
             //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
-            
+
         } else if(iNum == LM_SETTING_DELETE){
-            
+
             //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
             //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
-            
+
         } else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (~iMenuIndex) {
@@ -364,7 +363,7 @@ state active
                 // integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
                 string sMenu=llList2String(g_lMenuIDs, iMenuIndex + 1);
-                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
+                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex + 1);
                 if (sMenu == "couples") {
                     if (sMessage == UPMENU)
                         llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
@@ -414,7 +413,7 @@ state active
                     else if ((integer)sMessage > 0 && ((string)((integer)sMessage) == sMessage)) {
                         g_fTimeOut = (float)((integer)sMessage);
                         llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "timeout=" + (string)g_fTimeOut, "");
-                        string sPet; 
+                        string sPet;
                         if (g_fTimeOut > 20.0)  sPet = "(except the \"pet\" sequence) ";
                         llMessageLinked(LINK_SET,NOTIFY,"1"+"Couple Anmiations "+sPet+"play now for " + (string)llRound(g_fTimeOut) + " seconds.",kAv);
                         CoupleAnimMenu(kAv, iAuth);
@@ -428,7 +427,7 @@ state active
             }
         } else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
+            if (~iMenuIndex) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex+1);  //remove stride from g_lMenuIDs
         } else if (iNum == LOADPIN && sStr == llGetScriptName()) {
             integer iPin = (integer)llFrand(99999.0)+1;
             llSetRemoteScriptAccessPin(iPin);

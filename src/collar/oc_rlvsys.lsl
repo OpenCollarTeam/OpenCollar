@@ -6,12 +6,12 @@ Sumi Perl et al.
 Licensed under the GPLv2.  See LICENSE for full details.
 Medea Destiny   -
         Sept 2021  -    Added RLV_CMD_OVERRIDE function. This allows one shot (=force) commands to be sent that will override any
-                        restrictions. This command should only be used where operator has owner permission. The notion behind it 
-                        is that owners should not be restricted by wearer restictions. They can unset restrictions manually, 
-                        perform the function, and then reset the restriction, but that's a lot of hassle. This performs the 
-                        function automatically. Operator and wearer are notified of restrictions that have been temporarily 
+                        restrictions. This command should only be used where operator has owner permission. The notion behind it
+                        is that owners should not be restricted by wearer restictions. They can unset restrictions manually,
+                        perform the function, and then reset the restriction, but that's a lot of hassle. This performs the
+                        function automatically. Operator and wearer are notified of restrictions that have been temporarily
                         restricted to avoid being misled that a restriciton is not present.
-        Aug 2022    -   Ensure applyrem() restores a detach=n when the collar is locked, otherwise new methodology with relay 
+        Aug 2022    -   Ensure applyrem() restores a detach=n when the collar is locked, otherwise new methodology with relay
                         would cause a locked collar to unlock when there are no more relay sources. Fix for issue #842
         Oct 2022    -   Changed "RLV ready!" notification to "RLV active!" to avoid confusion during boot process.
 Kristen Mynx -
@@ -39,7 +39,6 @@ string g_sSubMenu = "RLV";
 list g_lMenu;
 //key kMenuID;
 list    g_lMenuIDs;
-integer g_iMenuStride = 3;
 integer RELAY_CHANNEL = -1812221819;
 
 //MESSAGE MAP
@@ -146,7 +145,7 @@ DoMenu(key kID, integer iAuth){
     else lButtons = [TURNON, TURNOFF];
     llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|0|" + llDumpList2String(lButtons, "`") + "|" + UPMENU + "|" + (string)iAuth, kMenuID);
     integer iIndex = llListFindList(g_lMenuIDs, [kID]);
-    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, g_sSubMenu], iIndex, iIndex + g_iMenuStride - 1);
+    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, g_sSubMenu], iIndex, iIndex + 2);
     else g_lMenuIDs += [kID, kMenuID, g_sSubMenu];
     //Debug("Made menu.");
 }
@@ -412,7 +411,7 @@ state active
         //llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "on="+(string)g_iRLVOn, "");
         llOwnerSay("@clear");
         g_kWearer = llGetOwner();
-        
+
         llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "ALL","");
         //Debug("Starting");
     }
@@ -467,7 +466,7 @@ state active
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
                 lMenuParams=[];
                 string sMenu=llList2String(g_lMenuIDs, iMenuIndex + 1);
-                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
+                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex + 1);
                 if (sMenu == g_sSubMenu) {
                     if (sMsg == TURNON) {
                         UserCommand(iAuth, "rlv on", kAv);
@@ -487,7 +486,7 @@ state active
             }
         }  else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
+            if (~iMenuIndex) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex + 1);
         } else if (iNum == LM_SETTING_REQUEST && sStr == "ALL") { //inventory changed in root
             if (g_iRlvActive == TRUE) {
                 llSleep(2);
@@ -500,31 +499,31 @@ state active
                 }
              }
         } else if(iNum == LM_SETTING_EMPTY){
-           
+
             //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
             //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
-            
+
         } else if(iNum == LM_SETTING_DELETE){
-            
+
             if(sStr=="global_locked") g_iCollarLocked=0;
             //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
             //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
-            
+
         } else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["_","="], []);
             string sToken = llList2String(lParams, 0);
             string sVar = llList2String(lParams,1);
             string sValue = llList2String(lParams, 2);
-            
+
             //integer ind = llListFindList(g_lSettingsReqs, [sToken+"_"+sVar]);
             //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
-            
-            
+
+
             lParams=[];
             if (sToken+"_"+sVar == "auth_owner") g_lOwners = llParseString2List(sValue, [","], []);
             else if(sToken == "global"){
                 if(sVar == "locked") g_iCollarLocked=(integer)sValue;
- 
+
                 else if (sVar=="handshakes") g_iMaxViewerChecks=(integer)sValue;
             }
             else if (sToken=="rlvsys"){
@@ -643,13 +642,13 @@ state active
                     }
                     else llOwnerSay("@"+llList2String(lOverrides,iLen)+"=y");
                 }
-                llSleep(0.5); 
+                llSleep(0.5);
                 iLen=llGetListLength(lCommands);
                 while(iLen--){
                     llOwnerSay("@"+llList2String(lCommands,iLen)+"=force");
                     llSleep(0.1);
                 }
-                llSleep(0.5); 
+                llSleep(0.5);
                 iLen=llGetListLength(lOverrides);
                 while(iLen--){
                     llOwnerSay("@"+llList2String(lOverrides,iLen)+"=n");
@@ -667,7 +666,7 @@ state active
             llInstantMessage(kID, llGetScriptName() +" FREE MEMORY: "+(string)llGetFreeMemory()+" bytes");
             llInstantMessage(kID, llGetScriptName()+" RLV_ON: "+(string)g_iRLVOn);
         }
-        
+
     }
 
     timer() {
@@ -729,10 +728,10 @@ state inUpdate{
         if(iNum == REBOOT)llResetScript();
         else if(iNum == 0){
             if(sMsg == "do_move"){
-                
+
                 if(llGetLinkNumber()==LINK_ROOT || llGetLinkNumber() == 0)return;
-                
-                
+
+
                 llOwnerSay("Moving "+llGetScriptName()+"!");
                 integer i=0;
                 integer end=llGetInventoryNumber(INVENTORY_ALL);
@@ -747,7 +746,7 @@ state inUpdate{
                         end=llGetInventoryNumber(INVENTORY_ALL);
                     }
                 }
-                
+
                 llRemoveInventory(llGetScriptName());
             }
         }

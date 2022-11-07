@@ -5,14 +5,14 @@ Copyright 2020
 Aria (Tashia Redrose)
     * Aug 2020      -           Rewrote oc_folders for 8.0 Alpha 5
 Medea (Medea Destiny)
-    * June 2021     -   *Fix issue #570, Allow hiding folders starting with ~ via HideTilde option, defaults to ON. 
+    * June 2021     -   *Fix issue #570, Allow hiding folders starting with ~ via HideTilde option, defaults to ON.
                         *Fix issue  #581, filtering input to UserCommand to only folder-auth check actual folder
-                        commands rather than folder-authing and processing EVERYTHING THE COLLAR DOES BY ANY USER 
+                        commands rather than folder-authing and processing EVERYTHING THE COLLAR DOES BY ANY USER
     * May 2022      -   *Fix issue #775, changed string handling to ensure command is not issued as part of search
                         term, added sanity checking for chat commands to ensure we don't try to search for nothing,
-                        and no longer operate on empty search results. Issuer of chat command now stored as 
+                        and no longer operate on empty search results. Issuer of chat command now stored as
                         g_kChatUser so they can be notified if findfolder fails.
-                         
+
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
@@ -71,7 +71,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
     llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
 
     integer iIndex = llListFindList(g_lMenuIDs, [kID]);
-    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
+    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + 2);
     else g_lMenuIDs += [kID, kMenuID, sName];
 }
 
@@ -204,8 +204,8 @@ UserCommand(integer iNum, string sStr, key kID) {
         //string sText;
         if(sChangevalue==""){ // don't search for empty strings.
              llMessageLinked(LINK_SET, NOTIFY, "0You have to supply a string to search for to use add/remove/wear commands.", kID);
-             return; 
-        } 
+             return;
+        }
         g_kChatUser=kID;
         if(iNum == CMD_TRUSTED && !Bool((g_iAccessBitSet&1)))return R();
         if(iNum == CMD_EVERYONE && !Bool((g_iAccessBitSet&2)))return R();
@@ -237,7 +237,7 @@ UserCommand(integer iNum, string sStr, key kID) {
         sChangevalue = llStringTrim(llDeleteSubString(sStr, 0, 0), STRING_TRIM);
         if(sChangevalue==""){ // don't search for empty strings.
              llMessageLinked(LINK_SET, NOTIFY, "0You have to supply a string to search for to use add/remove/wear commands.", kID);
-             return; 
+             return;
         }
         if(sChangetype == "&"){
             // add folder path
@@ -268,7 +268,6 @@ UserCommand(integer iNum, string sStr, key kID) {
 
 key g_kWearer;
 list g_lMenuIDs;
-integer g_iMenuStride;
 list g_lOwner;
 list g_lTrust;
 list g_lBlock;
@@ -399,7 +398,7 @@ state active
         {
             if(llStringTrim(sMsg,STRING_TRIM)==""){
                  llMessageLinked(LINK_SET, NOTIFY, "0Nothing matching that term was found in #RLV!", g_kChatUser);
-                 return; // don't do anything if 
+                 return; // don't do anything if
             } if(g_iCmdMode & F_RECURSIVE){
                 if(g_iCmdMode & F_ADD){
                     llOwnerSay("@attachallover:"+sMsg+"=force");
@@ -432,7 +431,7 @@ state active
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if(iMenuIndex!=-1){
                 string sMenu = llList2String(g_lMenuIDs, iMenuIndex+1);
-                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
+                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex+1);
                 list lMenuParams = llParseString2List(sStr, ["|"],[]);
                 key kAv = llList2Key(lMenuParams,0);
                 string sMsg = llList2String(lMenuParams,1);
@@ -540,7 +539,7 @@ state active
             }
         } else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
+            if(iMenuIndex!=-1) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex+1);  //remove stride from g_lMenuIDs
         } else if(iNum == LM_SETTING_RESPONSE){
             // Detect here the Settings
             list lSettings = llParseString2List(sStr, ["_","="],[]);
@@ -561,7 +560,7 @@ state active
                 } else if(llList2String(lSettings,1) =="hidetilde"){
                     g_iHideTilde=(integer)llList2String(lSettings,2);
                 }
-                
+
             }
         } else if(iNum == REPLY_FOLDER_LOCKS)
         {

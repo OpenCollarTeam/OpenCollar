@@ -1,7 +1,7 @@
 // This file is part of OpenCollar.
-// Copyright (c) 2008 - 2016 Satomi Ahn, Nandana Singh, Joy Stipe,     
-// Wendy Starfall, Sumi Perl, littlemousy, Romka Swallowtail et al.    
-// Licensed under the GPLv2.  See LICENSE for full details. 
+// Copyright (c) 2008 - 2016 Satomi Ahn, Nandana Singh, Joy Stipe,
+// Wendy Starfall, Sumi Perl, littlemousy, Romka Swallowtail et al.
+// Licensed under the GPLv2.  See LICENSE for full details.
 
 
 // Based on original version and idea by Kaly Shinn & Tuco Solo
@@ -237,7 +237,6 @@ integer g_iRlvActive = TRUE; // we'll get updates from the rlv script(s)
 
 // handles
 list    g_lMenuIDs;
-integer g_iMenuStride = 3;
 
 key     g_kSimPosRequestHandle; // UUID of the dataserver request
 key     g_kOwnerRequestHandle;
@@ -262,7 +261,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtility, integer iPage, int
     llMessageLinked(LINK_THIS, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" +
     llDumpList2String(lChoices,"`") + "|" + llDumpList2String(lUtility,"`")+"|"+(string)iAuth,kMenuID);
     integer i = llListFindList(g_lMenuIDs, [kID]);
-    if (~i) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], i, i + g_iMenuStride - 1);
+    if (~i) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], i, i + 2);
     else g_lMenuIDs += [kID, kMenuID, sName];
 }
 
@@ -629,7 +628,7 @@ UserCommand(integer iAuth, string sStr, key kID) {
     if (sStr=="menu "+g_sSubMenu || sStr==g_sSubMenu || sStr==g_sChatCmd) MenuMain(kID,iAuth);
     else if (llToLower(sStr) == "rm cagehome") {
         if (kID!=g_kWearer && iAuth!=CMD_OWNER) llMessageLinked(LINK_THIS,NOTIFY,"0"+"%NOACCESS%",kID);
-        else Dialog(kID, "\nDo you really want to uninstall the "+g_sSubMenu+" App?", ["Yes","No","Cancel"], [], 0, iAuth,"rmcagehome");        
+        else Dialog(kID, "\nDo you really want to uninstall the "+g_sSubMenu+" App?", ["Yes","No","Cancel"], [], 0, iAuth,"rmcagehome");
     } else if (sStr == "settings") { // collar's command to request settings of all modules
         string sMsg = g_sPluginTitle+": "+llList2String(lSTATES, g_iState);
         if (g_sCageRegion!="") sMsg += ", TP Location: "+Map(g_sCageRegion, g_vCagePos);
@@ -779,7 +778,7 @@ default {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (iMenuIndex == -1) return;
             string sMenu = llList2String(g_lMenuIDs, iMenuIndex+1);
-            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
+            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex+1);
             // got a menu response meant for us, extract the sValues
             list lMenuParams = llParseString2List(sStr, ["|"], []);
             key kAv = (key)llList2String(lMenuParams, 0);
@@ -823,10 +822,10 @@ default {
                     llMessageLinked(LINK_THIS, NOTIFY, "1"+g_sSubMenu+" App has been removed.", kAv);
                 if (llGetInventoryType(llGetScriptName()) == INVENTORY_SCRIPT) llRemoveInventory(llGetScriptName());
                 } else llMessageLinked(LINK_THIS, NOTIFY, "0"+g_sSubMenu+" App remains installed.", kAv);
-            }         
+            }
         } else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            if (~iMenuIndex) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
+            if (~iMenuIndex) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex+1);
         } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
     }
 

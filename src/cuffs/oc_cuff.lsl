@@ -14,7 +14,7 @@ Ping (Pingout Duffield)
 Kristen Mynx
     * May 2022        -       Added resizer support
 Kristen Mynx
-    * July 2022       -       Fix "BACK" buttons on resizer 
+    * July 2022       -       Fix "BACK" buttons on resizer
 Ping (Pingout Duffield)
     * Nov 2022        -       Add in link message for cuff [New Theme] button using iNum == 32
 et al.
@@ -117,7 +117,7 @@ integer REPLY_POINT_KEY = -58933;
 integer CLEAR_ALL_CHAINS = -58934;
 integer STOP_CUFF_POSE = -58935; // <-- stops all active animations originating from this cuff
 integer DESUMMON_PARTICLES = -58936; // Message only includes the From point name
-integer CLEAR_POSE_RESTRICTION = -58937;  // Clear Restrictions between poses 
+integer CLEAR_POSE_RESTRICTION = -58937;  // Clear Restrictions between poses
 
 integer g_iFirstInit=TRUE;
 
@@ -133,7 +133,6 @@ list g_lPoses = [];
 
 
 list g_lMenuIDs;
-integer g_iMenuStride;
 
 string UPMENU = "BACK";
 
@@ -143,7 +142,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
     llRegionSayTo(g_kCollar, API_CHANNEL, llList2Json(JSON_OBJECT, [ "pkt_type", "from_addon", "addon_name", g_sAddon, "iNum", DIALOG, "sMsg", (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, "kID", kMenuID ]));
 
     integer iIndex = llListFindList(g_lMenuIDs, [kID]);
-    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [ kID, kMenuID, sName ], iIndex, iIndex + g_iMenuStride - 1);
+    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [ kID, kMenuID, sName ], iIndex, iIndex + 2);
     else g_lMenuIDs += [kID, kMenuID, sName];
 }
 
@@ -178,7 +177,7 @@ Menu(key kID, integer iAuth) {
      && (llGetObjectPermMask(MASK_OWNER) & (PERM_COPY | PERM_MODIFY | PERM_TRANSFER))  == (PERM_COPY | PERM_MODIFY | PERM_TRANSFER)){
         if(!g_iHidden)
             lButtons+=["New Theme"];
-        }        
+        }
     }
     if(llGetInventoryType("oc_cuff_resizer")==INVENTORY_SCRIPT){
         if(!g_iHidden)
@@ -715,7 +714,7 @@ default
                     }
                     else if (iNum == DIALOG_TIMEOUT) {
                         integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-                        g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex + 3);  //remove stride from g_lMenuIDs
+                        f (~iMenuIndex1) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex+1);  //remove stride from g_lMenuIDs
                     }
                     else if (iNum == DIALOG_RESPONSE) {
                         integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
@@ -755,7 +754,7 @@ default
                                 }else if(sMsg == "ClearChains"){
                                     if(iAuth==CMD_OWNER)
                                         Link("from_addon", CLEAR_ALL_CHAINS, "", "");
-                                } 
+                                }
                                 else if(sMsg == Checkbox(g_iCuffLocked, "Lock")){
                                     if(iAuth==CMD_OWNER){
                                         g_iCuffLocked=1-g_iCuffLocked;
@@ -885,7 +884,7 @@ default
             key kLMKey = (key)llGetSubString(msg,0,35);
             list lLMCmd = llParseString2List(msg,["|"],[]);
             if (kLMKey == llGetOwner()) {
-                if (llGetListLength(lLMCmd) > 1) {  
+                if (llGetListLength(lLMCmd) > 1) {
                 // A Lockmeister command
                     string sLMCMD = llList2String(lLMCmd,2);
                     string sLMPoint = llList2String(lLMCmd,3);
@@ -895,12 +894,12 @@ default
                         integer iMapIndex = llListFindList(g_lLMV2Map, [sLMPoint]);
                         if (iMapIndex > -1) {
                             lKey = GetKey(llList2String(g_lLMV2Map, iMapIndex + 1));
-                            if (llList2Integer(lKey, 0) != LINK_ROOT) 
-                            llRegionSayTo(id, -8888,(string)llGetOwner()+"|LMV2|ReplyPoint|"+sLMPoint+"|"+llList2String(lKey, 1)); 
+                            if (llList2Integer(lKey, 0) != LINK_ROOT)
+                            llRegionSayTo(id, -8888,(string)llGetOwner()+"|LMV2|ReplyPoint|"+sLMPoint+"|"+llList2String(lKey, 1));
                         }
                     }
-                } 
-                else { 
+                }
+                else {
                 // A Lockmeister Ping
                     string sLMPoint = llGetSubString(msg,36,-1);
                     if (llListFindList(g_lLMV2Map, [sLMPoint]) > -1) {

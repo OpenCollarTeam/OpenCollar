@@ -5,18 +5,18 @@ Copyright ©2021
 Aria (Tashia Redrose)
     * Oct 2020       -       Created oc_themes
 Kristen Mynx
-    * May 2022       -       Modify to oc_cuff_themes    
+    * May 2022       -       Modify to oc_cuff_themes
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
 */
 
 integer API_CHANNEL = 0x60b97b5e;
-string g_sParentMenu = "Apps";
-string g_sSubMenu = "Themes";
+//string g_sParentMenu = "Apps";
+//string g_sSubMenu = "Themes";
 
 
-integer g_iHide;
+//integer g_iHide;
 
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
@@ -170,11 +170,11 @@ ScanThemes(){
 }
 
 key g_kWearer;
-list g_lMenuIDs;
-integer g_iMenuStride;
-list g_lOwner;
-list g_lTrust;
-list g_lBlock;
+//list g_lMenuIDs;
+//integer g_iMenuStride;
+//list g_lOwner;
+//list g_lTrust;
+// list g_lBlock;
 integer g_iLocked=FALSE;
 string sBuffer = "";
 E(key kID, string sMsg){
@@ -257,7 +257,7 @@ default
         // so we can evesdrop on messages from the collar
         // specifically -9001 where a string matches a notecard ending in .theme
         API_CHANNEL = ((integer)("0x" + llGetSubString((string)llGetOwner(), 0, 8))) + 0xf6eb - 0xd2;
-        llListen(API_CHANNEL, "", "", "");        
+        llListen(API_CHANNEL, "", "", "");
     }
 
     changed(integer iChange){

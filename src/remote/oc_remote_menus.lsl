@@ -1,4 +1,4 @@
-  
+
 /*
 This file is a part of OpenCollar.
 Copyright ©2020
@@ -8,8 +8,8 @@ Copyright ©2020
 
 Aria (Tashia Redrose)
     * December 2020       -       Recreated oc_Remote
-    
-    
+
+
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
@@ -17,17 +17,16 @@ https://github.com/OpenCollarTeam/OpenCollar
 */
 
 list g_lMenuIDs;
-integer g_iMenuStride;
 
 string UPMENU="BACK";
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
     key kMenuID = llGenerateKey();
-    
+
     LM("from_addon", DIALOG, (string)kID+"|"+sPrompt+"|"+(string)iPage+"|"+llDumpList2String(lChoices, "`")+"|"+llDumpList2String(lUtilityButtons, "`")+"|"+(string)iAuth, kMenuID);
     //llRegionSayTo(g_kCollar,llList2Integer(g_lAPIListeners,0), llList2Json(JSON_OBJECT, ["pkt_type", "from_addon", "addon_name", g_sAddon, "iNum", DIALOG, "sMsg", (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, "kID", kMenuID]));
 
     integer iIndex = llListFindList(g_lMenuIDs, [kID]);
-    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
+    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + 2);
     else g_lMenuIDs += [kID, kMenuID, sName];
 }
 Menu(key kID, integer iAuth){
@@ -37,7 +36,7 @@ Menu(key kID, integer iAuth){
 AMenu(key kID, integer iAuth) {
     string sPrompt = "\n[OpenCollar Remote]\n\nRows: "+(string)g_iRows;
     list lButtons = ["+ Favorite", "- Favorite", "Buttons", "+ Rows", "- Rows"];
-    
+
     //llSay(0, "opening menu");
     Dialog(kID, sPrompt, lButtons, ["DISCONNECT", UPMENU], 0, iAuth, "Menu~Main");
 }
@@ -85,11 +84,11 @@ UserCommand(integer iNum, string sStr, key kID) {
     if (llToLower(sStr)==llToLower(g_sAddon) || llToLower(sStr) == "menu "+llToLower(g_sAddon)) Menu(kID, iNum);
     //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else {
-        //integer iWSuccess = 0; 
+        //integer iWSuccess = 0;
         string sChangetype = llList2String(llParseString2List(sStr, [" "], []),0);
         //string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),1);
         //string sText;
-        
+
         if(sChangetype == "remote")
         {
             Menu(kID, iNum);
@@ -109,14 +108,14 @@ MenuButtons(key kID, integer iAuth, integer iPage)
 {
     string prompt = "[OpenCollar Remote]\n=Button Manager=\n\nButtons: "+(string)g_iBitMask;
     list buttons = [];
-    
+
     integer i=0;
     integer end = llGetListLength(g_lBTNS);
     for(i=0;i<end;i+=3)
     {
         buttons += Checkbox(llList2String(g_lBTNS, i), (integer)(g_iBitMask&(integer)llList2String(g_lBTNS,i+2)));
     }
-    
+
     Dialog(kID, prompt, buttons, ["APPLY", UPMENU], iPage, iAuth, "Menu~Buttons");
 }
 
@@ -135,18 +134,18 @@ default
         //llSay(0, llDumpList2String([iSender,iNums, sMsg, kIDx], "~"));
         if(iNums==0)
         {
-            
+
             integer iNum = (integer)llJsonGetValue(sMsg,["iNum"]);
             string sStr = llJsonGetValue(sMsg,["sMsg"]);
             key kID = (key)llJsonGetValue(sMsg,["kID"]);
-                
-                
+
+
             if(iNum == LM_SETTING_RESPONSE){
                 list lPar = llParseString2List(sStr, ["_","="],[]);
                 string sToken = llList2String(lPar,0);
                 string sVar = llList2String(lPar,1);
                 string sVal = llList2String(lPar,2);
-                    
+
                 /*if(sToken == "auth"){
                     if(sVar == "owner"){
                         //llSay(0, "owner values is: "+sVal);
@@ -159,10 +158,10 @@ default
                 }
             } else if(iNum >= CMD_OWNER && iNum <= CMD_EVERYONE){
                 UserCommand(iNum, sStr, kID);
-                
+
             } else if (iNum == DIALOG_TIMEOUT) {
                 integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
+                if(~iMenuIndex) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex+1);  //remove stride from g_lMenuIDs
             } else if(iNum == AUTH_REPLY){
                 list lTmp = llParseString2List(sStr, ["|"],[]);
                 if(llList2String(lTmp,0) == "AuthReply" && kID == "check_auth_remote")
@@ -182,13 +181,13 @@ default
                 integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
                 if(iMenuIndex!=-1){
                     string sMenu = llList2String(g_lMenuIDs, iMenuIndex+1);
-                    g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
+                    g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex+1);
                     list lMenuParams = llParseString2List(sStr, ["|"],[]);
                     key kAv = llList2Key(lMenuParams,0);
                     string sMsgx = llList2String(lMenuParams,1);
                     integer iPage = llList2Integer(lMenuParams,2);
                     integer iAuth = llList2Integer(lMenuParams,3);
-                    
+
                     if(sMenu == "Menu~Main"){
                         if(sMsgx == UPMENU) LM("from_addon", iAuth, "menu Addons", kAv);
                         else if(sMsgx == "+ Favorite"){
@@ -221,14 +220,14 @@ default
                             list lSeg = llParseString2List(sMsgx, [" "],[]);
                             integer cBoxMode = llListFindList(g_lCheckboxes, [llList2String(lSeg, 0)]);
                             string label = llDumpList2String(llList2List(lSeg,1,-1), " ");
-                            
+
                             integer mask = (integer)llList2String(g_lBTNS, llListFindList(g_lBTNS,[label])+2);
                             if(cBoxMode)g_iBitMask = g_iBitMask - mask;
                             else g_iBitMask += mask;
-                            
+
                             //llMessageLinked(LINK_SET, -5, (string)g_iBitMask, "");
-                            
-                            
+
+
                             MenuButtons(kAv,iAuth, iPage);
                         }
                     }
@@ -236,7 +235,7 @@ default
             }
         } else if(iNums ==-1){
             g_lMenuIDs=[];
-            
+
         } else if(iNums==-10){
             llResetScript();
         } else if(iNums == -3)

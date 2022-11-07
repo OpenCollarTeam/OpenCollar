@@ -44,24 +44,23 @@ integer DIALOG_TIMEOUT  = -9002;
 list g_lOptedLM     = [];
 
 list g_lMenuIDs;
-integer g_iMenuStride;
 
 string UPMENU = "BACK";
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
     key kMenuID = llGenerateKey();
-    
+
     llRegionSayTo(g_kCollar, API_CHANNEL, llList2Json(JSON_OBJECT, [ "pkt_type", "from_addon", "addon_name", g_sAddon, "iNum", DIALOG, "sMsg", (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, "kID", kMenuID ]));
 
     integer iIndex = llListFindList(g_lMenuIDs, [kID]);
-    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [ kID, kMenuID, sName ], iIndex, iIndex + g_iMenuStride - 1);
+    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [ kID, kMenuID, sName ], iIndex, iIndex + 2);
     else g_lMenuIDs += [kID, kMenuID, sName];
 }
 
 Menu(key kID, integer iAuth) {
     string sPrompt = "\n[Menu App]";
     list lButtons  = ["A Button"];
-    
+
     //llSay(0, "opening menu");
     Dialog(kID, sPrompt, lButtons, ["DISCONNECT", UPMENU], 0, iAuth, "Menu~Main");
 }
@@ -79,7 +78,7 @@ UserCommand(integer iNum, string sStr, key kID) {
     } //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else
     {
-        //integer iWSuccess   = 0; 
+        //integer iWSuccess   = 0;
         //string sChangetype  = llList2String(llParseString2List(sStr, [" "], []),0);
         //string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),1);
         //string sText;
@@ -119,7 +118,7 @@ default
         g_iLMLastRecv = llGetUnixTime(); // Need to initialize this here in order to prevent resetting before we can receive our first pong
         llSetTimerEvent(60);
     }
-    
+
     attach(key id)
     {
         // if attached make a connectin when detached disconnect.
@@ -136,7 +135,7 @@ default
         }
     }
 
-    
+
     timer()
     {
         if (llGetUnixTime() >= (g_iLMLastSent + 30))
@@ -150,10 +149,10 @@ default
             g_kCollar = NULL_KEY;
             llResetScript(); // perform our action on disconnect
         }
-        
+
         if (g_kCollar == NULL_KEY) Link("online", 0, "", llGetOwner());
     }
-    
+
     listen(integer channel, string name, key id, string msg){
         string sPacketType = llJsonGetValue(msg, ["pkt_type"]);
         if (sPacketType == "approved" && g_kCollar == NULL_KEY)
@@ -180,14 +179,14 @@ default
                 integer iNum = (integer) llJsonGetValue(msg, ["iNum"]);
                 string sStr  = llJsonGetValue(msg, ["sMsg"]);
                 key kID      = (key) llJsonGetValue(msg, ["kID"]);
-                
+
                 if (iNum == LM_SETTING_RESPONSE)
                 {
                     list lPar     = llParseString2List(sStr, ["_","="], []);
                     string sToken = llList2String(lPar, 0);
                     string sVar   = llList2String(lPar, 1);
                     string sVal   = llList2String(lPar, 2);
-                    
+
                     if (sToken == "auth")
                     {
                         if (sVar == "owner")
@@ -199,12 +198,12 @@ default
                 else if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE)
                 {
                     UserCommand(iNum, sStr, kID);
-                    
+
                 }
                 else if (iNum == DIALOG_TIMEOUT)
                 {
                     integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-                    g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex + 3);  //remove stride from g_lMenuIDs
+                    if (~iMenuIndex) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex+1); //remove stride from g_lMenuIDs
                 }
                 else if (iNum == DIALOG_RESPONSE)
                 {
@@ -212,12 +211,12 @@ default
                     if (iMenuIndex != -1)
                     {
                         string sMenu = llList2String(g_lMenuIDs, iMenuIndex + 1);
-                        g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
+                        g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex + 1);
                         list lMenuParams = llParseString2List(sStr, ["|"], []);
                         key kAv = llList2Key(lMenuParams, 0);
                         string sMsg = llList2String(lMenuParams, 1);
                         integer iAuth = llList2Integer(lMenuParams, 3);
-                        
+
                         if (sMenu == "Menu~Main")
                         {
                             if (sMsg == UPMENU)

@@ -13,13 +13,13 @@ Felkami (Caraway Ohmai)
 
 Kristen Mynx,  Phidoux (taya Maruti)
     *May 2022  - Fixed bug: !release or @clear sent to the relay would clear all
-    restrictions and exceptions from the collar.   Changed the relay to send all RLV 
+    restrictions and exceptions from the collar.   Changed the relay to send all RLV
     commands through RLV_CMD link messages instead of directly to the viewer.  oc_rlvsys
     will process them, and arbitrate between collar and relay restrictions and exceptions.
     Also removed DO_RLV_REFRESH which cleared all restrictions and exceptions.
 
    *July 2022  - Fixed bug: Ask mode only accepted one RLV command from the object.
-    
+
 et al.
 
 Licensed under the GPLv2. See LICENSE for full details.
@@ -98,7 +98,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
     llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
 
     integer iIndex = llListFindList(g_lMenuIDs, [kID]);
-    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
+    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + 2);
     else g_lMenuIDs += [kID, kMenuID, sName];
 }
 
@@ -207,7 +207,6 @@ string tf(integer a){
 }
 key g_kWearer;
 list g_lMenuIDs;
-integer g_iMenuStride;
 list g_lOwner;
 list g_lTrust;
 list g_lBlock;
@@ -426,7 +425,7 @@ state active
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if(iMenuIndex!=-1){
                 string sMenu = llList2String(g_lMenuIDs, iMenuIndex+1);
-                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
+                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex+1);
                 list lMenuParams = llParseString2List(sStr, ["|"],[]);
                 key kAv = llList2Key(lMenuParams,0);
                 string sMsg = llList2String(lMenuParams,1);
@@ -530,7 +529,7 @@ state active
 
         } else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
+            if(~iMenuIndex) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex+1);  //remove stride from g_lMenuIDs
         } else if(iNum == LM_SETTING_RESPONSE){
             // Detect here the Settings
             list lSettings = llParseString2List(sStr, ["_","="],[]);

@@ -8,18 +8,18 @@ Aria (Tashia Redrose)
 Medea (Medea Destiny)
     * Jun 2021      -       Quick despam: stores mask values as they are set in g_lLastMask to only release restrictions
                             that have actually been set.
-    * Jul 2021      -       * issue #528: Handling layers: As of RLVa 2.3.0: Tattoos, alphas and universal layers show up 
-                            in getoutfit unless the layer is locked and the Hide Locked Layers setting is on. They can 
+    * Jul 2021      -       * issue #528: Handling layers: As of RLVa 2.3.0: Tattoos, alphas and universal layers show up
+                            in getoutfit unless the layer is locked and the Hide Locked Layers setting is on. They can
                             be locked or removed. The physics layer layer can be locked, but cannot be removed and does
                             not show up in getoutfit. I'm not certain of the current status of Marine's RLV, but I last
-                            I knew neither physics nor universal layers can be accessed. We need to extend the 
+                            I knew neither physics nor universal layers can be accessed. We need to extend the
                             functionality to cover the extra layers, but this is problematic. This fix ignores the physics
-                            layer in locks due to current broken-ness, warns about locked layers not showing up, and will 
-                            not require refactoring for updates that increase the number of layers handled. 
+                            layer in locks due to current broken-ness, warns about locked layers not showing up, and will
+                            not require refactoring for updates that increase the number of layers handled.
                             * Added chat handling: (prefix)undress (layer) removes layers. (prefix)undress lock (layer)
                             and (prefix)undress unlock (layer) set layer locks. Some rejigging of usercommand filtering
                             to handle this cleanly.
-                            * Added short llSleep before remenuing after detaching a clothing layer to ensure the viewer 
+                            * Added short llSleep before remenuing after detaching a clothing layer to ensure the viewer
                             removes the layer before replying to the getoutfit command.
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
@@ -73,7 +73,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
     llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
 
     integer iIndex = llListFindList(g_lMenuIDs, [kID]);
-    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
+    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + 2);
     else g_lMenuIDs += [kID, kMenuID, sName];
 }
 
@@ -117,14 +117,13 @@ UserCommand(integer iNum, string sStr, key kID) {
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, "undress_mask="+llDumpList2String(g_lMasks,"|"),"");
             }
         }else if(llListFindList(g_lLayers,[sCmd])!=-1){
-            if(llListFindList(["skin","hair","eyes","shape","physics"],[sCmd])==-1) llOwnerSay("@remoutfit:"+sCmd+"=force"); 
-            }      
+            if(llListFindList(["skin","hair","eyes","shape","physics"],[sCmd])==-1) llOwnerSay("@remoutfit:"+sCmd+"=force");
+            }
     }
 }
 
 key g_kWearer;
 list g_lMenuIDs;
-integer g_iMenuStride;
 //list g_lOwner;
 //list g_lTrust;
 //list g_lBlock;
@@ -163,7 +162,7 @@ ApplyMask(){
 CLock(key kAv, integer iAuth){
     string sPrompt = "[Undress - Clothing Locks]\n\nThis menu will allow you to lock or unlock clothing layers.\nNote that Physics and Universal layer locking may not work on a viewer using RLV rather than RLVa.";
     list lButtons = [];
-    
+
     // Create checkboxes
     integer i = 0;
     integer end = llGetListLength(g_lLayers);
@@ -174,7 +173,7 @@ CLock(key kAv, integer iAuth){
         else
             lButtons += Checkbox(FALSE,llList2String(g_lLayers,i));
     }
-    
+
     Dialog(kAv, sPrompt, lButtons, [UPMENU], 0, iAuth, "undress~locks");
 }
 
@@ -237,7 +236,7 @@ state active
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if(iMenuIndex!=-1){
                 string sMenu = llList2String(g_lMenuIDs, iMenuIndex+1);
-                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
+                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex+1);
                 list lMenuParams = llParseString2List(sStr, ["|"],[]);
                 key kAv = llList2Key(lMenuParams,0);
                 string sMsg = llList2String(lMenuParams,1);
@@ -261,7 +260,7 @@ state active
                         CLock(kAv,iAuth);
                         iRespring=FALSE;
                     }
-                    
+
                     if(iRespring)
                         Menu(kAv,iAuth);
                 } else if(sMenu == "undress~select"){
@@ -271,7 +270,7 @@ state active
                     } else {
                         llOwnerSay("@remoutfit:"+sMsg+"=force");
                     }
-                    
+
                     if(iRespring){
                         llSleep(1); //Give the viewer a moment to remove layer before remenuing.
                         g_iOutfitScan = llRound(llFrand(58439875));
@@ -293,28 +292,28 @@ state active
                         }else {
                             if(index==-1)g_lMasks+=llList2String(lLabel,1);
                         }
-                        
+
                         llMessageLinked(LINK_SET, LM_SETTING_SAVE, "undress_mask="+llDumpList2String(g_lMasks,"|"),"");
                     }
-                    
-                    
+
+
                     if(iRespring)CLock(kAv,iAuth);
                 }
             }
         } else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
+            if(~iMenuIndex) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex+1); //remove stride from g_lMenuIDs
         } else if(iNum == LM_SETTING_RESPONSE){
             // Detect here the Settings
             list lSettings = llParseString2List(sStr, ["_","="],[]);
             string sToken = llList2String(lSettings,0);
             string sVar = llList2String(lSettings,1);
             string sVal = llList2String(lSettings,2);
-            
-            
+
+
             //integer ind = llListFindList(g_lSettingsReqs, [sToken+"_"+sVar]);
             //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
-            
+
             if(sToken=="global"){
                 if(sVar=="locked"){
                     g_iLocked=(integer)sVal;
@@ -330,7 +329,7 @@ state active
         } else if(iNum == LM_SETTING_EMPTY){
             //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
             //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
-            
+
             if(sStr == "undress_mask"){
                 g_lMasks = [];
                 ApplyMask();
@@ -340,19 +339,19 @@ state active
             // This is recieved back from settings when a setting is deleted
             //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
             //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
-            
+
             list lSettings = llParseString2List(sStr, ["_"],[]);
             if(llList2String(lSettings,0)=="global")
                 if(llList2String(lSettings,1) == "locked") g_iLocked=FALSE;
         }
         //llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
     }
-    
-    
+
+
     listen(integer c,string n,key i,string m){
         if(c == g_iOutfitScan){
             llListenRemove(g_iOutfitLstn);
-            
+
             list lButtons;
             integer iEnd = llStringLength(m)-1;
             integer i=-1;
