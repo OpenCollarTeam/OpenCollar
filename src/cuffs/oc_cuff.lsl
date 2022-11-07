@@ -714,13 +714,13 @@ default
                     }
                     else if (iNum == DIALOG_TIMEOUT) {
                         integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-                        f (~iMenuIndex1) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex+1);  //remove stride from g_lMenuIDs
+                        f (~iMenuIndex) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex+1);  //remove stride from g_lMenuIDs
                     }
                     else if (iNum == DIALOG_RESPONSE) {
                         integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
                         if (iMenuIndex != -1) {
                             string sMenu = llList2String(g_lMenuIDs, iMenuIndex + 1);
-                            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
+                            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex + 1);
                             list lMenuParams = llParseString2List(sStr, ["|"], []);
                             key kAv = llList2Key(lMenuParams, 0);
                             string sMsg = llList2String(lMenuParams, 1);
