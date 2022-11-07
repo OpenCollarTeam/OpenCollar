@@ -714,7 +714,7 @@ default
                     }
                     else if (iNum == DIALOG_TIMEOUT) {
                         integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-                        f (~iMenuIndex) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex+1);  //remove stride from g_lMenuIDs
+                        if (~iMenuIndex) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex+1);  //remove stride from g_lMenuIDs
                     }
                     else if (iNum == DIALOG_RESPONSE) {
                         integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
