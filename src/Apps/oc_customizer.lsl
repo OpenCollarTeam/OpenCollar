@@ -1,6 +1,6 @@
 // This file is part of OpenCollar.
-// Copyright (c) 2014 - 2016 Romka Swallowtail et al.           
-// Licensed under the GPLv2.  See LICENSE for full details. 
+// Copyright (c) 2014 - 2016 Romka Swallowtail et al.
+// Licensed under the GPLv2.  See LICENSE for full details.
 
 
 
@@ -43,7 +43,6 @@ string g_sCurrentElement ;
 list g_lCurrentParam ;
 
 list g_lMenuIDs;//3-strided list of kAv, dialogid, menuname
-integer g_iMenuStride = 3;
 
 
 /*
@@ -69,7 +68,7 @@ Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer i
     integer iMenuIndex = llListFindList(g_lMenuIDs, [kRCPT]);
     list lAddMe = [kRCPT, kMenuID, sMenuType];
     if (iMenuIndex == -1) g_lMenuIDs += lAddMe;
-    else g_lMenuIDs = llListReplaceList(g_lMenuIDs, lAddMe, iMenuIndex, iMenuIndex + g_iMenuStride - 1);
+    else g_lMenuIDs = llListReplaceList(g_lMenuIDs, lAddMe, iMenuIndex, iMenuIndex + 2);
 }
 
 ElementMenu(key kAv, integer iPage, integer iAuth)
@@ -229,7 +228,7 @@ default
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
 
                 string sMenuType = llList2String(g_lMenuIDs, iMenuIndex+1);
-                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
+                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex+1);
 
                 if (sMenuType == "ElementMenu")
                 {
@@ -302,7 +301,7 @@ default
         else if (iNum == DIALOG_TIMEOUT)
         {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            if (iMenuIndex != -1) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
+            if (~iMenuIndex) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex+1);
         }
     }
 

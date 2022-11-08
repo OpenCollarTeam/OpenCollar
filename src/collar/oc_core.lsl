@@ -12,30 +12,30 @@ Medea (Medea Destiny)
                 -   added Wearer Trust option to Access Menu so that owners may allow or forbid
                     wearer from adding/removing to trusted and block lists
                 -   Moved Limit Range to Settings menu to make room in Access menu for above,
-                    as it seems logical to have this as a global setting. 
+                    as it seems logical to have this as a global setting.
                 -   Added explanatory text to settings menu prompt and access prompt,
-                -   Added safeword to help/about prompt. 
+                -   Added safeword to help/about prompt.
                 -   Fix issue #566, clear @setgroup when group unchecked properly.
-                -   Extention to above, Disallow setting group access when no group active.  
+                -   Extention to above, Disallow setting group access when no group active.
                 -   Fix issue #580 Limited printing settings to owner and wearer
                 -   #579 Added 'Listen 0' button to Settings menu that allows toggling channel 0
                     command listener on and off.
-    Sept 2021   -   Added sleep before notify for device name chage, issue #672 
+    Sept 2021   -   Added sleep before notify for device name chage, issue #672
                 -   Added confirmation messages when group or public access is toggled and fixed a typo
                 -   Efficiency pass, inlined majorminor(), docheckupdate() and docheckdevupdate().
 
                     Removed g_lTestReports, left over from alpha.
     Nov 2021    -   Auth check for hide didn't account for when wearer tries to use hide with AllowHiding
-                     ticked but access is not CMD_WEARER (i.e. wearer set to trusted). (see #774)                         
-    Jun 2022    -   Fixes for #774 (extension to above, allowing for wearer set to trusted). Using 
+                     ticked but access is not CMD_WEARER (i.e. wearer set to trusted). (see #774)
+    Jun 2022    -   Fixes for #774 (extension to above, allowing for wearer set to trusted). Using
                     kID == g_kWearer instead of iNum==CMD_WEARER in UserCommad() for:
                     Safeword report, verbosity level, locking
                     And kAv == g_kWearer instead of iAuth == CMD_WEARER in meu dialog responses for:
-                    + / - trusted / blacklist when wearer is permitted, displaying access list, print settings  
+                    + / - trusted / blacklist when wearer is permitted, displaying access list, print settings
     Oct 2022    -   Fix for full version>beta version checking. Added menu text to clarify versioning for beta users.
-                    
+
 Stormed Darkshade (StormedStormy)
-    March 2022  -   Added a button for reboot to help/about menu.  
+    March 2022  -   Added a button for reboot to help/about menu.
 
 Yosty7B3
     Nov 2022  -     Removed Setor() and bool() functions for streamlining.
@@ -119,7 +119,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
     llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
 
     integer iIndex = llListFindList(g_lMenuIDs, [kID]);
-    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
+    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + 2);
     else g_lMenuIDs += [kID, kMenuID, sName];
 }
 integer g_iHide=FALSE;
@@ -191,7 +191,7 @@ HelpMenu(key kID, integer iAuth){
     string EXTRA_VER_TXT;
     if(llGetSubString(COLLAR_VERSION,-1,-1)!="0") EXTRA_VER_TXT = " (ALPHA "+llGetSubString(COLLAR_VERSION,-1,-1)+") ";
     if(llGetSubString(COLLAR_VERSION,-2,-2)!="0") EXTRA_VER_TXT += " (BETA "+llGetSubString(COLLAR_VERSION,-2,-2)+") ";
-    if(llGetSubString(COLLAR_VERSION,-3,-3)!="0") EXTRA_VER_TXT += " (RC " + llGetSubString(COLLAR_VERSION,-3,-3)+") ";  
+    if(llGetSubString(COLLAR_VERSION,-3,-3)!="0") EXTRA_VER_TXT += " (RC " + llGetSubString(COLLAR_VERSION,-3,-3)+") ";
 
     string sPrompt = "\nOpenCollar "+COLLAR_VERSION+" "+EXTRA_VER_TXT+"\nVersion: "+llList2String(["","(Newer than release)"],g_iAmNewer)+" "+llList2String(["(Most Current Version)","(Update Available)"],UPDATE_AVAILABLE);
     sPrompt += "\n\nDocumentation https://opencollar.cc";
@@ -370,7 +370,6 @@ integer g_iWaitUpdate;
 integer g_iUpdateChan = -7483213;
 key g_kWearer;
 list g_lMenuIDs;
-integer g_iMenuStride;
 integer g_iLocked=FALSE;
 Compare(string V1, string V2){
     V2=llStringTrim(V2,STRING_TRIM);
@@ -500,7 +499,7 @@ state active
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if(iMenuIndex!=-1){
                 string sMenu = llList2String(g_lMenuIDs, iMenuIndex+1);
-                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
+                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex+1);
                 list lMenuParams = llParseString2List(sStr, ["|"],[]);
                 key kAv = llList2Key(lMenuParams,0);
                 string sMsg = llList2String(lMenuParams,1);
@@ -559,7 +558,7 @@ state active
                             if(g_kGroup!=""){
                                 g_kGroup="";
                                 llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_group", "origin");
-                                llMessageLinked(LINK_SET,NOTIFY,"1Group Access has been turned off.",kAv); 
+                                llMessageLinked(LINK_SET,NOTIFY,"1Group Access has been turned off.",kAv);
                             }else{
                                 key t_kGroup = llList2Key(llGetObjectDetails(llGetKey(), [OBJECT_GROUP]),0);
                                 if(t_kGroup==NULL_KEY){
@@ -568,7 +567,7 @@ state active
                                 else{
                                     g_kGroup=t_kGroup;
                                      llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_group="+(string)g_kGroup, "origin");
-                                     llMessageLinked(LINK_SET,NOTIFY,"1Group Access has been turned on.",kAv);   
+                                     llMessageLinked(LINK_SET,NOTIFY,"1Group Access has been turned on.",kAv);
                                 }
                             }
                         } else {
@@ -579,11 +578,11 @@ state active
                             g_iPublic=1-g_iPublic;
                             if(g_iPublic) {
                                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_public=1", "origin");
-                                llMessageLinked(LINK_SET,NOTIFY,"1Public Access has been turned on.",kAv); 
+                                llMessageLinked(LINK_SET,NOTIFY,"1Public Access has been turned on.",kAv);
                             } else {
                                 llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_public","origin");
-                                llMessageLinked(LINK_SET,NOTIFY,"1Public Access has been turned off.",kAv); 
-                            } 
+                                llMessageLinked(LINK_SET,NOTIFY,"1Public Access has been turned off.",kAv);
+                            }
                         } else llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to changing public", kAv);
                     } else if(sMsg == "Runaway"){
                         llMessageLinked(LINK_SET,0,"menu runaway", kAv);
@@ -715,7 +714,7 @@ state active
             }
         }else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
+            if(iMenuIndex!=-1) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex+1);  //remove stride from g_lMenuIDs
         } else if(iNum == LM_SETTING_RESPONSE){
             list lPar = llParseString2List(sStr, ["_","="],[]);
             string sToken = llList2String(lPar,0);

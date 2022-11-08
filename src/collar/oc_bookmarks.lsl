@@ -1,8 +1,8 @@
 // oc_bookmarks
 // This file is part of OpenCollar.
-// Copyright (c) 2008 - 2021 Satomi Ahn, Nandana Singh, Wendy Starfall,  
-// Sumi Perl, Master Starship, littlemousy, mewtwo064, ml132,       
-// Romka Swallowtail, Garvin Twine, Medea Destiny et al.                 
+// Copyright (c) 2008 - 2021 Satomi Ahn, Nandana Singh, Wendy Starfall,
+// Sumi Perl, Master Starship, littlemousy, mewtwo064, ml132,
+// Romka Swallowtail, Garvin Twine, Medea Destiny et al.
 // Licensed under the GPLv2.  See LICENSE for full details.
 /*
 Medea Destiny -
@@ -44,7 +44,6 @@ integer g_iRLVOn                      = FALSE; //Assume RLV is off until we hear
 string g_tempLoc                      = "";   //This holds a global temp location for manual entry from provided location but no favorite name - g_kTBoxIdLocationOnly
 
 list g_lMenuIDs;//3-strided list of avkey, dialogid, menuname
-integer g_iMenuStride = 3;
 
 key     g_kWearer;
 
@@ -103,7 +102,7 @@ Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer i
     key kMenuID = llGenerateKey();
     llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
     integer iIndex = llListFindList(g_lMenuIDs, [kRCPT]);
-    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kRCPT, kMenuID, sMenuType], iIndex, iIndex + g_iMenuStride - 1);
+    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kRCPT, kMenuID, sMenuType], iIndex, iIndex + 2);
     else g_lMenuIDs += [kRCPT, kMenuID, sMenuType];
 }
 
@@ -354,9 +353,9 @@ TeleportTo(string sStr,key kIssuer) {  //take a string in region (x,y,z) format,
         llMapDestination(sRegion, g_vLocalPos, ZERO_VECTOR);
     else  //We've got RLV, let's use it
         g_kRequestHandle = llRequestSimulatorData(sRegion, DATA_SIM_POS);
-        llRegionSayTo(kIssuer,0,"Sending "+llGetDisplayName(g_kWearer)+" to http://maps.secondlife.com/secondlife/"+sRegion+"/"+(string)((integer)g_vLocalPos.x) + "/"+(string)((integer)g_vLocalPos.y)+"/"+(string)((integer)g_vLocalPos.z)+".");   
-    
-   
+        llRegionSayTo(kIssuer,0,"Sending "+llGetDisplayName(g_kWearer)+" to http://maps.secondlife.com/secondlife/"+sRegion+"/"+(string)((integer)g_vLocalPos.x) + "/"+(string)((integer)g_vLocalPos.y)+"/"+(string)((integer)g_vLocalPos.z)+".");
+
+
 }
 
 PrintDestinations(key kID) {  // On inventory change, re-read our ~destinations notecard
@@ -405,7 +404,7 @@ default
         }
     }
 }
-state active 
+state active
 {
     on_rez(integer iStart) {
         llResetScript();
@@ -493,10 +492,10 @@ state active
         else if(iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
-            
+
             //integer ind = llListFindList(g_lSettingsReqs, [sToken]);
             //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
-            
+
             string sValue = llList2String(lParams, 1);
             integer i = llSubStringIndex(sToken, "_");
             if(llGetSubString(sToken, 0, i) == g_sSettingToken) {
@@ -507,27 +506,27 @@ state active
                 }
             }
         } else if(iNum == LM_SETTING_EMPTY){
-            
+
             //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
             //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
-            
+
         } else if(iNum == LM_SETTING_DELETE){
-            
+
             //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
             //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
-            
+
         } else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER && iNum != CMD_GROUP) UserCommand(iNum, sStr, kID); // This is intentionally not available to public access.
         else if( (iNum == CMD_EVERYONE || iNum == CMD_GROUP) && (llToLower(sStr)==llToLower(g_sSubMenu) || llToLower(sStr) == "menu "+llToLower(g_sSubMenu)) ){
             //Test if this is a denied auth
             llMessageLinked(LINK_SET,NOTIFY, "0%NOACCESS% to bookmarks", kID);
         } else if(iNum == DIALOG_RESPONSE) {
-        
+
             //Test to see if this is a denied auth. If we're here and its denied, we respring. A CMD_* call is already sent out which will produce the NOTIFY
             //We're hard coding page 0 because new menu calls should always be page 0
             if((llSubStringIndex(sStr, g_sSubMenu + "|0|" + (string)CMD_EVERYONE) != -1) || (llSubStringIndex(sStr, g_sSubMenu + "|0|" + (string)CMD_GROUP) != -1)){
                 llMessageLinked(LINK_SET, CMD_EVERYONE, "menu "+g_sParentMenu, llGetSubString(sStr, 0, 35));
             }
-            
+
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (iMenuIndex != -1) {
                 list lMenuParams = llParseStringKeepNulls(sStr, ["|"], []);
@@ -536,7 +535,7 @@ state active
                 // integer iPage = (integer)llList2String(lMenuParams, 2); // menu page
                 integer iAuth = (integer)llList2String(lMenuParams, 3); // auth level of avatar
                 string sMenuType = llList2String(g_lMenuIDs, iMenuIndex + 1);
-                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
+                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex + 1);
                 if(sMenuType == "TextBoxIdLocation") {
                     if(sMessage != " ")
                         addDestination(sMessage, g_tempLoc, kID);
@@ -580,7 +579,7 @@ state active
             }
         } else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
+            if (~iMenuIndex) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex+1);  //remove stride from g_lMenuIDs
         } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
         else if(iNum == LINK_CMD_DEBUG){
             integer onlyver=0;

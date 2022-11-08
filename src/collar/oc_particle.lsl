@@ -76,7 +76,6 @@ string Uncheckbox(string Button){
 list g_lSettings=g_lDefaultSettings;
 
 list g_lMenuIDs;
-integer g_iMenuStride = 3;
 key g_kWearer;
 
 key NULLKEY;
@@ -143,7 +142,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 
     integer iIndex = llListFindList(g_lMenuIDs, [kID]);
     if (~iIndex)
-        g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sMenuName], iIndex, iIndex + g_iMenuStride - 1);
+        g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sMenuName], iIndex, iIndex + 2);
     else
         g_lMenuIDs += [kID, kMenuID, sMenuName];
 }
@@ -527,7 +526,7 @@ state active
                 string sButton = llList2String(lMenuParams, 1);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
                 string sMenu=llList2String(g_lMenuIDs, iMenuIndex + 1);
-                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
+                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex + 1);
                 if (sButton == UPMENU) {
                     if(sMenu == "configure") llMessageLinked(LINK_SET, iAuth, "menu " + PARENTMENU, kAv);
                     else ConfigureMenu(kAv, iAuth);
@@ -648,7 +647,7 @@ state active
             }
         } else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kMessageID]);
-            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
+            if (~iMenuIndex) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex + 1);
         } else if (iNum == LM_SETTING_RESPONSE) {
            // Debug ("LocalSettingsResponse: " + sMessage);
             integer i = llSubStringIndex(sMessage, "=");

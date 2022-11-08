@@ -1,8 +1,8 @@
 // This file is part of OpenCollar.
-// Copyright (c) 2008 - 2017 Satomi Ahn, Nandana Singh, Joy Stipe,     
-// Wendy Starfall, Master Starship, Medea Destiny, littlemousy,      
-// Romka Swallowtail, Sumi Perl, Keiyra Aeon, Garvin Twine et al.     
-// Licensed under the GPLv2.  See LICENSE for full details. 
+// Copyright (c) 2008 - 2017 Satomi Ahn, Nandana Singh, Joy Stipe,
+// Wendy Starfall, Master Starship, Medea Destiny, littlemousy,
+// Romka Swallowtail, Sumi Perl, Keiyra Aeon, Garvin Twine et al.
+// Licensed under the GPLv2.  See LICENSE for full details.
 
 string g_sAppVersion = "¹⋅⁴";
 
@@ -93,7 +93,6 @@ list g_lLocalMenu;
 key g_kWearer;
 // handles
 list g_lMenuIDs;
-integer g_iMenuStride = 3;
 
 
 /*
@@ -115,7 +114,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtility, integer iPage, int
     llMessageLinked(LINK_THIS, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtility, "`") + "|" + (string)iAuth, kMenuID);
 
     integer i = llListFindList(g_lMenuIDs, [kID]);
-    if (~i) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], i, i + g_iMenuStride - 1);
+    if (~i) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], i, i + 2);
     else g_lMenuIDs += [kID, kMenuID, sName];
 }
 
@@ -482,7 +481,7 @@ default {
             if (iMenuIndex == -1) return;
             //this is one of our menus
             string sMenu = llList2String(g_lMenuIDs, iMenuIndex+1);
-            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
+            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex+1);
             list lMenuParams = llParseString2List(sStr, ["|"], []);
             key kAv = (key)llList2String(lMenuParams, 0);
             string sMsg = llList2String(lMenuParams, 1);
@@ -509,7 +508,7 @@ default {
             }
         } else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            if (~iMenuIndex) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
+            if (~iMenuIndex) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex+1);
         } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
     }
 

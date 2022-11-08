@@ -59,8 +59,8 @@ string g_sSubMenu = "Spy";
 
 string g_scmd_menu = "\nTrace: Location trace\nSub Chat: Monitor Sub's speech\nAtt Chat: Monitor Sub's Attachments\nRadar: Report Nearby Avatars\n\nUse Attachment Chat monitoring with caution as attachments can be noisy.";
 //list g_lcmds = ["trace", "sub chat", "att chat", "radar"];
-list g_lSensRates = ["240","120","90","60","30"];    
-list g_lSensDist = ["20","15","10","5"];    
+list g_lSensRates = ["240","120","90","60","30"];
+list g_lSensDist = ["20","15","10","5"];
 
 
 // Globals for App
@@ -84,7 +84,6 @@ integer g_announce;
 key g_kWearer;
 //string g_sWearerName;
 list g_lMenuIDs;
-integer g_iMenuStride;
 list g_lOwner=[];
 integer g_iLocked=FALSE;
 
@@ -184,14 +183,14 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
     llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" +     llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
 
     integer iIndex = llListFindList(g_lMenuIDs, [kID]);
-    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
+    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + 2);
     else g_lMenuIDs += [kID, kMenuID, sName];
 }
 
 Menu(key kID, integer iAuth) {
     string sPrompt = "\n[Spy App]\nVersion: " + g_sAppVersion + "\n" + g_scmd_menu + "\n\nCurrent Sensor Rate: " + (string)g_iSensorRepeat + "\nCurrent Sensor Distance: " + (string)g_iSensorRange;
     list lButtons = ["Rate...","Range...", Checkbox(g_itrace, "Trace"), Checkbox(g_iradar, "Radar"), Checkbox(g_isubchat, "SubChat"), Checkbox(g_iattchat, "AttChat")];
-    
+
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "Menu~Spy");
 }
 
@@ -248,7 +247,7 @@ UserCommand(integer iNum, string sStr, key kID) {
         string sChangetype = llToLower(llList2String(llParseString2List(sStr, [" "], []),0));
         string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),1);
         //string sText;
-        // handle chat commands 
+        // handle chat commands
         list lChatCmds = ["spychat", "spyattach", "spyradar", "spytrace", "spyrange", "spyrate"];
         integer iVal=FALSE;
         if (llToLower(sChangevalue) == "on")
@@ -270,12 +269,12 @@ UserCommand(integer iNum, string sStr, key kID) {
                 string sVal = "off";
                 if (iVal) sVal = "on";
                 Notify(kID, "Spy Avatar Radar turned "+sVal);
-            } else if (iCmdIndex==3) { // Location 
+            } else if (iCmdIndex==3) { // Location
                 g_itrace = iVal;
                 string sVal = "off";
                 if (iVal) sVal = "on";
                 Notify(kID, "Spy Trace Location turned "+sVal);
-            } else if (iCmdIndex==4) { // Range 
+            } else if (iCmdIndex==4) { // Range
                 iVal = (integer)sChangevalue;
                 if (iVal<5 || iVal>20)  {
                     Notify(kID, "Error, range must be between 5 and 20");
@@ -283,7 +282,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                 }
                 g_iSensorRange = iVal;
                 Notify(kID, "Spy Radar Range set to "+(string)iVal+" meters");
-            } else if (iCmdIndex==5) { // Rate 
+            } else if (iCmdIndex==5) { // Rate
                 iVal = (integer)sChangevalue;
                 if (iVal<60 || iVal>300)  {
                     Notify(kID, "Error, rate must be between 60 and 300");
@@ -294,7 +293,7 @@ UserCommand(integer iNum, string sStr, key kID) {
             }
             SaveSettings();    // Save just in case they changed anything.
         }
-        
+
     }
 }
 
@@ -305,7 +304,7 @@ AddLog(string msg) {
     if (llStringLength(g_sreport) > 500)
         SendLog();    // If half full, send early
 
-    llSetTimerEvent(20);                        
+    llSetTimerEvent(20);
 }
 
 SendLog() {
@@ -355,7 +354,7 @@ UpdateSensor() {
         }
         g_announce = TRUE;
         llSensorRepeat("" ,"" , AGENT, g_iSensorRange, PI, g_iSensorRepeat);
-    
+
         if (g_iattchat)
             g_iListenerHandle = llListen(0, "", NULL_KEY , "");    // Listen to everything
         else if (g_isubchat)
@@ -380,7 +379,7 @@ default
         llSetTimerEvent(0);
         SendLog();
     }
-    
+
     state_entry() {
         g_kWearer = llGetOwner();
         llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "global_locked","");
@@ -436,7 +435,7 @@ default
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if(iMenuIndex!=-1){
                 string sMenu = llList2String(g_lMenuIDs, iMenuIndex+1);
-                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
+                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex+1);
                 list lMenuParams = llParseString2List(sStr, ["|"],[]);
                 key kAv = llList2Key(lMenuParams,0);
                 string sMsg = llList2String(lMenuParams,1);
@@ -444,13 +443,13 @@ default
                 integer iRespring=TRUE;
                 if(sMenu == "Menu~Spy"){
                     if(sMsg == UPMENU) {
-                        iRespring=FALSE;                
+                        iRespring=FALSE;
                         llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
                     } else if (sMsg == "Rate...") {
                         MenuSensorRate(kAv,iAuth);
                         return;
                     } else if (sMsg == "Range...") {
-                        MenuSensorDist(kAv,iAuth);    
+                        MenuSensorDist(kAv,iAuth);
                         return;
                     } else { // menu button is an option toggle
                         if(iAuth != CMD_OWNER || kAv == g_kWearer){
@@ -459,7 +458,7 @@ default
                             return;
                         }
                     }
-                    
+
                     if(sMsg == Checkbox(g_itrace, "Trace")){
                         g_itrace=1-g_itrace;
                     } else if(sMsg == Checkbox(g_iradar, "Radar")){
@@ -471,7 +470,7 @@ default
                     }
 
                     SaveSettings();
-                    if(iRespring){                                  
+                    if(iRespring){
                         Menu(kAv,iAuth);
                     }
                     UpdateSensor();
@@ -504,10 +503,10 @@ default
                     Menu(kAv,iAuth);
                 }
             }
-            
+
         }else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
+            if(~iMenuIndex) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex+1);  //remove stride from g_lMenuIDs
         } else if(iNum == LM_SETTING_RESPONSE) {
             // Detect here the Settings
             list lSettings = llParseString2List(sStr, ["_","="],[]);
@@ -528,8 +527,8 @@ default
                     g_itrace=llList2Integer(lSettings,2);
                 else if(llList2String(lSettings,1)=="range")
                     g_iSensorRange=llList2Integer(lSettings,2);
-                else if(llList2String(lSettings,1)=="rate") 
-                    g_iSensorRepeat=llList2Integer(lSettings,2);                    
+                else if(llList2String(lSettings,1)=="rate")
+                    g_iSensorRepeat=llList2Integer(lSettings,2);
                 UpdateSensor();
             } else if(llList2String(lSettings,0)=="auth"){
                 if(llList2String(lSettings,1)=="owner") {

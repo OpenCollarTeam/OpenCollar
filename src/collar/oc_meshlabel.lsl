@@ -1,17 +1,17 @@
 // This file is part of OpenCollar.
-// Copyright (c) 2006 - 2016 Xylor Baysklef, Kermitt Quirk,        
-// Thraxis Epsilon, Gigs Taggart, Strife Onizuka, Huney Jewell,      
-// Salahzar Stenvaag, Lulu Pink, Nandana Singh, Cleo Collins, Satomi Ahn, 
-// Joy Stipe, Wendy Starfall, Romka Swallowtail, littlemousy,       
-// Garvin Twine et al.   
-// Licensed under the GPLv2.  See LICENSE for full details. 
+// Copyright (c) 2006 - 2016 Xylor Baysklef, Kermitt Quirk,
+// Thraxis Epsilon, Gigs Taggart, Strife Onizuka, Huney Jewell,
+// Salahzar Stenvaag, Lulu Pink, Nandana Singh, Cleo Collins, Satomi Ahn,
+// Joy Stipe, Wendy Starfall, Romka Swallowtail, littlemousy,
+// Garvin Twine et al.
+// Licensed under the GPLv2.  See LICENSE for full details.
 
 // How to use:
-// 
+//
 // - You need a Mesh-Strip with 6 Faces next to each other. Each Face should have 1 Material.
-// - Link the Strips together next to each other. 
+// - Link the Strips together next to each other.
 // - Name them like this: MeshLabel~number~line
-//      number is the mesh-number from 0 to how many you linked horizontally   
+//      number is the mesh-number from 0 to how many you linked horizontally
 //      line is the vertical number from 0 to how many lines you have
 //
 //  Example:
@@ -69,7 +69,6 @@ string g_sFontMenu = "Font";
 string g_sColorMenu = "Color";
 
 list g_lMenuIDs;  //three strided list of avkey, dialogid, and menuname
-integer g_iMenuStride = 3;
 
 //integer TIMEOUT_READY = 30497;
 //integer TIMEOUT_REGISTER = 30498;
@@ -192,7 +191,7 @@ integer LabelsCount() {
             llSetLinkPrimitiveParamsFast(iLink,[PRIM_DESC,"Label~notexture~nocolor~nohide~noshiny"]);
         } else if (sLabel == "LabelBase") g_lLabelBaseElements += iLink;
     }
-    
+
     if (bMultiLine && llGetListLength(lSingleParamLinks) > 0) // if we have multible lines, check if all prims are correctly named
     {
         g_sErrorMsg += "Error! Some of your label prims don't have the line parameter in the name! (Should be: MeshLabel~num~line) \n";
@@ -205,7 +204,7 @@ integer LabelsCount() {
         g_sErrorMsg += "\n";
         ok = FALSE;
     }
-    
+
     if (ok) {
         integer i;
         for (i=0; i<llGetListLength(g_lLabelLinks);++i)
@@ -222,11 +221,11 @@ integer LabelsCount() {
                 integer iLine = 0;
                 if (llGetListLength(lTmp) > 2) iLine = llList2Integer(lTmp,2); // keep it compatible with old single-line version
                 integer link = -1;
-                
+
                 list lLineList = llParseString2List(llList2String(g_lLabelLinks,iLine),["|"],[]);
-                
+
                 link = llList2Integer(lLineList,iLabel);
-                if (link == 0) 
+                if (link == 0)
                 {
                     if (iLabel > llGetListLength(lLineList) -1) {
                         g_sErrorMsg += "Error! First Parameter of the label prim with the link number "+(string)iLink+" exceeds the number of prims in line "+(string)iLine+" (Current="+(string)iLabel+" Max="+(string)(llGetListLength(lLineList) -1)+")\n";
@@ -241,7 +240,7 @@ integer LabelsCount() {
                 }
             }
         }
-    } 
+    }
     if (!ok) {
         if (~llSubStringIndex(llGetObjectName(),"Installer") && ~llSubStringIndex(llGetObjectName(),"Updater"))
             return 1;
@@ -277,7 +276,7 @@ UpdateGlow(integer iLink, integer iAlpha) {
         i = llListFindList(g_lGlows,[iLink]);
         if (i != -1) llSetLinkPrimitiveParamsFast(iLink, [PRIM_GLOW, ALL_SIDES, llList2Float(g_lGlows, i+1)]);
     }
-}   
+}
 
 SetLine(integer iNumber, string sText)
 {
@@ -319,7 +318,7 @@ Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer i
     key kMenuID = llGenerateKey();
     llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
     integer iIndex = llListFindList(g_lMenuIDs, [kRCPT]);
-    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kRCPT, kMenuID, iMenuType], iIndex, iIndex + g_iMenuStride - 1);
+    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kRCPT, kMenuID, iMenuType], iIndex, iIndex + 2);
     else g_lMenuIDs += [kRCPT, kMenuID, iMenuType];
 }
 
@@ -339,9 +338,9 @@ MainMenu(key kID, integer iAuth) {
     {
         lButtons += [g_sTextMenu+(string)(i+1)];
     }
-    
+
     lButtons += [g_sColorMenu, g_sFontMenu, Checkbox(g_iShow, "Show")];
-    
+
     if (llGetListLength(g_lLabelLinks) < 3)  // Too much work to scroll more than 2 lines.
     {
         lButtons+=Checkbox(g_iScroll, "Scroll");
@@ -415,7 +414,7 @@ UserCommand(integer iAuth, string sStr, key kAv) {
                 else if (sValue == "off") g_iScroll = FALSE;
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"scroll="+(string)g_iScroll, "");
             } else {
-                
+
                 integer iLine;
                 if (llGetSubString(sCommand,-1,-1) == "t") iLine = 0;
                 else iLine = ((integer)llGetSubString(sCommand,-1,-1));
@@ -424,7 +423,7 @@ UserCommand(integer iAuth, string sStr, key kAv) {
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "text"+(string)iLine+"=" + sNewText, "");
                 if (!g_iShow)
                     llMessageLinked(LINK_SET, NOTIFY, "0"+"The label is currently disabled, it will not show up until you enable it.", kAv);
-                
+
                 if (llStringLength(sNewText) > llList2Integer(g_lCharLimit,iLine)) {
                         string sDisplayText = llGetSubString(sNewText, 0, llList2Integer(g_lCharLimit,iLine)-1);
                         llMessageLinked(LINK_SET, NOTIFY, "0"+"Unless your set your label to scroll it will be truncted at "+sDisplayText+".", kAv);
@@ -495,12 +494,12 @@ state active
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
             integer i = llSubStringIndex(sToken, "_");
-            
-            
+
+
             //integer ind = llListFindList(g_lSettingsReqs, [sToken]);
             //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
-            
-            
+
+
             if (llGetSubString(sToken, 0, i) == g_sSettingToken) {
                 sToken = llGetSubString(sToken, i + 1, -1);
                 if (llGetSubString(sToken,0,-2) == "text") g_lLabelText = llListReplaceList(g_lLabelText,[sValue],(integer)llGetSubString(sToken,-1,-1),(integer)llGetSubString(sToken,-1,-1));
@@ -518,15 +517,15 @@ state active
                 }
             }
         }else if(iNum == LM_SETTING_EMPTY){
-            
+
             //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
             //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
-            
+
         } else if(iNum == LM_SETTING_DELETE){
-            
+
             //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
             //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
-        
+
         } else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             if (!g_bHasError) llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
             else llOwnerSay(g_sErrorMsg);
@@ -534,7 +533,7 @@ state active
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (~iMenuIndex) {
                 string sMenuType = llList2String(g_lMenuIDs, iMenuIndex + 1);
-                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
+                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex + 1);
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
@@ -586,7 +585,7 @@ state active
             }
         } else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
+            if (~iMenuIndex) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex+1);  //remove stride from g_lMenuIDs
         } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
          else if(iNum == LINK_CMD_DEBUG){
             integer onlyver=0;
@@ -603,7 +602,7 @@ state active
     }
 
     timer() {
-    
+
         integer i;
         for (i=0; i<llGetListLength(g_lScrollText);++i)
         {
@@ -613,7 +612,7 @@ state active
             for(iCharPosition=0; iCharPosition < llList2Integer(g_lCharLimit,i); iCharPosition++)
                 RenderString(iCharPosition, llGetSubString(sText, iCharPosition, iCharPosition),i);
             g_lScrollPos = llListReplaceList(g_lScrollPos,[iLineScroll+1],i,i);
-            
+
             if(llList2Integer(g_lScrollPos,i) > llStringLength(llList2String(g_lScrollText,i))) g_lScrollPos = llListReplaceList(g_lScrollPos,[0],i,i);
         }
     }

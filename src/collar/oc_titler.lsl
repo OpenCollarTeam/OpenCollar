@@ -6,7 +6,7 @@ Aria (Tashia Redrose)
     * Mar 2020      - Fix bug where title would not detect the float text prim.
                     - Fixed bug where titler would display garbled text as a result of failing to decode base64
     * Jan 2020      - Rewrote titler to cleanup the code and make easier to read
-    
+
 Medea (Medea Destiny)
     Oct 2021    -   Refactored SAVE to only save changed settings. Added helpful menu text.
                     Added text2col() function that makes a sensible colour vector out of whatever
@@ -92,7 +92,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
     llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
 
     integer iIndex = llListFindList(g_lMenuIDs, [kID]);
-    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
+    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + 2);
     else g_lMenuIDs += [kID, kMenuID, sName];
 }
 
@@ -121,7 +121,7 @@ integer validvector(string input)
         }
     return TRUE;
 }
-        
+
 vector text2col(string input)
 {
     list t=llParseString2List(input,[",","<",">"," "],[]);
@@ -140,7 +140,7 @@ vector text2col(string input)
     if(norm) out=out/255;
     return out;
 }
-        
+
 
 UserCommand(integer iNum, string sStr, key kID) {
     if (iNum<CMD_OWNER || iNum>CMD_WEARER) return;
@@ -251,7 +251,6 @@ integer g_iOffset=8;
 vector g_vColor = <1,1,1>;
 string g_sTitle;
 list g_lMenuIDs;
-integer g_iMenuStride;
 list g_lOwner;
 list g_lTrust;
 list g_lBlock;
@@ -340,7 +339,7 @@ state active
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if(iMenuIndex!=-1){
                 string sMenu = llList2String(g_lMenuIDs, iMenuIndex+1);
-                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
+                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex+1);
                 list lMenuParams = llParseString2List(sStr, ["|"],[]);
                 key kAv = llList2Key(lMenuParams,0);
                 string sMsg = llList2String(lMenuParams,1);
@@ -416,7 +415,7 @@ state active
             }
         }else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
+            if(~iMenuIndex) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex+1);  //remove stride from g_lMenuIDs
         } else if(iNum == LM_SETTING_RESPONSE){
             // Detect here the Settings
             list lSettings = llParseString2List(sStr, ["_","="],[]);

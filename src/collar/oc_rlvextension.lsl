@@ -1,8 +1,8 @@
 /*
  oc_rlvextension
 This file is part of OpenCollar.
-Copyright (c) 2018 - 2019 Tashia Redrose, Silkie Sabra, lillith xue, Medea Destiny, Nirea Mercury et al.                           
-Licensed under the GPLv2.  See LICENSE for full details. 
+Copyright (c) 2018 - 2019 Tashia Redrose, Silkie Sabra, lillith xue, Medea Destiny, Nirea Mercury et al.
+Licensed under the GPLv2.  See LICENSE for full details.
 Medea Destiny -
     Sept 2021   -   Moved Exceptions menu into RLV as a main directory, and folded Menu Settings into
                     RLVSuite menu customize
@@ -10,18 +10,18 @@ Medea Destiny -
                     individually (setUserExceptions() function), replaced ApplyAllExceptions() function
                     with SetAllExes() that allows individual lists to be updated separately, and added
                     list updating. Result is much cleaner setting of exceptions, where exceptions that
-                    have previously not been set don't get unset, and changing a single person on a 
+                    have previously not been set don't get unset, and changing a single person on a
                     list doesn't require the entire list to be cleared and reset. One line of correct
                     exceptions issued per user rather than one per exception per user, refreshed whenever
                     anything needs updating. Result at bootup with a test collar with 8 people on
                     owner/trusted list was 8 lines of RLV commands issued to viewer rather than up to 150
-                    depending on timing of settings received. 
+                    depending on timing of settings received.
                 -   Added list compare function that works.
-                -   Changed setting save function to allow individual settings to be saved rather than 
-                    all settings being saved when any are changed. 
+                -   Changed setting save function to allow individual settings to be saved rather than
+                    all settings being saved when any are changed.
                 -   Changed MenuSetValue() function so that the correct values were given for the blur
                     function rather than sharing values with camdist settings, which gave incorrect user
-                    feedback. Reformatted handling of dialog response to cast returned string rather 
+                    feedback. Reformatted handling of dialog response to cast returned string rather
                     than using list of conditionals.
                 -   Added remenu timer for force sit menu when unsit used, to delay scan so that object
                     user is unsat from will show up in list rather than being ignored by scan if timing
@@ -36,17 +36,17 @@ Medea Destiny -
                     wearer. Owners shouldn't be restricted by restrictions, wearers should. Previously
                     The user would click unsit, be told it didn't work, have to navigate to
                     restrictions, remove the restriction, navigate back to UNSIT, unsit the collar
-                    wearer, then navigate back to restrictions and reset it. This does that 
-                    automatically for owners. 
+                    wearer, then navigate back to restrictions and reset it. This does that
+                    automatically for owners.
                 -   Added explanatory text to exceptions and force sit menus
-                -   Renamed Refuse TP to Force TP to reflect what the button actually does.                  
+                -   Renamed Refuse TP to Force TP to reflect what the button actually does.
     Dec2021     -   Fixed filtering of unsit - > sit unsit for chat command and remote (issue #703 )
                 -   Fix to disengaging strict sit when disabled via menu when already sitting.
     Feb2022     -   SetAllExes triggered on RLV_REFRESH / RLV_ON was saving values, causing exception
                     settings to be restored to defaults if trigged before settings are received.
                     (fixes #740, #720, #719)
     Aug2022     -   Fix auth filtering for changing exceptions. Issue #844 & #848
- 
+
 Krysten Minx -
    May2022      - Added check for valid UUID when setting custom exception
 */
@@ -93,7 +93,7 @@ integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no mes
 
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
-//integer DIALOG_TIMEOUT = -9002;
+integer DIALOG_TIMEOUT = -9002;
 integer DIALOG_SENSOR = -9003;
 string UPMENU = "BACK";
 //string ALL = "ALL";
@@ -127,7 +127,7 @@ list lRLVEx = [
     "RcvEmote"      , "recvemote"   , 8     ,
     "Lure"          , "tplure"      , 16    ,
     "Force TP"      , "accepttp"    , 32    ,
-    "Start IM"      , "startim"     , 64    
+    "Start IM"      , "startim"     , 64
 ];
 
 string g_sExTarget = "";
@@ -144,7 +144,6 @@ list g_lMenuIDs;
 integer TIMEOUT_REGISTER = 30498;
 integer TIMEOUT_FIRED = 30499;
 //list g_lSettingsReqs = [];
-integer g_iMenuStride;
 integer g_iLocked=FALSE;
 
 //list g_lStrangerEx = [];
@@ -168,7 +167,7 @@ list g_lMuffleReplace = [
 
 integer g_iMuffleListener;
 
-string strReplace(string str, string search, string replace) 
+string strReplace(string str, string search, string replace)
 {
     return llDumpList2String(llParseStringKeepNulls((str = "") + str, [search], []), replace);
 }
@@ -203,7 +202,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
     else llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
 
     integer iIndex = llListFindList(g_lMenuIDs, [kID]);
-    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
+    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + 2);
     else g_lMenuIDs += [kID, kMenuID, sName];
 }
 
@@ -237,7 +236,7 @@ MenuSetExceptions(key kID, integer iAuth, string sTarget){
     list lButtons = [];
     integer iExMask;
     g_sExTarget = sTarget;
-    
+
     if (sTarget == "Owner") iExMask = g_iOwnerEx;
     else if (sTarget == "Trusted") iExMask = g_iTrustedEx;
     else if(sTarget == "Custom"){
@@ -252,12 +251,12 @@ MenuSetExceptions(key kID, integer iAuth, string sTarget){
     else if(sTarget=="Trusted") menutext+="TRUSTED PEOPLE";
     else menutext+="'"+g_sTmpExceptionName+"'";
     menutext+=" from being impacted by wearer's restrictions. Even if restricted, wearer can:\n *IM - talk in IMs with them.\n *RcvIM - Receive IMs from them.\n *RcvChat - Hear their public chat.\n *RcvEmote - See their public emotes\n *Lure - Receive TP offers from them.\n *StartIM - Start a new IM conversation with them.\n *Force TP - When on, wearer is automatically teleported on receiving a TP offer from them.";
-    
+
     Dialog(kID, menutext, lButtons, [UPMENU], 0, iAuth, "Exceptions~Set");
 }
 
 MenuForceSit(key kID, integer iAuth) {
-    
+
     Dialog(kID, "\nSelect a place to force sit the wearer on it, or [UNSIT] to force them to stand up. \nWearer may stand after being force sat unless STRICT SIT is active. When it's active, they are forbidden from standing ONLY when force sat from this menu, and if force sat will need to be released with [UNSIT].\n", [Checkbox(g_iStrictSit, "Strict Sit"), UPMENU, "[UNSIT]"], [], 0, iAuth, "Restrictions~sensor");
 }
 
@@ -268,7 +267,7 @@ MenuCamera(key kID, integer iAuth){
 MenuChat(key kID, integer iAuth){
     string sBtn;
     sBtn = Checkbox(g_bMuffle, "Muffle");
-    
+
     Dialog(kID, "Selecting MUFFLE will cause speech to be garbled rather than completely blocked with the TALK restrictions preset is activated.", [sBtn], [UPMENU], 0, iAuth, "Settings~Chat");
 }
 
@@ -281,7 +280,7 @@ MenuSetValue(key kID, integer iAuth, string sValueName) {
         sValue = (string)g_iBlurAmount;
         lLocalButtons=["+blur","-blur"];
     }
-    
+
 
     Dialog(kID, "Set "+sValueName+"\n \n"+sValueName+"="+sValue, lLocalButtons, [UPMENU], 0, iAuth, "Settings~"+sValueName);
 }
@@ -315,7 +314,7 @@ UpdateList(list newlist, integer type) // type 1=owner, 2=trusted;
     if(type==EX_TYPE_OWNER)g_lOwners=newlist;
     else if(type==EX_TYPE_TRUSTED) g_lTrusted=newlist;
 }
-        
+
 SetUserExes(key id, integer mask, integer lastmask)
 {
     if(id==g_kWearer) return;
@@ -332,8 +331,8 @@ SetUserExes(key id, integer mask, integer lastmask)
     }
     if(out!=[]) llOwnerSay("@"+llDumpList2String(out,","));
 }
-       
-SetAllExes(integer clearall, integer type, integer send) //type 1=owners type 2=trusted type 4=custom 
+
+SetAllExes(integer clearall, integer type, integer send) //type 1=owners type 2=trusted type 4=custom
 {
     integer i;
     integer end;
@@ -393,7 +392,7 @@ integer SAVE_CUSTOM=64;
 integer SAVE_ALL=127;
 
 Save(integer iVal){ //iVal is bitmask of settings to save. 127 to save all.
-    
+
    if(iVal&SAVE_MINCAM) llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvext_mincamdist="+(string)g_fMinCamDist, "");
    if(iVal&SAVE_MAXCAM) llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvext_maxcamdist="+(string)g_fMaxCamDist, "");
    if(iVal&SAVE_BLURAMOUNT) llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvext_bluramount="+(string)g_iBlurAmount, "");
@@ -425,10 +424,10 @@ UserCommand(integer iNum, string sStr, key kID) {
         else {
             llMessageLinked(LINK_SET, NOTIFY, "0"+"%NOACCESS% to changing muffle settings", kID);
             llMessageLinked(LINK_SET, iNum, "menu [Manage]", kID);
-        }    
-    } 
+        }
+    }
     else if(llSubStringIndex(sStr,"sit") && llSubStringIndex(sStr,"rlvex")) return;
-    else { 
+    else {
         string sChangetype = llList2String(llParseString2List(sStr, [" "], []),0);
         string sChangekey = llList2String(llParseString2List(sStr, [" "], []),1);
         if (sChangetype == "sit") {
@@ -501,7 +500,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                 for(ix=0;ix<end;ix+=3){
                     sCustom  += llList2String(g_lCustomExceptions,ix)+": "+llList2String(g_lCustomExceptions, ix+1)+" = "+llList2String(g_lCustomExceptions,ix+2)+"\n";
                 }
-                
+
                 llMessageLinked(LINK_SET, NOTIFY, "0Custom Exceptions:\n\n"+sCustom,kID);
             }
         }
@@ -537,7 +536,7 @@ state active
     on_rez(integer iNum){
         llResetScript();
     }
-    
+
     state_entry()
     {
         if(llGetStartParameter()!= 0)llResetScript();
@@ -553,12 +552,12 @@ state active
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if(iMenuIndex!=-1){
                 string sMenu = llList2String(g_lMenuIDs, iMenuIndex+1);
-                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
+                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex+1);
                 list lMenuParams = llParseString2List(sStr, ["|"],[]);
                 key kAv = llList2Key(lMenuParams,0);
                 string sMsg = llList2String(lMenuParams,1);
                 integer iAuth = llList2Integer(lMenuParams,3);
-                
+
                 if(sMenu == "Exceptions~Main"){
                     if(sMsg == UPMENU)  llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
                     else if (iAuth!=CMD_OWNER)
@@ -587,7 +586,7 @@ state active
                         integer iPos = llListFindList(g_lCustomExceptions, [sMsg]);
                         SetAllExes(TRUE,EX_TYPE_CUSTOM,FALSE);
                         llSleep(0.5);
-                        
+
                         g_lCustomExceptions = llDeleteSubList(g_lCustomExceptions, iPos,iPos+2);
                         MenuCustomExceptionsSelect(kAv,iAuth);
                         SetAllExes(FALSE,EX_TYPE_CUSTOM,TRUE);
@@ -627,7 +626,7 @@ state active
                                 // do stuff
                                 if(iTmpBits & llList2Integer(lRLVEx,iIndex+2)) iTmpBits = iTmpBits ^ llList2Integer(lRLVEx,iIndex+2);
                                 else iTmpBits = iTmpBits | llList2Integer(lRLVEx,iIndex+2);
-                                
+
                                 g_lCustomExceptions = llListReplaceList(g_lCustomExceptions, [iTmpBits], iPos, iPos);
                             }
                             SetAllExes(FALSE,iTarget,TRUE);
@@ -648,11 +647,11 @@ state active
                         }
                         return;
                     }
-                    
+
                     if (sMsg == UPMENU) llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
                     else{
                         UserCommand(iAuth,"sit "+sMsg,kAv);
-                        
+
                         //MenuForceSit(kAv, iAuth); //Changing this to a time-delayed remenu here as the scan won't pick up an object sat on and will likely miss the object previously sat on if someone is unsat.
                         llMessageLinked(LINK_SET,TIMEOUT_REGISTER,"3","remenu_forcesit:"+(string)kAv+":"+(string)iAuth);
                     }
@@ -660,7 +659,7 @@ state active
                     if (sMsg == UPMENU)llMessageLinked(LINK_SET, iAuth,g_sCameraBackMenu, kAv);
                     else if (sMsg == "Min Dist") MenuSetValue(kAv, iAuth, "MinCamDist");
                     else if (sMsg == "Max Dist") MenuSetValue(kAv, iAuth, "MaxCamDist");
-                    else if (sMsg == "Blur Amount") MenuSetValue(kAv, iAuth, "BlurAmount"); 
+                    else if (sMsg == "Blur Amount") MenuSetValue(kAv, iAuth, "BlurAmount");
                 } else if (sMenu == "Settings~Chat") {
                     if (sMsg == UPMENU) llMessageLinked(LINK_SET, iAuth, "menu customize", kAv);
                     else {
@@ -714,23 +713,27 @@ state active
                     }
                 }
             }
-        }else if(iNum == LM_SETTING_EMPTY){
-            
+        } else if (iNum == DIALOG_TIMEOUT) {
+            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
+            if (~iMenuIndex) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex+1);
+                //remove stride from g_lMenuIDs
+        } else if(iNum == LM_SETTING_EMPTY){
+
             //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
             //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
-            
+
         } else if(iNum == LM_SETTING_RESPONSE){
         // Detect here the Settings
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
             integer i = llSubStringIndex(sToken, "_");
-            
-            
+
+
             //integer ind = llListFindList(g_lSettingsReqs, [sToken]);
             //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
-            
-            
+
+
             if (sToken == "rlvext_mincamdist") {
                 g_fMinCamDist = (float)sValue;
                 llMessageLinked(LINK_SET,LINK_CMD_RESTDATA,"MinCamDist="+(string)g_fMinCamDist,kID);
@@ -742,13 +745,13 @@ state active
             } else if (sToken == "rlvext_bluramount") {
                 g_iBlurAmount = (integer)sValue;
                 llMessageLinked(LINK_SET,LINK_CMD_RESTDATA,"BlurAmount="+(string)g_iBlurAmount,kID);
-            } else if (sToken == "rlvext_muffle") { 
+            } else if (sToken == "rlvext_muffle") {
                 g_bMuffle = (integer)sValue;
                 SetMuffle(g_bMuffle);
             } else if (sToken == "rlvext_owner") {
                 if(g_iOwnerEx == (integer)sValue)return;
                 g_iOwnerEx = (integer) sValue;
-                
+
                 if(g_iRLV==TRUE && g_lOwners!=[])
                 {
                     SetAllExes(FALSE,EX_TYPE_OWNER,FALSE);
@@ -756,13 +759,13 @@ state active
             } else if (sToken == "rlvext_trusted") {
                 if(g_iTrustedEx==(integer)sValue)return;
                 g_iTrustedEx = (integer) sValue;
-                
+
                 if(g_iRLV==TRUE && g_lTrusted!=[])
                 {
                     SetAllExes(FALSE,EX_TYPE_TRUSTED,FALSE);
-                   
-                    } 
-                
+
+                    }
+
             } else if(sToken == "rlvext_custom"){
                 list lCustomExceptions = llParseString2List(sValue,["^"],[]);
                 if(samelist(g_lCustomExceptions,lCustomExceptions)) return;
@@ -783,7 +786,7 @@ state active
                             SetAllExes(FALSE,EX_TYPE_OWNER,FALSE);
                         }
                     }
-                    else { 
+                    else {
                         g_lOwners=lOwners;
                     }
                 } else if (sToken == "auth_trust") {
@@ -826,13 +829,13 @@ state active
             if(sStr == "global_locked") g_iLocked=FALSE;
             else if (sStr == "auth_owner") {
                 SetAllExes(TRUE,EX_TYPE_OWNER,FALSE);
-                g_lOwners = []; 
+                g_lOwners = [];
             } else if (sStr == "auth_trust") {
                 SetAllExes(TRUE,EX_TYPE_TRUSTED,FALSE);
-                g_lTrusted = []; 
+                g_lTrusted = [];
             } else if (sStr == "auth_tempowner") {
                 SetAllExes(TRUE,EX_TYPE_OWNER,FALSE);
-                g_lTempOwners = []; 
+                g_lTempOwners = [];
             }
         } else if(iNum == -99999){
             if(sStr == "update_active")llResetScript();
@@ -867,7 +870,7 @@ state active
             }
         }
     }
-    
+
     listen(integer iChan, string sName, key kID, string sMsg)
     {
         if (iChan == 3728192 && kID == llGetOwner()){

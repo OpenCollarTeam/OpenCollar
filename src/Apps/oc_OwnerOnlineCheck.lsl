@@ -6,7 +6,7 @@ Copyright ©2021
 
 Aria (Tashia Redrose)
     *Jan 2021       -       Created optional app for notification on owner login
-    
+
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
@@ -68,7 +68,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
     llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
 
     integer iIndex = llListFindList(g_lMenuIDs, [kID]);
-    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
+    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + 2);
     else g_lMenuIDs += [kID, kMenuID, sName];
 }
 
@@ -87,7 +87,7 @@ UserCommand(integer iNum, string sStr, key kID) {
     if (llToLower(sStr)==llToLower(g_sSubMenu) || llToLower(sStr) == "menu "+llToLower(g_sSubMenu)) Menu(kID, iNum);
     //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else {
-        //integer iWSuccess = 0; 
+        //integer iWSuccess = 0;
         //string sChangetype = llList2String(llParseString2List(sStr, [" "], []),0);
         //string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),1);
         //string sText;
@@ -97,7 +97,6 @@ UserCommand(integer iNum, string sStr, key kID) {
 
 key g_kWearer;
 list g_lMenuIDs;
-integer g_iMenuStride;
 integer g_iLocked=FALSE;
 integer g_iInterval=60;
 integer g_iEnable;
@@ -146,7 +145,7 @@ UpdateOwner(key ID, integer online)
     if(index==-1) g_lOwners += [ID, online];
     else {
         integer lastState = (integer)llList2String(g_lOwners,index+1);
-        
+
         //llSay(0, "UPDATE called ("+(string)lastState+", "+(string)lastRegion+") [secondlife:///app/agent/"+(string)ID+"/about] = ("+(string)online+", "+(string)inRegion+")");
         if(lastState==online){}
         else {
@@ -195,7 +194,7 @@ state active
         g_kWearer = llGetOwner();
         llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "global_locked","");
     }
-    
+
     timer(){
         if(g_iEnable){
             llSetTimerEvent(g_iInterval);
@@ -205,7 +204,7 @@ state active
             return;
         }
     }
-    
+
     dataserver(key kID, string sData)
     {
         if(HasDSRequest(kID)!=-1){
@@ -224,7 +223,7 @@ state active
             }
         }
     }
-    
+
     link_message(integer iSender,integer iNum,string sStr,key kID){
         if(iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
         else if(iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
@@ -233,7 +232,7 @@ state active
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if(iMenuIndex!=-1){
                 string sMenu = llList2String(g_lMenuIDs, iMenuIndex+1);
-                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
+                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex+1);
                 list lMenuParams = llParseString2List(sStr, ["|"],[]);
                 key kAv = llList2Key(lMenuParams,0);
                 string sMsg = llList2String(lMenuParams,1);
@@ -258,9 +257,9 @@ state active
                         g_iTypeDialog=1-g_iTypeDialog;
                         llMessageLinked(LINK_SET, LM_SETTING_SAVE, "ownerchecks_typedialog="+(string)g_iTypeDialog,"");
                     }
-                    
+
                     if(iRespring)Menu(kAv,iAuth);
-                        
+
                 } else if(sMenu == "Menu~Interval"){
                     g_iInterval=(integer)sMsg;
                     llSetTimerEvent(g_iEnable);
@@ -270,14 +269,14 @@ state active
             }
         } else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
+            if(~iMenuIndex) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex+1); //remove stride from g_lMenuIDs
         } else if(iNum == LM_SETTING_RESPONSE){
             // Detect here the Settings
             list lSettings = llParseString2List(sStr, ["_","="],[]);
             string sToken = llList2String(lSettings,0);
             string sVar = llList2String(lSettings,1);
             string sVal = llList2String(lSettings,2);
-            
+
             if(sToken=="auth"){
                 if(sVar=="owner"){
                     g_lOwners=[];
@@ -300,8 +299,8 @@ state active
                 }else if(sVar == "typedialog"){
                     g_iTypeDialog=(integer)sVal;
                 }
-            } 
-            
+            }
+
             if(sStr == "settings=sent")
             {
                 llSetTimerEvent(g_iEnable);

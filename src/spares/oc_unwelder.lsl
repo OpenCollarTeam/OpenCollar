@@ -5,10 +5,10 @@ Copyright ©2021
 Aria (Tashia Redrose)
     * Feb 2021       -       Created oc_unwelder
 Autumn Jersey (autumnerilyx.littlepaws)
-    * Aug 2022   -    Edited wording of local chat messages to improve user comprehension 
+    * Aug 2022   -    Edited wording of local chat messages to improve user comprehension
 Medea (Medea Destiny)
       Aug 2022    -  Fix for issue #862, allow wearer with trusted perm to operate
-    
+
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
@@ -52,24 +52,23 @@ integer DIALOG_TIMEOUT  = -9002;
 list g_lOptedLM     = [];
 
 list g_lMenuIDs;
-integer g_iMenuStride;
 
 string UPMENU = "BACK";
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
     key kMenuID = llGenerateKey();
-    
+
     llRegionSayTo(g_kCollar, API_CHANNEL, llList2Json(JSON_OBJECT, [ "pkt_type", "from_addon", "addon_name", g_sAddon, "iNum", DIALOG, "sMsg", (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, "kID", kMenuID ]));
 
     integer iIndex = llListFindList(g_lMenuIDs, [kID]);
-    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [ kID, kMenuID, sName ], iIndex, iIndex + g_iMenuStride - 1);
+    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [ kID, kMenuID, sName ], iIndex, iIndex + 2);
     else g_lMenuIDs += [kID, kMenuID, sName];
 }
 
 Menu(key kID, integer iAuth) {
     string sPrompt = "\n[OpenCollar Unwelder]\n\n* This action will break the weld on your collar. Are you sure you want to proceed?\n\n* Your owner(s) will be notified that the unweld tool was used.\n\n* Your collar will reboot immediately upon a successful unweld.";
     list lButtons  = ["UNWELD NOW"];
-    
+
     //llSay(0, "opening menu");
     Dialog(kID, sPrompt, lButtons, ["DISCONNECT", UPMENU], 0, iAuth, "Menu~Main");
 }
@@ -87,7 +86,7 @@ UserCommand(integer iNum, string sStr, key kID) {
     } //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else
     {
-        //integer iWSuccess   = 0; 
+        //integer iWSuccess   = 0;
         //string sChangetype  = llList2String(llParseString2List(sStr, [" "], []),0);
         //string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),1);
         //string sText;
@@ -145,12 +144,12 @@ default
     touch_start(integer t){
         if(g_kUser != NULL_KEY){
             if(llDetectedKey(0) == g_kUser){
-                Link("from_addon", 0, "menu "+g_sAddon, g_kUser);                
+                Link("from_addon", 0, "menu "+g_sAddon, g_kUser);
             } else {
                 llSay(0, "Unweld tool is in use, try again in a few minutes");
             }
         }else {
-            
+
     //        llSay(0, "Unwelder now in use");
             llSetText("In use by\n" + llKey2Name (llDetectedKey(0)), <1,0,0>,1);
             //llSetText("In use..", <1,0,0>,1);
@@ -160,10 +159,10 @@ default
             llListen(API_CHANNEL, "", "", "");
             Link("online", 0, "", g_kUser); // This is the signal to initiate communication between the addon and the collar
             llResetTime();
-            
+
         }
     }
-    
+
     timer()
     {
         if(llGetTime() >= 30.0 && g_kCollar==NULL_KEY && g_kUser!=NULL_KEY){
@@ -183,10 +182,10 @@ default
             softreset();
             //llResetScript(); // perform our action on disconnect
         }
-        
+
         if (g_kCollar == NULL_KEY) Link("online", 0, "", g_kUser);
     }
-    
+
     listen(integer channel, string name, key id, string msg){
         string sPacketType = llJsonGetValue(msg, ["pkt_type"]);
         if (sPacketType == "approved" && g_kCollar == NULL_KEY)
@@ -220,14 +219,14 @@ default
                 integer iNum = (integer) llJsonGetValue(msg, ["iNum"]);
                 string sStr  = llJsonGetValue(msg, ["sMsg"]);
                 key kID      = (key) llJsonGetValue(msg, ["kID"]);
-                
+
                 if (iNum == LM_SETTING_RESPONSE)
                 {
                     list lPar     = llParseString2List(sStr, ["_","="], []);
                     string sToken = llList2String(lPar, 0);
                     string sVar   = llList2String(lPar, 1);
                     string sVal   = llList2String(lPar, 2);
-                    
+
                     if (sToken == "global"){
                         if(sVar=="addonlimit"){
                             if(sVal=="0"){
@@ -239,7 +238,7 @@ default
                             g_iWelded=1;
                         }
                     }
-                    
+
                     if(sStr == "settings=sent"){
                         if(g_iAddonLimitation){
                             llSay(0, "Addons Limited is checked. To unweld, someone with Owner access (including wearer if they are Owner) must: 1) Open the collar menu. 2)Click Settings. 3) Click the Addons button in Settings. UNCHECK AddOns Limited. Leave WearerAdd and Addons CHECKED. The Wearer can then proceed to unweld.");
@@ -265,12 +264,12 @@ default
                 else if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE)
                 {
                     UserCommand(iNum, sStr, kID);
-                    
+
                 }
                 else if (iNum == DIALOG_TIMEOUT)
                 {
                     integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-                    g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex + 3);  //remove stride from g_lMenuIDs
+                    if (~iMenuIndex) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex + 1); //remove stride from g_lMenuIDs
                 }
                 else if (iNum == DIALOG_RESPONSE)
                 {
@@ -278,12 +277,12 @@ default
                     if (iMenuIndex != -1)
                     {
                         string sMenu = llList2String(g_lMenuIDs, iMenuIndex + 1);
-                        g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
+                        g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex + 1);
                         list lMenuParams = llParseString2List(sStr, ["|"], []);
                         key kAv = llList2Key(lMenuParams, 0);
                         string sMsg = llList2String(lMenuParams, 1);
                         integer iAuth = llList2Integer(lMenuParams, 3);
-                        
+
                         if (sMenu == "Menu~Main")
                         {
                             if (sMsg == UPMENU)

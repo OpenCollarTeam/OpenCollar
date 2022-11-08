@@ -42,17 +42,16 @@ integer DIALOG_TIMEOUT  = -9002;
 list g_lOptedLM     = [];
 
 list g_lMenuIDs;
-integer g_iMenuStride;
 
 string UPMENU = "BACK";
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
     key kMenuID = llGenerateKey();
-    
+
     llRegionSayTo(g_kCollar, API_CHANNEL, llList2Json(JSON_OBJECT, [ "pkt_type", "from_addon", "addon_name", g_sAddon, "iNum", DIALOG, "sMsg", (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, "kID", kMenuID ]));
 
     integer iIndex = llListFindList(g_lMenuIDs, [kID]);
-    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [ kID, kMenuID, sName ], iIndex, iIndex + g_iMenuStride - 1);
+    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [ kID, kMenuID, sName ], iIndex, iIndex + 2);
     else g_lMenuIDs += [kID, kMenuID, sName];
 }
 
@@ -127,7 +126,7 @@ default
     on_rez(integer start_pram){
         softreset();
     }
-    
+
     attach(key kID) {
         if (kID == NULL_KEY) llResetScript();
         else if (llGetAttached() <= 30) {
@@ -149,7 +148,7 @@ default
             softreset();
         }
     }
-    
+
     timer(){
         if (llGetUnixTime() >= (g_iLMLastSent + 30)){
             g_iLMLastSent = llGetUnixTime();
@@ -159,12 +158,12 @@ default
         if (llGetUnixTime() > (g_iLMLastRecv + (5 * 60)) && g_kCollar != NULL_KEY){
             softreset();
         }
-        
+
         if (g_kCollar == NULL_KEY){
             Link("online", 0, "", llGetOwner());
         }
     }
-    
+
     listen(integer channel, string name, key id, string msg){
         string sPacketType = llJsonGetValue(msg, ["pkt_type"]);
         if (sPacketType == "approved" && g_kCollar == NULL_KEY){
@@ -187,22 +186,22 @@ default
                 key kID      = (key) llJsonGetValue(msg, ["kID"]);
                 if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE){
                     UserCommand(iNum, sStr, kID);
-                    
+
                 }
                 else if (iNum == DIALOG_TIMEOUT){
                     integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-                    g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex + 3);  //remove stride from g_lMenuIDs
+                    if (~iMenuIndex) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex+1); //remove stride from g_lMenuIDs
                 }
                 else if (iNum == DIALOG_RESPONSE){
                     integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
                     if (iMenuIndex != -1){
                         string sMenu = llList2String(g_lMenuIDs, iMenuIndex + 1);
-                        g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
+                        g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex + 1);
                         list lMenuParams = llParseString2List(sStr, ["|"], []);
                         key kAv = llList2Key(lMenuParams, 0);
                         string sMsg = llList2String(lMenuParams, 1);
                         integer iAuth = llList2Integer(lMenuParams, 3);
-                        
+
                         if (sMenu == "Menu~Main"){
                             if (sMsg == UPMENU){
                                 Link("from_addon", iAuth, "menu Addons", kAv);

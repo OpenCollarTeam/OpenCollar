@@ -1,4 +1,4 @@
-  
+
 /*
 This file is a part of OpenCollar.
 Copyright ©2020
@@ -8,8 +8,8 @@ Copyright ©2020
 Aria (Tashia Redrose)
     * Nov 2020      - Add a sorted labels option, fix license on menu tester to GPLv2
     * Sep 2020      - Basic menu tester script to test all functions of the oc_dialog script
-    
-    
+
+
 et al.
 
 Licensed under the GPLv2. See LICENSE for full details.
@@ -63,7 +63,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
     llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth + "|"+(string)iSort, kMenuID);
 
     integer iIndex = llListFindList(g_lMenuIDs, [kID]);
-    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
+    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + 2);
     else g_lMenuIDs += [kID, kMenuID, sName];
 }
 
@@ -80,7 +80,7 @@ LongTester(key kID, integer iAuth){
     for(i=0;i<end;i++){
         lButtons += llMD5String((string)i, 0);
     }
-    
+
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "Menu~LongText",0);
 }
 
@@ -122,7 +122,7 @@ UserCommand(integer iNum, string sStr, key kID) {
     if (llToLower(sStr)==llToLower(g_sSubMenu) || llToLower(sStr) == "menu "+llToLower(g_sSubMenu)) Menu(kID, iNum);
     //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else {
-        integer iWSuccess = 0; 
+        integer iWSuccess = 0;
         string sChangetype = llList2String(llParseString2List(sStr, [" "], []),0);
         string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),1);
         string sText;
@@ -132,7 +132,6 @@ UserCommand(integer iNum, string sStr, key kID) {
 
 key g_kWearer;
 list g_lMenuIDs;
-integer g_iMenuStride;
 list g_lOwner;
 list g_lTrust;
 list g_lBlock;
@@ -181,17 +180,17 @@ state active
         }
         string sAppend;
         if(g_iSorted)sAppend="Sort";
-        
+
         Dialog(g_kTmpScan, "\n[Object ID Test]", lIDS, [UPMENU],0,g_iTmpAuth, "Menu~Objs"+sAppend,g_iSorted);
     }
-    
+
     no_sensor(){
         string sAppend="";
         if(g_iSorted)sAppend="Sort";
         Dialog(g_kTmpScan, "\n[Object ID Test]\n\nNothing found", [], [UPMENU], 0, g_iTmpAuth, "Menu~Objs", g_iSorted);
     }
-    
-    
+
+
     link_message(integer iSender,integer iNum,string sStr,key kID){
         if(iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
         else if(iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
@@ -200,12 +199,12 @@ state active
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if(iMenuIndex!=-1){
                 string sMenu = llList2String(g_lMenuIDs, iMenuIndex+1);
-                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
+                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex+1);
                 list lMenuParams = llParseString2List(sStr, ["|"],[]);
                 key kAv = llList2Key(lMenuParams,0);
                 string sMsg = llList2String(lMenuParams,1);
                 integer iAuth = llList2Integer(lMenuParams,3);
-                
+
                 if(sMenu == "Menu~Main"){
                     if(sMsg == UPMENU) llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
                     else if(sMsg == "LongText"){
@@ -228,8 +227,8 @@ state active
                     } else {
                         llSay(0, "You selected: "+sMsg);
                     }
-                    
-                    
+
+
                     LongTester(kAv,iAuth);
                 } else if(sMenu == "Menu~Avs"){
                     if(sMsg == UPMENU){
@@ -246,7 +245,7 @@ state active
                     }else{
                         llSay(0, "You selected: "+sMsg);
                     }
-                    
+
                     ObjsTester(kAv,iAuth);
                 }else if(sMenu == "Menu~Colors"){
                     if(sMsg == UPMENU){
@@ -255,7 +254,7 @@ state active
                     }else{
                         llSay(0, "You selected: "+sMsg);
                     }
-                    
+
                     Colors(kAv,iAuth);
                 } else if(sMenu == "Menu~ObjsSort"){
                     if(sMsg == UPMENU){
@@ -264,7 +263,7 @@ state active
                     } else {
                         llSay(0, "You selected: "+sMsg);
                     }
-                    
+
                     ObjsSortTester(kAv,iAuth);
                 } else if(sMenu == "Menu~SortedText"){
                     if(sMsg == UPMENU){
@@ -273,13 +272,13 @@ state active
                     } else {
                         llSay(0, "You selected: "+sMsg);
                     }
-                    
+
                     SortedText(kAv, iAuth);
                 }
             }
         } else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
+            if(~iMenuIndex) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex+1);  //remove stride from g_lMenuIDs
         }
         //llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
     }
