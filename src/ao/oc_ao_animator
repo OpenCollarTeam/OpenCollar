@@ -8,7 +8,9 @@ Taya Maruti:
     Oct 20 2022 - Modified the reset to include removing while on.
     oct 22 2022 - changes to make the loading sequence more informative to aid in finding ways to make it faster
                     and less confusing for the team.
-    oct 22 2022 - change speed up the load time by removing the else if block on the state check.
+    oct 23 2022 - change loading information to reflect missing animations.
+    nov 9 2022  - Changes to further fix the permissions issue on ao transfer, as well as fix the ao not loading
+                  animations when a new note card is loaded.
 */
 
 
@@ -193,6 +195,10 @@ default {
                     //llResetAnimationOverride("ALL");
                 }
             }
+            else if(sVar == "Reboot")
+            {
+                llResetScript();
+            }
         } else if( iNum == AO_SETOVERRIDE){
             list lPar     = llParseString2List(sStr, [":","="], []);
             string sToken  = llList2String(lPar, 0);
@@ -246,13 +252,6 @@ default {
             }
         }
     }
-    
-    on_rez(integer start_pram){
-        if(g_iAO_ON){
-            llRequestPermissions(g_kWearer,PERMISSION_OVERRIDE_ANIMATIONS);
-            SwitchStand();
-        }
-    }
 
     changed(integer iChange) {
         if (iChange & CHANGED_LINK) {
@@ -265,13 +264,16 @@ default {
         }
         if (iChange & CHANGED_INVENTORY) PermsCheck();
     }
-    attach(key kID){
-        if(kID == NULL_KEY || g_kWearer != kID){
-            //llResetAnimationOverride("ALL");
-            llResetScript();
+    attach(key kID)
+    {
+        if(kID != NULL_KEY || g_kWearer == kID)
+        {
+            if(g_iAO_ON){
+                llRequestPermissions(g_kWearer,PERMISSION_OVERRIDE_ANIMATIONS);
+                SwitchStand();
+            } 
         }
     }
-    
     dataserver(key kRequest, string sData) {
         if (kRequest == g_kCard) {
             if (sData != EOF) {
@@ -360,6 +362,7 @@ default {
                     while(i--) {
                         if (llGetInventoryType(llList2String(lTemp,i)) != INVENTORY_ANIMATION) {
                             ++g_iAnimFail;
+                            llOwnerSay("Animation "+llList2String(lTemp,i)+" was not found!");
                             lTemp = llDeleteSubList(lTemp,i,i);
                         }
                     }
@@ -404,6 +407,7 @@ default {
                     g_iAO_ON = TRUE;
                     llMessageLinked(LINK_THIS,AO_GIVEOVERRIDE,g_sJson_Anims,llGetOwner());
                     llMessageLinked(LINK_THIS,AO_STATUS,"UPDATE:iAOOn="+(string)g_iAO_ON,llGetOwner());
+                    llMessageLinked(LINK_THIS,AO_STATUS,"UPDATE:iAO_ON="+(string)g_iAO_ON,llGetOwner());
                 }
                 llRequestPermissions(g_kWearer,PERMISSION_OVERRIDE_ANIMATIONS);
                 g_iCardLine = 0;
