@@ -657,7 +657,7 @@ default {
             PositionButtons();
             llMessageLinked(LINK_THIS,AO_GETOVERRIDE,"all",g_kWearer);
             llMessageLinked(LINK_THIS,AO_SETTINGS,"UPDATE",g_kWearer);
-            llMessageLinked(LINK_THIS,AO_SETOVERRIDE,"RESET:ALL",kID);//llResetAnimationOverride("ALL");
+            //llMessageLinked(LINK_THIS,AO_SETOVERRIDE,"RESET:ALL",kID);//llResetAnimationOverride("ALL");
             g_iJustRezzed = TRUE;
             softreset();
         }
