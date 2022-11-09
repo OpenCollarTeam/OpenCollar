@@ -647,11 +647,7 @@ default {
     }
 
     attach(key kID) {
-        if (kID == NULL_KEY) {
-            llMessageLinked(LINK_THIS,AO_SETOVERRIDE,"RESET:ALL",kID);//llResetAnimationOverride("ALL");
-            g_iJustRezzed = TRUE;
-            softreset();
-        } else if (kID != g_kWearer){
+        if (kID == NULL_KEY || kID != g_kWearer){
             llResetScript();
         } else if (llGetAttached() <= 30) {
             llOwnerSay("Sorry, this device can only be attached to the HUD.");
@@ -661,6 +657,9 @@ default {
             PositionButtons();
             llMessageLinked(LINK_THIS,AO_GETOVERRIDE,"all",g_kWearer);
             llMessageLinked(LINK_THIS,AO_SETTINGS,"UPDATE",g_kWearer);
+            llMessageLinked(LINK_THIS,AO_SETOVERRIDE,"RESET:ALL",kID);//llResetAnimationOverride("ALL");
+            g_iJustRezzed = TRUE;
+            softreset();
         }
     }
 
