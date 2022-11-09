@@ -267,7 +267,8 @@ default {
     }
     attach(key kID){
         if(kID == NULL_KEY || g_kWearer != kID){
-            llResetAnimationOverride("ALL");
+            //llResetAnimationOverride("ALL");
+            llResetScript();
         }
     }
     
