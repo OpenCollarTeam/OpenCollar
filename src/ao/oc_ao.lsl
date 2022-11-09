@@ -17,6 +17,8 @@ Taya Maruti
                 - Fix a with Sit menu option toggle, and unify the check boxes with the collar.
                 - Fix not loading Default on startup.
                 - Fix Shuffle Toggle.
+    nov 9 2022  - Changes to further fix the permissions issue on ao transfer, as well as fix the ao not loading
+                  animations when a new note card is loaded.
 
 */
 
@@ -63,7 +65,7 @@ string UPMENU = "BACK";
 integer g_iLockAuth=504;
 
 string g_sDevStage = "";
-string g_sVersion = "2.2";
+string g_sVersion = "2.3";
 integer g_iUpdateAvailable;
 key g_kWebLookup;
 
@@ -645,9 +647,10 @@ default {
     state_entry() {
         softreset();
     }
-
+    
     attach(key kID) {
         if (kID == NULL_KEY || kID != g_kWearer){
+            llMessageLinked(LINK_THIS,AO_SETTINGS,"Reboot",g_kWearer);
             llResetScript();
         } else if (llGetAttached() <= 30) {
             llOwnerSay("Sorry, this device can only be attached to the HUD.");
@@ -657,7 +660,7 @@ default {
             PositionButtons();
             llMessageLinked(LINK_THIS,AO_GETOVERRIDE,"all",g_kWearer);
             llMessageLinked(LINK_THIS,AO_SETTINGS,"UPDATE",g_kWearer);
-            //llMessageLinked(LINK_THIS,AO_SETOVERRIDE,"RESET:ALL",kID);//llResetAnimationOverride("ALL");
+            llMessageLinked(LINK_THIS,AO_SETOVERRIDE,"RESET:ALL",kID);//llResetAnimationOverride("ALL");
             g_iJustRezzed = TRUE;
             softreset();
         }
