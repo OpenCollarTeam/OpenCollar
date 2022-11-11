@@ -19,6 +19,7 @@ Taya Maruti
                 - Fix Shuffle Toggle.
     nov 9 2022  - Changes to further fix the permissions issue on ao transfer, as well as fix the ao not loading
                   animations when a new note card is loaded.
+    nov 11 2022 - Made the code Readable and fixed permission issue on passing to other users.
 
 */
 
@@ -152,26 +153,32 @@ integer g_iOldPos;
 vector g_vAOoffcolor = <0.5,0.5,0.5>;
 vector g_vAOoncolor = <1,1,1>;
 
-integer JsonValid(string sTest) {
-    if (~llSubStringIndex(JSON_FALSE+JSON_INVALID+JSON_NULL,sTest)) {
+integer JsonValid(string sTest)
+{
+    if (~llSubStringIndex(JSON_FALSE+JSON_INVALID+JSON_NULL,sTest))
+    {
         return FALSE;
     }
     return TRUE;
 }
 
-FindButtons() { // collect buttons names & links
+FindButtons()// collect buttons names & links
+{
     g_lButtons = [" ", "Minimize"] ;
     g_lPrimOrder = [0, 1];  //  '1' - root prim
     integer i;
-    for (i=2; i<=llGetNumberOfPrims(); ++i) {
+    for (i=2; i<=llGetNumberOfPrims(); ++i)
+    {
         g_lButtons += llGetLinkPrimitiveParams(i, [PRIM_DESC]);
         g_lPrimOrder += i;
     }
 }
 
-SetButtonTexture(integer link, string name) {
+SetButtonTexture(integer link, string name)
+{
     integer idx = llListFindList(BTNS, [name]);
-    if (idx == -1) {
+    if (idx == -1)
+    {
         return;
     }
     integer x = idx % BTN_XS;
@@ -191,15 +198,21 @@ SetButtonTexture(integer link, string name) {
     ]);
 }
 
-TextureButtons() {
+TextureButtons()
+{
     integer i = llGetNumberOfPrims();
 
-    while (i) {
+    while (i)
+    {
         string name = llGetLinkName(i);
-        if (i == 1) {
-            if (g_iHidden) {
+        if (i == 1)
+        {
+            if (g_iHidden)
+            {
                 name = "Maximize";
-            } else {
+            }
+            else
+            {
                 name = "Minimize";
             }
         }
@@ -209,62 +222,83 @@ TextureButtons() {
     }
 }
 
-PositionButtons() {
+PositionButtons()
+{
     integer iPosition = llGetAttached();
     vector vSize = llGetScale();
 //  Allows manual repositioning, without resetting it, if needed
-    if (iPosition != g_iPosition && iPosition > 30) { //do this only when attached to the hud
+    if (iPosition != g_iPosition && iPosition > 30)//do this only when attached to the hud
+    {
         vector vOffset = <0.01, vSize.y/2+g_Yoff, vSize.z/2+g_Zoff>;
-        if (iPosition == ATTACH_HUD_TOP_RIGHT || iPosition == ATTACH_HUD_TOP_CENTER || iPosition == ATTACH_HUD_TOP_LEFT) {
+        if (iPosition == ATTACH_HUD_TOP_RIGHT || iPosition == ATTACH_HUD_TOP_CENTER || iPosition == ATTACH_HUD_TOP_LEFT)
+        {
             vOffset.z = -vOffset.z;
         }
-        if (iPosition == ATTACH_HUD_TOP_LEFT || iPosition == ATTACH_HUD_BOTTOM_LEFT) {
+        if (iPosition == ATTACH_HUD_TOP_LEFT || iPosition == ATTACH_HUD_BOTTOM_LEFT)
+        {
             vOffset.y = -vOffset.y;
         }
         llSetPos(vOffset); // Position the Root Prim on screen
         g_iPosition = iPosition;
     }
-    if (g_iHidden) {
+    if (g_iHidden)
+    {
         SetButtonTexture(1, "Maximize");
         llSetLinkPrimitiveParamsFast(LINK_ALL_OTHERS, [PRIM_POSITION,<1,0,0>]);
-    } else {
+    }
+    else
+    {
         SetButtonTexture(1, "Minimize");
         float fYoff = vSize.y + g_fGap;
         float fZoff = vSize.z + g_fGap;
-        if (iPosition == ATTACH_HUD_TOP_LEFT || iPosition == ATTACH_HUD_TOP_CENTER || iPosition == ATTACH_HUD_TOP_RIGHT) {
+        if (iPosition == ATTACH_HUD_TOP_LEFT || iPosition == ATTACH_HUD_TOP_CENTER || iPosition == ATTACH_HUD_TOP_RIGHT) 
+        {
             fZoff = -fZoff;
         }
-        if (iPosition == ATTACH_HUD_TOP_CENTER || iPosition == ATTACH_HUD_TOP_LEFT || iPosition == ATTACH_HUD_BOTTOM || iPosition == ATTACH_HUD_BOTTOM_LEFT) {
+        if (iPosition == ATTACH_HUD_TOP_CENTER || iPosition == ATTACH_HUD_TOP_LEFT || iPosition == ATTACH_HUD_BOTTOM || iPosition == ATTACH_HUD_BOTTOM_LEFT)
+{
             fYoff = -fYoff;
         }
-        if (iPosition == ATTACH_HUD_TOP_CENTER || iPosition == ATTACH_HUD_BOTTOM) {
+        if (iPosition == ATTACH_HUD_TOP_CENTER || iPosition == ATTACH_HUD_BOTTOM)
+        {
             g_iLayout = 0;
         }
-        if (g_iLayout) {
+        if (g_iLayout)
+        {
             fYoff = 0;
-        } else {
+        }
+        else
+        {
             fZoff = 0;
         }
         integer i;
         integer LinkCount=llGetListLength(g_lPrimOrder);
-        for (i=2;i<=LinkCount;++i) {
+        for (i=2;i<=LinkCount;++i)
+        {
             llSetLinkPrimitiveParamsFast(llList2Integer(g_lPrimOrder,i),[PRIM_POSITION,<0.01, fYoff*(i-1), fZoff*(i-1)>]);
         }
     }
 }
 
-DoButtonOrder(integer iNewPos) {   // -- Set the button order and reset display
+DoButtonOrder(integer iNewPos)// -- Set the button order and reset display
+{
     integer iOldPos = llList2Integer(g_lPrimOrder,g_iOldPos);
     iNewPos = llList2Integer(g_lPrimOrder,iNewPos);
     integer i = 2;
     list lTemp = [0,1];
-    for(;i<llGetListLength(g_lPrimOrder);++i) {
+    for(;i<llGetListLength(g_lPrimOrder);++i)
+    {
         integer iTempPos = llList2Integer(g_lPrimOrder,i);
-        if (iTempPos == iOldPos) {
+        if (iTempPos == iOldPos)
+        {
             lTemp += [iNewPos];
-        } else if (iTempPos == iNewPos) {
+        }
+        else if (iTempPos == iNewPos)
+        {
             lTemp += [iOldPos];
-        } else {
+        }
+        else
+        {
             lTemp += [iTempPos];
         }
     }
@@ -273,35 +307,50 @@ DoButtonOrder(integer iNewPos) {   // -- Set the button order and reset display
     PositionButtons();
 }
 
-DetermineColors() {
+DetermineColors()
+{
     g_vAOoncolor = llGetColor(0);
     g_vAOoffcolor = g_vAOoncolor/2;
     ShowStatus();
 }
 
-ShowStatus() {
+ShowStatus()
+{
     vector vColor = g_vAOoffcolor;
-    if (g_iAO_ON) {
+    if (g_iAO_ON)
+    {
         vColor = g_vAOoncolor;
     }
     llSetLinkColor(llListFindList(g_lButtons,["Power"]), vColor, ALL_SIDES);
-    if (g_iSitAnywhereOn) {
+    if (g_iSitAnywhereOn)
+    {
         vColor = g_vAOoncolor;
-    } else {
+    }
+    else 
+    {
         vColor = g_vAOoffcolor;
     }
     llSetLinkColor(llListFindList(g_lButtons,["SitAny"]), vColor, ALL_SIDES);
 }
 
-ToggleSitAnywhere() {
-    if (!g_iAO_ON) {
+ToggleSitAnywhere()
+{
+    if (!g_iAO_ON)
+    {
         llOwnerSay("SitAnywhere is not possible while the AO is turned off.");
-    } else if (g_iStandPause) {
+    }
+    else if (g_iStandPause)
+    {
         llOwnerSay("SitAnywhere is not possible while you are in a collar pose.");
-    } else {
-        if (g_iSitAnywhereOn) {
+    }
+    else
+    {
+        if (g_iSitAnywhereOn)
+        {
             llMessageLinked(LINK_THIS,AO_SETOVERRIDE,"switchstand",llGetOwner());
-        } else {
+        }
+        else 
+        {
             llMessageLinked(LINK_THIS,AO_SETOVERRIDE,"set:Standing="+g_sSitAnywhereAnim,llGetOwner());
         }
         g_iSitAnywhereOn = !g_iSitAnywhereOn;
@@ -310,54 +359,70 @@ ToggleSitAnywhere() {
     }
 }
 
-Notify(key kID, string sStr, integer iAlsoNotifyWearer) {
-    if (kID == g_kWearer) {
+Notify(key kID, string sStr, integer iAlsoNotifyWearer)
+{
+    if (kID == g_kWearer)
+    {
         llOwnerSay(sStr);
-    } else {
+    }
+    else
+    {
         llRegionSayTo(kID,0,sStr);
-        if (iAlsoNotifyWearer) llOwnerSay(sStr);
+        if (iAlsoNotifyWearer){
+            llOwnerSay(sStr);
+        }
     }
 }
  
 //menus integer iPage,
-Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iAuth, string sName) {
+Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iAuth, string sName)
+{
     integer iChannel = llRound(llFrand(10000000)) + 100000;
-    while (~llListFindList(g_lMenuIDs, [iChannel])) {
+    while (~llListFindList(g_lMenuIDs, [iChannel]))
+    {
         iChannel = llRound(llFrand(10000000)) + 100000;
     }
     integer iListener = llListen(iChannel, "",kID, "");
     integer iTime = llGetUnixTime() + 180;
     integer iIndex = llListFindList(g_lMenuIDs, [kID]);
-    if (~iIndex) {
+    if (~iIndex)
+    {
         g_lMenuIDs = llListReplaceList(g_lMenuIDs,[kID, iChannel, iListener, iTime, sName, iAuth],iIndex,iIndex+4);
-    } else {
+    }
+    else
+    {
         g_lMenuIDs += [kID, iChannel, iListener, iTime, sName,iAuth];
     }
    // if (!g_iAO_ON || !g_iChangeInterval) llSetTimerEvent(20);
     llDialog(kID,sPrompt,SortButtons(lChoices,lUtilityButtons),iChannel);
 }
 
-list SortButtons(list lButtons, list lStaticButtons) {
+list SortButtons(list lButtons, list lStaticButtons)
+{
     list lSpacers;
     list lAllButtons = lButtons + lStaticButtons;
     //cutting off too many buttons, no multi page menus as of now
-    while (llGetListLength(lAllButtons)>12) {
+    while (llGetListLength(lAllButtons)>12)
+    {
         lButtons = llDeleteSubList(lButtons,0,0);
         lAllButtons = lButtons + lStaticButtons;
     }
-    while (llGetListLength(lAllButtons) % 3 != 0 && llGetListLength(lAllButtons) < 12) {
+    while (llGetListLength(lAllButtons) % 3 != 0 && llGetListLength(lAllButtons) < 12)
+    {
         lSpacers += "-";
         lAllButtons = lButtons + lSpacers + lStaticButtons;
     }
     integer i = llListFindList(lAllButtons, ["BACK"]);
-    if (~i) {
+    if (~i)
+    {
         lAllButtons = llDeleteSubList(lAllButtons, i, i);
     }
     list lOut = llList2List(lAllButtons, 9, 11);
     lOut += llList2List(lAllButtons, 6, 8);
     lOut += llList2List(lAllButtons, 3, 5);
     lOut += llList2List(lAllButtons, 0, 2);
-    if (~i) {
+    if (~i)
+    {
         lOut = llListInsertList(lOut, ["BACK"], 2);
     }
     return lOut;
@@ -368,19 +433,27 @@ string b_sSits;
 string d_sShuffle = "Shuffle";
 string b_sShuffle;
 
-MenuAO(key kID,integer iAuth) {
+MenuAO(key kID,integer iAuth)
+{
     string sPrompt = "\n[OpenCollar AO]\t"+g_sVersion+g_sDevStage;
-    if (g_iUpdateAvailable) sPrompt+= "\n\nUPDATE AVAILABLE: A new patch has been released.\nPlease install at your earliest convenience. Thanks!";
+    if (g_iUpdateAvailable)
+    {
+        sPrompt+= "\n\nUPDATE AVAILABLE: A new patch has been released.\nPlease install at your earliest convenience. Thanks!";
+    }
     list lButtons = ["Load","Sits","Ground Sits","Walks"];
-    if(g_lCheckBoxes != []) {
+    if(g_lCheckBoxes != [])
+    {
         b_sSits = llList2String(g_lCheckBoxes,g_iSitAnimOn)+d_sSits;
         b_sShuffle = llList2String(g_lCheckBoxes,g_iShuffle)+d_sShuffle;
-    } else {
+    }
+    else
+    {
         b_sSits = llList2String(b_lCheckBoxes,g_iSitAnimOn)+d_sSits;
         b_sShuffle = llList2String(b_lCheckBoxes,g_iShuffle)+d_sShuffle;
     }
     lButtons += [b_sSits,b_sShuffle,"Stand Time","Next Stand","Admin Menu"];
-    if (kID == g_kWearer) {
+    if (kID == g_kWearer)
+    {
         lButtons += "HUD Style";
     }
     Dialog(kID, sPrompt, lButtons, ["Cancel"], iAuth, "AO");
@@ -389,22 +462,29 @@ MenuAO(key kID,integer iAuth) {
 string b_sLock;
 string d_sLock = "Lock";
 
-MenuAdmin(key kID,integer iAuth) {
+MenuAdmin(key kID,integer iAuth)
+{
     string sPrompt = "\n[OpenCollar AO]\t"+g_sVersion+g_sDevStage;
-    if(g_lCheckBoxes != []) {
+    if(g_lCheckBoxes != [])
+    {
         b_sLock = llList2String(g_lCheckBoxes,g_iLocked)+d_sLock;
-    } else {
+    }
+    else
+    {
         b_sLock = llList2String(b_lCheckBoxes,g_iLocked)+d_sLock;
     }
     list lButtons = [b_sLock];
-    if (g_kCollar != NULL_KEY) {
+    if (g_kCollar != NULL_KEY)
+    {
         lButtons += ["Collar Menu","DISCONNECT"];
     }
     Dialog(kID, sPrompt, lButtons, ["Cancel","BACK"], iAuth, "Admin");
 }
 
-MenuLoad(key kID, integer iPage,integer iAuth) {
-    if (!iPage) {
+MenuLoad(key kID, integer iPage,integer iAuth)
+{
+    if (!iPage)
+    {
         g_iPage = 0;
     }
     string sPrompt = "\nLoad an animation set!";
@@ -414,48 +494,64 @@ MenuLoad(key kID, integer iPage,integer iAuth) {
     integer iCountCustomCards;
     string sNotecardName;
     integer i;
-    while (i < iEnd) {
+    while (i < iEnd)
+    {
         sNotecardName = llGetInventoryName(INVENTORY_NOTECARD, i++);
-        if (llSubStringIndex(sNotecardName,".") && sNotecardName != "") {
-            if (!llSubStringIndex(sNotecardName,"SET")) {
+        if (llSubStringIndex(sNotecardName,".") && sNotecardName != "")
+        {
+            if (!llSubStringIndex(sNotecardName,"SET"))
+            {
                 g_lCustomCards += [sNotecardName,"Wildcard "+(string)(++iCountCustomCards)];// + g_lCustomCards;
-            } else if(llStringLength(sNotecardName) < 24) {
+            }
+            else if(llStringLength(sNotecardName) < 24)
+            {
                 lButtons += sNotecardName;
-            } else {
+            }
+            else
+            {
                 llOwnerSay(sNotecardName+"'s name is too long to be displayed in menus and cannot be used.");
             }
         }
     }
     i = 1;
-    while (i <= 2*iCountCustomCards) {
+    while (i <= 2*iCountCustomCards)
+    {
         lButtons += llList2List(g_lCustomCards,i,i);
         i += 2;
     }
     list lStaticButtons = ["BACK"];
-    if (llGetListLength(lButtons) > 11) {
+    if (llGetListLength(lButtons) > 11)
+    {
         lStaticButtons = ["◄","►","BACK"];
         g_iNumberOfPages = llGetListLength(lButtons)/9;
         lButtons = llList2List(lButtons,iPage*9,iPage*9+8);
     }
-    if (!llGetListLength(lButtons)) {
+    if (!llGetListLength(lButtons))
+    {
         llOwnerSay("There aren't any animation sets installed!");
     }
     Dialog(kID, sPrompt, lButtons, lStaticButtons,iAuth,"Load");
 }
 
-MenuInterval(key kID,integer iAuth) {
+MenuInterval(key kID,integer iAuth)
+{
     string sInterval = "won't change automatically.";
-    if (g_iChangeInterval) {
+    if (g_iChangeInterval)
+    {
         sInterval = "change every "+(string)g_iChangeInterval+" seconds.";
     }
     Dialog(kID, "\nStands " +sInterval, ["Never","20","30","45","60","90","120","180"], ["BACK"],iAuth,"Interval");
 }
 
-MenuChooseAnim(key kID, string sAnimState, integer iAuth) {
+MenuChooseAnim(key kID, string sAnimState, integer iAuth)
+{
     string sAnim = g_sSitAnywhereAnim;
-    if (sAnimState == "Walking") {
+    if (sAnimState == "Walking")
+    {
         sAnim = g_sWalkAnim;
-    } else if (sAnimState == "Sitting") {
+    }
+    else if (sAnimState == "Sitting")
+    {
         sAnim = g_sSitAnim;
     }
     string sPrompt = "\n"+sAnimState+": \""+sAnim+"\"\n";
@@ -463,23 +559,27 @@ MenuChooseAnim(key kID, string sAnimState, integer iAuth) {
     list lButtons;
     integer iEnd = llGetListLength(g_lAnims2Choose);
     integer i;
-    while (++i<=iEnd) {
+    while (++i<=iEnd)
+    {
         lButtons += (string)i;
         sPrompt += "\n"+(string)i+": "+llList2String(g_lAnims2Choose,i-1);
     }
     Dialog(kID, sPrompt, lButtons, ["BACK"],iAuth,sAnimState);
 }
 
-MenuOptions(key kID,integer iAuth) {
+MenuOptions(key kID,integer iAuth)
+{
     Dialog(kID,"\nCustomize your AO!",["Horizontal","Vertical","Order"],["BACK"],iAuth, "options");
 }
 
-OrderMenu(key kID,integer iAuth) {
+OrderMenu(key kID,integer iAuth)
+{
     string sPrompt = "\nWhich button do you want to re-order?";
     integer i;
     list lButtons;
     integer iPos;
-    for (i=2;i<llGetListLength(g_lPrimOrder);++i) {
+    for (i=2;i<llGetListLength(g_lPrimOrder);++i)
+    {
         iPos = llList2Integer(g_lPrimOrder,i);
         lButtons += llList2List(g_lButtons,iPos,iPos);
     }
@@ -488,117 +588,164 @@ OrderMenu(key kID,integer iAuth) {
 
 //command handling
 
-Command(key kID, string sCommand,integer iNum) {
+Command(key kID, string sCommand,integer iNum)
+{
     //llOwnerSay("first check:"+sCommand+"from:"+(string)iNum);
-    if (iNum<CMD_OWNER || iNum>CMD_WEARER) {
-        if(iNum == AO_SETOVERRIDE){
-            if (sCommand == "on") {
+    if (iNum<CMD_OWNER || iNum>CMD_WEARER)
+    {
+        if(iNum == AO_SETOVERRIDE)
+        {
+            if (sCommand == "on")
+            {
                 g_iAO_ON = TRUE;
                 llMessageLinked(LINK_THIS,AO_SETTINGS,"iAO_ON="+(string)g_iAO_ON,kID);
                 llMessageLinked(LINK_THIS,AO_SETTINGS,"start",kID);
                 ShowStatus();
-            } else if (sCommand == "off") {
+            }
+            else if (sCommand == "off")
+            {
                 g_iAO_ON = FALSE;
                 llMessageLinked(LINK_THIS,AO_SETTINGS,"iAO_ON="+(string)g_iAO_ON,kID);
                 llMessageLinked(LINK_THIS,AO_SETOVERRIDE,"RESET:ALL",kID);
                 //llResetAnimationOverride("ALL");
                 ShowStatus();
-            } else {
+            }
+            else
+            {
                 return;
             }
-        } else {
+        }
+        else
+        {
             return;
         }
     }
     if (llSubStringIndex(llToLower(sCommand), llToLower(g_sAddon)) && llToLower(sCommand) != "menu " + llToLower(g_sAddon)) {
         return;
     }
-    if (iNum == CMD_OWNER && llToLower(sCommand) == "runaway") {
+    if (iNum == CMD_OWNER && llToLower(sCommand) == "runaway")
+    {
         llOwnerSay("run away!");
         Command(kID,g_sAddon+"unlock",iNum);
         return;
     }
 
-    if (llToLower(sCommand) == llToLower(g_sAddon) || llToLower(sCommand) == "menu "+llToLower(g_sAddon)) {
+    if (llToLower(sCommand) == llToLower(g_sAddon) || llToLower(sCommand) == "menu "+llToLower(g_sAddon))
+    {
         llOwnerSay("spawn Menu!");
         MenuAO(kID, iNum);
-    //} else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) Notify(kID,"Access denied!",TRUE);
-    } else {
+    }
+    /*
+    else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer)
+    {
+        Notify(kID,"Access denied!",TRUE);
+    }
+    */
+    else
+    {
         list lParams = llParseString2List(sCommand,[" "],[g_sAddon,llToLower(g_sAddon)]);
         string sToken = llToLower(llList2String(lParams,1));
         string sValue = llList2String(lParams,2);
-        if (sToken == "load") {
-            if (llGetInventoryType(sValue) == INVENTORY_NOTECARD) {
+        if (sToken == "load")
+        {
+            if (llGetInventoryType(sValue) == INVENTORY_NOTECARD)
+            {
                 g_sCard = sValue;
                 g_iCardLine = 0;
                 g_sJson_Anims = "{}";
                 Notify(kID,"Loading animation set \""+g_sCard+"\".",TRUE);
                 llMessageLinked(LINK_THIS,AO_NOTECARD,g_sCard,kID);
-            } else {
+            }
+            else
+            {
                 MenuLoad(kID,0,iNum);
             }
-        } else if (!g_iReady) {
+        }
+        else if (!g_iReady)
+        {
             Notify(kID,"Please load an animation set first.",TRUE);
             MenuLoad(kID,0,iNum);
             return;
-        } else if (sToken == "on") {
+        }
+        else if (sToken == "on")
+        {
             g_iAO_ON = TRUE;
             llMessageLinked(LINK_THIS,AO_SETTINGS,"iAO_ON="+(string)g_iAO_ON,kID);
             llMessageLinked(LINK_THIS,AO_SETTINGS,"start",kID);
             ShowStatus();
-        } else if (sToken == "off") {
+        }
+        else if (sToken == "off")
+        {
             g_iAO_ON = FALSE;
             llMessageLinked(LINK_THIS,AO_SETTINGS,"iAO_ON="+(string)g_iAO_ON,kID);
             llMessageLinked(LINK_THIS,AO_SETOVERRIDE,"RESET:ALL",kID);
             //llResetAnimationOverride("ALL");
             ShowStatus();
-        } else if (sToken == "unlock"){
-            if( iNum <= g_iLockAuth){
+        }
+        else if (sToken == "unlock")
+        {
+            if( iNum <= g_iLockAuth)
+            {
                 g_iLocked = FALSE;
                 llOwnerSay("@detach=y");
                 llPlaySound("82fa6d06-b494-f97c-2908-84009380c8d1", 1.0);
                 Notify(kID,"The AO has been unlocked.",TRUE);
-            } else {
+            }
+            else
+            {
                 Notify(kID,"Sorry Authorization denied!",TRUE);
             }
-        } else if (sToken == "lock" ){
-            if( iNum <= g_iLockAuth) {
+        }
+        else if (sToken == "lock" )
+        {
+            if( iNum <= g_iLockAuth)
+            {
                 g_iLockAuth = iNum;
                 g_iLocked = TRUE;
                 llOwnerSay("@detach=n");
                 llPlaySound("dec9fb53-0fef-29ae-a21d-b3047525d312", 1.0);
                 Notify(kID,"The AO has been locked.",TRUE);
-            } else {
+            }
+            else
+            {
                 Notify(kID,"Sorry Authorization denied!",TRUE);
             }
-        } else if (sToken == "menu") {
+        }
+        else if (sToken == "menu")
+        {
             MenuAO(kID,iNum);
         }
     }
 }
 
-PermsCheck() {
+PermsCheck()
+{
     string sName = llGetScriptName();
-    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY)) {
+    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY))
+    {
         llOwnerSay("You have been given a no-modify OpenCollar object.  This could break future updates.  Please ask the provider to make the object modifiable.");
     }
 
-    if (!(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)) {
+    if (!(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY))
+    {
         llOwnerSay("You have put an OpenCollar script into an object that the next user cannot modify.  This could break future updates.  Please leave your OpenCollar objects modifiable.");
     }
 
     integer FULL_PERMS = PERM_COPY | PERM_MODIFY | PERM_TRANSFER;
-    if (!((llGetInventoryPermMask(sName,MASK_OWNER) & FULL_PERMS) == FULL_PERMS)) {
+    if (!((llGetInventoryPermMask(sName,MASK_OWNER) & FULL_PERMS) == FULL_PERMS))
+    {
         llOwnerSay("The " + sName + " script is not mod/copy/trans.  This is a violation of the OpenCollar license.  Please ask the person who gave you this script for a full-perms replacement.");
     }
 
-    if (!((llGetInventoryPermMask(sName,MASK_NEXT) & FULL_PERMS) == FULL_PERMS)) {
+    if (!((llGetInventoryPermMask(sName,MASK_NEXT) & FULL_PERMS) == FULL_PERMS))
+    {
         llOwnerSay("You have removed mod/copy/trans permissions for the next owner of the " + sName + " script.  This is a violation of the OpenCollar license.  Please make the script full perms again.");
     }
 }
 
 
-Link(string packet, integer iNum, string sStr, key kID){
+Link(string packet, integer iNum, string sStr, key kID)
+{
     list packet_data = [ "pkt_type", packet, "iNum", iNum, "addon_name", g_sAddon, "bridge", FALSE, "sMsg", sStr, "kID", kID ];
 
     if (packet == "online" || packet == "update") // only add optin if packet type is online or update
@@ -607,25 +754,33 @@ Link(string packet, integer iNum, string sStr, key kID){
     }
 
     string pkt = llList2Json(JSON_OBJECT, packet_data);
-    if (g_kCollar != "" && g_kCollar != NULL_KEY) {
+    if (g_kCollar != "" && g_kCollar != NULL_KEY)
+    {
         llRegionSayTo(g_kCollar, API_CHANNEL, pkt);
-    } else {
+    }
+    else
+    {
         llRegionSay(API_CHANNEL, pkt);
     }
 }
 
-softreset(){
+softreset()
+{
     g_kCollar = NULL_KEY;
     g_kWearer = llGetOwner();
-    if(g_iListen){
+    if(g_iListen)
+    {
         llListenRemove(g_iListen);
     }
     API_CHANNEL = ((integer)("0x" + llGetSubString((string)g_kWearer, 0, 8))) + 0xf6eb - 0xd2;
     g_iListen = llListen(API_CHANNEL, "", "", "");
     Link("online", 0, "", g_kWearer); // This is the signal to initiate communication between the addon and the collar
-    if(llGetInventoryType(g_sCard) == INVENTORY_NOTECARD){
+    if(llGetInventoryType(g_sCard) == INVENTORY_NOTECARD)
+    {
         Command(g_kWearer,g_sAddon+" load "+g_sCard, CMD_WEARER);
-    } else {
+    }
+    else
+    {
         MenuLoad(g_kWearer,0,CMD_WEARER);
     }
     llSetTimerEvent(5);
@@ -637,76 +792,105 @@ softreset(){
     DetermineColors();
 }
 
-shutdown() {
+shutdown()
+{
     Link("offline", 0, "", llGetOwnerKey(g_kCollar));
     g_lMenuIDs = [];
     g_kCollar = NULL_KEY;
 }
 
-default {
-    state_entry() {
+default
+{
+    state_entry()
+    {
         softreset();
     }
     
-    attach(key kID) {
-        if (kID == NULL_KEY || kID != g_kWearer){
-            llMessageLinked(LINK_THIS,AO_SETTINGS,"Reboot",g_kWearer);
-            llResetScript();
-        } else if (llGetAttached() <= 30) {
-            llOwnerSay("Sorry, this device can only be attached to the HUD.");
-            llRequestPermissions(kID, PERMISSION_ATTACH);
-            llDetachFromAvatar();
-        } else {
-            PositionButtons();
-            llMessageLinked(LINK_THIS,AO_GETOVERRIDE,"all",g_kWearer);
-            llMessageLinked(LINK_THIS,AO_SETTINGS,"UPDATE",g_kWearer);
-            llMessageLinked(LINK_THIS,AO_SETOVERRIDE,"RESET:ALL",kID);//llResetAnimationOverride("ALL");
-            g_iJustRezzed = TRUE;
-            softreset();
-        }
-    }
-
-    changed(integer iChange) {
-        if(iChange & CHANGED_REGION){
-            Link("update", 0, "", g_kCollar);
-        }
-        if (iChange & CHANGED_COLOR) {
-            if (llGetColor(0) != g_vAOoncolor) {
-                DetermineColors();
+    attach(key kID)
+    {
+        if (kID != NULL_KEY)
+        {
+            if(kID != g_kWearer)
+            {
+                llMessageLinked(LINK_THIS,AO_SETTINGS,"Reboot",g_kWearer);
+                llResetScript();
+            }
+            else if (llGetAttached() <= 30)
+            {
+                llOwnerSay("Sorry, this device can only be attached to the HUD.");
+                llRequestPermissions(kID, PERMISSION_ATTACH);
+                llDetachFromAvatar();
+            }
+            else
+            {
+                PositionButtons();
+                llMessageLinked(LINK_THIS,AO_GETOVERRIDE,"all",g_kWearer);
+                llMessageLinked(LINK_THIS,AO_SETTINGS,"UPDATE",g_kWearer);
+                llMessageLinked(LINK_THIS,AO_SETOVERRIDE,"RESET:ALL",kID);//llResetAnimationOverride("ALL");
+                g_iJustRezzed = TRUE;
+                softreset();
             }
         }
-        if (iChange & CHANGED_LINK) {
-            softreset();
-        }
-        if (iChange & CHANGED_INVENTORY) {
-            /*llMessageLinked(LINK_THIS,AO_NOTECARD,g_sCard+"|"+(string)g_iCardLine,g_kWearer);
-            softreset();
-            PermsCheck();*/
-            llResetScript();
-        }
     }
 
-    timer() {
-        if( g_iJustRezzed ){
+    changed(integer iChange)
+    {
+        if(llGetOwner() == g_kWearer && g_iReady)
+        {
+            if(iChange & CHANGED_REGION)
+            {
+                Link("update", 0, "", g_kCollar);
+            }
+            if (iChange & CHANGED_COLOR)
+            {
+                if (llGetColor(0) != g_vAOoncolor)
+                {
+                    DetermineColors();
+                }
+            }
+            if (iChange & CHANGED_LINK)
+            {
+                softreset();
+            }
+            if (iChange & CHANGED_INVENTORY)
+            {
+                llMessageLinked(LINK_THIS,AO_SETTINGS,"Reboot",g_kWearer);
+                llResetScript();
+            }
+        }
+    }
+    
+
+    timer()
+    {
+        if( g_iJustRezzed )
+        {
             softreset();
-        } else {
-            if (llGetUnixTime() >= (g_iLMLastSent + 30)) {
+        }
+        else
+        {
+            if (llGetUnixTime() >= (g_iLMLastSent + 30))
+            {
                 g_iLMLastSent = llGetUnixTime();
                 Link("ping", 0, "", g_kCollar);
             }
 
-            if (llGetUnixTime() > (g_iLMLastRecv + (5 * 60)) && g_kCollar != NULL_KEY) {
+            if (llGetUnixTime() > (g_iLMLastRecv + (5 * 60)) && g_kCollar != NULL_KEY)
+            {
                 softreset();
             }
 
-            if (g_kCollar == NULL_KEY) {
+            if (g_kCollar == NULL_KEY)
+            {
                 Link("online", 0, "", llGetOwner());
             }
             integer n = llGetListLength(g_lMenuIDs)-6;
             integer iNow = llGetUnixTime();
-            for (n; n>=0; n=n-6) {
+            for (n; n>=0; n=n-6)
+            {
                 integer iDieTime = llList2Integer(g_lMenuIDs,n+3);
-                if (iNow > iDieTime) {
+                if (iNow > iDieTime)
+                {
                     llListenRemove(llList2Integer(g_lMenuIDs,n+2));
                     g_lMenuIDs = llDeleteSubList(g_lMenuIDs,n,n+4);
                 }
@@ -715,82 +899,118 @@ default {
     }
 
     touch_start(integer total_number) {
-        if(llGetAttached()) {
-            if (!g_iReady) {
+        if(llGetAttached())
+        {
+            if (!g_iReady)
+            {
                 MenuLoad(g_kWearer,0,CMD_WEARER);
                 //llOwnerSay("Please load an animation set first.");
                 llOwnerSay("system not loaded yet!");
                 return;
             }
             string sButton = (string)llGetObjectDetails(llGetLinkKey(llDetectedLinkNumber(0)),[OBJECT_DESC]);
-            if (sButton == "Menu") {
+            if (sButton == "Menu")
+            {
                 MenuAO(g_kWearer,CMD_WEARER);
-            } else if (sButton == "SitAny") {
+            }
+            else if (sButton == "SitAny")
+            {
                 ToggleSitAnywhere();
-            } else if (llSubStringIndex(llToLower(sButton),"ao")>=0) {
+            }
+            else if (llSubStringIndex(llToLower(sButton),"ao")>=0)
+            {
                 g_iHidden = !g_iHidden;
                 PositionButtons();
-            } else if (sButton == "Power") {
-                if (g_iAO_ON) {
+            }
+            else if (sButton == "Power")
+            {
+                if (g_iAO_ON) 
+                {
                     Command(g_kWearer,g_sAddon+"off",CMD_WEARER);
-                } else if (g_iReady) {
+                }
+                else if (g_iReady)
+                {
                     Command(g_kWearer,g_sAddon+"on",CMD_WEARER);
                 }
             }
-        } else if (llDetectedKey(0) == g_kWearer) {
+        }
+        else if (llDetectedKey(0) == g_kWearer)
+        {
             MenuAO(g_kWearer,CMD_WEARER);
         }
     }
     
-    link_message(integer iSender, integer iNum, string sStr, key kID){
-        if( iNum == AO_STATUS ){
+    link_message(integer iSender, integer iNum, string sStr, key kID)
+    {
+        if( iNum == AO_STATUS )
+        {
             //llOwnerSay(sStr);
             list lPar     = llParseString2List(sStr, [":","="], []);
             string sToken  = llList2String(lPar, 0);
             string sVar   = llList2String(lPar, 1);
             string sVal   = llList2String(lPar, 2);
-            if(sToken == "UPDATE"){
-                if( sVar == "iSitAnimOn"){
+            if(sToken == "UPDATE")
+            {
+                if( sVar == "iSitAnimOn")
+                {
                     g_iSitAnimOn = (integer)sVal;
-                } else if( sVar == "sWalkAnim"){
+                }
+                else if( sVar == "sWalkAnim"){
                     g_sWalkAnim = sVal;
-                } else if( sVar == "sSitAnim"){
+                }
+                else if( sVar == "sSitAnim")
+                {
                     g_sSitAnim = sVal;
-                } else if( sVar == "iSitAnywhereOn"){
+                }
+                else if( sVar == "iSitAnywhereOn")
+                {
                     g_iSitAnywhereOn = (integer)sVal;
-                } else if( sVar == "sSitAnywhereAnim"){
+                }
+                else if( sVar == "sSitAnywhereAnim")
+                {
                     g_sSitAnywhereAnim = sVal;
-                } else if(sVar == "iAOOn"){
+                }
+                else if(sVar == "iAOOn"){
                     g_iAO_ON = (integer)sVal;
                 }
                 ShowStatus();
             }
         }
-        if( iNum == AO_GIVEOVERRIDE) {
-            if(JsonValid(sStr)) {
+        if( iNum == AO_GIVEOVERRIDE)
+        {
+            if(JsonValid(sStr))
+            {
                 g_iReady = TRUE;
                 g_sJson_Anims=sStr;
-            } else {
+            }
+            else
+            {
                 g_iReady = FALSE;
                 llOwnerSay("Json not valid!");
             }
             ShowStatus();
         }
-        if( iNum == AO_ANTISLIDE) {
+        if( iNum == AO_ANTISLIDE)
+        {
             llMessageLinked(LINK_THIS,AO_ANTISLIDE,"AOantislide off",g_kWearer);
         }
     }
 
-    listen(integer iChannel, string sName, key kID, string sMessage) {
-        if(g_sCollar == sName && llGetOwnerKey(kID) != g_kWearer){
+    listen(integer iChannel, string sName, key kID, string sMessage)
+    {
+        if(g_sCollar == sName && llGetOwnerKey(kID) != g_kWearer)
+        {
             // this check only works on addons owned by the collar wearer, like clothing or personal furnature.
             return;
         }
-        if(JsonValid(sMessage)) {
+        if(JsonValid(sMessage))
+        {
             string sPacketType = llJsonGetValue(sMessage, ["pkt_type"]);
-            if (sPacketType == "approved" && g_kCollar == NULL_KEY) {
+            if (sPacketType == "approved" && g_kCollar == NULL_KEY)
+            {
                 // This signal, indicates the collar has approved the addon and that communication requests will be responded to if the requests are valid collar LMs.
-                if(g_iJustRezzed){
+                if(g_iJustRezzed)
+                {
                     g_iJustRezzed = FALSE;
                 }
                 g_kCollar = kID;
@@ -801,212 +1021,335 @@ default {
                 Link("from_addon", LM_SETTING_REQUEST, "ALL", "");
                 g_iLMLastSent = llGetUnixTime();
                 llSetTimerEvent(10);// move the timer here in order to wait for collar responce.
-            } else if (sPacketType == "dc" && g_kCollar == kID) {
+            }
+            else if (sPacketType == "dc" && g_kCollar == kID)
+            {
                 softreset();
-            } else if (sPacketType == "pong" && g_kCollar == kID) {
+            }
+            else if (sPacketType == "pong" && g_kCollar == kID)
+            {
                 g_iLMLastRecv = llGetUnixTime();
-            } else if(sPacketType == "from_collar") {
+            }
+            else if(sPacketType == "from_collar")
+            {
                 g_iLMLastRecv = llGetUnixTime(); // this call should be any where you recive a message from the collar.
                 // process link message if in range of addon
-                if (llVecDist(llGetPos(), llList2Vector(llGetObjectDetails(kID, [OBJECT_POS]), 0)) <= 10.0) {
+                if (llVecDist(llGetPos(), llList2Vector(llGetObjectDetails(kID, [OBJECT_POS]), 0)) <= 10.0)
+                {
                     integer iNum = (integer) llJsonGetValue(sMessage, ["iNum"]);
                     string sStr  = llJsonGetValue(sMessage, ["sMsg"]);
                     key kID      = (key) llJsonGetValue(sMessage, ["kID"]);
                     
-                    if (iNum == LM_SETTING_RESPONSE) {
+                    if (iNum == LM_SETTING_RESPONSE)
+                    {
                         list lPar     = llParseString2List(sStr, ["_","="], []);
                         string sToken = llList2String(lPar, 0);
                         string sVar   = llList2String(lPar, 1);
                         string sVal   = llList2String(lPar, 2);
-                        if (sToken == "global"){
-                            if( sVar == "checkboxes"){
+                        if (sToken == "global")
+                        {
+                            if( sVar == "checkboxes")
+                            {
                                 b_lCheckBoxes =llParseString2List(sVal,[","],[]);
                             }
                         }
-                    } else if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) {
+                    }
+                    else if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE)
+                    {
                         Command(kID, sStr, iNum);
                     }
                 }
             }
         }
-        if (~llListFindList(g_lMenuIDs,[kID, iChannel])) {
+        if (~llListFindList(g_lMenuIDs,[kID, iChannel]))
+        {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             integer iAuth = llList2Integer(g_lMenuIDs,iMenuIndex+5);
             string sMenuType = llList2String(g_lMenuIDs, iMenuIndex+4);
             llListenRemove(llList2Integer(g_lMenuIDs,iMenuIndex+2));
             g_lMenuIDs = llDeleteSubList(g_lMenuIDs,iMenuIndex, iMenuIndex+4);
-            //if (llGetListLength(g_lMenuIDs) == 0 && (!g_iAO_ON || !g_iChangeInterval)) llSetTimerEvent(0.0);
-            if (sMenuType == "AO") {
-                if (sMessage == "Cancel") {
+            /*
+            if (llGetListLength(g_lMenuIDs) == 0 && (!g_iAO_ON || !g_iChangeInterval)) 
+            {
+                llSetTimerEvent(0.0);
+            }
+            */
+            if (sMenuType == "AO")
+            {
+                if (sMessage == "Cancel")
+                {
                     return;
-                } else if (sMessage == "-") {
+                }
+                else if (sMessage == "-")
+                {
                     MenuAO(kID,iAuth);
-                } else if (sMessage == "Admin Menu") {
+                }
+                else if (sMessage == "Admin Menu")
+                {
                     MenuAdmin(kID,iAuth);
-                } else if (sMessage == "HUD Style") {
+                }
+                else if (sMessage == "HUD Style")
+                {
                     MenuOptions(kID,iAuth);
-                } else if (sMessage == "Load") {
+                }
+                else if (sMessage == "Load")
+                {
                     MenuLoad(kID,0,iAuth);
-                } else if (sMessage == "Sits") {
+                }
+                else if (sMessage == "Sits")
+                {
                     MenuChooseAnim(kID,"Sitting",iAuth);
-                } else if (sMessage == "Walks") {
+                }
+                else if (sMessage == "Walks")
+                {
                     MenuChooseAnim(kID,"Walking",iAuth);
-                } else if (sMessage == "Ground Sits") {
+                }
+                else if (sMessage == "Ground Sits")
+                {
                     MenuChooseAnim(kID,"Sitting on Ground",iAuth);
-                } else if (sMessage == b_sSits){
-                    if(g_iSitAnimOn){
+                }
+                else if (sMessage == b_sSits)
+                {
+                    if(g_iSitAnimOn)
+                    {
                         g_iSitAnimOn = FALSE;
                         llMessageLinked(LINK_THIS,AO_SETTINGS,"iSitAnimOn="+(string)g_iSitAnimOn,kID);
                         llMessageLinked(LINK_THIS,AO_SETOVERRIDE,"reset_Sitting",kID);
-                    } else if (g_sSitAnim != "") {
+                    }
+                    else if (g_sSitAnim != "")
+                    {
                         g_iSitAnimOn = TRUE;
-                        if (g_iAO_ON) {
+                        if (g_iAO_ON)
+                        {
                             llMessageLinked(LINK_THIS,AO_SETOVERRIDE,"set:Sitting="+g_sSitAnim,kID);
                         }
-                    } else {
+                    }
+                    else
+                    {
                         Notify(kID,"Sorry, the currently loaded animation set doesn't have any sits.",TRUE);
                     }
                     MenuAO(kID,iAuth);
-                } else if (sMessage == "Stand Time") {
+                }
+                else if (sMessage == "Stand Time")
+                {
                     MenuInterval(kID,iAuth);
-                } else if (sMessage == "Next Stand") {
-                    if (g_iAO_ON) {
+                }
+                else if (sMessage == "Next Stand")
+                {
+                    if (g_iAO_ON)
+                    {
                         llMessageLinked(LINK_THIS,AO_SETOVERRIDE,"switchstand",llGetOwner());
                     }
                     MenuAO(kID,iAuth);
-                } else if (sMessage == b_sShuffle){
-                    if( g_iShuffle ){
+                }
+                else if (sMessage == b_sShuffle)
+                {
+                    if( g_iShuffle )
+                    {
                         g_iShuffle = FALSE;
-                    } else {
+                    }
+                    else
+                    {
                         g_iShuffle = TRUE;
                     }
                     llMessageLinked(LINK_THIS,AO_SETTINGS,"iShuffle="+(string)g_iShuffle,kID);
                     MenuAO(kID,iAuth);
                 }
-            } else if (sMenuType == "Load") {
+            }
+            else if (sMenuType == "Load")
+            {
                 integer index = llListFindList(g_lCustomCards,[sMessage]);
-                if (~index) {
+                if (~index)
+                {
                     sMessage = llList2String(g_lCustomCards,index-1);
                 }
-                if (llGetInventoryType(sMessage) == INVENTORY_NOTECARD) {
+                if (llGetInventoryType(sMessage) == INVENTORY_NOTECARD)
+                {
                     Command(kID,g_sAddon+" load "+sMessage,iAuth);
                     return;
-                } else if (g_iReady && sMessage == "BACK") {
+                }
+                else if (g_iReady && sMessage == "BACK")
+                {
                     MenuAO(kID,iAuth);
                     return;
-                } else if (sMessage == "►") {
+                }
+                else if (sMessage == "►")
+                {
                     if (++g_iPage > g_iNumberOfPages) g_iPage = 0;
-                } else if (sMessage == "◄") {
+                }
+                else if (sMessage == "◄")
+                {
                     if (--g_iPage < 0) g_iPage = g_iNumberOfPages;
-                } else if (!g_iReady){
+                }
+                else if (!g_iReady)
+                {
                      llOwnerSay("Please load an animation set first.");
-                } else {
+                }
+                else
+                {
                     llOwnerSay("Could not find animation set: "+sMessage);
                 }
                 MenuLoad(kID,g_iPage,iAuth);
-            } else if (sMenuType == "Interval") {
-                if (sMessage == "BACK") {
+            }
+            else if (sMenuType == "Interval")
+            {
+                if (sMessage == "BACK")
+                {
                     MenuAO(kID,iAuth);
                     return;
-                } else if (sMessage == "Never") {
+                }
+                else if (sMessage == "Never")
+                {
                     g_iChangeInterval = FALSE;
                     llMessageLinked(LINK_THIS,AO_SETTINGS,"iChangeInterval="+(string)g_iChangeInterval,kID);
-                } else if ((integer)sMessage >= 20) {
+                }
+                else if ((integer)sMessage >= 20)
+                {
                     g_iChangeInterval = (integer)sMessage;
-                    if (g_iAO_ON && !g_iSitAnywhereOn) {
+                    if (g_iAO_ON && !g_iSitAnywhereOn)
+                    {
                         llMessageLinked(LINK_THIS,AO_SETTINGS,"iChangeInterval="+(string)g_iChangeInterval,kID); 
                     }
                 }
                 MenuInterval(kID,iAuth);
-            } else if (~llListFindList(["Walking","Sitting on Ground","Sitting"],[sMenuType])) {
-                if (sMessage == "BACK") {
+            }
+            else if (~llListFindList(["Walking","Sitting on Ground","Sitting"],[sMenuType]))
+            {
+                if (sMessage == "BACK")
+                {
                     MenuAO(kID,iAuth);
-                } else if (sMessage == "-") {
+                }
+                else if (sMessage == "-")
+                {
                     MenuChooseAnim(kID,sMenuType,iAuth);
-                } else {
+                }
+                else
+                {
                     sMessage = llList2String(g_lAnims2Choose,((integer)sMessage)-1);
                     g_lAnims2Choose = [];
-                    if (llGetInventoryType(sMessage) == INVENTORY_ANIMATION) {
-                        if (sMenuType == "Sitting") {
+                    if (llGetInventoryType(sMessage) == INVENTORY_ANIMATION)
+                    {
+                        if (sMenuType == "Sitting")
+                        {
                             g_sSitAnim = sMessage;
                             llMessageLinked(LINK_THIS,AO_SETTINGS,"sSitAnim="+g_sSitAnim,kID);
-                        } else if (sMenuType == "Sitting on Ground") {
+                        }
+                        else if (sMenuType == "Sitting on Ground")
+                        {
                             g_sSitAnywhereAnim = sMessage;
                             llMessageLinked(LINK_THIS,AO_SETTINGS,"sSitAnywhereAnim="+g_sSitAnywhereAnim,kID);
-                        } else if (sMenuType == "Walking") {
+                        }
+                        else if (sMenuType == "Walking")
+                        {
                             g_sWalkAnim = sMessage;
                             llMessageLinked(LINK_THIS,AO_SETTINGS,"sWalkAnim="+g_sWalkAnim,kID);
                             
                         }
-                        if (g_iAO_ON && (sMenuType != "Sitting" || g_iSitAnimOn)) {
+                        if (g_iAO_ON && (sMenuType != "Sitting" || g_iSitAnimOn))
+                        {
                             llMessageLinked(LINK_THIS,AO_SETOVERRIDE,"set:"+sMenuType+"="+sMessage,kID);
                         }
-                    } else {
+                    }
+                    else
+                    {
                         llOwnerSay("No "+sMenuType+" animation set.");
                     }
                     MenuChooseAnim(kID,sMenuType,iAuth);
                 }
-            } else if (sMenuType == "options") {
-                if (sMessage == "BACK") {
+            }
+            else if (sMenuType == "options")
+            {
+                if (sMessage == "BACK")
+                {
                     MenuAO(kID,iAuth);
                     return;
-                } else if (sMessage == "Horizontal") {
+                }
+                else if (sMessage == "Horizontal")
+                {
                     g_iLayout = 0;
                     PositionButtons();
-                } else if (sMessage == "Vertical") {
+                }
+                else if (sMessage == "Vertical")
+                {
                     g_iLayout = 1;
                     PositionButtons();
-                } else if (sMessage == "Order") {
+                }
+                else if (sMessage == "Order")
+                {
                     OrderMenu(kID,iAuth);
                     return;
                 }
                 MenuOptions(kID,iAuth);
-            } else if (sMenuType == "ordermenu") {
-                if (sMessage == "BACK") {
+            }
+            else if (sMenuType == "ordermenu")
+            {
+                if (sMessage == "BACK")
+                {
                     MenuOptions(kID,iAuth);
-                } else if (sMessage == "-") {
+                }
+                else if (sMessage == "-") 
+                {
                     OrderMenu(kID,iAuth);
-                } else if (sMessage == "Reset") {
+                }
+                else if (sMessage == "Reset") 
+                {
                     FindButtons();
                     llOwnerSay("Order position reset to default.");
                     PositionButtons();
                     OrderMenu(kID,iAuth);
-                } else if (llSubStringIndex(sMessage,":") >= 0) {
+                }
+                else if (llSubStringIndex(sMessage,":") >= 0)
+                {
                     DoButtonOrder(llList2Integer(llParseString2List(sMessage,[":"],[]),1));
                     OrderMenu(kID,iAuth);
-                } else {
+                }
+                else
+                {
                     list lButtons;
                     string sPrompt;
                     integer iTemp = llListFindList(g_lButtons,[sMessage]);
                     g_iOldPos = llListFindList(g_lPrimOrder, [iTemp]);
                     sPrompt = "\nWhich slot do you want to swap for the "+sMessage+" button.";
                     integer i;
-                    for (i=2;i<llGetListLength(g_lPrimOrder);++i) {
-                        if (g_iOldPos != i) {
+                    for (i=2;i<llGetListLength(g_lPrimOrder);++i)
+                    {
+                        if (g_iOldPos != i)
+                        {
                             lButtons +=[llList2String(g_lButtons,llList2Integer(g_lPrimOrder,i))+":"+(string)i];
                         }
                     }
                     Dialog(kID, sPrompt, lButtons, ["BACK"],iAuth,"ordermenu");
                 }
-            } else if (sMenuType == "Admin") {
-                if (sMessage == "Cancel") {
+            }
+            else if (sMenuType == "Admin")
+            {
+                if (sMessage == "Cancel")
+                {
                     return;
-                } else if (sMessage == "Collar Menu") {
+                }
+                else if (sMessage == "Collar Menu")
+                {
                     Link("from_addon",iAuth,"menu ",kID);
-                } else if (~llSubStringIndex(sMessage,"LOCK")) {
+                }
+                else if (~llSubStringIndex(sMessage,"LOCK")) {
                     Command(kID,g_sAddon+llToLower(sMessage),iAuth);
                     MenuAdmin(kID,iAuth);
-                } else if( sMessage == "DISCONNECT" ) {
+                }
+                else if( sMessage == "DISCONNECT" ) {
                     shutdown();
-                } else if (sMessage == "BACK") {
+                }
+                else if (sMessage == "BACK")
+                {
                     MenuAO(kID,iAuth);
                 }
             }  
         }
     }
 
-    http_response(key kRequestID, integer iStatus, list lMeta, string sBody) {
-        if (kRequestID == g_kWebLookup && iStatus == 200)  {
+    http_response(key kRequestID, integer iStatus, list lMeta, string sBody)
+    {
+        if (kRequestID == g_kWebLookup && iStatus == 200) 
+        {
             if ((float)sBody > (float)g_sVersion) g_iUpdateAvailable = TRUE;
             else g_iUpdateAvailable = FALSE;
         }
