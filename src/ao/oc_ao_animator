@@ -11,6 +11,7 @@ Taya Maruti:
     oct 23 2022 - change loading information to reflect missing animations.
     nov 9 2022  - Changes to further fix the permissions issue on ao transfer, as well as fix the ao not loading
                   animations when a new note card is loaded.
+    nov 11 2022 - Made the code Readable and fixed permission issue on passing to other users.
 */
 
 
@@ -63,134 +64,209 @@ list g_lCustomCards;
 
 //ao functions
 
-integer JsonValid(string sTest) {
-    if (~llSubStringIndex(JSON_FALSE+JSON_INVALID+JSON_NULL,sTest)){
+integer JsonValid(string sTest)
+{
+    if (~llSubStringIndex(JSON_FALSE+JSON_INVALID+JSON_NULL,sTest))
+    {
         return FALSE;
     }
     return TRUE;
 }
 
-SetAnimOverride() {
-    if (llGetPermissions() & PERMISSION_OVERRIDE_ANIMATIONS) {
+SetAnimOverride()
+{
+    if (llGetPermissions() & PERMISSION_OVERRIDE_ANIMATIONS)
+    {
         llResetAnimationOverride("ALL");
         integer i = 22; //llGetListLength(g_lAnimStates);
         string sAnim;
         string sAnimState;
-        do {
+        //llInstantMessage(g_kWearer,"Animations about to laod\n"+(string)g_sJson_Anims);
+        do
+        {
             sAnimState = llList2String(g_lAnimStates,i);
-            if (~llSubStringIndex(g_sJson_Anims,sAnimState)) {
+            if (~llSubStringIndex(g_sJson_Anims,sAnimState))
+            {
                 sAnim = llJsonGetValue(g_sJson_Anims,[sAnimState]);
-                if (JsonValid(sAnim)) {
-                    if (sAnimState == "Walking" && g_sWalkAnim != "") {
+                if (JsonValid(sAnim))
+                {
+                    if (sAnimState == "Walking" && g_sWalkAnim != "")
+                    {
                         sAnim = g_sWalkAnim;
-                    } else if (sAnimState == "Sitting" && !g_iSitAnimOn) {
+                    }
+                    else if (sAnimState == "Sitting" && !g_iSitAnimOn)
+                    {
                         jump next;
-                    } else if (sAnimState == "Sitting" && g_sSitAnim != "" && g_iSitAnimOn) {
+                    }
+                    else if (sAnimState == "Sitting" && g_sSitAnim != "" && g_iSitAnimOn)
+                    {
                         sAnim = g_sSitAnim;
-                    } else if (sAnimState == "Sitting on Ground" && g_sSitAnywhereAnim != "") {
+                    }
+                    else if (sAnimState == "Sitting on Ground" && g_sSitAnywhereAnim != "")
+                    {
                         sAnim = g_sSitAnywhereAnim;
-                    } else if (sAnimState == "Standing") {
+                    }
+                    else if (sAnimState == "Standing")
+                    {
                         sAnim = llList2String(llParseString2List(sAnim, ["|"],[]),0);
                     }
-                    if (llGetInventoryType(sAnim) == INVENTORY_ANIMATION){
+                    if (llGetInventoryType(sAnim) == INVENTORY_ANIMATION)
+                    {
                         llSetAnimationOverride(sAnimState, sAnim);
-                    } else {
+                    }
+                    else
+                    {
                         llOwnerSay(sAnim+" could not be found.");
                     }
                     @next;
                 }
             }
-        } while (i--);
+        } 
+        while (i--);
         llSetTimerEvent(g_iChangeInterval);
-        if (!g_iStandPause){
+        if (!g_iStandPause)
+        {
             llMessageLinked(LINK_THIS,AO_ANTISLIDE,(string)g_kWearer+":antislide off ao",llGetOwner());
         }
         //llOwnerSay("AO ready ("+(string)llGetFreeMemory()+" bytes free memory)");
     }
 }
 
-SwitchStand() {
-    if (g_iStandPause){
+SwitchStand() 
+{
+    if (g_iStandPause)
+    {
          return;
     }
-    if (llGetPermissions() & PERMISSION_OVERRIDE_ANIMATIONS) {
+    if (llGetPermissions() & PERMISSION_OVERRIDE_ANIMATIONS)
+    {
         string sCurAnim = llGetAnimationOverride("Standing");
         list lAnims = llParseString2List(llJsonGetValue(g_sJson_Anims,["Standing"]),["|"],[]);
         integer index;
-        if (g_iShuffle){
+        if (g_iShuffle)
+        {
             index = (integer)llFrand(llGetListLength(lAnims));
-        } else {
+        }
+        else
+        {
             index = llListFindList(lAnims,[sCurAnim]);
-            if (index == llGetListLength(lAnims)-1) {
+            if (index == llGetListLength(lAnims)-1)
+            {
                 index = 0;
-            } else {
+            }
+            else
+            {
                 index += 1;
             }
         }
-        if (g_iReady){
+        if (g_iReady)
+        {
             llSetAnimationOverride("Standing",llList2String(lAnims,index));
         }
     }
 }
 
-PermsCheck() {
+PermsCheck()
+{
     string sName = llGetScriptName();
-    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY)) {
+    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY))
+    {
         llOwnerSay("You have been given a no-modify OpenCollar object.  This could break future updates.  Please ask the provider to make the object modifiable.");
     }
 
-    if (!(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)) {
+    if (!(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY))
+    {
         llOwnerSay("You have put an OpenCollar script into an object that the next user cannot modify.  This could break future updates.  Please leave your OpenCollar objects modifiable.");
     }
 
     integer FULL_PERMS = PERM_COPY | PERM_MODIFY | PERM_TRANSFER;
-    if (!((llGetInventoryPermMask(sName,MASK_OWNER) & FULL_PERMS) == FULL_PERMS)) {
+    if (!((llGetInventoryPermMask(sName,MASK_OWNER) & FULL_PERMS) == FULL_PERMS))
+    {
         llOwnerSay("The " + sName + " script is not mod/copy/trans.  This is a violation of the OpenCollar license.  Please ask the person who gave you this script for a full-perms replacement.");
     }
 
-    if (!((llGetInventoryPermMask(sName,MASK_NEXT) & FULL_PERMS) == FULL_PERMS)) {
+    if (!((llGetInventoryPermMask(sName,MASK_NEXT) & FULL_PERMS) == FULL_PERMS))
+    {
         llOwnerSay("You have removed mod/copy/trans permissions for the next owner of the " + sName + " script.  This is a violation of the OpenCollar license.  Please make the script full perms again.");
     }
 }
 
-default {
-    state_entry() {
+default
+{
+    state_entry()
+    {
         g_kWearer = llGetOwner();
+        llRequestPermissions(g_kWearer,PERMISSION_OVERRIDE_ANIMATIONS);
         PermsCheck();
     }
+    attach(key kID)
+    {
+        if(kID != NULL_KEY)
+        {
+            if(llGetOwner() != g_kWearer)
+            {
+                g_kWearer = llGetOwner();
+            }
+            llRequestPermissions(g_kWearer,PERMISSION_OVERRIDE_ANIMATIONS);
+        }
+    }
 
-    link_message(integer iSender, integer iNum, string sStr, key kID) {
-        if( iNum == AO_SETTINGS){
+    link_message(integer iSender, integer iNum, string sStr, key kID)
+    {
+        if( iNum == AO_SETTINGS)
+        {
             list lPar     = llParseString2List(sStr, ["=","|"], []);
             string sVar   = llList2String(lPar, 0);
             string sVal   = llList2String(lPar, 1);
             string sVal2  = llList2String(lPar, 2);
-            if( sVar == "UPDATE"){
+            if( sVar == "UPDATE")
+            {
                 SetAnimOverride();
-            } else if( sVar == "iSitAnimOn"){
+            }
+            else if( sVar == "iSitAnimOn")
+            {
                 g_iSitAnimOn = (integer)sVal;
-            } else if( sVar == "sWalkAnim"){
+            }
+            else if( sVar == "sWalkAnim")
+            {
                 g_sWalkAnim = sVal;
                 SetAnimOverride();
-            } else if( sVar == "iSitAnywhereOn"){
+            }
+            else if( sVar == "iSitAnywhereOn")
+            {
                 g_iSitAnywhereOn = (integer)sVal;
-            } else if( sVar == "sString_Anim"){
+            }
+            else if( sVar == "sString_Anim")
+            {
                 g_sSitAnim = sVal;
-            } else if( sVar == "sSitAnywhereAnim"){
+            }
+            else if( sVar == "sSitAnywhereAnim")
+            {
                 g_sSitAnywhereAnim = sVal;
-            } else if( sVar == "iShuffle"){
+            }
+            else if( sVar == "iShuffle")
+            {
                 g_iShuffle = (integer)sVal;
-            } else if( sVar == "iStandPause"){
+            }
+            else if( sVar == "iStandPause")
+            {
                 g_iStandPause = (integer)sVal;
-            } else if( sVar == "iChangeInterval"){
+            }
+            else if( sVar == "iChangeInterval")
+            {
                 g_iChangeInterval = (integer)sVal;
                 llSetTimerEvent(g_iChangeInterval);
-            } else if(sVar == "iAO_ON"){
+            }
+            else if(sVar == "iAO_ON")
+            {
                 g_iAO_ON = (integer)sVal;
-                if(g_iAO_ON){
+                if(g_iAO_ON)
+                {
                     llRequestPermissions(g_kWearer,PERMISSION_OVERRIDE_ANIMATIONS);
                     SetAnimOverride();
-                } else {
+                }
+                else
+                {
                     llSetTimerEvent(0);
                     //llResetAnimationOverride("ALL");
                 }
@@ -199,29 +275,46 @@ default {
             {
                 llResetScript();
             }
-        } else if( iNum == AO_SETOVERRIDE){
+        }
+        else if( iNum == AO_SETOVERRIDE)
+        {
             list lPar     = llParseString2List(sStr, [":","="], []);
             string sToken  = llList2String(lPar, 0);
             string sVar   = llList2String(lPar, 1);
             string sVal  = llList2String(lPar, 2);
-            if(sToken == "switchstand"){
+            if(sToken == "switchstand")
+            {
                 SwitchStand();
-            } else if(sToken == "set"){
+            }
+            else if(sToken == "set")
+            {
                 llSetAnimationOverride(sVar,sVal);
-            } else if(sToken == "RESET"){
+            }
+            else if(sToken == "RESET")
+            {
                 llResetAnimationOverride(llToUpper(sVar));
             }
-        } else if( iNum == AO_GETOVERRIDE){
-            if( sStr == "" | sStr == "all"){
+        }
+        else if( iNum == AO_GETOVERRIDE)
+        {
+            if( sStr == "" | sStr == "all")
+            {
                 llMessageLinked(LINK_THIS,AO_GIVEOVERRIDE,g_sJson_Anims,kID);
-            } else if(~llSubStringIndex(g_sJson_Anims,sStr)){
+            }
+            else if(~llSubStringIndex(g_sJson_Anims,sStr))
+            {
                 list lAnims = llParseString2List(llJsonGetValue(g_sJson_Anims,[sStr]),["|"],[]);
                 llMessageLinked(LINK_THIS,AO_GIVEOVERRIDE,"{"+sStr+llDumpList2String(lAnims,"|")+"}",kID);
-            } else {
+            }
+            else
+            {
                 llMessageLinked(LINK_THIS,AO_GIVEOVERRIDE,"404",kID);
             }
-        } else if( iNum == AO_NOTECARD){
-            if(llGetInventoryType(sStr) == INVENTORY_NOTECARD){
+        }
+        else if( iNum == AO_NOTECARD)
+        {
+            if(llGetInventoryType(sStr) == INVENTORY_NOTECARD)
+            {
                 llOwnerSay("Loading notecard "+sStr);
                 g_sJson_Anims = "{}";
                 g_iAnimCount = 0;
@@ -234,175 +327,211 @@ default {
         }
     }
 
-    timer() {
+    timer()
+    {
         if (g_iAO_ON && g_iChangeInterval) SwitchStand();
     }
 
-    run_time_permissions(integer iFlag) {
-        if (iFlag & PERMISSION_OVERRIDE_ANIMATIONS) {
-            if (g_sJson_Anims != "{}") {
+    run_time_permissions(integer iFlag)
+    {
+        if (iFlag & PERMISSION_OVERRIDE_ANIMATIONS)
+        {
+            if (g_sJson_Anims != "{}")
+            {
                 g_iReady = TRUE;
-            } else {
+            }
+            else
+            {
                 g_iReady =  FALSE;
             }
-            if (g_iAO_ON) {
+            if (g_iAO_ON)
+            {
                 SetAnimOverride();
-            } else {
+            }
+            else
+            {
                 llResetAnimationOverride("ALL");
             }
         }
     }
-
-    changed(integer iChange) {
-        if (iChange & CHANGED_LINK) {
-            if(g_iReady){
-                if(g_iAO_ON){
-                    llRequestPermissions(g_kWearer,PERMISSION_OVERRIDE_ANIMATIONS);
-                    SwitchStand();
-                }
-            }
-        }
-        if (iChange & CHANGED_INVENTORY) PermsCheck();
-    }
-    attach(key kID)
+    
+    dataserver(key kRequest, string sData)
     {
-        if(kID != NULL_KEY || g_kWearer == kID)
+        if (kRequest == g_kCard)
         {
-            if(g_iAO_ON){
-                llRequestPermissions(g_kWearer,PERMISSION_OVERRIDE_ANIMATIONS);
-                SwitchStand();
-            } 
-        }
-    }
-    dataserver(key kRequest, string sData) {
-        if (kRequest == g_kCard) {
-            if (sData != EOF) {
-                if (llGetSubString(sData,0,0) != "["){
+            if (sData != EOF)
+            {
+                if (llGetSubString(sData,0,0) != "[")
+                {
                      jump next;
                 }
                 string sAnimationState = llStringTrim(llGetSubString(sData,1,llSubStringIndex(sData,"]")-1),STRING_TRIM);
                 // Translate common ZHAOII, Oracul and AX anim state values
-                if (sAnimationState == "Stand.1" || sAnimationState == "Stand.2" || sAnimationState == "Stand.3") {
+                if (sAnimationState == "Stand.1" || sAnimationState == "Stand.2" || sAnimationState == "Stand.3")
+                {
                     sAnimationState = "Standing";
                 }
-                if (sAnimationState == "Walk.N") {
+                if (sAnimationState == "Walk.N")
+                {
                     sAnimationState = "Walking";
                 }
-                if (sAnimationState == "Running") {
+                if (sAnimationState == "Running")
+                {
                     sAnimationState = "Running";
                 }
-                if (sAnimationState == "Turn.L") {
+                if (sAnimationState == "Turn.L")
+                {
                     sAnimationState = "Turning Left";
                 }
-                if (sAnimationState == "Turn.R") {
+                if (sAnimationState == "Turn.R")
+                {
                     sAnimationState = "Turning Right";
                 }
-                if (sAnimationState == "Sit.N") {
+                if (sAnimationState == "Sit.N")
+                {
                     sAnimationState = "Sitting";
                 }
-                if (sAnimationState == "Sit.G" || sAnimationState == "Sitting On Ground") {
+                if (sAnimationState == "Sit.G" || sAnimationState == "Sitting On Ground")
+                {
                     sAnimationState = "Sitting on Ground";
                 }
-                if (sAnimationState == "Crouch") {
+                if (sAnimationState == "Crouch")
+                {
                     sAnimationState = "Crouching";
                 }
-                if (sAnimationState == "Walk.C" || sAnimationState == "Crouch Walking") {
+                if (sAnimationState == "Walk.C" || sAnimationState == "Crouch Walking")
+                {
                     sAnimationState = "CrouchWalking";
                 }
-                if (sAnimationState == "Jump.N" || sAnimationState == "Jumping") {
+                if (sAnimationState == "Jump.N" || sAnimationState == "Jumping")
+                {
                     sAnimationState = "Jumping";
                 }
-                if (sAnimationState == "Takeoff") {
+                if (sAnimationState == "Takeoff")
+                {
                     sAnimationState = "Taking Off";
                 }
-                if (sAnimationState == "Hover.N") {
+                if (sAnimationState == "Hover.N")
+                {
                     sAnimationState = "Hovering";
                 }
-                if (sAnimationState == "Hover.U" || sAnimationState == "Flying Up") {
+                if (sAnimationState == "Hover.U" || sAnimationState == "Flying Up")
+                {
                     sAnimationState = "Hovering Up";
                 }
-                if (sAnimationState == "Hover.D" || sAnimationState == "Flying Down") {
+                if (sAnimationState == "Hover.D" || sAnimationState == "Flying Down")
+                {
                     sAnimationState = "Hovering Down";
                 }
-                if (sAnimationState == "Fly.N") {
+                if (sAnimationState == "Fly.N")
+                {
                     sAnimationState = "Flying";
                 }
-                if (sAnimationState == "Flying Slow") {
+                if (sAnimationState == "Flying Slow")
+                {
                     sAnimationState = "FlyingSlow";
                 }
-                if (sAnimationState == "Land.N") {
+                if (sAnimationState == "Land.N")
+                {
                     sAnimationState = "Landing";
                 }
-                if (sAnimationState == "Falling") {
+                if (sAnimationState == "Falling")
+                {
                     sAnimationState = "Falling Down";
                 /* ----------------------------------------------------------------------- */
                 // Meeded for competition events like those held in pony play
                 }
-                if (sAnimationState == "Striding") {
+                if (sAnimationState == "Striding")
+                {
                     sAnimationState = "Striding";
                 }
-                if (sAnimationState == "Soft Landing") {
+                if (sAnimationState == "Soft Landing")
+                {
                     sAnimationState = "Soft Landing";
                 }
-                if (sAnimationState == "Jump.P" || sAnimationState == "Pre Jumping") {
+                if (sAnimationState == "Jump.P" || sAnimationState == "Pre Jumping")
+                {
                     sAnimationState = "PreJumping";
                 }
-                if (sAnimationState == "Stand.U") {
+                if (sAnimationState == "Stand.U")
+                {
                     sAnimationState = "Standing Up";
                 /* ----------------------------------------------------------------------- */
                 }
-                if (!~llListFindList(g_lAnimStates,[sAnimationState])) {
+                if (!~llListFindList(g_lAnimStates,[sAnimationState]))
+                {
                     jump next;
                 }
-                if (llStringLength(sData)-1 > llSubStringIndex(sData,"]")) {
+                if (llStringLength(sData)-1 > llSubStringIndex(sData,"]"))
+                {
                     sData = llGetSubString(sData,llSubStringIndex(sData,"]")+1,-1);
                     list lTemp = llParseString2List(sData, ["|",","],[]);
                     integer i = llGetListLength(lTemp);
                     g_iAnimCount += i;
-                    while(i--) {
-                        if (llGetInventoryType(llList2String(lTemp,i)) != INVENTORY_ANIMATION) {
+                    while(i--)
+                    {
+                        if (llGetInventoryType(llList2String(lTemp,i)) != INVENTORY_ANIMATION)
+                        {
                             ++g_iAnimFail;
                             llOwnerSay("Animation "+llList2String(lTemp,i)+" was not found!");
                             lTemp = llDeleteSubList(lTemp,i,i);
                         }
                     }
-                    if (sAnimationState == "Sitting on Ground"){
+                    if (sAnimationState == "Sitting on Ground")
+                    {
                         g_sSitAnywhereAnim = llList2String(lTemp,0);
                         llMessageLinked(LINK_THIS,AO_STATUS,"UPDATE:sSitAnywhereAnim="+g_sSitAnywhereAnim,llGetOwner());
-                    } else if (sAnimationState == "Sitting") {
+                    }
+                    else if (sAnimationState == "Sitting")
+                    {
                         g_sSitAnim = llList2String(lTemp,0);
                         llMessageLinked(LINK_THIS,AO_STATUS,"UPDATE:sSitAnim="+g_sSitAnim,llGetOwner());
-                        if (g_sSitAnim != ""){
+                        if (g_sSitAnim != "")
+                        {
                             g_iSitAnimOn = TRUE;
-                        } else {
+                        }
+                        else
+                        {
                             g_iSitAnimOn = FALSE;
                         }
                         llMessageLinked(LINK_THIS,AO_STATUS,"UPDATE:iSitAnimOn="+(string)g_iSitAnimOn,llGetOwner());
-                    } else if (sAnimationState == "Walking"){
+                    }
+                    else if (sAnimationState == "Walking")
+                    {
                         g_sWalkAnim = llList2String(lTemp,0);
                         llMessageLinked(LINK_THIS,AO_STATUS,"UPDATE:sWaLkAnim="+g_sWalkAnim,llGetOwner());
-                    } else if (sAnimationState != "Standing"){
+                    }
+                    else if (sAnimationState != "Standing")
+                    {
                         lTemp = llList2List(lTemp,0,0);
                     }
-                    if (lTemp) {
+                    if (lTemp)
+                    {
                         g_sJson_Anims = llJsonSetValue(g_sJson_Anims, [sAnimationState],llDumpList2String(lTemp,"|"));
                     }
                 }
                 @next;
                 g_kCard = llGetNotecardLine(g_sCard,++g_iCardLine);
-            } else {
+            }
+            else
+            {
                 g_iSitAnywhereOn = FALSE;
                 llMessageLinked(LINK_THIS,AO_STATUS,"UPDATE:iSitAnywhereOn="+(string)g_iSitAnywhereOn,llGetOwner());
                 integer index = llListFindList(g_lCustomCards,[g_sCard]);
-                if (~index) {
+                if (~index)
+                {
                     g_sCard = llList2String(g_lCustomCards,index+1)+" ("+g_sCard+")";
                 }
                 g_lCustomCards = [];
-                if (g_sJson_Anims == "{}") {
+                if (g_sJson_Anims == "{}")
+                {
                     llOwnerSay("\""+g_sCard+"\" is an invalid animation set and can't play.");
                     g_iAO_ON = FALSE;
                     llMessageLinked(LINK_THIS,AO_STATUS,"UPDATE:iAO_ON="+(string)g_iAO_ON,llGetOwner());
-                } else {
+                }
+                else
+                {
+                    //llInstantMessage(g_kWearer,"Animations that passed note card read:\n"+(string)g_sJson_Anims);
                     llOwnerSay("The \""+g_sCard+"\" animation set was loaded successfully in "+(string)llGetTime()+" Seconds with "+(string)g_iCardLine+" lines and "+(string)g_iAnimCount+" animations and "+(string)g_iAnimFail+" failed to load!");
                     g_iAO_ON = TRUE;
                     llMessageLinked(LINK_THIS,AO_GIVEOVERRIDE,g_sJson_Anims,llGetOwner());
