@@ -18,7 +18,8 @@ Lillith (Lillith Xue)
 Phidoux (Taya Maruti)
     *Sept 2022      - Limited core lock/unlock to wearer and owner (issue #855)
 et al.
-
+  Medea (Medea Destiny)
+    *Dec 2022       - Fix issue #902
 
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
@@ -419,7 +420,7 @@ state active
                         llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
                     }
                     else if(sMsg == TickBox(g_iLockCore, "Lock Core")){
-                        if(iAuth != CMD_OWNER && kID != g_kWearer) {
+                        if(iAuth != CMD_OWNER && kAv != g_kWearer) {
                            llMessageLinked(LINK_SET,NOTIFY, "0%NOACCESS% to core", kID);
                            return;
                         }
