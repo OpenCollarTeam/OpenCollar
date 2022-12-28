@@ -6,7 +6,8 @@ Aria (Tashia Redrose)
     * Feb 2021       -       Created oc_unwelder_hud
 Medea (Medea Destiny)
       Aug 2022    -  Fix for issue #862, allow wearer with trusted perm to operate    
-    
+Ping (Pingout Duffield)
+   * Dec 2022    -   Fix for issue #907, order of Welded -> Addons Limited checking
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
@@ -246,7 +247,6 @@ default
                             Link("offline", 0, "", g_kUser);
                             llSleep(2);
                             llResetScript();
-                            }
                         }
                     }
                 }
