@@ -189,7 +189,7 @@ integer LabelsCount() {
             lLineLinks += [0]; // Fill with Zero
             g_lLabelLinks = llListReplaceList(g_lLabelLinks,[llDumpList2String(lLineLinks,"|")],iLine,iLine);
             //change prim description
-            llSetLinkPrimitiveParamsFast(iLink,[PRIM_DESC,"Label~notexture~nocolor~nohide~noshiny"]);
+            llSetLinkPrimitiveParamsFast(iLink,[PRIM_DESC,"Label~notexture"]);
         } else if (sLabel == "LabelBase") g_lLabelBaseElements += iLink;
     }
     
