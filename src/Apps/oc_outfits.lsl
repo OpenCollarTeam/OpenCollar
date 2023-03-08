@@ -273,7 +273,7 @@ UserCommand(integer iNum, string sStr, key kID) {
             llSleep(1);
         }
         if(sChangetype == "wear"){ //This looks like dead code TODO: Verify for removal?
-            if (g_sPath != "" && g_sPath != ".") llOwnerSay("@attachallover:"+g_sPath+"=force");
+            if (g_sPath != "~" && g_sPath != ".") llOwnerSay("@attachallover:"+g_sPath+"=force");
         }
     }
 }
