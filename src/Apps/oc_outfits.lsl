@@ -17,6 +17,7 @@ Lillith (Lillith Xue)
     * Dec 2019      - Fixed bug: Outfits not working for non-wearer as menu user due to listen typo
 Phidoux (Taya Maruti)
     *Sept 2022      - Limited core lock/unlock to wearer and owner (issue #855)
+    *Mar 2023       - Fixed lock issues with "~" and some navigation errors. (issue #910)
 et al.
 
 
@@ -257,7 +258,14 @@ UserCommand(integer iNum, string sStr, key kID) {
             }
             llSleep(2); // incase of lag
             string sAppend;
-            if(g_iRLVa)sAppend=RLVA_APPEND;
+            if(g_iRLVa)
+            {
+                sAppend=RLVA_APPEND;
+            }
+            else
+            {
+                sAppend=RLV_APPEND;
+            }
             if (g_sPath == GetOutfitSystem(FALSE)+"/" || g_sPath == GetOutfitSystem(FALSE)+"/"+sAppend) g_sLastOutfit = "NONE";
             else g_sLastOutfit=g_sPath;
 
@@ -321,6 +329,7 @@ integer STARTUP = -57;
 integer g_iRLVa = FALSE;
 
 string RLVA_APPEND=".";
+string RLV_APPEND="~";
 
 string GetOutfitSystem(integer iCorePath){
     if(g_iRLVa){
