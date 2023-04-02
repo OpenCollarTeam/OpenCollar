@@ -273,6 +273,8 @@ state startup
             g_iStartup=g_iStartup|4;
         } else if(iNum == ALIVE){
             Startup(sStr);
+        } else if(iNum == MENUNAME_REQUEST && sStr == "Settings"){
+            llMessageLinked(iSender, MENUNAME_RESPONSE, "Settings|"+g_sSubmenu,"");
         }
         if(g_iStartup>=7) state running;
     }          
