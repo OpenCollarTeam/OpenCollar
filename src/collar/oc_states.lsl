@@ -213,6 +213,9 @@ default
     }
     timer(){    
         llMessageLinked(LINK_SET, READY, "","");
+        
+        if(Alive(llList2String(g_lWaiting,0))) state startup;
+        
         if(llGetTime()<15) return;
     
         if(g_iVerbosityLevel>=1)
