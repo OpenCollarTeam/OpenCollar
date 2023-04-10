@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <asset>
+    <contributor>
+      <author>Blender User</author>
+      <authoring_tool>Blender 3.0.0 commit date:2021-12-02, commit time:18:35, hash:f1cca3055776</authoring_tool>
+    </contributor>
+    <created>2022-11-12T20:28:51</created>
+    <modified>2022-11-12T20:28:51</modified>
+    <unit name="meter" meter="1"/>
+    <up_axis>Z_UP</up_axis>
+  </asset>
+  <library_effects>
+    <effect id="Face_0-effect">
+      <profile_COMMON>
+        <technique sid="common">
+          <lambert>
+            <emission>
+              <color sid="emission">0 0 0 1</color>
+            </emission>
+            <diffuse>
+              <color sid="diffuse">0.8 0.8 0.8 1</color>
+            </diffuse>
+            <index_of_refraction>
+              <float sid="ior">1.45</float>
+            </index_of_refraction>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="Face_1-effect">
+      <profile_COMMON>
+        <technique sid="common">
+          <lambert>
+            <emission>
+              <color sid="emission">0 0 0 1</color>
+            </emission>
+            <diffuse>
+              <color sid="diffuse">0.8 0.8 0.8 1</color>
+            </diffuse>
+            <index_of_refraction>
+              <float sid="ior">1.45</float>
+            </index_of_refraction>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="Face_2-effect">
+      <profile_COMMON>
+        <technique sid="common">
+          <lambert>
+            <emission>
+              <color sid="emission">0 0 0 1</color>
+            </emission>
+            <diffuse>
+              <color sid="diffuse">0.8 0.8 0.8 1</color>
+            </diffuse>
+            <index_of_refraction>
+              <float sid="ior">1.45</float>
+            </index_of_refraction>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="Face_3-effect">
+      <profile_COMMON>
+        <technique sid="common">
+          <lambert>
+            <emission>
+              <color sid="emission">0 0 0 1</color>
+            </emission>
+            <diffuse>
+              <color sid="diffuse">0.8 0.8 0.8 1</color>
+            </diffuse>
+            <index_of_refraction>
+              <float sid="ior">1.45</float>
+            </index_of_refraction>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="Face_4-effect">
+      <profile_COMMON>
+        <technique sid="common">
+          <lambert>
+            <emission>
+              <color sid="emission">0 0 0 1</color>
+            </emission>
+            <diffuse>
+              <color sid="diffuse">0.8 0.8 0.8 1</color>
+            </diffuse>
+            <index_of_refraction>
+              <float sid="ior">1.45</float>
+            </index_of_refraction>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="Face_5-effect">
+      <profile_COMMON>
+        <technique sid="common">
+          <lambert>
+            <emission>
+              <color sid="emission">0 0 0 1</color>
+            </emission>
+            <diffuse>
+              <color sid="diffuse">0.8 0.8 0.8 1</color>
+            </diffuse>
+            <index_of_refraction>
+              <float sid="ior">1.45</float>
+            </index_of_refraction>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_images/>
+  <library_materials>
+    <material id="Face_0-material" name="Face 0">
+      <instance_effect url="#Face_0-effect"/>
+    </material>
+    <material id="Face_1-material" name="Face 1">
+      <instance_effect url="#Face_1-effect"/>
+    </material>
+    <material id="Face_2-material" name="Face 2">
+      <instance_effect url="#Face_2-effect"/>
+    </material>
+    <material id="Face_3-material" name="Face 3">
+      <instance_effect url="#Face_3-effect"/>
+    </material>
+    <material id="Face_4-material" name="Face 4">
+      <instance_effect url="#Face_4-effect"/>
+    </material>
+    <material id="Face_5-material" name="Face 5">
+      <instance_effect url="#Face_5-effect"/>
+    </material>
+  </library_materials>
+  <library_geometries>
+    <geometry id="_-mesh" name="0">
+      <mesh>
+        <source id="_-mesh-positions">
+          <float_array id="_-mesh-positions-array" count="72">-0.01611298 -0.005507946 0.005462944 -0.01610594 -0.005507946 -0.005448997 -0.01043695 -0.004592955 -0.00544697 -0.01044499 -0.004592955 0.005464971 -0.01044499 -0.004592955 0.005464971 -0.01043695 -0.004592955 -0.00544697 -0.004889965 -0.003112971 -0.005444943 -0.004897952 -0.003112971 0.005464971 -0.004897952 -0.003112971 0.005464971 -0.004889965 -0.003112971 -0.005444943 4.88e-4 -0.001113951 -0.005444943 4.88e-4 -0.00109899 0.005465984 4.88e-4 -0.00109899 0.005465984 4.88e-4 -0.001113951 -0.005444943 0.00564599 0.001433968 -0.00544399 0.00564599 0.001433968 0.005465984 0.00564599 0.001433968 0.005465984 0.00564599 0.001433968 -0.00544399 0.01043695 0.004622995 -0.00544399 0.01042896 0.004622995 0.005467951 0.01042896 0.004622995 0.005467951 0.01488494 0.008254945 -0.00544399 0.01487696 0.008254945 0.005467951 0.01043695 0.004622995 -0.00544399</float_array>
+          <technique_common>
+            <accessor source="#_-mesh-positions-array" count="24" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="_-mesh-normals">
+          <float_array id="_-mesh-normals-array" count="72">0.1574428 -0.9875281 4.11641e-4 0.1574726 -0.9875233 4.0686e-4 0.1574801 -0.9875221 4.05705e-4 0.1574504 -0.9875268 4.10163e-4 0.2523745 -0.9676296 4.31276e-4 0.2523745 -0.9676295 4.31859e-4 0.2523745 -0.9676296 4.31577e-4 0.2523746 -0.9676296 4.31724e-4 0.3454363 -0.9384421 4.55023e-4 0.3454481 -0.9384378 4.56025e-4 0.3454262 -0.9384459 4.55446e-4 0.3454552 -0.9384352 4.57532e-4 0.4370563 -0.899434 4.75244e-4 0.4370392 -0.8994423 4.72618e-4 0.4370527 -0.8994358 4.74534e-4 0.437032 -0.8994458 4.78257e-4 0.5476634 -0.8366987 4.93118e-4 0.5476703 -0.8366941 4.92858e-4 0.5476623 -0.8366994 4.93466e-4 0.5476608 -0.8367004 4.03743e-4 0.6268182 -0.7791655 5.00393e-4 0.6268181 -0.7791655 5.00379e-4 0.6268181 -0.7791655 4.63641e-4 0.626818 -0.7791656 5.00109e-4</float_array>
+          <technique_common>
+            <accessor source="#_-mesh-normals-array" count="24" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="_-mesh-map-0">
+          <float_array id="_-mesh-map-0-array" count="72">0 1 0 0 1 0 0 1 1 0 1 1 0 1 0 0 1 0 0 1 1 0 1 1 0 1 0 0 0.999997 0 0 1 0.999997 0 0.999997 1 0 1 0 0 1 0 0 1 1 0 1 1 0 1 0 0 0.999997 0 0 1 0.999997 0 0.999997 1 0 1 1 0 1 1 0 1 0 0 1 0</float_array>
+          <technique_common>
+            <accessor source="#_-mesh-map-0-array" count="36" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="_-mesh-vertices">
+          <input semantic="POSITION" source="#_-mesh-positions"/>
+        </vertices>
+        <triangles material="Face_0-material" count="2">
+          <input semantic="VERTEX" source="#_-mesh-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#_-mesh-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#_-mesh-map-0" offset="2" set="0"/>
+          <p>0 0 0 1 1 1 2 2 2 0 0 3 2 2 4 3 3 5</p>
+        </triangles>
+        <triangles material="Face_1-material" count="2">
+          <input semantic="VERTEX" source="#_-mesh-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#_-mesh-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#_-mesh-map-0" offset="2" set="0"/>
+          <p>4 4 6 5 5 7 6 6 8 4 4 9 6 6 10 7 7 11</p>
+        </triangles>
+        <triangles material="Face_2-material" count="2">
+          <input semantic="VERTEX" source="#_-mesh-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#_-mesh-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#_-mesh-map-0" offset="2" set="0"/>
+          <p>8 8 12 9 9 13 10 10 14 8 8 15 10 10 16 11 11 17</p>
+        </triangles>
+        <triangles material="Face_3-material" count="2">
+          <input semantic="VERTEX" source="#_-mesh-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#_-mesh-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#_-mesh-map-0" offset="2" set="0"/>
+          <p>12 12 18 13 13 19 14 14 20 12 12 21 14 14 22 15 15 23</p>
+        </triangles>
+        <triangles material="Face_4-material" count="2">
+          <input semantic="VERTEX" source="#_-mesh-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#_-mesh-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#_-mesh-map-0" offset="2" set="0"/>
+          <p>16 16 24 17 17 25 18 18 26 16 16 27 18 18 28 19 19 29</p>
+        </triangles>
+        <triangles material="Face_5-material" count="2">
+          <input semantic="VERTEX" source="#_-mesh-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#_-mesh-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#_-mesh-map-0" offset="2" set="0"/>
+          <p>20 20 30 21 21 31 22 22 32 20 20 33 23 23 34 21 21 35</p>
+        </triangles>
+      </mesh>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="Scene" name="Scene">
+      <node id="_" name="0" type="NODE">
+        <matrix sid="transform">0.917578 0.3975556 -6.477e-8 0 0 -1.62921e-7 -1 0 -0.3975556 0.917578 -1.49492e-7 0 0 0 0 1</matrix>
+        <instance_geometry url="#_-mesh" name="0">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="Face_0-material" target="#Face_0-material">
+                <bind_vertex_input semantic="UVMap" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
+              <instance_material symbol="Face_1-material" target="#Face_1-material">
+                <bind_vertex_input semantic="UVMap" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
+              <instance_material symbol="Face_2-material" target="#Face_2-material">
+                <bind_vertex_input semantic="UVMap" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
+              <instance_material symbol="Face_3-material" target="#Face_3-material">
+                <bind_vertex_input semantic="UVMap" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
+              <instance_material symbol="Face_4-material" target="#Face_4-material">
+                <bind_vertex_input semantic="UVMap" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
+              <instance_material symbol="Face_5-material" target="#Face_5-material">
+                <bind_vertex_input semantic="UVMap" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#Scene"/>
+  </scene>
+</COLLADA>
