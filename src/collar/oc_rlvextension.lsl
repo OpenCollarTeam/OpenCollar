@@ -49,6 +49,9 @@ Medea Destiny -
  
 Krysten Minx -
    May2022      - Added check for valid UUID when setting custom exception
+
+Very Spicy -
+    April2023   - Added the exception to allow auto accept TP requests.
 */
 string g_sParentMenu = "RLV";
 string g_sSubMenu1 = "Force Sit";
@@ -121,13 +124,14 @@ string Checkbox(integer iValue, string sLabel) {
 }
 
 list lRLVEx = [
-    "IM"            , "sendim"      , 1     ,
-    "RcvIM"         , "recvim"      , 2     ,
-    "RcvChat"       , "recvchat"    , 4     ,
-    "RcvEmote"      , "recvemote"   , 8     ,
-    "Lure"          , "tplure"      , 16    ,
-    "Force TP"      , "accepttp"    , 32    ,
-    "Start IM"      , "startim"     , 64    
+    "IM"            , "sendim"          , 1     ,
+    "RcvIM"         , "recvim"          , 2     ,
+    "RcvChat"       , "recvchat"        , 4     ,
+    "RcvEmote"      , "recvemote"       , 8     ,
+    "Lure"          , "tplure"          , 16    ,
+    "Force TP"      , "accepttp"        , 32    ,
+    "Start IM"      , "startim"         , 64    ,
+    "AcptTPReq"     , "accepttprequest" , 128
 ];
 
 string g_sExTarget = "";
@@ -258,7 +262,7 @@ MenuSetExceptions(key kID, integer iAuth, string sTarget){
     if(sTarget=="Owner") menutext+="OWNERS";
     else if(sTarget=="Trusted") menutext+="TRUSTED PEOPLE";
     else menutext+="'"+g_sTmpExceptionName+"'";
-    menutext+=" from being impacted by wearer's restrictions. Even if restricted, wearer can:\n *IM - talk in IMs with them.\n *RcvIM - Receive IMs from them.\n *RcvChat - Hear their public chat.\n *RcvEmote - See their public emotes\n *Lure - Receive TP offers from them.\n *StartIM - Start a new IM conversation with them.\n *Force TP - When on, wearer is automatically teleported on receiving a TP offer from them.";
+    menutext+=" from being impacted by wearer's restrictions. Even if restricted, wearer can:\n *IM - talk in IMs with them.\n *RcvIM - Receive IMs from them.\n *RcvChat - Hear their public chat.\n *RcvEmote - See their public emotes\n *Lure - Receive TP offers from them.\n *StartIM - Start a new IM conversation with them.\n *Force TP - When on, wearer is automatically teleported on receiving a TP offer from them.\n *Accept TP Requests - When on, wearer will auto accept TP Requests from them.";
     
     Dialog(kID, menutext, lButtons, [UPMENU], 0, iAuth, "Exceptions~Set");
 }
@@ -326,11 +330,11 @@ UpdateList(list newlist, integer type) // type 1=owner, 2=trusted;
 SetUserExes(key id, integer mask, integer lastmask)
 {
     if(id==g_kWearer) return;
-    list lExcepts=["sendim","recvim","recvchat","recvemote","tplure","accepttp","startim"];
+    list lExcepts=["sendim","recvim","recvchat","recvemote","tplure","accepttp","startim","accepttprequest"];
     integer i;
     integer maskval;
     list out;
-    while(i<7)
+    while(i<8)
     {
         maskval=(integer)llPow(2,i);
         if((mask&maskval)==maskval && (lastmask&maskval)!=maskval) out+=llList2String(lExcepts,i)+":"+(string)id+"=add";
