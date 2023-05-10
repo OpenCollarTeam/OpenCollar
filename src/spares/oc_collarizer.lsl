@@ -8,12 +8,15 @@
 
 // Instructions:
 // 1. Make sure your unscripted object allows the "Modify" permission for the next owner.
-// 2. Rez an OpenCollar Updater (7.0 or later) near your unscripted object.
-// 3. Drop this script into the root prim of your unscripted object.  When asked
+// 2. (Optional) If you want your object to support OpenCollar's hover text
+//    titler feature, make a prim with the word "FloatText" in its "Description"
+//    field.  Link it to your unscripted object, near the center, as a child
+//    prim.
+// 3. Rez an OpenCollar Updater (7.0 or later) near your unscripted object.
+// 4. Drop this script into the root prim of your unscripted object.  When asked
 //    for permission to link objects, click Yes.
 //
-// Two new child prims will be rezzed and linked to your object: A FloatText prim for the titler, and 
-// a leashpoint prim.  Then a
+// Several new child prims will be rezzed and linked to your object.  Then a
 // regular OpenCollar update process will be performed.  At the end, you may
 // wish to reposition the newly-rezzed child prims, particularly the leashpoint
 // one.
