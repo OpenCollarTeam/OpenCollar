@@ -1,3 +1,4 @@
+
 /*
 This file is a part of OpenCollar.
 Copyright ©2021
@@ -17,6 +18,7 @@ Kristen Mynx
     * July 2022       -       Fix "BACK" buttons on resizer 
 Ping (Pingout Duffield)
     * Nov 2022        -       Add in link message for cuff [New Theme] button using iNum == 32
+    * May 2023        -       Minor change: new chain texture UUID, adjustment to particle scale
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
@@ -288,14 +290,14 @@ ClearAllParticles(){
 
 SetParticles(integer link, key kID,key kTexture, float fMaxAge, float fGravity){
 
-    if(kTexture=="" || kTexture=="def")kTexture="4cde01ac-4279-2742-71e1-47ff81cc3529";
+    if(kTexture=="" || kTexture=="def")kTexture="1f5df35f-7859-897a-9c40-c787ba944393";
     if(fMaxAge==0)fMaxAge=7.3;
     if(llRound(fGravity) == -1) fGravity = -0.01;
     llLinkParticleSystem(link, [
 PSYS_SRC_PATTERN,PSYS_SRC_PATTERN_DROP,
 PSYS_PART_START_ALPHA,1,
-PSYS_PART_START_SCALE,<0.075, 0.075, 0>,
-PSYS_PART_END_SCALE,<0.075,0.075,0>,
+PSYS_PART_START_SCALE,<0.07, 0.07, 0>,
+PSYS_PART_END_SCALE,<0.07,0.07,0>,
 PSYS_PART_MAX_AGE,fMaxAge,
 PSYS_SRC_BURST_PART_COUNT,1,
 PSYS_SRC_ACCEL,<0, 0, -0.01>,
