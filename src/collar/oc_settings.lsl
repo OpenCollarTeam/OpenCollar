@@ -10,6 +10,9 @@ https://github.com/OpenCollarTeam/OpenCollar
 Medea Destiny
         Sept 2021   -   Tightened timings on release of all settings and reduced sleep
                         padding on initialize
+
+Taya Maruti
+        Mar 2023    -   Preparation for linkset data migration.
 */
 
 //string g_sParentMenu = "Apps";
@@ -20,13 +23,22 @@ integer TIMEOUT_FIRED = 30499;
 
 
 string GetSetting(string sToken) {
-    integer i = llListFindList(g_lSettings, [llToLower(sToken)]);
-    if(i == -1)return "NOT_FOUND";
-    return llList2String(g_lSettings, i + 1);
+    sToken = llToLower(sToken);
+    integer i = llListFindList(g_lSettings, [sToken]);
+    if(i == -1)
+    {
+        return llList2String(g_lSettings, i + 1);
+    }
+    else if(~llListFindList(llLinksetDataListKeys(0,llLinksetDataCountKeys()),[sToken]))
+    {
+        return llLinksetDataRead(sToken);
+    }
+    return "NOT_FOUND";
 }
 
 DelSetting(string sToken) { // we'll only ever delete user settings
     sToken = llToLower(sToken);
+    llLinksetDataDelete(sToken);
     integer i = llGetListLength(g_lSettings) - 1;
     if(sToken == "intern_weld")DeleteWeldFlag();
     if (SplitToken(sToken, 1) == "all") {
@@ -64,12 +76,22 @@ integer GroupIndex(string sToken) {
 
 integer SettingExists(string sToken) {
     sToken = llToLower(sToken);
-    if (~llListFindList(g_lSettings, [sToken])) return TRUE;
+    if(~llListFindList(llLinksetDataListKeys(0,llLinksetDataCountKeys()),[sToken]))
+    {
+        if(~llListFindList(g_lSettings, [sToken]))
+        {   // reapir g_lSettings if missing.
+            g_lSettings = SetSetting(sToken,llLinksetDataRead(sToken));
+        }
+        return TRUE;
+    }
+    else if (~llListFindList(g_lSettings, [sToken])) return TRUE;
     return FALSE;
 }
 
 list SetSetting(string sToken, string sValue) {
     sToken = llToLower(sToken);
+    // write every thing to linksetdata
+    llLinksetDataWrite(sToken,sValue);
     integer idx = llListFindList(g_lSettings, [sToken]);
     if (~idx) return llListReplaceList(g_lSettings, [sValue], idx + 1, idx + 1);
     idx = GroupIndex(sToken);
@@ -407,11 +429,19 @@ RestoreWeldState(){
 
     // get welded
     list lPara = llParseString2List(llList2String(llGetLinkPrimitiveParams(g_iWeldStorage,[PRIM_DESC]),0),["~"],[]);
-    if(llListFindList(lPara,["weld"])!=-1){
+    if((integer)llLinksetDataRead("intern_weldby") || (integer)llLinksetDataRead("intern_weld"))
+    {
+        // if it exists in linkset we apply that information.
+        g_lSettings = SetSetting("intern_weldby",llLinksetDataRead("intern_weldby"));
+        g_lSettings = SetSetting("intern_weld",llLinksetDataRead("intern_weld"));
+        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "intern_weld","");
+        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "intern_weldby","");
+    }
+    else if(llListFindList(lPara,["weld"])!=-1)
+    {
         integer index = llListFindList(lPara,["weld"]);
         g_lSettings = SetSetting("intern_weldby", llList2String(lPara, index+1));
         g_lSettings = SetSetting("intern_weld","1");
-
         llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "intern_weld","");
         llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "intern_weldby","");
     }
@@ -432,6 +462,8 @@ DeleteWeldFlag()
     lPara = llDeleteSubList(lPara,iIndex,iIndex+1);
 
     llSetLinkPrimitiveParams(g_iWeldStorage, [PRIM_DESC, llDumpList2String(lPara,"~")]);
+    llLinksetDataDelete("intern_weld");
+    llLinksetDataDelete("intern_weldBy");
 }
 integer g_iBootup;
 
@@ -556,6 +588,7 @@ default
             // This is recieved back from settings when a setting is deleted
             if(!CheckModifyPerm(sStr, kID))return;
             DelSetting(sStr);
+
             llMessageLinked(LINK_SET, LM_SETTING_REQUEST, sStr,""); // trigger the empty signal to be dispatched
         } else if(iNum == LM_SETTING_RESPONSE){
             list lTmp = llParseString2List(sStr,["_","="],[]);
