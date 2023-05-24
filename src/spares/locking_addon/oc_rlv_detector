@@ -1,4 +1,10 @@
 /*
+THIS FILE IS HEREBY RELEASED UNDER THE Public Domain
+This script is released public domain, unlike other OC scripts for a specific and limited reason, because we want to encourage third party plugin creators to create for OpenCollar and use whatever permissions on their own work they see fit.  No portion of OpenCollar derived code may be used excepting this script,  without the accompanying GPLv2 license.
+-Authors Attribution-
+Phidoux (taya.maruti) - (May 24 2023) - this script will allow rlv scripts to verify that rlv is alive and functioning.
+
+//==========================================//
   this script just pings for rlv so that other scripts in the object can be sure rlv exists.
 */
 
