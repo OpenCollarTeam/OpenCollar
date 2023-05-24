@@ -1,3 +1,12 @@
+/*
+THIS FILE IS HEREBY RELEASED UNDER THE Public Domain
+This script is released public domain, unlike other OC scripts for a specific and limited reason, because we want to encourage third party plugin creators to create for OpenCollar and use whatever permissions on their own work they see fit.  No portion of OpenCollar derived code may be used excepting this script,  without the accompanying GPLv2 license.
+-Authors Attribution-
+Aria (tiff589) - (August 2020)
+Lysea - (December 2020)
+Taya  - (May 24 2023) Changes to make addons more stable, and make use of LSD.
+*/
+
 integer API_CHANNEL = 0x60b97b5e;
 
 //list g_lCollars;
