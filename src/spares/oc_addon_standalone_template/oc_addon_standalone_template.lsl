@@ -4,6 +4,9 @@ This script is released public domain, unlike other OC scripts for a specific an
 -Authors Attribution-
 Aria (tiff589) - (August 2020)
 Lysea - (December 2020)
+Phidoux (taya.maruti) - (Thu Jun  1 2023) 
+    reconfigured the addon template to improve preformance, enable stand alone functionality, separated menu to lower script
+    memory and allow bigger menues without causing stack heap collision.
 */
 
 integer API_CHANNEL = 0x60b97b5e;
