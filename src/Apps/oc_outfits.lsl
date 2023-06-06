@@ -18,6 +18,7 @@ Lillith (Lillith Xue)
 Phidoux (Taya Maruti)
     *Sept 2022      - Limited core lock/unlock to wearer and owner (issue #855)
 et al.
+    *Mar 2023       - Fixed lock issues with "~" and some navigation errors. (issue #910)
 
 
 Licensed under the GPLv2. See LICENSE for full details.
@@ -257,7 +258,14 @@ UserCommand(integer iNum, string sStr, key kID) {
             }
             llSleep(2); // incase of lag
             string sAppend;
-            if(g_iRLVa)sAppend=RLVA_APPEND;
+            if(g_iRLVa)
+            {
+                sAppend=RLVA_APPEND;
+            }
+            else
+            {
+                sAppend=RLV_APPEND;
+            }
             if (g_sPath == GetOutfitSystem(FALSE)+"/" || g_sPath == GetOutfitSystem(FALSE)+"/"+sAppend) g_sLastOutfit = "NONE";
             else g_sLastOutfit=g_sPath;
 
@@ -265,7 +273,7 @@ UserCommand(integer iNum, string sStr, key kID) {
             llSleep(1);
         }
         if(sChangetype == "wear"){ //This looks like dead code TODO: Verify for removal?
-            if (g_sPath != "" && g_sPath != ".") llOwnerSay("@attachallover:"+g_sPath+"=force");
+            if (g_sPath != "~" && g_sPath != ".") llOwnerSay("@attachallover:"+g_sPath+"=force");
         }
     }
 }
@@ -321,6 +329,7 @@ integer STARTUP = -57;
 integer g_iRLVa = FALSE;
 
 string RLVA_APPEND=".";
+string RLV_APPEND="~";
 
 string GetOutfitSystem(integer iCorePath){
     if(g_iRLVa){
