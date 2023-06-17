@@ -19,32 +19,32 @@ list g_lCheckBoxes = ["▢","▣"];
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName)
 {
-    list g_lMenuIDs;
+    list lMenuIDs;
     if(llLinksetDataRead(llToLower(llLinksetDataRead("addon_name"))+"_menu") != "")
     {
-        g_lMenuIDs = llParseString2List(llLinksetDataRead(llToLower(llLinksetDataRead("addon_name"))+"_menu"),[","],[]);
+        lMenuIDs = llParseString2List(llLinksetDataRead(llToLower(llLinksetDataRead("addon_name"))+"_menu"),[","],[]);
     }
     integer iChannel = llRound(llFrand(10000000)) + 100000;
-    while (~llListFindList(g_lMenuIDs, [iChannel]))
+    while (~llListFindList(lMenuIDs, [iChannel]))
     {
         iChannel = llRound(llFrand(10000000)) + 100000;
     }
     integer iListener = llListen(iChannel, "",kID, "");
     integer iTime = llGetUnixTime() + 180;
-    integer iIndex = llListFindList(g_lMenuIDs, [(string)kID]);
+    integer iIndex = llListFindList(lMenuIDs, [(string)kID]);
     if (~iIndex)
     {
-        llListenRemove(llList2Integer(g_lMenuIDs,2));
-        g_lMenuIDs = llListReplaceList(g_lMenuIDs,[kID, iChannel, iListener, iTime, sName, iAuth],iIndex,iIndex+4);
+        llListenRemove(llList2Integer(lMenuIDs,2));
+        g_lMenuIDs = llListReplaceList(lMenuIDs,[kID, iChannel, iListener, iTime, sName, iAuth],iIndex,iIndex+5);
     }
     else
     {
-        g_lMenuIDs = [kID, iChannel, iListener, iTime, sName, iAuth];
+        g_lMenuIDs += [kID, iChannel, iListener, iTime, sName, iAuth];
     }
     llDialog(kID,sPrompt,SortButtons(lChoices,lUtilityButtons),iChannel);
-    llLinksetDataWrite(llToLower(llLinksetDataRead("addon_name"))+"_menu",llDumpList2String(g_lMenuIDs,","));
+    llLinksetDataWrite(llToLower(llLinksetDataRead("addon_name"))+"_menu",llDumpList2String(lMenuIDs,","));
     iPage = 0;
-    g_lMenuIDs = [];
+    lMenuIDs = [];
 }
 
 list SortButtons(list lButtons, list lStaticButtons)
@@ -148,16 +148,39 @@ default
 
     timer()
     {
-        list g_lMenuIDs = llParseString2List(llLinksetDataRead(llToLower(llLinksetDataRead("addon_name"))+"_menu"),[","],[]);
-        if(llGetListLength(g_lMenuIDs))
+        list lMenuIDs = llParseString2List(llLinksetDataRead(llToLower(llLinksetDataRead("addon_name"))+"_menu"),[","],[]);
+        integer n = llGetListLength(lMenuIDs) - 5;
+        integer iNow = llGetUnixTime();
+        for ( n; n>=0; n=n-5 )
         {
-            if(llGetUnixTime() >= llList2Integer(g_lMenuIDs,3))
+            integer iDieTime = llList2Integer(lMenuIDs,n+3);
+            if ( iNow > iDieTime )
             {
-                llListenRemove(llList2Integer(g_lMenuIDs,2));
-                llLinksetDataDelete(llToLower(llLinksetDataRead("addon_name"))+"_menu");
-                llOwnerSay("Closing Menu:"+llList2String(g_lMenuIDs,4));
+                llInstantMessage(llList2Key(lMenuIDs,n-1),"Menu Timed out!");
+                llListenRemove(llList2Integer(lMenuIDs,n+2));
+                lMenuIDs = llDeleteSubList(lMenuIDs,n,n+5);
             }
         }
+        if(!llGetListLength(lMenuIDs))
+        {
+            llLinksetDataDelete(llToLower(llLinksetDataRead("addon_name"))+"_menu"));
+            llSetTimerEvent(0.0);
+        }
+        else
+        {
+            llLinksetDataWrite(llToLower(llLinksetDataRead("addon_name"))+"_menu"),llDumpList2String(g_lMenuIDs,","));
+        }
+/*
+        if(llGetListLength(lMenuIDs))
+        {
+            if(llGetUnixTime() >= llList2Integer(lMenuIDs,3))
+            {
+                llListenRemove(llList2Integer(lMenuIDs,2));
+                llLinksetDataDelete(llToLower(llLinksetDataRead("addon_name"))+"_menu");
+                llOwnerSay("Closing Menu:"+llList2String(lMenuIDs,4));
+            }
+        }
+*/
         g_lMenuIDs=[];
     }
 
@@ -165,21 +188,21 @@ default
     {
         if (~llListFindList( llParseString2List(llLinksetDataRead(llToLower(llLinksetDataRead("addon_name"))+"_menu"),[","],[]),[(string)kID,(string)iChannel]))
         {
-            list g_lMenuIDs = llParseString2List(llLinksetDataRead(llToLower(llLinksetDataRead("addon_name"))+"_menu"),[","],[]);
+            list lMenuIDs = llParseString2List(llLinksetDataRead(llToLower(llLinksetDataRead("addon_name"))+"_menu"),[","],[]);
             //llOwnerSay(llToLower(llLinksetDataRead("addon_name"))+"_menu"+" Data is\n["+llLinksetDataRead(llToLower(llLinksetDataRead("addon_name"))+"_menu")+"]\nand g_lMenuIDs Data is\n["+llDumpList2String(g_lMenuIDs,",")+"]");
             if(llLinksetDataRead(llToLower(llLinksetDataRead("addon_name"))+"_menu") == "")
             {
                 llOwnerSay("Error Menu is Blank when it should not be!");
-                g_lMenuIDs = [];
+                lMenuIDs = [];
             }
-            integer iMenuIndex = llListFindList(g_lMenuIDs, [(string)kID]);
-            integer iAuth = llList2Integer(g_lMenuIDs,iMenuIndex+5);
-            string sMenu = llList2String(g_lMenuIDs, iMenuIndex+4);
-            llListenRemove(llList2Integer(g_lMenuIDs,iMenuIndex+2));
-            g_lMenuIDs = llDeleteSubList(g_lMenuIDs,iMenuIndex, iMenuIndex+4);
-            llLinksetDataWrite(llToLower(llLinksetDataRead("addon_name"))+"_menu",llDumpList2String(g_lMenuIDs,","));
+            integer iMenuIndex = llListFindList(lMenuIDs, [(string)kID]);
+            integer iAuth = llList2Integer(lMenuIDs,iMenuIndex+5);
+            string sMenu = llList2String(lMenuIDs, iMenuIndex+4);
+            llListenRemove(llList2Integer(lMenuIDs,iMenuIndex+2));
+            lMenuIDs = llDeleteSubList(lMenuIDs,iMenuIndex, iMenuIndex+4);
+            llLinksetDataWrite(llToLower(llLinksetDataRead("addon_name"))+"_menu",llDumpList2String(lMenuIDs,","));
             llLinksetDataWrite("menu_user",(string)kID);
-            g_lMenuIDs=[];
+            lMenuIDs=[];
             integer iRespring = TRUE;
             if (sMenu == "Menu~Main") {
                 if (sMsg == "Admin")
