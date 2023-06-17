@@ -35,11 +35,11 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
     if (~iIndex)
     {
         llListenRemove(llList2Integer(lMenuIDs,2));
-        g_lMenuIDs = llListReplaceList(lMenuIDs,[kID, iChannel, iListener, iTime, sName, iAuth],iIndex,iIndex+5);
+        lMenuIDs = llListReplaceList(lMenuIDs,[kID, iChannel, iListener, iTime, sName, iAuth],iIndex,iIndex+5);
     }
     else
     {
-        g_lMenuIDs += [kID, iChannel, iListener, iTime, sName, iAuth];
+        lMenuIDs += [kID, iChannel, iListener, iTime, sName, iAuth];
     }
     llDialog(kID,sPrompt,SortButtons(lChoices,lUtilityButtons),iChannel);
     llLinksetDataWrite(llToLower(llLinksetDataRead("addon_name"))+"_menu",llDumpList2String(lMenuIDs,","));
@@ -168,7 +168,7 @@ default
         }
         else
         {
-            llLinksetDataWrite(llToLower(llLinksetDataRead("addon_name"))+"_menu"),llDumpList2String(g_lMenuIDs,","));
+            llLinksetDataWrite(llToLower(llLinksetDataRead("addon_name"))+"_menu"),llDumpList2String(lMenuIDs,","));
         }
 /*
         if(llGetListLength(lMenuIDs))
@@ -181,7 +181,7 @@ default
             }
         }
 */
-        g_lMenuIDs=[];
+        lMenuIDs=[];
     }
 
     listen(integer iChannel, string sName, key kID, string sMsg)
@@ -189,7 +189,7 @@ default
         if (~llListFindList( llParseString2List(llLinksetDataRead(llToLower(llLinksetDataRead("addon_name"))+"_menu"),[","],[]),[(string)kID,(string)iChannel]))
         {
             list lMenuIDs = llParseString2List(llLinksetDataRead(llToLower(llLinksetDataRead("addon_name"))+"_menu"),[","],[]);
-            //llOwnerSay(llToLower(llLinksetDataRead("addon_name"))+"_menu"+" Data is\n["+llLinksetDataRead(llToLower(llLinksetDataRead("addon_name"))+"_menu")+"]\nand g_lMenuIDs Data is\n["+llDumpList2String(g_lMenuIDs,",")+"]");
+            //llOwnerSay(llToLower(llLinksetDataRead("addon_name"))+"_menu"+" Data is\n["+llLinksetDataRead(llToLower(llLinksetDataRead("addon_name"))+"_menu")+"]\nand lMenuIDs Data is\n["+llDumpList2String(lMenuIDs,",")+"]");
             if(llLinksetDataRead(llToLower(llLinksetDataRead("addon_name"))+"_menu") == "")
             {
                 llOwnerSay("Error Menu is Blank when it should not be!");
