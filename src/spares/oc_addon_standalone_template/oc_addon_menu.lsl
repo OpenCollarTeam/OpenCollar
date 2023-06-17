@@ -163,12 +163,12 @@ default
         }
         if(!llGetListLength(lMenuIDs))
         {
-            llLinksetDataDelete(llToLower(llLinksetDataRead("addon_name"))+"_menu"));
+            llLinksetDataDelete(llToLower(llLinksetDataRead("addon_name"))+"_menu");
             llSetTimerEvent(0.0);
         }
         else
         {
-            llLinksetDataWrite(llToLower(llLinksetDataRead("addon_name"))+"_menu"),llDumpList2String(lMenuIDs,","));
+            llLinksetDataWrite(llToLower(llLinksetDataRead("addon_name"))+"_menu",llDumpList2String(lMenuIDs,","));
         }
 /*
         if(llGetListLength(lMenuIDs))
