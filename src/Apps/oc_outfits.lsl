@@ -20,6 +20,7 @@ Phidoux (Taya Maruti)
 et al.
     *Mar 2023       - Fixed lock issues with "~" and some navigation errors. (issue #910)
     *June 2023      - Fixed Lock issue kAv instead of kID on the button check.
+    *June 20 2023   - Fixed Stray ~ that was causing detach to not work.
 
 
 Licensed under the GPLv2. See LICENSE for full details.
@@ -241,6 +242,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                 g_sPath=GetFolderName(FALSE)+"/"+sChangevalue;
                 g_iListenTimeout=0;
             }
+            llOwnerSay("[command "+sChangetype+"]"+g_sPath);
 
             if(!g_iLocked){
                 llOwnerSay("@detach=n");
@@ -249,12 +251,13 @@ UserCommand(integer iNum, string sStr, key kID) {
             ForceLockCore();
             TickBrowser();
             llSetTimerEvent(1);
+            llOwnerSay("[command "+sChangetype+"] Attempt detach");
             if(!Bool((g_iAccessBitSet&32))){
                 if(llSubStringIndex(g_sPath, GetFolderName(TRUE))==-1)
                     llOwnerSay("@detachall:"+GetFolderName(FALSE)+"=force");
             }
             else{
-                llOwnerSay("@detach=force");
+                llOwnerSay("@detach:=force");
                 llOwnerSay("@remoutfit=force");
             }
             llSleep(2); // incase of lag
@@ -270,6 +273,9 @@ UserCommand(integer iNum, string sStr, key kID) {
             if (g_sPath == GetOutfitSystem(FALSE)+"/" || g_sPath == GetOutfitSystem(FALSE)+"/"+sAppend) g_sLastOutfit = "NONE";
             else g_sLastOutfit=g_sPath;
 
+            if(!g_iLocked){
+                llOwnerSay("@detach=y");
+            }
             RmCorelock();
             llSleep(1);
         }
@@ -316,11 +322,14 @@ ForceLockCore(){
     llOwnerSay("@detachallthis:"+GetOutfitSystem(TRUE)+"=y");
     llSleep(1);
     llOwnerSay("@detachallthis:"+GetOutfitSystem(TRUE)+"=n");
-    llSleep(0.5);
+    llSleep(1); // origionaly 0.5 may be to short and causes ~.core to be open during detach process.
 }
 
 RmCorelock(){
-    llOwnerSay("@detachallthis:"+GetOutfitSystem(TRUE)+"=y");
+    if(!g_iLockCore)
+    {
+        llOwnerSay("@detachallthis:"+GetOutfitSystem(TRUE)+"=y");
+    }
 }
 
 integer ALIVE = -55;
