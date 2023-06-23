@@ -257,7 +257,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                     llOwnerSay("@detachall:"+GetFolderName(FALSE)+"=force");
             }
             else{
-                llOwnerSay("@detach:=force");
+                llOwnerSay("@detach=force");
                 llOwnerSay("@remoutfit=force");
             }
             llSleep(2); // incase of lag
