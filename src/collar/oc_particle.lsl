@@ -754,8 +754,11 @@ state active
                     // this is likely a leash holder
                     jump ovLG;
                 }
-                if(llVecDist(llGetPos(), (vector)llList2String(llGetObjectDetails(kLGTarget, [OBJECT_POS]),0)) > g_iLeashLength){
-                    return;
+                    if(llVecDist(llGetPos(), (vector)llList2String(llGetObjectDetails(kLGTarget, [OBJECT_POS]),0)) > g_iLeashLength){
+                    //Leash length is irrelevant for the unlink command
+                    if (sLGCMD != "unlink"){
+                        return;
+                    }
                 }
 
                 @ovLG;
