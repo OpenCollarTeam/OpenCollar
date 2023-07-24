@@ -14,30 +14,30 @@ integer CMD_WEARER = 503;
 integer CMD_EVERYONE = 504;
 integer CMD_SAFEWORD = 510;
 
-integer NOTIFY = 1002;
-integer NOTIFY_OWNERS=1003;
-integer REBOOT = -1000;
+integer NOTIFY              = 1002;
+integer NOTIFY_OWNERS       = 1003;
+integer REBOOT              = -1000;
 
 // messages for storing and retrieving values in the settings script
-integer LM_SETTING_SAVE = 2000;
+integer LM_SETTING_SAVE     = 2000;
 //integer LM_SETTING_REQUEST = 2001;
 integer LM_SETTING_RESPONSE = 2002;
-integer LM_SETTING_DELETE = 2003;
-integer LM_SETTING_EMPTY = 2004;
+integer LM_SETTING_DELETE   = 2003;
+integer LM_SETTING_EMPTY    = 2004;
 
 // messages for creating OC menu structure
-integer MENUNAME_REQUEST = 3000;
-integer MENUNAME_RESPONSE = 3001;
-integer MENUNAME_REMOVE = 3003;
+integer MENUNAME_REQUEST    = 3000;
+integer MENUNAME_RESPONSE   = 3001;
+integer MENUNAME_REMOVE     = 3003;
 
 // messages for RLV commands
-integer RLV_CMD = 6000;
-integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
-integer RLV_CLEAR = 6002;//RLV plugins should clear their restriction lists upon receiving this message.
+integer RLV_CMD             = 6000;
+integer RLV_REFRESH         = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
+integer RLV_CLEAR           = 6002;//RLV plugins should clear their restriction lists upon receiving this message.
 
 string g_sParentMenu = "Apps";
-string GARBLE = "☐ Garble";
-string UNGARBLE = "☒ Garble";
+string GARBLE        = "☐ Garble";
+string UNGARBLE      = "☒ Garble";
 
 key g_kWearer;
 
@@ -45,7 +45,7 @@ integer g_iGarbleChan;
 integer g_iGarbleListen;
 
 string g_sSafeWord = "RED";
-string g_sPrefix ;
+string g_sPrefix;
 
 integer bOn;
 
@@ -67,11 +67,11 @@ Debug(string sStr) {
 */
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
-    llMessageLinked(LINK_THIS,NOTIFY,(string)iAlsoNotifyWearer+sMsg,kID);
+    llMessageLinked(LINK_THIS, NOTIFY, (string)iAlsoNotifyWearer + sMsg, kID);
 }
 
 string Name(key id) {
-    return "secondlife:///app/agent/"+(string)id+"/inspect";
+    return "secondlife:///app/agent/" + (string)id + "/inspect";
 }
 
 string garble(string in) {
@@ -93,11 +93,11 @@ string garble(string in) {
 bind() {
     if (bOn) return ;
     bOn = TRUE;
-    llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, g_sParentMenu+"|"+UNGARBLE, "");
-    llMessageLinked(LINK_THIS, MENUNAME_REMOVE, g_sParentMenu+"|"+GARBLE, "");
+    llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, g_sParentMenu + "|" + UNGARBLE, "");
+    llMessageLinked(LINK_THIS, MENUNAME_REMOVE, g_sParentMenu + "|" + GARBLE, "");
 
     g_iGarbleListen = llListen(g_iGarbleChan, "", g_kWearer, "");
-    llMessageLinked(LINK_THIS, RLV_CMD, "redirchat:"+(string)g_iGarbleChan+"=add,chatshout=n,sendim=n", NULL_KEY);
+    llMessageLinked(LINK_THIS, RLV_CMD, "redirchat:" + (string)g_iGarbleChan + "=add,chatshout=n,sendim=n", NULL_KEY);
 }
 
 release() {
@@ -108,7 +108,7 @@ release() {
     llMessageLinked(LINK_THIS, LM_SETTING_DELETE, "garble_Binder", "");
     llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, g_sParentMenu + "|" + GARBLE, "");
     llMessageLinked(LINK_THIS, MENUNAME_REMOVE, g_sParentMenu + "|" + UNGARBLE, "");
-    llMessageLinked(LINK_THIS, RLV_CMD, "chatshout=y,sendim=y,redirchat:"+(string)g_iGarbleChan+"=rem", NULL_KEY);
+    llMessageLinked(LINK_THIS, RLV_CMD, "chatshout=y,sendim=y,redirchat:" + (string)g_iGarbleChan + "=rem", NULL_KEY);
     llListenRemove(g_iGarbleListen);
 }
 
@@ -117,24 +117,24 @@ UserCommand(integer iAuth, string sStr, key kID, integer iMenu) {
     else if (llToLower(sStr) == "settings") {
         if (bOn) Notify(kID, "Garbled.", FALSE);
         else Notify(kID, "Not Garbled.", FALSE);
-    } else if (sStr == "menu "+GARBLE || llToLower(sStr) == "garble on") {
+    } else if (sStr == "menu " + GARBLE || llToLower(sStr) == "garble on") {
         if (bOn && g_kBinder == kID) Notify(kID, "I can't garble 'er any more, Jim! She's only a subbie!", FALSE);
         else {
             g_iBinder = iAuth;
             g_kBinder = kID;
-            llMessageLinked(LINK_THIS, LM_SETTING_SAVE, "garble_Binder="+(string)kID+","+(string)iAuth, "");
+            llMessageLinked(LINK_THIS, LM_SETTING_SAVE, "garble_Binder=" + (string)kID + "," + (string)iAuth, "");
             bind();
-            if (kID != g_kWearer) llOwnerSay(Name(kID)+" ordered you to be quiet");
+            if (kID != g_kWearer) llOwnerSay(Name(kID) + " ordered you to be quiet");
             Notify(kID, "%WEARERNAME%'s speech is now garbled", FALSE);
         }
-    } else if (sStr == "menu "+UNGARBLE || llToLower(sStr) == "garble off") {
+    } else if (sStr == "menu " + UNGARBLE || llToLower(sStr) == "garble off") {
         if (iAuth <= g_iBinder) {
             release();
             if (kID != g_kWearer) llOwnerSay("You are free to speak again");
             Notify(kID, "%WEARERNAME% is allowed to talk again", FALSE);
         } else Notify(kID, "Sorry, the garbler can only be released by someone with an equal or higher rank than the person who set it.", FALSE);
     }
-    if (iMenu) llMessageLinked(LINK_THIS, iAuth, "menu "+g_sParentMenu, kID);
+    if (iMenu) llMessageLinked(LINK_THIS, iAuth, "menu " + g_sParentMenu, kID);
 }
 
 default {
@@ -144,7 +144,7 @@ default {
 
     state_entry() {
         g_kWearer = llGetOwner();
-        g_sPrefix = llGetSubString(llKey2Name(g_kWearer),0,1);
+        g_sPrefix = llGetSubString(llKey2Name(g_kWearer), 0, 1);
         release();
         g_iGarbleChan = llRound(llFrand(499) + 100);
         //llMessageLinked(LINK_THIS, LM_SETTING_REQUEST, "listener_safeword", "");
@@ -155,8 +155,8 @@ default {
     link_message(integer iLink, integer iNum, string sMsg, key kID) {
         if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sMsg, kID, FALSE);
         else if (iNum == MENUNAME_REQUEST && sMsg == g_sParentMenu) {
-            if (bOn) llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, g_sParentMenu+"|"+UNGARBLE, "");
-            else llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, g_sParentMenu+"|"+GARBLE, "");
+            if (bOn) llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, g_sParentMenu + "|" + UNGARBLE, "");
+            else llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, g_sParentMenu + "|" + GARBLE, "");
         } else if (iNum == RLV_REFRESH) {
             if (bOn) bind();
             else release();
@@ -166,7 +166,7 @@ default {
             list lParam = llParseString2List(sMsg, ["="], []);
             string sToken = llList2String(lParam, 0);
             if (sToken == "garble_Binder") {
-                list lValue = llParseString2List(llList2String(lParam,1), [","], []);
+                list lValue = llParseString2List(llList2String(lParam, 1), [","], []);
                 g_kBinder = (key)llList2String(lValue, 0);
                 g_iBinder = (integer)llList2String(lValue, 1);
                 bind();
@@ -184,12 +184,12 @@ default {
             string sw = sMsg;
             if (llGetSubString(sw, 0, 3) == "/me ") sw = llGetSubString(sw, 4, -1);
             if (llGetSubString(sw, 0, 1) == "((" && llGetSubString(sw, -2, -1) == "))") sw = llGetSubString(sw, 2, -3);
-            if (llSubStringIndex(sw, g_sPrefix)==0) sw = llGetSubString(sw, llStringLength(g_sPrefix), -1);
+            if (llSubStringIndex(sw, g_sPrefix) == 0) sw = llGetSubString(sw, llStringLength(g_sPrefix), -1);
             if (sw == g_sSafeWord)
             {
                 llMessageLinked(LINK_SET, CMD_SAFEWORD, "", "");
                 llOwnerSay("You used your safeword, your owner will be notified you did.");
-                llMessageLinked(LINK_THIS,NOTIFY_OWNERS,"Your sub %WEARERNAME% has used the safeword. Please check on their well-being in case further care is required.","");
+                llMessageLinked(LINK_THIS, NOTIFY_OWNERS, "Your sub %WEARERNAME% has used the safeword. Please check on their well-being in case further care is required.", "");
             }
             else
             {
@@ -199,20 +199,20 @@ default {
                     sOut += garble(llToLower(llGetSubString(sMsg, i, i)));
                 string sMe = llGetObjectName();
                 llSetObjectName("");
-                llWhisper(0, "/me "+Name(g_kWearer)+" mumbles: " + sOut);
+                llWhisper(0, "/me " + Name(g_kWearer) + " mumbles: " + sOut);
                 llSetObjectName(sMe);
             }
         }
     }
 
-/*
-    changed(integer iChange) {
-        if (iChange & CHANGED_REGION) {
-            if (g_iProfiled) {
-                llScriptProfiler(1);
-                Debug("profiling restarted");
+    /*
+        changed(integer iChange) {
+            if (iChange & CHANGED_REGION) {
+                if (g_iProfiled) {
+                    llScriptProfiler(1);
+                    Debug("profiling restarted");
+                }
             }
         }
-    }
-*/
+    */
 }

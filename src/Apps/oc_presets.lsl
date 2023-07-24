@@ -3,7 +3,7 @@
 // Licensed under the GPLv2.  See LICENSE for full details.
 
 string g_sScriptVersion = "8.1"; // Used to validate that a script is up to date via versions/debug command.
-integer LINK_CMD_DEBUG=1999;
+integer LINK_CMD_DEBUG  = 1999;
 /*DebugOutput(key kID, list ITEMS){
     integer i=0;
     integer end=llGetListLength(ITEMS);
@@ -13,36 +13,36 @@ integer LINK_CMD_DEBUG=1999;
     }
     llInstantMessage(kID, llGetScriptName() +final);
 }*/
-string g_sSubMenu = "SizePresets";
-string g_sParentMenu = "Apps";
+string g_sSubMenu       = "SizePresets";
+string g_sParentMenu    = "Apps";
 
-string RESTORE = "RESTORE";
-string SAVE = "SAVE";
-string DEL = "DELETE";
-string NEW = "NEW";
-string UPMENU = "BACK";
-string g_sToken = "presets";
+string RESTORE     = "RESTORE";
+string SAVE        = "SAVE";
+string DEL         = "DELETE";
+string NEW         = "NEW";
+string UPMENU      = "BACK";
+string g_sToken    = "presets";
 
 //MESSAGE MAP
-integer CMD_OWNER = 500;
+integer CMD_OWNER  = 500;
 integer CMD_WEARER = 503;
 
 integer NOTIFY = 1002;
 
-integer LM_SETTING_SAVE = 2000;
+integer LM_SETTING_SAVE     = 2000;
 //integer LM_SETTING_REQUEST = 2001;
 integer LM_SETTING_RESPONSE = 2002;
-integer LM_SETTING_DELETE = 2003;
+integer LM_SETTING_DELETE   = 2003;
 //integer LM_SETTING_EMPTY = 2004;
-integer REBOOT      = -1000;
+integer REBOOT              = -1000;
 
-integer MENUNAME_REQUEST = 3000;
+integer MENUNAME_REQUEST  = 3000;
 integer MENUNAME_RESPONSE = 3001;
-integer MENUNAME_REMOVE = 3003;
+integer MENUNAME_REMOVE   = 3003;
 
-integer DIALOG = -9000;
+integer DIALOG          = -9000;
 integer DIALOG_RESPONSE = -9001;
-integer DIALOG_TIMEOUT = -9002;
+integer DIALOG_TIMEOUT  = -9002;
 
 key g_kWearer;
 
@@ -61,8 +61,8 @@ Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer i
 
 ForceUpdate() {
     //workaround for https://jira.secondlife.com/browse/VWR-1168
-    llSetText(".", <1,1,1>, 1.0);
-    llSetText("", <1,1,1>, 1.0);
+    llSetText(".", <1, 1, 1>, 1.0);
+    llSetText("", <1, 1, 1>, 1.0);
 }
 
 DoMenu(key kAv, integer iAuth) {
@@ -76,7 +76,7 @@ DoMenu(key kAv, integer iAuth) {
 
 PresetMenu(key kAv, integer iAuth, string sType) {
     string sPrompt;
-    list lMyButtons = llList2ListStrided(g_lPresets,0,-1,2);
+    list lMyButtons = llList2ListStrided(g_lPresets, 0, -1, 2);
     list lUtils = [UPMENU];
     if (sType == RESTORE) sPrompt = "\nSelect preset to restore size/position/rotation";
     else if (sType == SAVE) {
@@ -95,45 +95,45 @@ PresetMenu(key kAv, integer iAuth, string sType) {
 }
 
 Restore(string sName, key kAv) {
-    if (!llGetAttached()){
-        llMessageLinked(LINK_THIS,NOTIFY, "0You must be wearing the %DEVICETYPE% in order to restore a preset", kAv);
+    if (!llGetAttached()) {
+        llMessageLinked(LINK_THIS, NOTIFY, "0You must be wearing the %DEVICETYPE% in order to restore a preset", kAv);
         return;
     }
-    integer i = llListFindList(g_lPresets,[sName]);
+    integer i = llListFindList(g_lPresets, [sName]);
     if (~i) {
-        list lSettings = llParseString2List(llList2String(g_lPresets, i+1),["/"],[]);
+        list lSettings = llParseString2List(llList2String(g_lPresets, i + 1), ["/"], []);
         vector vCurSize = llGetScale();
-        vector vDestSize = (vector)llList2String(lSettings,0);
+        vector vDestSize = (vector)llList2String(lSettings, 0);
         float fScale = vDestSize.x / vCurSize.x;
         llScaleByFactor(fScale);
-        llSetPos((vector)llList2String(lSettings,1));
-        llSetLocalRot((rotation)llList2String(lSettings,2));
+        llSetPos((vector)llList2String(lSettings, 1));
+        llSetLocalRot((rotation)llList2String(lSettings, 2));
         ForceUpdate();
-        llMessageLinked(LINK_THIS,NOTIFY,"0"+"%DEVICETYPE% size/position/rotation restored from '"+sName+"' preset.",kAv);
+        llMessageLinked(LINK_THIS, NOTIFY, "0" + "%DEVICETYPE% size/position/rotation restored from '" + sName + "' preset.", kAv);
     }
 }
 
 Save(string sName, key kAv) {
-    if(!llGetAttached()){
+    if (!llGetAttached()) {
         llMessageLinked(LINK_THIS, NOTIFY, "0You cannot create or update a preset while the %DEVICETYPE% is rezzed", kAv);
         return;
     }
-    string sSettings = (string)llGetScale()+"/"+(string)llGetLocalPos()+"/"+(string)llGetLocalRot();
-    integer i = llListFindList(g_lPresets,[sName]);
-    if (~i) g_lPresets = llListReplaceList(g_lPresets, [sSettings], i+1, i+1);
+    string sSettings = (string)llGetScale() + "/" + (string)llGetLocalPos() + "/" + (string)llGetLocalRot();
+    integer i = llListFindList(g_lPresets, [sName]);
+    if (~i) g_lPresets = llListReplaceList(g_lPresets, [sSettings], i + 1, i + 1);
     else g_lPresets += [sName, sSettings];
-    llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sToken+"="+llDumpList2String(g_lPresets,"~"), "");
-    llMessageLinked(LINK_THIS,NOTIFY,"0"+"%DEVICETYPE% size/position/rotation saved to '"+sName+"' preset.",kAv);
+    llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sToken + "=" + llDumpList2String(g_lPresets, "~"), "");
+    llMessageLinked(LINK_THIS, NOTIFY, "0" + "%DEVICETYPE% size/position/rotation saved to '" + sName + "' preset.", kAv);
 }
 
 Delete(string sName, key kAv) {
-    integer i = llListFindList(g_lPresets,[sName]);
+    integer i = llListFindList(g_lPresets, [sName]);
     if (~i) {
-        g_lPresets = llDeleteSubList(g_lPresets, i, i+1);
-        if (g_lPresets != []) llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sToken+"="+llDumpList2String(g_lPresets,"~"), "");
+        g_lPresets = llDeleteSubList(g_lPresets, i, i + 1);
+        if (g_lPresets != []) llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sToken + "=" + llDumpList2String(g_lPresets, "~"), "");
         else llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sToken, "");
 
-        llMessageLinked(LINK_THIS,NOTIFY,"0"+"%DEVICETYPE% size/position/rotation preset '"+sName+"' is deleted.",kAv);
+        llMessageLinked(LINK_THIS, NOTIFY, "0" + "%DEVICETYPE% size/position/rotation preset '" + sName + "' is deleted.", kAv);
     }
 }
 
@@ -142,42 +142,46 @@ UserCommand(integer iNum, string sStr, key kID) {
     string sCommand = llToLower(llList2String(lParams, 0));
     string sValue = llList2String(lParams, 1);
     if (sCommand == "menu" && sValue == g_sSubMenu) {
-        if (kID!=g_kWearer && iNum!=CMD_OWNER) {
-            llMessageLinked(LINK_THIS,NOTIFY,"0"+"%NOACCESS%",kID);
+        if (kID != g_kWearer && iNum != CMD_OWNER) {
+            llMessageLinked(LINK_THIS, NOTIFY, "0" + "%NOACCESS%", kID);
             llMessageLinked(LINK_SET, iNum, "menu " + g_sParentMenu, kID);
         } else DoMenu(kID, iNum);
     } else if (sCommand == "restore") {
-        if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_THIS,NOTIFY,"0"+"%NOACCESS%",kID);
-        else Restore(sValue,kID);
+        if (kID != g_kWearer && iNum != CMD_OWNER) llMessageLinked(LINK_THIS, NOTIFY, "0" + "%NOACCESS%", kID);
+        else Restore(sValue, kID);
     } else if (sStr == "rm presets") {
-        if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_THIS,NOTIFY,"0"+"%NOACCESS%",kID);
-        else Dialog(kID, "\nDo you really want to remove the "+g_sSubMenu+"?", ["Yes","No","Cancel"], [], 0, iNum,"rmscript");
+        if (kID != g_kWearer && iNum != CMD_OWNER) llMessageLinked(LINK_THIS, NOTIFY, "0" + "%NOACCESS%", kID);
+        else Dialog(kID, "\nDo you really want to remove the " + g_sSubMenu + "?", ["Yes", "No", "Cancel"], [], 0, iNum, "rmscript");
     }
 }
 
-integer ALIVE = -55;
-integer READY = -56;
+integer ALIVE   = -55;
+integer READY   = -56;
 integer STARTUP = -57;
+
 default
 {
-    on_rez(integer iNum){
+    on_rez(integer iNum) {
         llResetScript();
     }
-    state_entry(){
-        llMessageLinked(LINK_SET, ALIVE, llGetScriptName(),"");
+
+    state_entry() {
+        llMessageLinked(LINK_SET, ALIVE, llGetScriptName(), "");
     }
-    link_message(integer iSender, integer iNum, string sStr, key kID){
-        if(iNum == REBOOT){
-            if(sStr == "reboot"){
+
+    link_message(integer iSender, integer iNum, string sStr, key kID) {
+        if (iNum == REBOOT) {
+            if (sStr == "reboot") {
                 llResetScript();
             }
-        } else if(iNum == READY){
+        } else if (iNum == READY) {
             llMessageLinked(LINK_SET, ALIVE, llGetScriptName(), "");
-        } else if(iNum == STARTUP){
+        } else if (iNum == STARTUP) {
             state active;
         }
     }
 }
+
 state active
 {
     on_rez(integer iParam) {
@@ -221,7 +225,7 @@ state active
                     } else if (sMessage != UPMENU) Save(sMessage, kAv);
                     DoMenu(kAv, iAuth);
                 } else if (sMenuType == NEW) {
-                    sMessage = llStringTrim(sMessage,STRING_TRIM);
+                    sMessage = llStringTrim(sMessage, STRING_TRIM);
                     if (sMessage != "") Save(sMessage, kAv);
                     DoMenu(kAv, iAuth);
                 } else if (sMenuType == DEL) {
@@ -229,25 +233,25 @@ state active
                     DoMenu(kAv, iAuth);
                 } else if (sMenuType == "rmscript") {
                     if (sMessage == "Yes") {
-                        llMessageLinked(LINK_ROOT, MENUNAME_REMOVE , g_sParentMenu + "|" + g_sSubMenu, "");
+                        llMessageLinked(LINK_ROOT, MENUNAME_REMOVE, g_sParentMenu + "|" + g_sSubMenu, "");
                         llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sToken, "");
-                        llMessageLinked(LINK_THIS,NOTIFY, "1"+"Presets has been removed.", kAv);
+                        llMessageLinked(LINK_THIS, NOTIFY, "1" + "Presets has been removed.", kAv);
                         if (llGetInventoryType(llGetScriptName()) == INVENTORY_SCRIPT) llRemoveInventory(llGetScriptName());
-                    } else llMessageLinked(LINK_THIS,NOTIFY, "0"+"Presets remains installed.", kAv);
+                    } else llMessageLinked(LINK_THIS, NOTIFY, "0" + "Presets remains installed.", kAv);
                 }
             }
         } else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (~iMenuIndex) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
         } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
-        else if(iNum == LINK_CMD_DEBUG){
-            
-            integer onlyver=0;
-            if(sStr == "ver")onlyver=1;
-            llInstantMessage(kID, llGetScriptName() +" SCRIPT VERSION: "+g_sScriptVersion);
-            if(onlyver)return; // basically this command was: <prefix> versions
-            llInstantMessage(kID, llGetScriptName() + " PRESETS: "+llDumpList2String(llList2ListStrided(g_lPresets, 0, -1, 2), " | "));
+        else if (iNum == LINK_CMD_DEBUG) {
+
+            integer onlyver = 0;
+            if (sStr == "ver") onlyver = 1;
+            llInstantMessage(kID, llGetScriptName() + " SCRIPT VERSION: " + g_sScriptVersion);
+            if (onlyver) return; // basically this command was: <prefix> versions
+            llInstantMessage(kID, llGetScriptName() + " PRESETS: " + llDumpList2String(llList2ListStrided(g_lPresets, 0, -1, 2), " | "));
         }
-            
+
     }
- }
+}

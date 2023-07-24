@@ -7,10 +7,10 @@ Lysea - (December 2020)
 Taya'Phidoux' (taya.maruti) - (july 2021)
 */
 
-integer API_CHANNEL = 0x60b97b5e;
+integer API_CHANNEL         = 0x60b97b5e;
 
 //list g_lCollars;
-string g_sAddon = "Test Addon";
+string g_sAddon             = "Test Addon";
 
 //integer CMD_ZERO            = 0;
 integer CMD_OWNER           = 500;
@@ -41,7 +41,7 @@ integer DIALOG_TIMEOUT  = -9002;
  * Following LMs require opt-in:
  * [ALIVE, READY, STARTUP, CMD_ZERO, MENUNAME_REQUEST, MENUNAME_RESPONSE, MENUNAME_REMOVE, SAY, NOTIFY, DIALOG, SENSORDIALOG]
  */
-list g_lOptedLM     = [];
+list g_lOptedLM         = [];
 
 list g_lMenuIDs;
 integer g_iMenuStride;
@@ -50,30 +50,30 @@ string UPMENU = "BACK";
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
     key kMenuID = llGenerateKey();
-    
-    llRegionSayTo(g_kCollar, API_CHANNEL, llList2Json(JSON_OBJECT, [ "pkt_type", "from_addon", "addon_name", g_sAddon, "iNum", DIALOG, "sMsg", (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, "kID", kMenuID ]));
+
+    llRegionSayTo(g_kCollar, API_CHANNEL, llList2Json(JSON_OBJECT, ["pkt_type", "from_addon", "addon_name", g_sAddon, "iNum", DIALOG, "sMsg", (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, "kID", kMenuID]));
 
     integer iIndex = llListFindList(g_lMenuIDs, [kID]);
-    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [ kID, kMenuID, sName ], iIndex, iIndex + g_iMenuStride - 1);
+    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
     else g_lMenuIDs += [kID, kMenuID, sName];
 }
 
 Menu(key kID, integer iAuth) {
     string sPrompt = "\n[Menu App]";
-    list lButtons  = ["A Button"];
-    
+    list lButtons = ["A Button"];
+
     //llSay(0, "opening menu");
     Dialog(kID, sPrompt, lButtons, ["DISCONNECT", UPMENU], 0, iAuth, "Menu~Main");
 }
 
 UserCommand(integer iNum, string sStr, key kID) {
-    if (iNum<CMD_OWNER || iNum>CMD_WEARER) return;
+    if (iNum < CMD_OWNER || iNum > CMD_WEARER) return;
     if (llSubStringIndex(llToLower(sStr), llToLower(g_sAddon)) && llToLower(sStr) != "menu " + llToLower(g_sAddon)) return;
     if (iNum == CMD_OWNER && llToLower(sStr) == "runaway") {
         return;
     }
 
-    if (llToLower(sStr) == llToLower(g_sAddon) || llToLower(sStr) == "menu "+llToLower(g_sAddon))
+    if (llToLower(sStr) == llToLower(g_sAddon) || llToLower(sStr) == "menu " + llToLower(g_sAddon))
     {
         Menu(kID, iNum);
     } //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
@@ -86,12 +86,12 @@ UserCommand(integer iNum, string sStr, key kID) {
     }
 }
 
-Link(string packet, integer iNum, string sStr, key kID){
-    list packet_data = [ "pkt_type", packet, "iNum", iNum, "addon_name", g_sAddon, "bridge", FALSE, "sMsg", sStr, "kID", kID ];
+Link(string packet, integer iNum, string sStr, key kID) {
+    list packet_data = ["pkt_type", packet, "iNum", iNum, "addon_name", g_sAddon, "bridge", FALSE, "sMsg", sStr, "kID", kID];
 
     if (packet == "online" || packet == "update") // only add optin if packet type is online or update
     {
-        packet_data += [ "optin", llDumpList2String(g_lOptedLM, "~") ];
+        packet_data += ["optin", llDumpList2String(g_lOptedLM, "~")];
     }
 
     string pkt = llList2Json(JSON_OBJECT, packet_data);
@@ -105,7 +105,7 @@ Link(string packet, integer iNum, string sStr, key kID){
     }
 }
 
-key g_kCollar=NULL_KEY;
+key g_kCollar = NULL_KEY;
 integer g_iLMLastRecv;
 integer g_iLMLastSent;
 
@@ -119,11 +119,11 @@ default
         g_iLMLastRecv = llGetUnixTime(); // Need to initialize this here in order to prevent resetting before we can receive our first pong
         llSetTimerEvent(60);
     }
-    
+
     attach(key id)
     {
         // if attached make a connectin when detached disconnect.
-        if(id)
+        if (id)
         {
             Link("online", 0, "", llGetOwner());
             // do like state_entry to fix random resets on teleport or login.
@@ -136,7 +136,7 @@ default
         }
     }
 
-    
+
     timer()
     {
         if (llGetUnixTime() >= (g_iLMLastSent + 30))
@@ -150,11 +150,11 @@ default
             g_kCollar = NULL_KEY;
             llResetScript(); // perform our action on disconnect
         }
-        
+
         if (g_kCollar == NULL_KEY) Link("online", 0, "", llGetOwner());
     }
-    
-    listen(integer channel, string name, key id, string msg){
+
+    listen(integer channel, string name, key id, string msg) {
         string sPacketType = llJsonGetValue(msg, ["pkt_type"]);
         if (sPacketType == "approved" && g_kCollar == NULL_KEY)
         {
@@ -172,22 +172,22 @@ default
         {
             g_iLMLastRecv = llGetUnixTime();
         }
-        else if(sPacketType == "from_collar")
+        else if (sPacketType == "from_collar")
         {
             // process link message if in range of addon
             if (llVecDist(llGetPos(), llList2Vector(llGetObjectDetails(id, [OBJECT_POS]), 0)) <= 10.0)
             {
-                integer iNum = (integer) llJsonGetValue(msg, ["iNum"]);
-                string sStr  = llJsonGetValue(msg, ["sMsg"]);
-                key kID      = (key) llJsonGetValue(msg, ["kID"]);
-                
+                integer iNum = (integer)llJsonGetValue(msg, ["iNum"]);
+                string sStr = llJsonGetValue(msg, ["sMsg"]);
+                key kID = (key)llJsonGetValue(msg, ["kID"]);
+
                 if (iNum == LM_SETTING_RESPONSE)
                 {
-                    list lPar     = llParseString2List(sStr, ["_","="], []);
+                    list lPar = llParseString2List(sStr, ["_", "="], []);
                     string sToken = llList2String(lPar, 0);
-                    string sVar   = llList2String(lPar, 1);
-                    string sVal   = llList2String(lPar, 2);
-                    
+                    string sVar = llList2String(lPar, 1);
+                    string sVal = llList2String(lPar, 2);
+
                     if (sToken == "auth")
                     {
                         if (sVar == "owner")
@@ -199,7 +199,7 @@ default
                 else if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE)
                 {
                     UserCommand(iNum, sStr, kID);
-                    
+
                 }
                 else if (iNum == DIALOG_TIMEOUT)
                 {
@@ -217,7 +217,7 @@ default
                         key kAv = llList2Key(lMenuParams, 0);
                         string sMsg = llList2String(lMenuParams, 1);
                         integer iAuth = llList2Integer(lMenuParams, 3);
-                        
+
                         if (sMenu == "Menu~Main")
                         {
                             if (sMsg == UPMENU)

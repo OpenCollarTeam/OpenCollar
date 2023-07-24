@@ -4,8 +4,8 @@
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 // This script exists to clean up some legacy cruft in old collars:
-  // - delete the hovertext script that is in a child prim
-  // - delete the mis-named "OpenCollar - remoteserver- 3.481" script (missing a space in the name pattern)
+// - delete the hovertext script that is in a child prim
+// - delete the mis-named "OpenCollar - remoteserver- 3.481" script (missing a space in the name pattern)
 
 // The items we want to delete are identified by having these strings in their names
 list garbage = [
@@ -42,7 +42,7 @@ DelMatchingItems(string pattern) {
         string name = llGetInventoryName(INVENTORY_ALL, n);
         // look for match but don't delete self.
         if (llSubStringIndex(name, pattern) != -1
-            && name != llGetScriptName()) {
+        && name != llGetScriptName()) {
             // found the item we're looking for.  Remove!
             llRemoveInventory(name);
             //Debug("found " + name);
@@ -67,14 +67,14 @@ default {
             llSetScriptState(llGetScriptName(), FALSE);
         }
 
-        key transKey="bd7d7770-39c2-d4c8-e371-0342ecf20921";
-        integer primNumber=llGetNumberOfPrims()+1;
-        while (primNumber--){
+        key transKey = "bd7d7770-39c2-d4c8-e371-0342ecf20921";
+        integer primNumber = llGetNumberOfPrims() + 1;
+        while (primNumber--) {
             integer numOfSides = llGetNumberOfSides();
-            while (numOfSides--){
-                key texture=llList2String(llGetLinkPrimitiveParams(primNumber,[PRIM_TEXTURE,numOfSides]),0);
-                if (texture == transKey || texture == TEXTURE_PLYWOOD || texture=="!totallytransparent"){
-                    llSetLinkPrimitiveParamsFast(primNumber,[PRIM_TEXTURE,numOfSides,TEXTURE_TRANSPARENT,<1,1,1>,<0,0,0>,0]);
+            while (numOfSides--) {
+                key texture = llList2String(llGetLinkPrimitiveParams(primNumber, [PRIM_TEXTURE, numOfSides]), 0);
+                if (texture == transKey || texture == TEXTURE_PLYWOOD || texture == "!totallytransparent") {
+                    llSetLinkPrimitiveParamsFast(primNumber, [PRIM_TEXTURE, numOfSides, TEXTURE_TRANSPARENT, <1, 1, 1>, <0, 0, 0>, 0]);
                 }
             }
         }
@@ -115,15 +115,15 @@ default {
         llRemoveInventory(llGetScriptName());
     }
 
-/*
-    changed(integer iChange) {
-        if (iChange & CHANGED_REGION) {
-            if (g_iProfiled) {
-                llScriptProfiler(1);
-                Debug("profiling restarted");
+    /*
+        changed(integer iChange) {
+            if (iChange & CHANGED_REGION) {
+                if (g_iProfiled) {
+                    llScriptProfiler(1);
+                    Debug("profiling restarted");
+                }
             }
         }
-    }
-*/
+    */
 
 }

@@ -19,11 +19,11 @@ PermsCheck() {
     }
 
     integer FULL_PERMS = PERM_COPY | PERM_MODIFY | PERM_TRANSFER;
-    if (!((llGetInventoryPermMask(sName,MASK_OWNER) & FULL_PERMS) == FULL_PERMS)) {
+    if (!((llGetInventoryPermMask(sName, MASK_OWNER) & FULL_PERMS) == FULL_PERMS)) {
         llOwnerSay("The " + sName + " script is not mod/copy/trans.  This is a violation of the OpenCollar license.  Please ask the person who gave you this script for a full-perms replacement.");
     }
 
-    if (!((llGetInventoryPermMask(sName,MASK_NEXT) & FULL_PERMS) == FULL_PERMS)) {
+    if (!((llGetInventoryPermMask(sName, MASK_NEXT) & FULL_PERMS) == FULL_PERMS)) {
         llOwnerSay("You have removed mod/copy/trans permissions for the next owner of the " + sName + " script.  This is a violation of the OpenCollar license.  Please make the script full perms again.");
     }
 }
@@ -45,10 +45,12 @@ default {
         llSay(g_iMychannel, g_sResponse);
         llSetTimerEvent(2.0);
     }
+
     attach(key kAttached) {
         if (kAttached == NULL_KEY)
-            llSay(g_iMychannel, g_sWearerID+"handle detached");
+            llSay(g_iMychannel, g_sWearerID + "handle detached");
     }
+
     changed(integer change) {
         if (change & CHANGED_INVENTORY) PermsCheck();
         if (change & CHANGED_TELEPORT || change & CHANGED_REGION) {
@@ -56,6 +58,7 @@ default {
             llSetTimerEvent(2.0);
         }
     }
+
     timer() {
         if (g_i) {
             g_i = FALSE;
@@ -66,6 +69,7 @@ default {
             llSay(g_iMychannel, g_sResponse);
         }
     }
+
     on_rez(integer param) {
         llResetScript();
     }

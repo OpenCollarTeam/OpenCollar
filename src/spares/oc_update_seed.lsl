@@ -22,11 +22,11 @@ default
 
     listen(integer channel, string name, key id, string msg) {
         if (llGetOwnerKey(id) != llGetOwner()) return;
-        if (llSubStringIndex(msg, "-.. ---|") == 0) { // why morse code? sigh.  Let's keep things readable, people.
+        if (llSubStringIndex(msg, "-.. ---|") == 0) {// why morse code? sigh.  Let's keep things readable, people.
             llOwnerSay("Updater found.  Beginning update!");
             integer pin = (integer)llFrand(99999998.0) + 1; //set a random pin
             llSetRemoteScriptAccessPin(pin);
-            llRegionSayTo(id, g_iUpdateChan, "ready|" + (string)pin );
+            llRegionSayTo(id, g_iUpdateChan, "ready|" + (string)pin);
             llRemoveInventory(llGetScriptName());
         }
     }

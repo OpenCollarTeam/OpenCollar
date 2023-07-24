@@ -18,8 +18,8 @@
 // message that includes all the same stuff it got in DO_BUNDLE (talkchannel,
 // recipient, card, pin).
 
-integer DO_BUNDLE = 98749;
-integer BUNDLE_DONE = 98750;
+integer DO_BUNDLE         = 98749;
+integer BUNDLE_DONE       = 98750;
 integer INSTALLATION_DONE = 98751;
 
 integer g_iTalkChannel;
@@ -37,18 +37,18 @@ float g_iTotalItems;
 
 
 StatusBar(float fCount) {
-    fCount = 100*(fCount/g_iTotalItems);
+    fCount = 100 * (fCount / g_iTotalItems);
     if (fCount > 100) fCount = 100;
-    string sCount = ((string)((integer)fCount))+"%";
-    if (fCount < 10) sCount = "░░"+sCount;
-    else if (fCount < 45) sCount = "░"+sCount;
-    else if (fCount < 100) sCount = "█"+sCount;
+    string sCount = ((string)((integer)fCount)) + "%";
+    if (fCount < 10) sCount = "░░" + sCount;
+    else if (fCount < 45) sCount = "░" + sCount;
+    else if (fCount < 100) sCount = "█" + sCount;
     string sStatusBar = "░░░░░░░░░░░░░░░░░░░░";
-    integer i = (integer)(fCount/5);
-    do { i--;
-        sStatusBar = "█"+llGetSubString(sStatusBar,0,-2);
-    } while (i>0);
-    llSetLinkPrimitiveParamsFast(2,[PRIM_TEXT,llGetSubString(sStatusBar,0,7)+sCount+llGetSubString(sStatusBar,12,-1), <1,1,0>, 1.0]);
+    integer i = (integer)(fCount / 5);
+    do {i--;
+        sStatusBar = "█" + llGetSubString(sStatusBar, 0, -2);
+    } while (i > 0) ;
+    llSetLinkPrimitiveParamsFast(2, [PRIM_TEXT, llGetSubString(sStatusBar, 0, 7) + sCount + llGetSubString(sStatusBar, 12, -1), <1, 1, 0>, 1.0]);
     //return llGetSubString(sStatusBar,0,7)+sCount+llGetSubString(sStatusBar,12,-1);
 }
 
@@ -57,7 +57,7 @@ SetStatus() {
     // text status message
     g_iItemCounter++;
     string sMsg = "Installation in progress...\n \n \n";
-    llSetText(sMsg, <1,1,1>, 1.0);
+    llSetText(sMsg, <1, 1, 1>, 1.0);
     if (g_iTotalItems < 2) StatusBar(0.5);
     else StatusBar(g_iItemCounter);
     //if (g_iItemCounter == g_iTotalItems) g_iTotalItems= 0;
@@ -69,13 +69,15 @@ list g_lListeners;
 list g_lItems;
 list g_lTypes;
 string g_sItemName;
-integer g_iTypes=0;
+integer g_iTypes = 0;
+
 default
 {
     state_entry() {
-        llSetLinkPrimitiveParamsFast(2,[PRIM_TEXT,"", <1,1,1>, 1.0]);
+        llSetLinkPrimitiveParamsFast(2, [PRIM_TEXT, "", <1, 1, 1>, 1.0]);
         g_iTotalItems = llGetInventoryNumber(INVENTORY_ALL) - llGetInventoryNumber(INVENTORY_NOTECARD) - 3;
     }
+
     link_message(integer iSender, integer iNum, string sStr, key kID) {
         if (iNum == DO_BUNDLE) {
             // str will be in form talkchannel|uuid|bundle_card_name
@@ -88,8 +90,8 @@ default
             g_iLine = 0;
             llListenRemove(g_iListener);
             g_iListener = llListen(g_iTalkChannel, "", g_kRCPT, "");
-            if (~llSubStringIndex(g_sCard,"_DEPRECATED"))
-                llSay(g_iTalkChannel,"Core5Done");
+            if (~llSubStringIndex(g_sCard, "_DEPRECATED"))
+                llSay(g_iTalkChannel, "Core5Done");
             // get the first line of the card
             g_kLineID = llGetNotecardLine(g_sCard, g_iLine);
         }
@@ -101,7 +103,7 @@ default
             if (sData != EOF) {
                 // process bundle line
                 sData = llStringTrim(sData, STRING_TRIM);
-                if (sData == "") { //skip blank line
+                if (sData == "") {//skip blank line
                     g_iLine++ ;
                     g_kLineID = llGetNotecardLine(g_sCard, g_iLine);
                 }
@@ -129,9 +131,9 @@ default
     listen(integer iChannel, string sName, key kID, string sMsg) {
         integer iIndexChannels = llListFindList(g_lChannels, [iChannel]);
         llResetTime();
-        if(iIndexChannels != -1){
+        if (iIndexChannels != -1) {
             // -> //
-            integer iLstn = llList2Integer(g_lListeners,iIndexChannels);
+            integer iLstn = llList2Integer(g_lListeners, iIndexChannels);
             string sItem = llList2String(g_lItems, iIndexChannels);
             string sType = llList2String(g_lTypes, iIndexChannels);
             g_lChannels = llDeleteSubList(g_lChannels, iIndexChannels, iIndexChannels);
@@ -140,10 +142,10 @@ default
             g_lTypes = llDeleteSubList(g_lTypes, iIndexChannels, iIndexChannels);
 
             llListenRemove(iLstn);
-            if(sMsg == "Skip" ||sMsg=="Keep"){
+            if (sMsg == "Skip" || sMsg == "Keep") {
                 g_iLine++;
                 g_kLineID = llGetNotecardLine(g_sCard, g_iLine);
-            } else if(sMsg == "Install"){
+            } else if (sMsg == "Install") {
                 if (sType == "ITEM") {
                     llGiveInventory(g_kRCPT, sItem);
                 } else if (sType == "SCRIPT") {
@@ -153,8 +155,8 @@ default
                 }
                 g_iLine++;
                 g_kLineID = llGetNotecardLine(g_sCard, g_iLine);
-            } else if(sMsg == "Remove"){
-                llRegionSayTo(g_kRCPT, g_iTalkChannel, sType+"|"+sItem+"|"+(string)NULL_KEY+"|DEPRECATED");
+            } else if (sMsg == "Remove") {
+                llRegionSayTo(g_kRCPT, g_iTalkChannel, sType + "|" + sItem + "|" + (string)NULL_KEY + "|DEPRECATED");
             }
 
             return;
@@ -183,30 +185,30 @@ default
                 }
                 g_iLine++;
                 g_kLineID = llGetNotecardLine(g_sCard, g_iLine);
-            } else if(sCmd == "PROMPT_INSTALL"){
+            } else if (sCmd == "PROMPT_INSTALL") {
                 //Do prompt
                 g_lChannels += [llRound(llFrand(5437845))];
                 g_lListeners += [llListen(llList2Integer(g_lChannels, -1), "", llGetOwner(), "")];
                 g_lItems += [sItemName];
                 g_lTypes += [sType];
-                g_sItemName=sItemName;
+                g_sItemName = sItemName;
                 g_iTypes = 0;
 
 
-                llDialog(llGetOwner(), "[OpenCollar Installer]\nCurrent Item: "+sItemName+"\n\n* Install\t\t- This optional item is not installed. If you wish to install, select this item\n* Skip\t\t- Skip and do not install this optional item", ["Install", "Skip"], llList2Integer(g_lChannels, -1));
+                llDialog(llGetOwner(), "[OpenCollar Installer]\nCurrent Item: " + sItemName + "\n\n* Install\t\t- This optional item is not installed. If you wish to install, select this item\n* Skip\t\t- Skip and do not install this optional item", ["Install", "Skip"], llList2Integer(g_lChannels, -1));
 
                 llSetTimerEvent(1);
-            } else if(sCmd == "PROMPT_REMOVE"){
+            } else if (sCmd == "PROMPT_REMOVE") {
 
                 g_lChannels += [llRound(llFrand(5437845))];
                 g_lListeners += [llListen(llList2Integer(g_lChannels, -1), "", llGetOwner(), "")];
                 g_lItems += [sItemName];
                 g_lTypes += [sType];
-                g_sItemName=sItemName;
+                g_sItemName = sItemName;
                 g_iTypes = 1;
 
 
-                llDialog(llGetOwner(), "[OpenCollar Installer]\nCurrent Item: "+sItemName+"\n\n* Remove\t\t- This optional item is currently installed. If you wish to uninstall, select this option\n* Keep\t\t- Do not change this optional item", ["Remove", "Keep"], llList2Integer(g_lChannels, -1));
+                llDialog(llGetOwner(), "[OpenCollar Installer]\nCurrent Item: " + sItemName + "\n\n* Remove\t\t- This optional item is currently installed. If you wish to uninstall, select this option\n* Keep\t\t- Do not change this optional item", ["Remove", "Keep"], llList2Integer(g_lChannels, -1));
 
                 llSetTimerEvent(1);
             }
@@ -215,12 +217,12 @@ default
 
     timer()
     {
-        if(llGetTime()>=15.0)
+        if (llGetTime() >= 15.0)
         {
-            if(g_iTypes)
-                llDialog(llGetOwner(), "[OpenCollar Installer]\nCurrent Item: "+g_sItemName+"\n\n* Remove\t\t- This optional item is currently installed. If you wish to uninstall, select this option\n* Keep\t\t- Do not change this optional item", ["Remove", "Keep"], llList2Integer(g_lChannels, -1));
+            if (g_iTypes)
+                llDialog(llGetOwner(), "[OpenCollar Installer]\nCurrent Item: " + g_sItemName + "\n\n* Remove\t\t- This optional item is currently installed. If you wish to uninstall, select this option\n* Keep\t\t- Do not change this optional item", ["Remove", "Keep"], llList2Integer(g_lChannels, -1));
             else
-                llDialog(llGetOwner(), "[OpenCollar Installer]\nCurrent Item: "+g_sItemName+"\n\n* Install\t\t- This optional item is not installed. If you wish to install, select this item\n* Skip\t\t- Skip and do not install this optional item", ["Install", "Skip"], llList2Integer(g_lChannels, -1));
+                llDialog(llGetOwner(), "[OpenCollar Installer]\nCurrent Item: " + g_sItemName + "\n\n* Install\t\t- This optional item is not installed. If you wish to install, select this item\n* Skip\t\t- Skip and do not install this optional item", ["Install", "Skip"], llList2Integer(g_lChannels, -1));
         }
     }
 
