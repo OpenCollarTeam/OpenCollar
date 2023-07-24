@@ -14,24 +14,24 @@ Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
 */
 
-integer API_CHANNEL = 0x60b97b5e;
+integer API_CHANNEL  = 0x60b97b5e;
 
 //list g_lCollars;
-string g_sAddon = "Unwelder";
+string g_sAddon      = "Unwelder";
 
 //integer CMD_ZERO            = 0;
-integer CMD_OWNER           = 500;
+integer CMD_OWNER    = 500;
 //integer CMD_TRUSTED         = 501;
 //integer CMD_GROUP           = 502;
-integer CMD_WEARER          = 503;
-integer CMD_EVERYONE        = 504;
+integer CMD_WEARER   = 503;
+integer CMD_EVERYONE = 504;
 //integer CMD_BLOCKED         = 598; // <--- Used in auth_request, will not return on a CMD_ZERO
 //integer CMD_RLV_RELAY       = 507;
 //integer CMD_SAFEWORD        = 510;
 //integer CMD_RELAY_SAFEWORD  = 511;
 //integer CMD_NOACCESS        = 599;
 
-integer NOTIFY_OWNERS=1003;
+integer NOTIFY_OWNERS       = 1003;
 //integer LM_SETTING_SAVE     = 2000; //scripts send messages on this channel to have settings saved, <string> must be in form of "token=value"
 integer LM_SETTING_REQUEST  = 2001; //when startup, scripts send requests for settings on this channel
 integer LM_SETTING_RESPONSE = 2002; //the settings script sends responses on this channel
@@ -49,7 +49,7 @@ integer DIALOG_TIMEOUT  = -9002;
  * Following LMs require opt-in:
  * [ALIVE, READY, STARTUP, CMD_ZERO, MENUNAME_REQUEST, MENUNAME_RESPONSE, MENUNAME_REMOVE, SAY, NOTIFY, DIALOG, SENSORDIALOG]
  */
-list g_lOptedLM     = [];
+list g_lOptedLM         = [];
 
 list g_lMenuIDs;
 integer g_iMenuStride;
@@ -58,30 +58,30 @@ string UPMENU = "BACK";
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
     key kMenuID = llGenerateKey();
-    
-    llRegionSayTo(g_kCollar, API_CHANNEL, llList2Json(JSON_OBJECT, [ "pkt_type", "from_addon", "addon_name", g_sAddon, "iNum", DIALOG, "sMsg", (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, "kID", kMenuID ]));
+
+    llRegionSayTo(g_kCollar, API_CHANNEL, llList2Json(JSON_OBJECT, ["pkt_type", "from_addon", "addon_name", g_sAddon, "iNum", DIALOG, "sMsg", (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, "kID", kMenuID]));
 
     integer iIndex = llListFindList(g_lMenuIDs, [kID]);
-    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [ kID, kMenuID, sName ], iIndex, iIndex + g_iMenuStride - 1);
+    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
     else g_lMenuIDs += [kID, kMenuID, sName];
 }
 
 Menu(key kID, integer iAuth) {
     string sPrompt = "\n[OpenCollar Unwelder]\n\n* This action will break the weld on your collar. Are you sure you want to proceed?\n\n* Your owner(s) will be notified that the unweld tool was used.\n\n* Your collar will reboot immediately upon a successful unweld.";
-    list lButtons  = ["UNWELD NOW"];
-    
+    list lButtons = ["UNWELD NOW"];
+
     //llSay(0, "opening menu");
     Dialog(kID, sPrompt, lButtons, ["DISCONNECT", UPMENU], 0, iAuth, "Menu~Main");
 }
 
 UserCommand(integer iNum, string sStr, key kID) {
-    if (iNum<CMD_OWNER || iNum>CMD_WEARER) return;
+    if (iNum < CMD_OWNER || iNum > CMD_WEARER) return;
     if (llSubStringIndex(llToLower(sStr), llToLower(g_sAddon)) && llToLower(sStr) != "menu " + llToLower(g_sAddon)) return;
     if (iNum == CMD_OWNER && llToLower(sStr) == "runaway") {
         return;
     }
 
-    if (llToLower(sStr) == llToLower(g_sAddon) || llToLower(sStr) == "menu "+llToLower(g_sAddon))
+    if (llToLower(sStr) == llToLower(g_sAddon) || llToLower(sStr) == "menu " + llToLower(g_sAddon))
     {
         Menu(kID, iNum);
     } //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
@@ -94,12 +94,12 @@ UserCommand(integer iNum, string sStr, key kID) {
     }
 }
 
-Link(string packet, integer iNum, string sStr, key kID){
-    list packet_data = [ "pkt_type", packet, "iNum", iNum, "addon_name", g_sAddon, "bridge", FALSE, "sMsg", sStr, "kID", kID ];
+Link(string packet, integer iNum, string sStr, key kID) {
+    list packet_data = ["pkt_type", packet, "iNum", iNum, "addon_name", g_sAddon, "bridge", FALSE, "sMsg", sStr, "kID", kID];
 
     if (packet == "online" || packet == "update") // only add optin if packet type is online or update
     {
-        packet_data += [ "optin", llDumpList2String(g_lOptedLM, "~") ];
+        packet_data += ["optin", llDumpList2String(g_lOptedLM, "~")];
     }
 
     string pkt = llList2Json(JSON_OBJECT, packet_data);
@@ -113,60 +113,61 @@ Link(string packet, integer iNum, string sStr, key kID){
     }
 }
 
-key g_kCollar=NULL_KEY;
+key g_kCollar              = NULL_KEY;
 integer g_iLMLastRecv;
 integer g_iLMLastSent;
-key g_kUser = NULL_KEY;
-integer g_iWelded=FALSE;
+key g_kUser                = NULL_KEY;
+integer g_iWelded          = FALSE;
 integer g_iAddonLimitation = TRUE;
-integer softCounter = 0;
+integer softCounter        = 0;
 
-softreset(){
-   if(softCounter < 3){
-      softCounter ++;
-      // assume unintentional disconnect and try to salvage.
-      g_kCollar = NULL_KEY;
-      API_CHANNEL = ((integer)("0x" + llGetSubString((string)g_kUser, 0, 8))) + 0xf6eb - 0xd2;
-      Link("online", 0, "", g_kUser);
-   }
-   else {
-      // if we have tried enough times do a hard reset because the item may no longer be present!
-      llResetScript();
-   }
+softreset() {
+    if (softCounter < 3) {
+        softCounter++;
+        // assume unintentional disconnect and try to salvage.
+        g_kCollar = NULL_KEY;
+        API_CHANNEL = ((integer)("0x" + llGetSubString((string)g_kUser, 0, 8))) + 0xf6eb - 0xd2;
+        Link("online", 0, "", g_kUser);
+    }
+    else {
+        // if we have tried enough times do a hard reset because the item may no longer be present!
+        llResetScript();
+    }
 }
 
 default
 {
-    state_entry(){
-        llSetText("",ZERO_VECTOR,0);
+    state_entry() {
+        llSetText("", ZERO_VECTOR, 0);
         llSay(0, "Unwelder is now ready");
         llSetTimerEvent(10);
     }
-    touch_start(integer t){
-        if(g_kUser != NULL_KEY){
-            if(llDetectedKey(0) == g_kUser){
-                Link("from_addon", 0, "menu "+g_sAddon, g_kUser);                
+
+    touch_start(integer t) {
+        if (g_kUser != NULL_KEY) {
+            if (llDetectedKey(0) == g_kUser) {
+                Link("from_addon", 0, "menu " + g_sAddon, g_kUser);
             } else {
                 llSay(0, "Unweld tool is in use, try again in a few minutes");
             }
-        }else {
-            
-    //        llSay(0, "Unwelder now in use");
-            llSetText("In use by\n" + llKey2Name (llDetectedKey(0)), <1,0,0>,1);
+        } else {
+
+            //        llSay(0, "Unwelder now in use");
+            llSetText("In use by\n" + llKey2Name(llDetectedKey(0)), <1, 0, 0>, 1);
             //llSetText("In use..", <1,0,0>,1);
             g_iLMLastSent = llGetUnixTime();
-            g_kUser=llDetectedKey(0);
+            g_kUser = llDetectedKey(0);
             API_CHANNEL = ((integer)("0x" + llGetSubString((string)g_kUser, 0, 8))) + 0xf6eb - 0xd2;
             llListen(API_CHANNEL, "", "", "");
             Link("online", 0, "", g_kUser); // This is the signal to initiate communication between the addon and the collar
             llResetTime();
-            
+
         }
     }
-    
+
     timer()
     {
-        if(llGetTime() >= 30.0 && g_kCollar==NULL_KEY && g_kUser!=NULL_KEY){
+        if (llGetTime() >= 30.0 && g_kCollar == NULL_KEY && g_kUser != NULL_KEY) {
             llSay(0, "Connection timed out to collar.");
             softreset();
             //llResetScript();
@@ -183,11 +184,11 @@ default
             softreset();
             //llResetScript(); // perform our action on disconnect
         }
-        
+
         if (g_kCollar == NULL_KEY) Link("online", 0, "", g_kUser);
     }
-    
-    listen(integer channel, string name, key id, string msg){
+
+    listen(integer channel, string name, key id, string msg) {
         string sPacketType = llJsonGetValue(msg, ["pkt_type"]);
         if (sPacketType == "approved" && g_kCollar == NULL_KEY)
         {
@@ -197,7 +198,7 @@ default
             g_iLMLastRecv = llGetUnixTime(); // use this call as the first pong rather than packet pong
             llSay(0, "Unwelder has connected");
             llSay(0, "Downloading active settings");
-        } else if(sPacketType == "denied" && g_kCollar==id){
+        } else if (sPacketType == "denied" && g_kCollar == id) {
             g_kCollar = NULL_KEY;
             llSay(0, "Connection request was denied by the collar");
             llResetScript();
@@ -212,48 +213,48 @@ default
         {
             g_iLMLastRecv = llGetUnixTime();
         }
-        else if(sPacketType == "from_collar")
+        else if (sPacketType == "from_collar")
         {
             // process link message if in range of addon
             if (llVecDist(llGetPos(), llList2Vector(llGetObjectDetails(id, [OBJECT_POS]), 0)) <= 10.0)
             {
-                integer iNum = (integer) llJsonGetValue(msg, ["iNum"]);
-                string sStr  = llJsonGetValue(msg, ["sMsg"]);
-                key kID      = (key) llJsonGetValue(msg, ["kID"]);
-                
+                integer iNum = (integer)llJsonGetValue(msg, ["iNum"]);
+                string sStr = llJsonGetValue(msg, ["sMsg"]);
+                key kID = (key)llJsonGetValue(msg, ["kID"]);
+
                 if (iNum == LM_SETTING_RESPONSE)
                 {
-                    list lPar     = llParseString2List(sStr, ["_","="], []);
+                    list lPar = llParseString2List(sStr, ["_", "="], []);
                     string sToken = llList2String(lPar, 0);
-                    string sVar   = llList2String(lPar, 1);
-                    string sVal   = llList2String(lPar, 2);
-                    
-                    if (sToken == "global"){
-                        if(sVar=="addonlimit"){
-                            if(sVal=="0"){
+                    string sVar = llList2String(lPar, 1);
+                    string sVal = llList2String(lPar, 2);
+
+                    if (sToken == "global") {
+                        if (sVar == "addonlimit") {
+                            if (sVal == "0") {
                                 g_iAddonLimitation = FALSE;
                             }
                         }
-                    } else if(sToken == "intern"){
-                        if(sVar == "weld"){
-                            g_iWelded=1;
+                    } else if (sToken == "intern") {
+                        if (sVar == "weld") {
+                            g_iWelded = 1;
                         }
                     }
-                    
-                    if(sStr == "settings=sent"){
-                        if(g_iAddonLimitation){
+
+                    if (sStr == "settings=sent") {
+                        if (g_iAddonLimitation) {
                             llSay(0, "Addons Limited is checked. To unweld, someone with Owner access (including wearer if they are Owner) must: 1) Open the collar menu. 2)Click Settings. 3) Click the Addons button in Settings. UNCHECK AddOns Limited. Leave WearerAdd and Addons CHECKED. The Wearer can then proceed to unweld.");
                             Link("offline", 0, "", g_kUser);
                             llSleep(2);
                             llResetScript();
                         } else {
                             llSay(0, "Checking for a existing collar weld");
-                            if(g_iWelded){
+                            if (g_iWelded) {
                                 llSay(0, "Unweld tool now ready.");
                                 llSay(0, "Building consent prompt");
-                                Link("from_addon", 0, "menu "+g_sAddon, g_kUser);
+                                Link("from_addon", 0, "menu " + g_sAddon, g_kUser);
                                 llSay(0, "If for some reason this prompt does not show up, go into your addons menu to find the Unwelder button");
-                            }else{
+                            } else {
                                 llSay(0, "Collar is not welded. Aborting");
                                 Link("offline", 0, "", g_kUser);
                                 llSleep(2);
@@ -265,12 +266,12 @@ default
                 else if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE)
                 {
                     UserCommand(iNum, sStr, kID);
-                    
+
                 }
                 else if (iNum == DIALOG_TIMEOUT)
                 {
                     integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-                    g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex + 3);  //remove stride from g_lMenuIDs
+                    g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex + 3); //remove stride from g_lMenuIDs
                 }
                 else if (iNum == DIALOG_RESPONSE)
                 {
@@ -283,7 +284,7 @@ default
                         key kAv = llList2Key(lMenuParams, 0);
                         string sMsg = llList2String(lMenuParams, 1);
                         integer iAuth = llList2Integer(lMenuParams, 3);
-                        
+
                         if (sMenu == "Menu~Main")
                         {
                             if (sMsg == UPMENU)
@@ -292,13 +293,13 @@ default
                             }
                             else if (sMsg == "UNWELD NOW")
                             {
-                                if(iAuth == CMD_OWNER || g_kUser == llGetOwnerKey(id)){
+                                if (iAuth == CMD_OWNER || g_kUser == llGetOwnerKey(id)) {
                                     Link("from_addon", NOTIFY_OWNERS, "The unweld tool was used.", "");
                                     llSay(0, "Consent : Valid");
-                                    Link("from_addon", LM_SETTING_DELETE, "intern_weld","origin");
+                                    Link("from_addon", LM_SETTING_DELETE, "intern_weld", "origin");
                                     llSay(0, "Weld is now broken");
                                     llResetScript();
-                                }else{
+                                } else {
                                     llSay(0, "This tool cannot be used by someone with public access, your collar access level must be owner or wearer");
                                 }
                             }

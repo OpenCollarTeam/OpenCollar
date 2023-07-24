@@ -26,7 +26,7 @@ default
             llOwnerSay("Updater found.  Beginning update!");
             integer pin = (integer)llFrand(99999998.0) + 1; //set a random pin
             llSetRemoteScriptAccessPin(pin);
-            llRegionSayTo(id, g_iUpdateChan, "ready|" + (string)pin );
+            llRegionSayTo(id, g_iUpdateChan, "ready|" + (string)pin);
             llRemoveInventory(llGetScriptName());
         }
     }

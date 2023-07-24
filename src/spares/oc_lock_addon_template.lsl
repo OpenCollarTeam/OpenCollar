@@ -6,10 +6,10 @@ Aria (tiff589) - (August 2020)
 Lysea - (December 2020)
 */
 
-integer API_CHANNEL = 0x60b97b5e;
+integer API_CHANNEL         = 0x60b97b5e;
 
 //list g_lCollars;
-string g_sAddon = "Addon Name Here";
+string g_sAddon             = "Addon Name Here";
 
 //integer CMD_ZERO            = 0;
 integer CMD_OWNER           = 500;
@@ -40,7 +40,7 @@ integer DIALOG_TIMEOUT  = -9002;
  * Following LMs require opt-in:
  * [ALIVE, READY, STARTUP, CMD_ZERO, MENUNAME_REQUEST, MENUNAME_RESPONSE, MENUNAME_REMOVE, SAY, NOTIFY, DIALOG, SENSORDIALOG]
  */
-list g_lOptedLM     = [];
+list g_lOptedLM         = [];
 
 list g_lMenuIDs;
 integer g_iMenuStride;
@@ -51,22 +51,22 @@ string UPMENU = "BACK";
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
     key kMenuID = llGenerateKey();
 
-    llRegionSayTo(g_kCollar, API_CHANNEL, llList2Json(JSON_OBJECT, [ "pkt_type", "from_addon", "addon_name", g_sAddon, "iNum", DIALOG, "sMsg", (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, "kID", kMenuID ]));
+    llRegionSayTo(g_kCollar, API_CHANNEL, llList2Json(JSON_OBJECT, ["pkt_type", "from_addon", "addon_name", g_sAddon, "iNum", DIALOG, "sMsg", (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, "kID", kMenuID]));
 
     integer iIndex = llListFindList(g_lMenuIDs, [kID]);
-    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [ kID, kMenuID, sName ], iIndex, iIndex + g_iMenuStride - 1);
+    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
     else g_lMenuIDs += [kID, kMenuID, sName];
 }
 
 Menu(key kID, integer iAuth) {
     string sPrompt = "\n[Menu App]";
-    list lButtons  = [bLock];
+    list lButtons = [bLock];
     //llSay(0, "opening menu");
     Dialog(kID, sPrompt, lButtons, ["DISCONNECT", UPMENU], 0, iAuth, "Menu~Main");
 }
 
 UserCommand(integer iNum, string sStr, key kID) {
-    if (iNum<CMD_OWNER || iNum>CMD_WEARER) return;
+    if (iNum < CMD_OWNER || iNum > CMD_WEARER) return;
     if (llSubStringIndex(llToLower(sStr), llToLower(g_sAddon)) && llToLower(sStr) != "menu " + llToLower(g_sAddon)) return;
     if (iNum == CMD_OWNER && llToLower(sStr) == "runaway") {
         lock = FALSE;
@@ -74,57 +74,57 @@ UserCommand(integer iNum, string sStr, key kID) {
         return;
     }
 
-    if (llToLower(sStr) == llToLower(g_sAddon) || llToLower(sStr) == "menu "+llToLower(g_sAddon))
+    if (llToLower(sStr) == llToLower(g_sAddon) || llToLower(sStr) == "menu " + llToLower(g_sAddon))
     {
-        if(lock){
-            if(iNum < CMD_WEARER && iNum >= CMD_OWNER){
+        if (lock) {
+            if (iNum < CMD_WEARER && iNum >= CMD_OWNER) {
                 Menu(kID, iNum);
             }
-            else{
-                llInstantMessage(kID,"Sorry you are not authorized");
+            else {
+                llInstantMessage(kID, "Sorry you are not authorized");
             }
         }
-        else{
+        else {
             Menu(kID, iNum);
         }
     } //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else
     {
-        list lCommands = llParseString2List(llToLower(sStr),[" "],[llToLower(g_sAddon)]);
-        string sCommand = llList2String(lCommands,1);
-        string sVar = llList2String(lCommands,2);
-        string sVal = llList2String(lCommands,3);
-        if( iNum == CMD_WEARER  && lock) {
+        list lCommands = llParseString2List(llToLower(sStr), [" "], [llToLower(g_sAddon)]);
+        string sCommand = llList2String(lCommands, 1);
+        string sVar = llList2String(lCommands, 2);
+        string sVal = llList2String(lCommands, 3);
+        if (iNum == CMD_WEARER && lock) {
             /* we lock out the wearer from access even if they are the one who locked it.
                This Section can be commented out for it to be possible for the wearer to
                unlock them self if they lock it.
             */
-            llInstantMessage(kID,"Sorry the lock is engaged you have no access!");
+            llInstantMessage(kID, "Sorry the lock is engaged you have no access!");
             return;
         }
-        if (sCommand == "unlock" && iNum <= iLockAuth){
+        if (sCommand == "unlock" && iNum <= iLockAuth) {
             lock = FALSE;
             iLockAuth = CMD_WEARER;
-            llInstantMessage(kID,"/me makes a soft click as the lock is disabled");
+            llInstantMessage(kID, "/me makes a soft click as the lock is disabled");
             llPlaySound("82fa6d06-b494-f97c-2908-84009380c8d1", 1.0);
             check_settings();
         }
-        else if (sCommand == "lock" && iNum <= iLockAuth){
+        else if (sCommand == "lock" && iNum <= iLockAuth) {
             lock = TRUE;
             iLockAuth = iNum;
-            llInstantMessage(kID,"/me makes a soft click as the lock is enabled");
+            llInstantMessage(kID, "/me makes a soft click as the lock is enabled");
             llPlaySound("dec9fb53-0fef-29ae-a21d-b3047525d312", 1.0);
             check_settings();
-        } else llInstantMessage(kID,"Sorry you are not authorized to unlock this device");
+        } else llInstantMessage(kID, "Sorry you are not authorized to unlock this device");
     }
 }
 
-Link(string packet, integer iNum, string sStr, key kID){
-    list packet_data = [ "pkt_type", packet, "iNum", iNum, "addon_name", g_sAddon, "bridge", FALSE, "sMsg", sStr, "kID", kID ];
+Link(string packet, integer iNum, string sStr, key kID) {
+    list packet_data = ["pkt_type", packet, "iNum", iNum, "addon_name", g_sAddon, "bridge", FALSE, "sMsg", sStr, "kID", kID];
 
     if (packet == "online" || packet == "update") // only add optin if packet type is online or update
     {
-        llListInsertList(packet_data, [ "optin", llDumpList2String(g_lOptedLM, "~") ], -1);
+        llListInsertList(packet_data, ["optin", llDumpList2String(g_lOptedLM, "~")], -1);
     }
 
     string pkt = llList2Json(JSON_OBJECT, packet_data);
@@ -138,12 +138,12 @@ Link(string packet, integer iNum, string sStr, key kID){
     }
 }
 
-key g_kCollar=NULL_KEY;
+key g_kCollar = NULL_KEY;
 integer g_iLMLastRecv;
 integer g_iLMLastSent;
 key g_kWearer;
 
-initialize(){
+initialize() {
     g_kWearer = llGetOwner();
     API_CHANNEL = ((integer)("0x" + llGetSubString((string)g_kWearer, 0, 8))) + 0xf6eb - 0xd2;
     llListen(API_CHANNEL, "", "", "");
@@ -153,13 +153,13 @@ initialize(){
     check_settings();
 }
 
-softreset(){
+softreset() {
     g_kCollar = NULL_KEY;
     initialize();
 }
 
-shutdown(){
-    lock=FALSE;
+shutdown() {
+    lock = FALSE;
     llOwnerSay("@detach=y");
     g_lMenuIDs = [];
     g_kCollar = NULL_KEY;
@@ -167,19 +167,19 @@ shutdown(){
 }
 
 integer l_Authorized = 503;
-integer lock = FALSE;
+integer lock         = FALSE;
 string bLock;
-string baLock = "☒Lock";
-string biLock = "☐Lock";
+string baLock        = "☒Lock";
+string biLock        = "☐Lock";
 
 check_settings()
 {
-    if (lock ){
-        bLock=baLock;
+    if (lock) {
+        bLock = baLock;
         llOwnerSay("@detach=n");
     }
     else {
-        bLock=biLock;
+        bLock = biLock;
         llOwnerSay("@detach=y");
     }
 }
@@ -189,21 +189,23 @@ default
     state_entry()
     {
         initialize();
-    }    
-    
-    on_rez(integer start_pram){
+    }
+
+    on_rez(integer start_pram) {
         softreset();
     }
+
     attach(key kID) {
         if (kID == NULL_KEY) llResetScript();
-        else if(kID != g_kWearer){
+        else if (kID != g_kWearer) {
             llResetScript();
         } else {
             softreset();
         }
     }
-    changed(integer change){
-        if(change & CHANGED_REGION){
+
+    changed(integer change) {
+        if (change & CHANGED_REGION) {
             softreset();
         }
     }
@@ -225,7 +227,7 @@ default
         if (g_kCollar == NULL_KEY) Link("online", 0, "", g_kWearer);
     }
 
-    listen(integer channel, string name, key id, string msg){
+    listen(integer channel, string name, key id, string msg) {
         string sPacketType = llJsonGetValue(msg, ["pkt_type"]);
         if (sPacketType == "approved" && g_kCollar == NULL_KEY)
         {
@@ -244,21 +246,21 @@ default
         {
             g_iLMLastRecv = llGetUnixTime();
         }
-        else if(sPacketType == "from_collar")
+        else if (sPacketType == "from_collar")
         {
             // process link message if in range of addon
             if (llVecDist(llGetPos(), llList2Vector(llGetObjectDetails(id, [OBJECT_POS]), 0)) <= 10.0)
             {
-                integer iNum = (integer) llJsonGetValue(msg, ["iNum"]);
-                string sStr  = llJsonGetValue(msg, ["sMsg"]);
-                key kID      = (key) llJsonGetValue(msg, ["kID"]);
+                integer iNum = (integer)llJsonGetValue(msg, ["iNum"]);
+                string sStr = llJsonGetValue(msg, ["sMsg"]);
+                key kID = (key)llJsonGetValue(msg, ["kID"]);
 
                 if (iNum == LM_SETTING_RESPONSE)
                 {
-                    list lPar     = llParseString2List(sStr, ["_","="], []);
+                    list lPar = llParseString2List(sStr, ["_", "="], []);
                     string sToken = llList2String(lPar, 0);
-                    string sVar   = llList2String(lPar, 1);
-                    string sVal   = llList2String(lPar, 2);
+                    string sVar = llList2String(lPar, 1);
+                    string sVal = llList2String(lPar, 2);
 
                     if (sToken == "auth")
                     {
@@ -276,7 +278,7 @@ default
                 else if (iNum == DIALOG_TIMEOUT)
                 {
                     integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-                    g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex + 3);  //remove stride from g_lMenuIDs
+                    g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex + 3); //remove stride from g_lMenuIDs
                 }
                 else if (iNum == DIALOG_RESPONSE)
                 {
@@ -296,13 +298,13 @@ default
                             {
                                 Link("from_addon", iAuth, "menu Addons", kAv);
                             }
-                            if (sMsg == baLock )
+                            if (sMsg == baLock)
                             {
-                                UserCommand(iAuth,g_sAddon+"unlock",kAv);
+                                UserCommand(iAuth, g_sAddon + "unlock", kAv);
                             }
-                            if (sMsg == biLock )
+                            if (sMsg == biLock)
                             {
-                                UserCommand(iAuth,g_sAddon+"lock",kAv);
+                                UserCommand(iAuth, g_sAddon + "lock", kAv);
                             }
                             else if (sMsg == "DISCONNECT")
                             {

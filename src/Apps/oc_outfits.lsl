@@ -29,17 +29,17 @@ https://github.com/OpenCollarTeam/OpenCollar
 
 
 string g_sParentMenu = "Apps";
-string g_sSubMenu = "Outfits";
+string g_sSubMenu    = "Outfits";
 string g_sAppVersion = "1.7";
 //string g_sScriptVersion = "8.0";
 
 
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
-integer CMD_OWNER = 500;
-integer CMD_TRUSTED = 501;
-integer CMD_GROUP = 502;
-integer CMD_WEARER = 503;
+integer CMD_OWNER    = 500;
+integer CMD_TRUSTED  = 501;
+integer CMD_GROUP    = 502;
+integer CMD_WEARER   = 503;
 integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
 //integer CMD_SAFEWORD = 510;
@@ -49,47 +49,50 @@ integer NOTIFY = 1002;
 string g_sLastOutfit;
 integer REBOOT = -1000;
 
-integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved
+integer LM_SETTING_SAVE     = 2000; //scripts send messages on this channel to have settings saved
 //str must be in form of "token=value"
-integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
-integer LM_SETTING_RESPONSE = 2002;//the settings script sends responses on this channel
-integer LM_SETTING_DELETE = 2003;//delete token from settings
+integer LM_SETTING_REQUEST  = 2001; //when startup, scripts send requests for settings on this channel
+integer LM_SETTING_RESPONSE = 2002; //the settings script sends responses on this channel
+integer LM_SETTING_DELETE   = 2003; //delete token from settings
 //integer LM_SETTING_EMPTY = 2004;//sent when a token has no value
 
-integer MENUNAME_REQUEST = 3000;
+integer MENUNAME_REQUEST  = 3000;
 integer MENUNAME_RESPONSE = 3001;
 //integer MENUNAME_REMOVE = 3003;
 
 integer OUTFITS_ADD = -999901;
 integer OUTFITS_REM = -999902;
 
-integer RLV_CMD = 6000;
-integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
-integer DO_RLV_REFRESH = 26001;//RLV plugins should reinstate their restrictions upon receiving this message.
-integer RLV_CLEAR = 6002;//RLV plugins should clear their restriction lists upon receiving this message.
-integer RLV_VERSION = 6003; //RLV Plugins can recieve the used RLV viewer version upon receiving this message..
-integer RLVA_VERSION = 6004; //RLV Plugins can recieve the used RLVa viewer version upon receiving this message..
-integer RLV_CMD_OVERRIDE=6010; //RLV Plugins can send one-shot (force) commands with a list of restrictions to temporarily lift if required to ensure that the one-shot commands can be executed
+integer RLV_CMD          = 6000;
+integer RLV_REFRESH      = 6001; //RLV plugins should reinstate their restrictions upon receiving this message.
+integer DO_RLV_REFRESH   = 26001; //RLV plugins should reinstate their restrictions upon receiving this message.
+integer RLV_CLEAR        = 6002; //RLV plugins should clear their restriction lists upon receiving this message.
+integer RLV_VERSION      = 6003; //RLV Plugins can recieve the used RLV viewer version upon receiving this message..
+integer RLVA_VERSION     = 6004; //RLV Plugins can recieve the used RLVa viewer version upon receiving this message..
+integer RLV_CMD_OVERRIDE = 6010; //RLV Plugins can send one-shot (force) commands with a list of restrictions to temporarily lift if required to ensure that the one-shot commands can be executed
 
 //integer RLV_OFF = 6100; // send to inform plugins that RLV is disabled now, no message or key needed
 //integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no message or key needed
 
-integer DIALOG = -9000;
+integer DIALOG          = -9000;
 integer DIALOG_RESPONSE = -9001;
-integer DIALOG_TIMEOUT = -9002;
-string UPMENU = "BACK";
+integer DIALOG_TIMEOUT  = -9002;
+string UPMENU           = "BACK";
 //string ALL = "ALL";
 
-integer bool(integer a){
-    if(a)return TRUE;
+integer bool(integer a) {
+    if (a) return TRUE;
     else return FALSE;
 }
-list g_lCheckboxes=["▢", "▣"];
+
+list g_lCheckboxes = ["▢", "▣"];
+
 string TickBox(integer iValue, string sLabel) {
-    return llList2String(g_lCheckboxes, bool(iValue))+" "+sLabel;
+    return llList2String(g_lCheckboxes, bool(iValue)) + " " + sLabel;
 }
 
 integer g_iLockCore = FALSE;
+
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
     key kMenuID = llGenerateKey();
 
@@ -101,16 +104,18 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 }
 
 Menu(key kID, integer iAuth) {
-    string sPrompt = "\n[Outfits App "+g_sAppVersion+"]\n\nChat Commands: \n-> wear <path>\n-> naked";
-    list lButtons = [TickBox(g_iLockCore, "Lock Core"), "◌ Configure", "Browse", "BrowseCore", "Help" ];
+    string sPrompt = "\n[Outfits App " + g_sAppVersion + "]\n\nChat Commands: \n-> wear <path>\n-> naked";
+    list lButtons = [TickBox(g_iLockCore, "Lock Core"), "◌ Configure", "Browse", "BrowseCore", "Help"];
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "Menu~Main");
 }
-string TrueOrFalse(integer iCheck){
-    if(iCheck)return "True";
+
+string TrueOrFalse(integer iCheck) {
+    if (iCheck) return "True";
     else return "False";
 }
-integer Bool(integer iNumber){ // for one liners that need the integer to be a boolean
-    if(iNumber)return TRUE;
+
+integer Bool(integer iNumber) { // for one liners that need the integer to be a boolean
+    if (iNumber) return TRUE;
     else return FALSE;
 }
 
@@ -121,62 +126,63 @@ integer g_iListenTimeout;
 key g_kListenTo;
 integer g_iListenToAuth;
 
-DoBrowserPath(list Options, key kListenTo, integer iAuth){
+DoBrowserPath(list Options, key kListenTo, integer iAuth) {
     string sAppend;
     list lAppend = [];
-    if(llSubStringIndex(g_sPath, GetFolderName(TRUE))!=-1){
-        sAppend="\n\n* You are browsing "+GetFolderName(TRUE)+"! This will change which items in your core folder are actively worn. This will work similarly to #Folders, to remove other core items, you will need to go to that folder and select >Remove<, it will not be automatic here!";
+    if (llSubStringIndex(g_sPath, GetFolderName(TRUE)) != -1) {
+        sAppend = "\n\n* You are browsing " + GetFolderName(TRUE) + "! This will change which items in your core folder are actively worn. This will work similarly to #Folders, to remove other core items, you will need to go to that folder and select >Remove<, it will not be automatic here!";
         lAppend = [">REMOVE<"];
     }
-    Dialog(kListenTo, "[Outfit Browser]\n \nLast outfit worn: "+g_sLastOutfit+"\n \n* You are currently browsing: "+g_sPath+"\n \n*Note: >Wear< will wear the current outfit, removing any other worn outfit, Naked will remove all worn outfits. Aside from .core", Options, [">Wear<", ">Naked<", UPMENU, "^"]+lAppend, 0, iAuth, "Browser");
+    Dialog(kListenTo, "[Outfit Browser]\n \nLast outfit worn: " + g_sLastOutfit + "\n \n* You are currently browsing: " + g_sPath + "\n \n*Note: >Wear< will wear the current outfit, removing any other worn outfit, Naked will remove all worn outfits. Aside from .core", Options, [">Wear<", ">Naked<", UPMENU, "^"] + lAppend, 0, iAuth, "Browser");
 }
 
 
-TickBrowser(){
-    g_iListenTimeout = llGetUnixTime()+90;
+TickBrowser() {
+    g_iListenTimeout = llGetUnixTime() + 90;
 }
-integer TimedOut(){
-    if(llGetUnixTime()>g_iListenTimeout)return TRUE;
+
+integer TimedOut() {
+    if (llGetUnixTime() > g_iListenTimeout) return TRUE;
     else return FALSE;
 }
 
-FolderBrowser (key kID, integer iAuth){
+FolderBrowser(key kID, integer iAuth) {
     g_sPath = GetOutfitSystem(FALSE);
     g_kListenTo = kID;
-    g_iListenToAuth=iAuth;
+    g_iListenToAuth = iAuth;
     g_iListenChannel = llRound(llFrand(99999999));
-    if(g_iListenHandle>0)llListenRemove(g_iListenHandle);
+    if (g_iListenHandle > 0) llListenRemove(g_iListenHandle);
     g_iListenHandle = llListen(g_iListenChannel, "", g_kWearer, "");
     TickBrowser();
 
-    llOwnerSay("@getinv:"+g_sPath+"="+(string)g_iListenChannel);
+    llOwnerSay("@getinv:" + g_sPath + "=" + (string)g_iListenChannel);
     llSetTimerEvent(1);
 }
 
-CoreBrowser(key kID, integer iAuth){
-    if(iAuth != CMD_OWNER && kID != g_kWearer) {
-        llMessageLinked(LINK_SET,NOTIFY, "0%NOACCESS% to core", kID);
+CoreBrowser(key kID, integer iAuth) {
+    if (iAuth != CMD_OWNER && kID != g_kWearer) {
+        llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to core", kID);
         return;
     }
     g_sPath = GetOutfitSystem(TRUE);
     g_kListenTo = kID;
     g_iListenToAuth = iAuth;
     g_iListenChannel = llRound(llFrand(9999999));
-    if(g_iListenHandle>0) llListenRemove(g_iListenHandle);
+    if (g_iListenHandle > 0) llListenRemove(g_iListenHandle);
     g_iListenHandle = llListen(g_iListenChannel, "", g_kWearer, "");
     TickBrowser();
 
-    llOwnerSay("@getinv:"+g_sPath+"="+(string)g_iListenChannel);
+    llOwnerSay("@getinv:" + g_sPath + "=" + (string)g_iListenChannel);
     llSetTimerEvent(1);
 }
 
-ConfigMenu(key kID, integer iAuth){
-    integer iTrusted = Bool((g_iAccessBitSet&1));
-    integer iPublic = Bool((g_iAccessBitSet&2));
-    integer iGroup = Bool((g_iAccessBitSet&4));
-    integer iWearer = Bool((g_iAccessBitSet&8));
-    integer iJail = Bool((g_iAccessBitSet&16));
-    integer iStripAll = Bool((g_iAccessBitSet&32));
+ConfigMenu(key kID, integer iAuth) {
+    integer iTrusted = Bool((g_iAccessBitSet & 1));
+    integer iPublic = Bool((g_iAccessBitSet & 2));
+    integer iGroup = Bool((g_iAccessBitSet & 4));
+    integer iWearer = Bool((g_iAccessBitSet & 8));
+    integer iJail = Bool((g_iAccessBitSet & 16));
+    integer iStripAll = Bool((g_iAccessBitSet & 32));
     string sTrusted = TrueOrFalse(iTrusted);
     string sPublic = TrueOrFalse(iPublic);
     string sGroup = TrueOrFalse(iGroup);
@@ -184,7 +190,7 @@ ConfigMenu(key kID, integer iAuth){
     string sJail = TrueOrFalse(iJail);
     string sStripAll = TrueOrFalse(iStripAll);
 
-    Dialog(kID, "\n[Outfits App "+g_sAppVersion+"]\n \nConfigure Access\n * Owner: ALWAYS\n * Trusted: "+sTrusted+"\n * Public: "+sPublic+"\n * Group: "+sGroup+"\n * Wearer: "+sWearer+"\n * Jail: "+sJail+"\n * Strip All (even not in .outfits): "+sStripAll+"\n \n** WARNING: If you disable the jail, then outfits WILL be able to browse your entire #RLV folder, not just under #RLV/.outfits", [TickBox(iTrusted, "Trusted"), TickBox(iPublic, "Public") ,TickBox(iGroup, "Group"), TickBox(iWearer, "Wearer"), TickBox(iJail, "Jail"), TickBox(iStripAll, "Strip All")], [UPMENU], 0, iAuth, "Menu~Configure");
+    Dialog(kID, "\n[Outfits App " + g_sAppVersion + "]\n \nConfigure Access\n * Owner: ALWAYS\n * Trusted: " + sTrusted + "\n * Public: " + sPublic + "\n * Group: " + sGroup + "\n * Wearer: " + sWearer + "\n * Jail: " + sJail + "\n * Strip All (even not in .outfits): " + sStripAll + "\n \n** WARNING: If you disable the jail, then outfits WILL be able to browse your entire #RLV folder, not just under #RLV/.outfits", [TickBox(iTrusted, "Trusted"), TickBox(iPublic, "Public"), TickBox(iGroup, "Group"), TickBox(iWearer, "Wearer"), TickBox(iJail, "Jail"), TickBox(iStripAll, "Strip All")], [UPMENU], 0, iAuth, "Menu~Configure");
 }
 
 
@@ -195,17 +201,18 @@ ConfigMenu(key kID, integer iAuth){
         1 == Deny
         2 == Deny and notify
 */
+
 integer AuthDenied(integer iNum) {
     integer deny = FALSE;
 
-    if(iNum == 599) deny = 1;//No Access
+    if (iNum == 599) deny = 1; //No Access
     // Verify access rights now
-    if(iNum > CMD_EVERYONE) deny = 1;
-    if(iNum == CMD_TRUSTED && !Bool((g_iAccessBitSet&1))) deny = 2;
-    if(iNum == CMD_EVERYONE && !Bool((g_iAccessBitSet&2))) deny = 2;
-    if(iNum == CMD_GROUP && !Bool((g_iAccessBitSet&4))) deny = 2;
-    if(iNum == CMD_WEARER && !Bool((g_iAccessBitSet&8))) deny = 2;
-    if (iNum<CMD_OWNER || iNum>CMD_EVERYONE) deny = 1;
+    if (iNum > CMD_EVERYONE) deny = 1;
+    if (iNum == CMD_TRUSTED && !Bool((g_iAccessBitSet & 1))) deny = 2;
+    if (iNum == CMD_EVERYONE && !Bool((g_iAccessBitSet & 2))) deny = 2;
+    if (iNum == CMD_GROUP && !Bool((g_iAccessBitSet & 4))) deny = 2;
+    if (iNum == CMD_WEARER && !Bool((g_iAccessBitSet & 8))) deny = 2;
+    if (iNum < CMD_OWNER || iNum > CMD_EVERYONE) deny = 1;
 
     return deny;
 }
@@ -213,74 +220,74 @@ integer AuthDenied(integer iNum) {
 UserCommand(integer iNum, string sStr, key kID) {
 
     integer deny = AuthDenied(iNum);
-    if(deny == 2) {
+    if (deny == 2) {
         //We have to validate against known commands for Outfits, or else we'll pop denied errors every time a public user sneezes
-        string sChangetype = llToLower(llList2String(llParseString2List(sStr, [" "], []),0));
+        string sChangetype = llToLower(llList2String(llParseString2List(sStr, [" "], []), 0));
 
-        if(llToLower(sStr)==llToLower(g_sSubMenu) || llToLower(sStr) == "menu "+ llToLower(g_sSubMenu) || sChangetype == "wear" || sChangetype == "naked")
-            llMessageLinked(LINK_SET,NOTIFY, "0%NOACCESS% to outifts", kID);
+        if (llToLower(sStr) == llToLower(g_sSubMenu) || llToLower(sStr) == "menu " + llToLower(g_sSubMenu) || sChangetype == "wear" || sChangetype == "naked")
+            llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to outifts", kID);
     }
-    if(deny) return;
+    if (deny) return;
 
     //if (llSubStringIndex(sStr,llToLower(g_sSubMenu)) && sStr != "menu "+g_sSubMenu) return;
     if (iNum == CMD_OWNER && sStr == "runaway") {
         g_lOwner = g_lTrust = g_lBlock = [];
         return;
     }
-    if (llToLower(sStr)==llToLower(g_sSubMenu) || llToLower(sStr) == "menu "+ llToLower(g_sSubMenu)) Menu(kID, iNum);
-    //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
+    if (llToLower(sStr) == llToLower(g_sSubMenu) || llToLower(sStr) == "menu " + llToLower(g_sSubMenu)) Menu(kID, iNum);
+        //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else {
         //integer iWSuccess = 0;
-        list Params=llParseString2List(sStr, [" "], []);
+        list Params = llParseString2List(sStr, [" "], []);
 
-        string sChangetype = llToLower(llList2String(Params,0));
-        string sChangevalue = llDumpList2String(llList2List(Params,1,-1)," ");
+        string sChangetype = llToLower(llList2String(Params, 0));
+        string sChangevalue = llDumpList2String(llList2List(Params, 1, -1), " ");
         //string sText;
 
-        if(sChangetype == "wear" || sChangetype == "naked"){
-            if(g_sPath!=sChangevalue){
-                g_sPath=GetFolderName(FALSE)+"/"+sChangevalue;
-                g_iListenTimeout=0;
+        if (sChangetype == "wear" || sChangetype == "naked") {
+            if (g_sPath != sChangevalue) {
+                g_sPath = GetFolderName(FALSE) + "/" + sChangevalue;
+                g_iListenTimeout = 0;
             }
-            llOwnerSay("[command "+sChangetype+"]"+g_sPath);
+            llOwnerSay("[command " + sChangetype + "]" + g_sPath);
 
-            if(!g_iLocked){
+            if (!g_iLocked) {
                 llOwnerSay("@detach=n");
             }
 
             ForceLockCore();
             TickBrowser();
             llSetTimerEvent(1);
-            llOwnerSay("[command "+sChangetype+"] Attempt detach");
-            if(!Bool((g_iAccessBitSet&32))){
-                if(llSubStringIndex(g_sPath, GetFolderName(TRUE))==-1)
-                    llOwnerSay("@detachall:"+GetFolderName(FALSE)+"=force");
+            llOwnerSay("[command " + sChangetype + "] Attempt detach");
+            if (!Bool((g_iAccessBitSet & 32))) {
+                if (llSubStringIndex(g_sPath, GetFolderName(TRUE)) == -1)
+                    llOwnerSay("@detachall:" + GetFolderName(FALSE) + "=force");
             }
-            else{
+            else {
                 llOwnerSay("@detach=force");
                 llOwnerSay("@remoutfit=force");
             }
             llSleep(2); // incase of lag
             string sAppend;
-            if(g_iRLVa)
+            if (g_iRLVa)
             {
-                sAppend=RLVA_APPEND;
+                sAppend = RLVA_APPEND;
             }
             else
             {
-                sAppend=RLV_APPEND;
+                sAppend = RLV_APPEND;
             }
-            if (g_sPath == GetOutfitSystem(FALSE)+"/" || g_sPath == GetOutfitSystem(FALSE)+"/"+sAppend) g_sLastOutfit = "NONE";
-            else g_sLastOutfit=g_sPath;
+            if (g_sPath == GetOutfitSystem(FALSE) + "/" || g_sPath == GetOutfitSystem(FALSE) + "/" + sAppend) g_sLastOutfit = "NONE";
+            else g_sLastOutfit = g_sPath;
 
-            if(!g_iLocked){
+            if (!g_iLocked) {
                 llOwnerSay("@detach=y");
             }
             RmCorelock();
             llSleep(1);
         }
-        if(sChangetype == "wear"){ //This looks like dead code TODO: Verify for removal?
-            if (g_sPath != "~" && g_sPath != ".") llOwnerSay("@attachallover:"+g_sPath+"=force");
+        if (sChangetype == "wear") { //This looks like dead code TODO: Verify for removal?
+            if (g_sPath != "~" && g_sPath != ".") llOwnerSay("@attachallover:" + g_sPath + "=force");
         }
     }
 }
@@ -291,72 +298,73 @@ integer g_iMenuStride;
 list g_lOwner;
 list g_lTrust;
 list g_lBlock;
-integer g_iLocked=FALSE;
-integer g_iAccessBitSet=25; // Default modes for outfits
+integer g_iLocked       = FALSE;
+integer g_iAccessBitSet = 25; // Default modes for outfits
 integer g_iJail;
-Commit(){
-    if(g_iLockCore)
-        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "outfits_lockcore="+(string)g_iLockCore, "");
-    else
-        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "outfits_lockcore","");
 
-    if(g_iAccessBitSet>0)
-        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "outfits_accessflags="+(string)g_iAccessBitSet,"");
+Commit() {
+    if (g_iLockCore)
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "outfits_lockcore=" + (string)g_iLockCore, "");
+    else
+        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "outfits_lockcore", "");
+
+    if (g_iAccessBitSet > 0)
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "outfits_accessflags=" + (string)g_iAccessBitSet, "");
     else llMessageLinked(LINK_SET, LM_SETTING_DELETE, "outfits_accessflags", "");
 
 
     Process();
 }
 
-Process(){
-    g_iJail = Bool((g_iAccessBitSet&16));
-    if(g_iLockCore){
-        llOwnerSay("@detachallthis:"+GetOutfitSystem(TRUE)+"=n");
+Process() {
+    g_iJail = Bool((g_iAccessBitSet & 16));
+    if (g_iLockCore) {
+        llOwnerSay("@detachallthis:" + GetOutfitSystem(TRUE) + "=n");
     }
-    else{
-        llOwnerSay("@detachallthis:"+GetOutfitSystem(TRUE)+"=y");
+    else {
+        llOwnerSay("@detachallthis:" + GetOutfitSystem(TRUE) + "=y");
     }
 }
 
-ForceLockCore(){
-    llOwnerSay("@detachallthis:"+GetOutfitSystem(TRUE)+"=y");
+ForceLockCore() {
+    llOwnerSay("@detachallthis:" + GetOutfitSystem(TRUE) + "=y");
     llSleep(1);
-    llOwnerSay("@detachallthis:"+GetOutfitSystem(TRUE)+"=n");
+    llOwnerSay("@detachallthis:" + GetOutfitSystem(TRUE) + "=n");
     llSleep(1); // origionaly 0.5 may be to short and causes ~.core to be open during detach process.
 }
 
-RmCorelock(){
-    if(!g_iLockCore)
+RmCorelock() {
+    if (!g_iLockCore)
     {
-        llOwnerSay("@detachallthis:"+GetOutfitSystem(TRUE)+"=y");
+        llOwnerSay("@detachallthis:" + GetOutfitSystem(TRUE) + "=y");
     }
 }
 
-integer ALIVE = -55;
-integer READY = -56;
+integer ALIVE   = -55;
+integer READY   = -56;
 integer STARTUP = -57;
 
 integer g_iRLVa = FALSE;
 
-string RLVA_APPEND=".";
-string RLV_APPEND="~";
+string RLVA_APPEND = ".";
+string RLV_APPEND  = "~";
 
-string GetOutfitSystem(integer iCorePath){
-    if(g_iRLVa){
-        if(iCorePath)return ".outfits/.core";
+string GetOutfitSystem(integer iCorePath) {
+    if (g_iRLVa) {
+        if (iCorePath) return ".outfits/.core";
         else return ".outfits";
-    }else{
-        if(iCorePath)return "~outfits/~core";
+    } else {
+        if (iCorePath) return "~outfits/~core";
         else return "~outfits";
     }
 }
 
-string GetFolderName(integer iCore){
-    if(g_iRLVa){
-        if(iCore)return ".core";
+string GetFolderName(integer iCore) {
+    if (g_iRLVa) {
+        if (iCore) return ".core";
         else return ".outfits";
-    }else{
-        if(iCore)return "~core";
+    } else {
+        if (iCore) return "~core";
         else return "~outfits";
     }
 }
@@ -364,244 +372,249 @@ string GetFolderName(integer iCore){
 
 default
 {
-    on_rez(integer iNum){
+    on_rez(integer iNum) {
         llResetScript();
     }
-    state_entry(){
-        llMessageLinked(LINK_SET, ALIVE, llGetScriptName(),"");
+
+    state_entry() {
+        llMessageLinked(LINK_SET, ALIVE, llGetScriptName(), "");
     }
-    link_message(integer iSender, integer iNum, string sStr, key kID){
-        if(iNum == REBOOT){
-            if(sStr == "reboot"){
+
+    link_message(integer iSender, integer iNum, string sStr, key kID) {
+        if (iNum == REBOOT) {
+            if (sStr == "reboot") {
                 llResetScript();
             }
-        } else if(iNum == READY){
+        } else if (iNum == READY) {
             llMessageLinked(LINK_SET, ALIVE, llGetScriptName(), "");
-        } else if(iNum == STARTUP){
+        } else if (iNum == STARTUP) {
             state active;
         }
     }
 }
+
 state active
 {
-    on_rez(integer t){
+    on_rez(integer t) {
         llResetScript();
     }
+
     state_entry()
     {
-        if(llGetStartParameter()!=0)llResetScript();
+        if (llGetStartParameter() != 0) llResetScript();
         g_kWearer = llGetOwner();
-        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "global_locked","");
+        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "global_locked", "");
     }
-    link_message(integer iSender,integer iNum,string sStr,key kID){
-        if(iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID);
-        else if(iNum == RLVA_VERSION ){
-               if(sStr != "0"){
-                  g_iRLVa=TRUE;
-               }else g_iRLVa=FALSE;
-        }
-        else if(iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
-            llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu+"|"+ g_sSubMenu,"");
-        else if(iNum == -99999){
-            if(sStr=="update_active")llResetScript();
 
-        }else if (iNum == DIALOG_TIMEOUT) {
+    link_message(integer iSender, integer iNum, string sStr, key kID) {
+        if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID);
+        else if (iNum == RLVA_VERSION) {
+            if (sStr != "0") {
+                g_iRLVa = TRUE;
+            } else g_iRLVa = FALSE;
+        }
+        else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
+            llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
+        else if (iNum == -99999) {
+            if (sStr == "update_active") llResetScript();
+
+        } else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
+            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex + 3); //remove stride from g_lMenuIDs
         }
-        else if(iNum == DIALOG_RESPONSE){
+        else if (iNum == DIALOG_RESPONSE) {
 
-            list lMenuParams = llParseString2List(sStr, ["|"],[]);
-            integer iAuth = llList2Integer(lMenuParams,3);
+            list lMenuParams = llParseString2List(sStr, ["|"], []);
+            integer iAuth = llList2Integer(lMenuParams, 3);
 
-            if(AuthDenied(iAuth)) {
+            if (AuthDenied(iAuth)) {
                 //Test to see if this is a denied auth. If we're here and its denied, we respring. A CMD_* call is already sent out which will produce the NOTIFY
-                if(llSubStringIndex(sStr, g_sSubMenu) != -1)
-                    llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, llGetSubString(sStr, 0, 35));
+                if (llSubStringIndex(sStr, g_sSubMenu) != -1)
+                    llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, llGetSubString(sStr, 0, 35));
             }
 
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            if(iMenuIndex!=-1){
-                string sMenu = llList2String(g_lMenuIDs, iMenuIndex+1);
-                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
+            if (iMenuIndex != -1) {
+                string sMenu = llList2String(g_lMenuIDs, iMenuIndex + 1);
+                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
                 //list lMenuParams = llParseString2List(sStr, ["|"],[]);
-                key kAv = llList2Key(lMenuParams,0);
-                string sMsg = llList2String(lMenuParams,1);
+                key kAv = llList2Key(lMenuParams, 0);
+                string sMsg = llList2String(lMenuParams, 1);
                 //integer iAuth = llList2Integer(lMenuParams,3);
 
-                integer iRespring=TRUE;
+                integer iRespring = TRUE;
 
                 //llSay(0, sMenu);
-                if(sMenu == "Menu~Main"){
-                    if(sMsg == UPMENU) {
-                        iRespring=FALSE;
-                        llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
-                    }else if(sMsg == TickBox(g_iLockCore, "Lock Core")){
-                        if(iAuth != CMD_OWNER && kAv != g_kWearer) {
-                            llMessageLinked(LINK_SET,NOTIFY, "0%NOACCESS% to core", kID);
+                if (sMenu == "Menu~Main") {
+                    if (sMsg == UPMENU) {
+                        iRespring = FALSE;
+                        llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
+                    } else if (sMsg == TickBox(g_iLockCore, "Lock Core")) {
+                        if (iAuth != CMD_OWNER && kAv != g_kWearer) {
+                            llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to core", kID);
                             return;
                         }
-                        g_iLockCore=1-g_iLockCore;
+                        g_iLockCore = 1 - g_iLockCore;
                         llSetTimerEvent(120);
                         Commit();
-                    }else if(sMsg == "◌ Configure"){
+                    } else if (sMsg == "◌ Configure") {
                         // Open the config menu to set access rights
-                        if(iAuth == CMD_OWNER){
-                            iRespring=FALSE;
+                        if (iAuth == CMD_OWNER) {
+                            iRespring = FALSE;
                             ConfigMenu(kAv, iAuth);
-                        }else{
+                        } else {
                             llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to configuration settings", kAv);
                         }
 
-                    } else if(sMsg == "Browse"){
-                        FolderBrowser(kAv,iAuth);
-                        iRespring=FALSE;
-                    } else if(sMsg == "BrowseCore"){
+                    } else if (sMsg == "Browse") {
+                        FolderBrowser(kAv, iAuth);
+                        iRespring = FALSE;
+                    } else if (sMsg == "BrowseCore") {
                         CoreBrowser(kAv, iAuth);
-                        iRespring=FALSE;
-                    } else if(sMsg == "Help"){
-                        llMessageLinked(LINK_SET,NOTIFY, "0 \n \n[Outfits Help]\n* This is the typical structure of a Outfits folder: \n#RLV\n-> "+GetFolderName(FALSE)+"\n---> "+GetFolderName(TRUE)+"\n-> My Outfit\n \nAnything placed in "+GetFolderName(TRUE)+" will never be removed during a outfit change using this script. If you enable 'Lock Core' then your core folder will stay locked for any changes made outside of this script, (for example:  your relay)", kAv);
+                        iRespring = FALSE;
+                    } else if (sMsg == "Help") {
+                        llMessageLinked(LINK_SET, NOTIFY, "0 \n \n[Outfits Help]\n* This is the typical structure of a Outfits folder: \n#RLV\n-> " + GetFolderName(FALSE) + "\n---> " + GetFolderName(TRUE) + "\n-> My Outfit\n \nAnything placed in " + GetFolderName(TRUE) + " will never be removed during a outfit change using this script. If you enable 'Lock Core' then your core folder will stay locked for any changes made outside of this script, (for example:  your relay)", kAv);
                     }
-                    if(iRespring)Menu(kAv,iAuth);
-                } else if(sMenu == "Menu~Configure"){
-                    if(sMsg == UPMENU){
-                        iRespring=FALSE;
+                    if (iRespring) Menu(kAv, iAuth);
+                } else if (sMenu == "Menu~Configure") {
+                    if (sMsg == UPMENU) {
+                        iRespring = FALSE;
                         Menu(kAv, iAuth);
-                    }else{
+                    } else {
                         // Check mode first
-                        list ButtonFlags = llParseString2List(sMsg,[" "],[]);
-                        string ButtonLabel = llDumpList2String(llList2List(ButtonFlags,1,-1), " ");
-                        integer Enabled = llListFindList(g_lCheckboxes, [llList2String(ButtonFlags,0)]);
+                        list ButtonFlags = llParseString2List(sMsg, [" "], []);
+                        string ButtonLabel = llDumpList2String(llList2List(ButtonFlags, 1, -1), " ");
+                        integer Enabled = llListFindList(g_lCheckboxes, [llList2String(ButtonFlags, 0)]);
 
-                        if(Enabled){
+                        if (Enabled) {
                             // Disable flag
-                            if(ButtonLabel == "Trusted")g_iAccessBitSet -=1;
-                            else if(ButtonLabel == "Public")g_iAccessBitSet-=2;
-                            else if(ButtonLabel == "Group")g_iAccessBitSet-=4;
-                            else if(ButtonLabel == "Wearer")g_iAccessBitSet-=8;
-                            else if(ButtonLabel == "Jail")g_iAccessBitSet-=16;
-                            else if(ButtonLabel == "Strip All")g_iAccessBitSet -= 32;
-                        }else{
-                            if(ButtonLabel == "Trusted")g_iAccessBitSet+=1;
-                            else if(ButtonLabel == "Public")g_iAccessBitSet+=2;
-                            else if(ButtonLabel == "Group")g_iAccessBitSet+=4;
-                            else if(ButtonLabel == "Wearer") g_iAccessBitSet+=8;
-                            else if(ButtonLabel == "Jail")g_iAccessBitSet+=16;
-                            else if(ButtonLabel == "Strip All")g_iAccessBitSet+=32;
+                            if (ButtonLabel == "Trusted") g_iAccessBitSet -= 1;
+                            else if (ButtonLabel == "Public") g_iAccessBitSet -= 2;
+                            else if (ButtonLabel == "Group") g_iAccessBitSet -= 4;
+                            else if (ButtonLabel == "Wearer") g_iAccessBitSet -= 8;
+                            else if (ButtonLabel == "Jail") g_iAccessBitSet -= 16;
+                            else if (ButtonLabel == "Strip All") g_iAccessBitSet -= 32;
+                        } else {
+                            if (ButtonLabel == "Trusted") g_iAccessBitSet += 1;
+                            else if (ButtonLabel == "Public") g_iAccessBitSet += 2;
+                            else if (ButtonLabel == "Group") g_iAccessBitSet += 4;
+                            else if (ButtonLabel == "Wearer") g_iAccessBitSet += 8;
+                            else if (ButtonLabel == "Jail") g_iAccessBitSet += 16;
+                            else if (ButtonLabel == "Strip All") g_iAccessBitSet += 32;
                         }
 
 
                         Commit();
                     }
-                    if(iRespring)ConfigMenu(kAv,iAuth);
-                } else if(sMenu == "Browser"){
+                    if (iRespring) ConfigMenu(kAv, iAuth);
+                } else if (sMenu == "Browser") {
                     // Process commands!
 
                     ForceLockCore(); // unlocks/relocks - compatible with the Lock Core option.
                     // The above is a workaround for a viewer bug where any newly added items to .core will not be protected.
-                    if(!g_iLocked){
+                    if (!g_iLocked) {
                         llOwnerSay("@detach=n");
                     }
 
-                    if(sMsg == UPMENU){
-                        iRespring=FALSE;
+                    if (sMsg == UPMENU) {
+                        iRespring = FALSE;
                         Menu(kAv, iAuth);
-                        g_iListenTimeout=0;
+                        g_iListenTimeout = 0;
                         return;
-                    } else if(sMsg == ">Wear<"){
+                    } else if (sMsg == ">Wear<") {
                         // add recursive. Adds subfolder contents too
-                        UserCommand(iAuth, "wear "+g_sPath, kAv);
-                    } else if(sMsg == ">Naked<"){
+                        UserCommand(iAuth, "wear " + g_sPath, kAv);
+                    } else if (sMsg == ">Naked<") {
                         UserCommand(iAuth, "naked", kAv);
-                    } else if(sMsg == ">REMOVE<"){
-                        llOwnerSay("@detachallthis:"+GetOutfitSystem(TRUE)+"=y");
+                    } else if (sMsg == ">REMOVE<") {
+                        llOwnerSay("@detachallthis:" + GetOutfitSystem(TRUE) + "=y");
                         llSleep(1);
-                        llOwnerSay("@detachall:"+g_sPath+"=force");
+                        llOwnerSay("@detachall:" + g_sPath + "=force");
                         ForceLockCore();
-                    } else if(sMsg == "^"){
+                    } else if (sMsg == "^") {
                         // go up a path
-                        list edit = llParseString2List(g_sPath,["/"],[]);
-                        string sEdit = llDumpList2String(llDeleteSubList(edit,-1,-1), "/");
-                        if(llGetSubString(sEdit,-1,-1)=="/")sEdit = llGetSubString(sEdit,0,-2);
-                        g_sPath=sEdit;
-                        iRespring=FALSE;
-                        if(g_iJail && g_sPath == "")g_sPath = GetFolderName(FALSE);
-                        llOwnerSay("@getinv:"+g_sPath+"="+(string)g_iListenChannel);
+                        list edit = llParseString2List(g_sPath, ["/"], []);
+                        string sEdit = llDumpList2String(llDeleteSubList(edit, -1, -1), "/");
+                        if (llGetSubString(sEdit, -1, -1) == "/") sEdit = llGetSubString(sEdit, 0, -2);
+                        g_sPath = sEdit;
+                        iRespring = FALSE;
+                        if (g_iJail && g_sPath == "") g_sPath = GetFolderName(FALSE);
+                        llOwnerSay("@getinv:" + g_sPath + "=" + (string)g_iListenChannel);
                     } else {
-                        g_sPath+="/"+sMsg;
-                        iRespring=FALSE;
+                        g_sPath += "/" + sMsg;
+                        iRespring = FALSE;
                         // attempt to enter folder: if empty will only display utility buttons. Which will still give the ability to add a folder
-                        llOwnerSay("@getinv:"+g_sPath+"="+(string)g_iListenChannel);
+                        llOwnerSay("@getinv:" + g_sPath + "=" + (string)g_iListenChannel);
                     }
                     TickBrowser();
-                    if(iRespring)llOwnerSay("@getinv:"+g_sPath+"="+(string)g_iListenChannel);
+                    if (iRespring) llOwnerSay("@getinv:" + g_sPath + "=" + (string)g_iListenChannel);
                 }
             }
-        } else if(iNum == OUTFITS_ADD){
-            UserCommand(CMD_OWNER, "wear "+sStr, kID);
-        } else if(iNum == OUTFITS_REM){
+        } else if (iNum == OUTFITS_ADD) {
+            UserCommand(CMD_OWNER, "wear " + sStr, kID);
+        } else if (iNum == OUTFITS_REM) {
             UserCommand(CMD_OWNER, "naked", kID);
-        } else if(iNum == LM_SETTING_RESPONSE){
+        } else if (iNum == LM_SETTING_RESPONSE) {
             // Detect here the Settings
-            list lSettings = llParseString2List(sStr, ["_","="],[]);
-            if(llList2String(lSettings,0)=="global"){
-                if(llList2String(lSettings,1)=="locked"){
-                    g_iLocked=llList2Integer(lSettings,2);
-                } else if(llList2String(lSettings,1) == "checkboxes"){
-                    g_lCheckboxes = llCSV2List(llList2String(lSettings,2));
+            list lSettings = llParseString2List(sStr, ["_", "="], []);
+            if (llList2String(lSettings, 0) == "global") {
+                if (llList2String(lSettings, 1) == "locked") {
+                    g_iLocked = llList2Integer(lSettings, 2);
+                } else if (llList2String(lSettings, 1) == "checkboxes") {
+                    g_lCheckboxes = llCSV2List(llList2String(lSettings, 2));
                 }
-            } else if(llList2String(lSettings,0) == "outfits"){
-                if(llList2String(lSettings,1) == "lockcore"){
-                    g_iLockCore=llList2Integer(lSettings,2);
-                } else if(llList2String(lSettings,1) == "accessflags"){
+            } else if (llList2String(lSettings, 0) == "outfits") {
+                if (llList2String(lSettings, 1) == "lockcore") {
+                    g_iLockCore = llList2Integer(lSettings, 2);
+                } else if (llList2String(lSettings, 1) == "accessflags") {
                     //llSay(0, "ACCESS FLAGS: "+llList2String(lSettings,2));
-                    g_iAccessBitSet=llList2Integer(lSettings,2);
+                    g_iAccessBitSet = llList2Integer(lSettings, 2);
                 }
                 Process();
             }
-        } else if(iNum == LM_SETTING_DELETE){
+        } else if (iNum == LM_SETTING_DELETE) {
             // This is recieved back from settings when a setting is deleted
-            list lSettings = llParseString2List(sStr, ["_"],[]);
-            if(llList2String(lSettings,0)=="global")
-                if(llList2String(lSettings,1) == "locked") g_iLocked=FALSE;
-        } else if(iNum == REBOOT)llResetScript();
+            list lSettings = llParseString2List(sStr, ["_"], []);
+            if (llList2String(lSettings, 0) == "global")
+                if (llList2String(lSettings, 1) == "locked") g_iLocked = FALSE;
+        } else if (iNum == REBOOT) llResetScript();
     }
 
-    timer(){
-        if(TimedOut() && g_iListenTimeout!=-1){
+    timer() {
+        if (TimedOut() && g_iListenTimeout != -1) {
             llSetTimerEvent(0);
-            if(g_iListenTimeout!=0)
-                llMessageLinked(LINK_SET,NOTIFY, "0Timed out.", g_kListenTo);
-            g_kListenTo="";
+            if (g_iListenTimeout != 0)
+                llMessageLinked(LINK_SET, NOTIFY, "0Timed out.", g_kListenTo);
+            g_kListenTo = "";
             llListenRemove(g_iListenHandle);
-            if(!g_iLocked)llOwnerSay("@detach=y");
-            g_iListenHandle=0;
-            g_iListenChannel=0;
-            g_iListenTimeout=-1;
-            g_iListenToAuth=0;
-            if(!g_iLockCore)llOwnerSay("@detachallthis:"+GetOutfitSystem(TRUE)+"=y");
+            if (!g_iLocked) llOwnerSay("@detach=y");
+            g_iListenHandle = 0;
+            g_iListenChannel = 0;
+            g_iListenTimeout = -1;
+            g_iListenToAuth = 0;
+            if (!g_iLockCore) llOwnerSay("@detachallthis:" + GetOutfitSystem(TRUE) + "=y");
 
             g_sPath = GetFolderName(FALSE);
-            if(g_iLockCore)llSetTimerEvent(120);
+            if (g_iLockCore) llSetTimerEvent(120);
             return;
         }
 
-        if(g_iListenTimeout==-1){
-            if(g_iLockCore){
+        if (g_iListenTimeout == -1) {
+            if (g_iLockCore) {
                 ForceLockCore();
-            }else {
+            } else {
                 llSetTimerEvent(0);
             }
         }
     }
 
-    listen(integer iChannel, string sName, key kID, string sMsg){
+    listen(integer iChannel, string sName, key kID, string sMsg) {
         TickBrowser();
-        if(iChannel == g_iListenChannel){
+        if (iChannel == g_iListenChannel) {
             // Viewer reply!
             // Delimiters : ,
-            list Options = llParseString2List(sMsg,[","],[]);
-            DoBrowserPath(llListSort(Options,0,TRUE), g_kListenTo, g_iListenToAuth);
+            list Options = llParseString2List(sMsg, [","], []);
+            DoBrowserPath(llListSort(Options, 0, TRUE), g_kListenTo, g_iListenToAuth);
 
         }
 

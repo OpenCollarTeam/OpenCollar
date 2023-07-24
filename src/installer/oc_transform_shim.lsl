@@ -2,7 +2,7 @@ integer g_iUpdateChan = -7483213;
 
 
 // be explicit about what we delete
-list deletables = [
+list deletables       = [
     "!totallytransparent",
     "!fadestripe",
     "!whiteleather",
@@ -126,7 +126,7 @@ LegacyCleanup() {
             llRemoveInventory(sName);
         }
     }
-    
+
     // clean up other old things.
     i = llGetInventoryNumber(INVENTORY_ALL);
     integer stop = llGetListLength(deletables);
@@ -140,11 +140,11 @@ default
     state_entry()
     {
         if (llGetAttached()) {
-            string additional = "You currently have: "+(string)llGetNumberOfPrims()+"\n";
-            if(llGetNumberOfPrims()==1)additional += "* The leash will not appear to be coming directly from a ring, and may appear from the center of the collar object. If you wish to resolve this, please create a small invisible linked prim at the desired location of the chain and name it 'leashpoint' without the quotes.\n \nAlternatively you can just re-run collarizer while the collar is rezzed to add the default leashpoint linkset to your collar. This will still require adjustment of the prim position.";
-            llDialog(llGetOwner(), "OpenCollar\n \n[WARNING]\nStarting update! \n"+additional, ["DISMISS"], -99);
+            string additional = "You currently have: " + (string)llGetNumberOfPrims() + "\n";
+            if (llGetNumberOfPrims() == 1) additional += "* The leash will not appear to be coming directly from a ring, and may appear from the center of the collar object. If you wish to resolve this, please create a small invisible linked prim at the desired location of the chain and name it 'leashpoint' without the quotes.\n \nAlternatively you can just re-run collarizer while the collar is rezzed to add the default leashpoint linkset to your collar. This will still require adjustment of the prim position.";
+            llDialog(llGetOwner(), "OpenCollar\n \n[WARNING]\nStarting update! \n" + additional, ["DISMISS"], -99);
             state update;
-        }// Else perform linking steps, using the old leashpoint linkset will be fine for this as the automated upgrade will move the scripts to root.
+        } // Else perform linking steps, using the old leashpoint linkset will be fine for this as the automated upgrade will move the scripts to root.
 
         if (llGetStartParameter()) {
             llOwnerSay("I need permission to link a few new child prims to your collar.");
@@ -153,19 +153,19 @@ default
             llRequestPermissions(llGetOwner(), PERMISSION_CHANGE_LINKS);
         }
     }
-    
+
     run_time_permissions(integer perms) {
         if (perms & PERMISSION_CHANGE_LINKS) {
-            LegacyCleanup();            
-            llRezAtRoot("leashpoint", llGetPos(), ZERO_VECTOR, llEuler2Rot(<0,0,-90 * DEG_TO_RAD>) * llGetRot(), 1);
+            LegacyCleanup();
+            llRezAtRoot("leashpoint", llGetPos(), ZERO_VECTOR, llEuler2Rot(<0, 0, -90 * DEG_TO_RAD>) * llGetRot(), 1);
         }
     }
-    
+
     object_rez(key id) {
         llCreateLink(id, TRUE);
         llRemoveInventory("leashpoint");
     }
-    
+
     changed(integer change) {
         if (change & CHANGED_LINK) {
             llOwnerSay("Child prims linked.  Starting update.");
@@ -194,11 +194,11 @@ state update {
             }
             integer pin = (integer)llFrand(99999998.0) + 1; //set a random pin
             llSetRemoteScriptAccessPin(pin);
-            llRegionSayTo(id, g_iUpdateChan, "ready|" + (string)pin );    
-            llRemoveInventory(llGetScriptName());    
+            llRegionSayTo(id, g_iUpdateChan, "ready|" + (string)pin);
+            llRemoveInventory(llGetScriptName());
         }
     }
-    
+
     timer() {
         // if we haven't gotten started by now, clean ourself up
         llRemoveInventory(llGetScriptName());
