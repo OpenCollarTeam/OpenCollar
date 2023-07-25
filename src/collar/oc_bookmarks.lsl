@@ -10,7 +10,7 @@ Medea Destiny -
 
 */
 
-string g_sScriptVersion = "8.1";
+string g_sScriptVersion = "8.2";
 integer LINK_CMD_DEBUG=1999;
 DebugOutput(key kID, list ITEMS){
     integer i=0;
@@ -600,3 +600,4 @@ state active
         if(iChange & CHANGED_OWNER)  llResetScript();
     }
 }
+

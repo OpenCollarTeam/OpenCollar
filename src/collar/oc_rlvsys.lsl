@@ -4,16 +4,22 @@ Copyright (c) 2008 - 2016 Satomi Ahn, Nandana Singh, Wendy Starfall,
 Medea Destiny, littlemousy, Romka Swallowtail, Garvin Twine,
 Sumi Perl et al.
 Licensed under the GPLv2.  See LICENSE for full details.
-
 Medea Destiny   -
-        Sept 20201  -   Added RLV_CMD_OVERRIDE function. This allows one shot (=force) commands to be sent that will override any restrictions. 
-                        This command should only be used where operator has owner permission. The notion behind it is that owners should
-                        not be restricted by wearer restictions. They can unset restrictions manually, perform the function, and then reset
-                        the restriction, but that's a lot of hassle. This performs the function automatically. Operator and wearer are notified of 
-                        restrictions that have been temporarily restricted to avoid being misled that a restriciton is not present.
+        Sept 2021  -    Added RLV_CMD_OVERRIDE function. This allows one shot (=force) commands to be sent that will override any
+                        restrictions. This command should only be used where operator has owner permission. The notion behind it 
+                        is that owners should not be restricted by wearer restictions. They can unset restrictions manually, 
+                        perform the function, and then reset the restriction, but that's a lot of hassle. This performs the 
+                        function automatically. Operator and wearer are notified of restrictions that have been temporarily 
+                        restricted to avoid being misled that a restriciton is not present.
+        Aug 2022    -   Ensure applyrem() restores a detach=n when the collar is locked, otherwise new methodology with relay 
+                        would cause a locked collar to unlock when there are no more relay sources. Fix for issue #842
+        Oct 2022    -   Changed "RLV ready!" notification to "RLV active!" to avoid confusion during boot process.
+Kristen Mynx -
+        May 2022 - Removed DO_RLV_REFRESH and recheck_lock timer.   Both of these were only used by
+        the relay, which is being changed at the same time.  Check the comments in oc_relay.
 */
 
-string g_sScriptVersion = "8.1";
+string g_sScriptVersion = "8.2";
 integer g_iRLVOn = TRUE;
 integer g_iRLVOff = FALSE;
 integer g_iViewerCheck = FALSE;
@@ -65,7 +71,6 @@ integer MENUNAME_REMOVE = 3003;
 
 integer RLV_CMD = 6000;
 integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
-integer DO_RLV_REFRESH = 26001;//RLV plugins should reinstate their restrictions upon receiving this message.
 integer RLV_CLEAR = 6002;//RLV plugins should clear their restriction lists upon receiving this message.
 integer RLV_VERSION = 6003; //RLV Plugins can recieve the used RLV viewer version upon receiving this message..
 integer RLVA_VERSION = 6004; //RLV Plugins can recieve the used RLVa viewer version upon receiving this message..
@@ -186,10 +191,13 @@ setRlvState(){
     } else if (g_iRlvActive) {  //Both were true, but not now. g_iViewerCheck must still be TRUE (as it was once true), so g_iRLVOn must have just been set FALSE
         //Debug("RLV went inactive");
         g_iRlvActive=FALSE;
+        integer relockcheck;
+        if(llListFindList(g_lBaked,["detach"])!=-1) relockcheck=TRUE;
         while (llGetListLength(g_lBaked)){
             llOwnerSay("@"+llList2String(g_lBaked,-1)+"=y"); //remove restriction
             g_lBaked=llDeleteSubList(g_lBaked,-1,-1);
         }
+        if(relockcheck==TRUE && g_iCollarLocked==TRUE) llOwnerSay("@detach=n");
         llMessageLinked(LINK_SET, RLV_OFF, "", NULL_KEY);
     } else if (g_iRLVOn){  //g_iViewerCheck must be FALSE (see above 2 cases), so g_iRLVOn must have just been set to TRUE, so do viewer check
         if (g_iListener) llListenRemove(g_iListener);
@@ -274,6 +282,7 @@ ApplyRem(string sBehav) {
         //also check the exceptions list, in case its an exception
         g_lBaked=llDeleteSubList(g_lBaked,iRestr,iRestr); //delete it from the baked list
         llOwnerSay("@"+sBehav+"=y"); //remove restriction
+        if(sBehav=="detach" && g_iCollarLocked == TRUE) llOwnerSay("@detach=n"); //ensure we're not unlocking a locked collar
     }
 }
 
@@ -391,7 +400,7 @@ state active
         g_lBaked=[];    //just been rezzed, so should have no baked restrictions
         */
         // Begin to detect RLV
-        llOwnerSay("@clear");
+       //llOwnerSay("@clear"); //not needed, & we're about to reset and issue the command in state entry anyway.
         //setRlvState();
         llResetScript();
     }
@@ -483,24 +492,21 @@ state active
             if (g_iRlvActive == TRUE) {
                 llSleep(2);
                 llMessageLinked(LINK_SET, RLV_ON, "", NULL_KEY);
-                if (g_iRlvaVersion) llMessageLinked(LINK_SET, RLVA_VERSION, (string) g_iRlvaVersion, NULL_KEY);
-            }
-        } else if(iNum == TIMEOUT_FIRED)
-        {
-            
-            if(sStr == "recheck_lock"){
-                if(!g_iCollarLocked){
-                    llOwnerSay("@detach=y");
+                if (g_iRlvaVersion) {
+                    llMessageLinked(LINK_SET, RLVA_VERSION, (string) g_iRlvaVersion, NULL_KEY);
                 }
-            }
-        
-        }else if(iNum == LM_SETTING_EMPTY){
-            
+                else {
+                    llMessageLinked(LINK_SET,RLV_VERSION, (string) g_iRlvVersion,NULL_KEY);
+                }
+             }
+        } else if(iNum == LM_SETTING_EMPTY){
+           
             //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
             //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
             
         } else if(iNum == LM_SETTING_DELETE){
             
+            if(sStr=="global_locked") g_iCollarLocked=0;
             //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
             //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
             
@@ -518,6 +524,7 @@ state active
             if (sToken+"_"+sVar == "auth_owner") g_lOwners = llParseString2List(sValue, [","], []);
             else if(sToken == "global"){
                 if(sVar == "locked") g_iCollarLocked=(integer)sValue;
+ 
                 else if (sVar=="handshakes") g_iMaxViewerChecks=(integer)sValue;
             }
             else if (sToken=="rlvsys"){
@@ -624,12 +631,6 @@ state active
                     if (kID==g_kSitter) llOwnerSay("@"+"sit:"+(string)g_kSitTarget+"=force");  //if we stored a sitter, sit on it
                     rebakeSourceRestrictions(kID);
                 }
-            } else if(iNum == DO_RLV_REFRESH){
-                llOwnerSay("@clear");
-                llOwnerSay("@detach=n");
-                llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "30", "recheck_lock");
-                llMessageLinked(LINK_SET, RLV_REFRESH, "","");
-                llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "ALL","");
             } else if(iNum == RLV_CMD_OVERRIDE){
                 //New feature! RLV_CMD_OVERRIDE is designed to allow one-shot (force) commands to override current restrictions. This is done by sending the behavior(s) to send as a comma separated list, followed by a ~ and then the restrictions to temporarily lift as another comma separate list as as sMsg. EXAMPLE: llMessageLinked(LINK_THIS,RLV_CMD_OVERRIDE,"unsit~unsit","") will lift the current unsit restriction if present, issue an @unsit=force, then restore the unsit restriction if it was previously present. These commands should ONLY be sent if the issuer has OWNER auth.
                 list lCommands=llParseString2List(llList2String(llParseString2List(sStr,["~"],[]),0),[","],[]);
@@ -688,7 +689,7 @@ state active
                     if ((key)kSource) llShout(RELAY_CHANNEL,"ping,"+(string)kSource+",ping,ping");
                     else rebakeSourceRestrictions(kSource);  //reapply collar's restrictions here
                 }
-                if (!llGetStartParameter()) llMessageLinked(LINK_SET,NOTIFY,"0"+"RLV ready!",g_kWearer);
+                if (!llGetStartParameter()) llMessageLinked(LINK_SET,NOTIFY,"0"+"RLV active!",g_kWearer);
             }
         } else {
             if (g_iCheckCount++ < g_iMaxViewerChecks) {
@@ -752,3 +753,4 @@ state inUpdate{
         }
     }
 }
+

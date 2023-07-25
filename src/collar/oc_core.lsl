@@ -23,9 +23,22 @@ Medea (Medea Destiny)
     Sept 2021   -   Added sleep before notify for device name chage, issue #672 
                 -   Added confirmation messages when group or public access is toggled and fixed a typo
                 -   Efficiency pass, inlined majorminor(), docheckupdate() and docheckdevupdate().
-                    Removed g_lTestReports, left over from alpha.a
-                  
-  
+
+                    Removed g_lTestReports, left over from alpha.
+    Nov 2021    -   Auth check for hide didn't account for when wearer tries to use hide with AllowHiding
+                     ticked but access is not CMD_WEARER (i.e. wearer set to trusted). (see #774)                         
+    Jun 2022    -   Fixes for #774 (extension to above, allowing for wearer set to trusted). Using 
+                    kID == g_kWearer instead of iNum==CMD_WEARER in UserCommad() for:
+                    Safeword report, verbosity level, locking
+                    And kAv == g_kWearer instead of iAuth == CMD_WEARER in meu dialog responses for:
+                    + / - trusted / blacklist when wearer is permitted, displaying access list, print settings  
+    Oct 2022    -   Fix for full version>beta version checking. Added menu text to clarify versioning for beta users.
+                    
+Stormed Darkshade (StormedStormy)
+    March 2022  -   Added a button for reboot to help/about menu.  
+
+Yosty7B3
+    Nov 2022  -     Removed Setor() and bool() functions for streamlining.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
 */
@@ -34,11 +47,12 @@ integer NOTIFY_OWNERS=1003;
 
 //string g_sParentMenu = "";
 string g_sSubMenu = "Main";
-string COLLAR_VERSION = "8.2.1000"; // Provide enough room
+string COLLAR_VERSION = "8.2.3000"; // Provide enough room
 // LEGEND: Major.Minor.Build RC Beta Alpha
 integer UPDATE_AVAILABLE=FALSE;
 string NEW_VERSION = "";
 integer g_iAmNewer=FALSE;
+integer g_iIsBeta;
 integer g_iChannel=1;
 string g_sPrefix;
 
@@ -145,6 +159,7 @@ Menu(key kID, integer iAuth) {
 
     if(UPDATE_AVAILABLE ) sPrompt += "\n\nUPDATE AVAILABLE: Your version is: "+COLLAR_VERSION+", The current release version is: "+NEW_VERSION;
     if(g_iAmNewer)sPrompt+="\n\nYour collar version is newer than the public release. This may happen if you are using a beta or pre-release copy.\nNote: Pre-Releases may have bugs. Ensure you report any bugs to [https://github.com/OpenCollarTeam/OpenCollar Github]";
+    if(g_iIsBeta)sPrompt+="\n(The last 3 digits indicate a pre-release version, which is superseded by 000 for a release version).";
 
     if(g_iWelded)sPrompt+="\n\n* The Collar is Welded by secondlife:///app/agent/"+(string)g_kWeldBy+"/about *";
     if(iAuth==CMD_OWNER && g_iLocked && !g_iWelded)lButtons+=["Weld"];
@@ -166,18 +181,19 @@ AccessMenu(key kID, integer iAuth){
         return;
     }
     string sPrompt = "\nOpenCollar Access Controls\n+/- buttons to control access lists.\nGroup allows access to current group, Public allows access to all. Wearer trust allows an owned wearer to add/remove from trusted list.\nRunaway removes all owners, access list prints out who has access.";
-    list lButtons = ["+ Owner", "+ Trust", "+ Block", "- Owner", "- Trust", "- Block", Checkbox(bool((g_kGroup!="")), "Group"), Checkbox(g_iPublic, "Public")];
+    list lButtons = ["+ Owner", "+ Trust", "+ Block", "- Owner", "- Trust", "- Block", Checkbox(g_kGroup!="", "Group"), Checkbox(g_iPublic, "Public")];
 
     lButtons += [Checkbox(g_iAllowWearerSetTrusted, "Wearer Trust"), "Runaway", "Access List"];
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "Menu~Auth");
 }
 
 HelpMenu(key kID, integer iAuth){
-    string EXTRA_VER_TXT = setor(bool((llGetSubString(COLLAR_VERSION,-1,-1)=="0")), "", " (ALPHA "+llGetSubString(COLLAR_VERSION,-1,-1)+") ");
-    EXTRA_VER_TXT += setor(bool((llGetSubString(COLLAR_VERSION,-2,-2)=="0")), "", " (BETA "+llGetSubString(COLLAR_VERSION,-2,-2)+") ");
-    EXTRA_VER_TXT += setor(bool((llGetSubString(COLLAR_VERSION,-3,-3) == "0")), "", " (RC "+llGetSubString(COLLAR_VERSION,-3,-3)+") ");
+    string EXTRA_VER_TXT;
+    if(llGetSubString(COLLAR_VERSION,-1,-1)!="0") EXTRA_VER_TXT = " (ALPHA "+llGetSubString(COLLAR_VERSION,-1,-1)+") ";
+    if(llGetSubString(COLLAR_VERSION,-2,-2)!="0") EXTRA_VER_TXT += " (BETA "+llGetSubString(COLLAR_VERSION,-2,-2)+") ";
+    if(llGetSubString(COLLAR_VERSION,-3,-3)!="0") EXTRA_VER_TXT += " (RC " + llGetSubString(COLLAR_VERSION,-3,-3)+") ";  
 
-    string sPrompt = "\nOpenCollar "+COLLAR_VERSION+" "+EXTRA_VER_TXT+"\nVersion: "+setor(g_iAmNewer, "(Newer than release)", "")+" "+setor(UPDATE_AVAILABLE, "(Update Available)", "(Most Current Version)");
+    string sPrompt = "\nOpenCollar "+COLLAR_VERSION+" "+EXTRA_VER_TXT+"\nVersion: "+llList2String(["","(Newer than release)"],g_iAmNewer)+" "+llList2String(["(Most Current Version)","(Update Available)"],UPDATE_AVAILABLE);
     sPrompt += "\n\nDocumentation https://opencollar.cc";
     sPrompt += "\nPrefix: "+g_sPrefix+"\nChannel: "+(string)g_iChannel;
     sPrompt += "\nSafeword: "+g_sSafeword;
@@ -186,17 +202,13 @@ HelpMenu(key kID, integer iAuth){
         llMessageLinked(LINK_SET, NOTIFY, sPrompt, kID);
         return;
     }
-    list lButtons = ["Update", "Support", "License"];
+    list lButtons = ["Update", "Support", "License", "Reboot"];
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "Menu~Help");
 }
 
-integer bool(integer a){
-    if(a)return TRUE;
-    else return FALSE;
-}
 list g_lCheckboxes=["▢", "▣"];
 string Checkbox(integer iValue, string sLabel) {
-    return llList2String(g_lCheckboxes, bool(iValue))+" "+sLabel;
+    return llList2String(g_lCheckboxes, (iValue>0))+" "+sLabel;
 }
 integer g_iUpdatePin = 0;
 //string g_sDeviceName;
@@ -225,7 +237,7 @@ UserCommand(integer iNum, string sStr, key kID) {
             llMessageLinked(LINK_SET,NOTIFY, "0Fixed menus", kID);
             llMessageLinked(LINK_SET,0,"initialize","");
         } else if(sChangetype == "update"){
-            if(iNum == CMD_OWNER || iNum == CMD_WEARER){
+            if(iNum == CMD_OWNER || kID == g_kWearer){
                 g_iUpdatePin = llRound(llFrand(0x7FFFFFFF))+1; // Maximum integer size
                 llSetRemoteScriptAccessPin(g_iUpdatePin);
 
@@ -260,7 +272,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                     }
                 }
             } else {
-                if(iNum == CMD_OWNER || iNum == CMD_WEARER){
+                if(iNum == CMD_OWNER || kID == g_kWearer){
                     llMessageLinked(LINK_SET, NOTIFY, "0The safeword is current set to: '"+g_sSafeword+"'",kID);
                 }
             }
@@ -328,7 +340,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                 llMessageLinked(LINK_SET,NOTIFY,"0%NOACCESS% to toggling Allow Hide", kID);
                 if(sChangevalue == "remenu")Settings(kID,iNum);
             }
-        } else if(llToLower(sChangetype)=="lock" && !g_iWelded && (iNum == CMD_OWNER || iNum == CMD_WEARER)){
+        } else if(llToLower(sChangetype)=="lock" && !g_iWelded && (iNum == CMD_OWNER || kID == g_kWearer)){
             // allow locking
             g_iLocked=TRUE;
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_locked="+(string)g_iLocked,"");
@@ -361,8 +373,9 @@ list g_lMenuIDs;
 integer g_iMenuStride;
 integer g_iLocked=FALSE;
 Compare(string V1, string V2){
+    V2=llStringTrim(V2,STRING_TRIM);
     NEW_VERSION=V2;
-
+    if(llGetSubString(V1,-3,-1)!="000") g_iIsBeta=TRUE;
     if(V1==V2){
         UPDATE_AVAILABLE=FALSE;
         return;
@@ -377,6 +390,11 @@ Compare(string V1, string V2){
         g_iAmNewer=FALSE;
     } else if(iV1 == iV2) return;
     else if(iV1 > iV2){
+        if(llGetSubString(V2,-3,-1)=="000" && llGetSubString(V1,0,-4)==llGetSubString(V2,0,-4)){
+            UPDATE_AVAILABLE=TRUE;
+            g_iAmNewer=FALSE;
+            return;
+        }
         UPDATE_AVAILABLE=FALSE;
         g_iAmNewer=TRUE;
 
@@ -386,19 +404,6 @@ Compare(string V1, string V2){
 
 key g_kUpdateCheck = NULL_KEY;
 key g_kCheckDev;
-
-///The setor method is derived from a similar PHP proposed function, though it was denied,
-///https://wiki.php.net/rfc/ifsetor
-///The concept is roughly the same though we're not dealing with lists in this method, so is just modified
-///The ifsetor proposal would give a function which would be more like
-///ifsetor(list[index], sTrue, sFalse)
-///LSL can't check if a list item is set without a stack heap if it is out of range, this is significantly easier for us to just check for a integer boolean
-string setor(integer iTest, string sTrue, string sFalse){
-    if(iTest)return sTrue;
-    else return sFalse;
-}
-
-
 
 integer g_iDoTriggerUpdate=FALSE;
 key g_kWelder = NULL_KEY;
@@ -535,21 +540,21 @@ state active
                         iRespring=FALSE;
                         Menu(kAv,iAuth);
                     } else if(llGetSubString(sMsg,0,0) == "+"){
-                        if(iAuth == CMD_OWNER || (iAuth==CMD_WEARER && (sMsg=="+ Trust"||sMsg=="+ Block") && g_iAllowWearerSetTrusted==TRUE) ){
+                        if(iAuth == CMD_OWNER || (kAv == g_kWearer && (sMsg=="+ Trust"||sMsg=="+ Block") && g_iAllowWearerSetTrusted==TRUE) ){
                             iRespring=FALSE;
                             llMessageLinked(LINK_SET, iAuth, "add "+llToLower(llGetSubString(sMsg,2,-1)), kAv);
                         }
                         else
                             llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to adding a person", kAv);
                     } else if(llGetSubString(sMsg,0,0)=="-"){
-                        if(iAuth == CMD_OWNER || (iAuth==CMD_WEARER && (sMsg=="- Trust"||sMsg=="-Block") && g_iAllowWearerSetTrusted==TRUE) ){
+                        if(iAuth == CMD_OWNER || (kAv == g_kWearer && (sMsg=="- Trust"||sMsg=="-Block") && g_iAllowWearerSetTrusted==TRUE) ){
                             iRespring=FALSE;
                             llMessageLinked(LINK_SET, iAuth, "rem "+llToLower(llGetSubString(sMsg,2,-1)), kAv);
                         } else llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to removing a person", kAv);
                     } else if(sMsg == "Access List"){
-                        if(iAuth == CMD_OWNER || iAuth == CMD_WEARER ){
+                        if(iAuth == CMD_OWNER || kAv == g_kWearer ){
                         llMessageLinked(LINK_SET, iAuth, "print auth", kAv);}
-                    } else if(sMsg == Checkbox(bool((g_kGroup!="")), "Group")){
+                    } else if(sMsg == Checkbox((g_kGroup!=""), "Group")){
                         if(iAuth ==CMD_OWNER){
                             if(g_kGroup!=""){
                                 g_kGroup="";
@@ -613,25 +618,21 @@ state active
                             }else{
                                 llMessageLinked(LINK_SET,NOTIFY,"0%NOACCESS% to changing policy on listening to local chat for collar commands.",kAv);}
                     } else if(sMsg == "Print"){
-                         if(iAuth==CMD_OWNER || iAuth==CMD_WEARER) llMessageLinked(LINK_SET, iAuth, "print settings", kAv);
+                         if(iAuth==CMD_OWNER || kAv == g_kWearer) llMessageLinked(LINK_SET, iAuth, "print settings", kAv);
                          else llMessageLinked(LINK_SET,NOTIFY,"0%NOACCESS% to reading settings.",kAv);
                     } else if(sMsg == "Fix Menus"){
                         llMessageLinked(LINK_SET, iAuth, "fix", kAv);
                         llMessageLinked(LINK_SET, NOTIFY, "0Menus have been fixed", kAv);
                     } else if(sMsg == Checkbox(g_iHide,"Hide")){
-
-                        if(!g_iAllowHide && iAuth == CMD_WEARER){
+                        if((kAv == g_kWearer && g_iAllowHide==TRUE)||iAuth==CMD_OWNER){
+                            g_iHide=1-g_iHide;
+                            llMessageLinked(LINK_SET, iAuth, llList2String(["show","hide"],g_iHide), kAv);
+                            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_hide="+(string)g_iHide, "");
+                        }
+                        else {
                             llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to hiding the collar", kAv);
                             return;
                         }
-                        if(iAuth != CMD_OWNER && iAuth!= CMD_WEARER){
-                            llMessageLinked(LINK_SET,NOTIFY, "0%NOACCESS% to hiding the collar", kAv);
-                            return;
-                        }
-
-                        g_iHide=1-g_iHide;
-                        llMessageLinked(LINK_SET, iAuth, setor(g_iHide, "hide", "show"), kAv);
-                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_hide="+(string)g_iHide, "");
                     } else if(sMsg == "Load"){
                         llMessageLinked(LINK_SET, iAuth, sMsg, kAv);
                     } else if(sMsg == "Resize"){
@@ -682,6 +683,8 @@ state active
                     if(sMsg == UPMENU){
                         iRespring=FALSE;
                         Menu(kAv,iAuth);
+                    } else if(sMsg == "Reboot") {
+                        llMessageLinked(LINK_SET, iAuth, "Reboot", kAv);
                     } else if(sMsg == "License"){
                         llGiveInventory(kAv, ".license");
                     } else if(sMsg == "Support"){
@@ -950,3 +953,4 @@ state active
         }
     }
 }
+

@@ -4,7 +4,8 @@ Copyright ©2021
 : Contributors :
 Aria (Tashia Redrose)
     * Feb 2021       -       Created oc_unwelder_hud
-    
+Medea (Medea Destiny)
+      Aug 2022    -  Fix for issue #862, allow wearer with trusted perm to operate    
     
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
@@ -116,11 +117,27 @@ integer g_iLMLastSent;
 key g_kUser = NULL_KEY;
 integer g_iWelded=FALSE;
 integer g_iAddonLimitation = TRUE;
+integer softCounter = 0;
+
+softreset(){
+   if(softCounter < 3){
+      softCounter ++;
+      // assume unintentional disconnect and try to salvage.
+      g_kCollar = NULL_KEY;
+      API_CHANNEL = ((integer)("0x" + llGetSubString((string)g_kUser, 0, 8))) + 0xf6eb - 0xd2;
+      Link("online", 0, "", g_kUser);
+   }
+   else {
+      // if we have tried enough times do a hard reset because the item may no longer be present!
+      llResetScript();
+   }
+}
 
 default
 {
     state_entry(){
         llOwnerSay("Click me to unweld");
+        llSetTimerEvent(10);
     }
     touch_start(integer t){
         g_iLMLastSent = llGetUnixTime();
@@ -128,7 +145,6 @@ default
         API_CHANNEL = ((integer)("0x" + llGetSubString((string)g_kUser, 0, 8))) + 0xf6eb - 0xd2;
         llListen(API_CHANNEL, "", "", "");
         Link("online", 0, "", g_kUser); // This is the signal to initiate communication between the addon and the collar
-        llSetTimerEvent(60);
     }
     
     attach(key kID){
@@ -151,7 +167,8 @@ default
         if (llGetUnixTime() > (g_iLMLastRecv + (5 * 60)) && g_kCollar != NULL_KEY)
         {
             g_kCollar = NULL_KEY;
-            llResetScript(); // perform our action on disconnect
+            softreset();
+            //llResetScript(); // perform our action on disconnect
         }
         
         if (g_kCollar == NULL_KEY) Link("online", 0, "", g_kUser);
@@ -163,6 +180,7 @@ default
         {
             // This signal, indicates the collar has approved the addon and that communication requests will be responded to if the requests are valid collar LMs.
             g_kCollar = id;
+            g_iLMLastRecv = llGetUnixTime();
             Link("from_addon", LM_SETTING_REQUEST, "ALL", "");
             llOwnerSay("Unwelder has connected");
             llOwnerSay("Downloading active settings");
@@ -174,7 +192,8 @@ default
         else if (sPacketType == "dc" && g_kCollar == id)
         {
             g_kCollar = NULL_KEY;
-            llResetScript(); // This addon is designed to always be connected because it is a test
+            softreset();
+            //llResetScript(); // This addon is designed to always be connected because it is a test
         }
         else if (sPacketType == "pong" && g_kCollar == id)
         {
@@ -210,12 +229,12 @@ default
                     
                     if(sStr == "settings=sent"){
                         if(g_iAddonLimitation){
-                            llOwnerSay("Error: Addon limitations are in place. Unweld tool cannot continue. To disable the addon limitation, please see the setitngs menu of your collar, inside the Addon.. submenu you will find the Limiter which must be disabled.");
+                            llOwnerSay("Addons Limited is checked. To unweld, someone with Owner access (including wearer if they are Owner) must: 1) Open the collar menu. 2)Click Settings. 3) Click the Addons button in Settings. UNCHECK AddOns Limited. Leave WearerAdd and Addons CHECKED. The Wearer can then proceed to unweld.");
                             Link("offline", 0, "", g_kUser);
                             llSleep(2);
                             llResetScript();
                         } else {
-                            llOwnerSay("Checking for a existing collar weld");
+                            llOwnerSay("Checking for an existing collar weld");
                             if(g_iWelded){
                                 llOwnerSay("Unweld tool now ready.");
                                 llOwnerSay("Building consent prompt");
@@ -260,7 +279,7 @@ default
                             }
                             else if (sMsg == "UNWELD NOW")
                             {
-                                if(iAuth == CMD_OWNER || iAuth == CMD_WEARER){
+                                if(iAuth == CMD_OWNER || llGetOwnerKey(id)==llGetOwner()){
                                     Link("from_addon", NOTIFY_OWNERS, "The unweld tool was used.", "");
                                     llOwnerSay("Consent : Valid");
                                     Link("from_addon", LM_SETTING_DELETE, "intern_weld","origin");
@@ -276,6 +295,7 @@ default
                                 Link("offline", 0, "", llGetOwnerKey(g_kCollar));
                                 g_lMenuIDs = [];
                                 g_kCollar = NULL_KEY;
+                                llResetScript();
                             }
                         }
                     }

@@ -140,7 +140,7 @@ default
             g_lTypes = llDeleteSubList(g_lTypes, iIndexChannels, iIndexChannels);
 
             llListenRemove(iLstn);
-            if(sMsg == "Skip"){
+            if(sMsg == "Skip" ||sMsg=="Keep"){
                 g_iLine++;
                 g_kLineID = llGetNotecardLine(g_sCard, g_iLine);
             } else if(sMsg == "Install"){
@@ -206,7 +206,7 @@ default
                 g_iTypes = 1;
 
 
-                llDialog(llGetOwner(), "[OpenCollar Installer]\nCurrent Item: "+sItemName+"\n\n* Remove\t\t- This optional item is currently installed. If you wish to uninstall, select this option\n* Skip\t\t- Skip and do not change this optional item", ["Remove", "Skip"], llList2Integer(g_lChannels, -1));
+                llDialog(llGetOwner(), "[OpenCollar Installer]\nCurrent Item: "+sItemName+"\n\n* Remove\t\t- This optional item is currently installed. If you wish to uninstall, select this option\n* Keep\t\t- Do not change this optional item", ["Remove", "Keep"], llList2Integer(g_lChannels, -1));
 
                 llSetTimerEvent(1);
             }
@@ -218,7 +218,7 @@ default
         if(llGetTime()>=15.0)
         {
             if(g_iTypes)
-                llDialog(llGetOwner(), "[OpenCollar Installer]\nCurrent Item: "+g_sItemName+"\n\n* Remove\t\t- This optional item is currently installed. If you wish to uninstall, select this option\n* Skip\t\t- Skip and do not change this optional item", ["Remove", "Skip"], llList2Integer(g_lChannels, -1));
+                llDialog(llGetOwner(), "[OpenCollar Installer]\nCurrent Item: "+g_sItemName+"\n\n* Remove\t\t- This optional item is currently installed. If you wish to uninstall, select this option\n* Keep\t\t- Do not change this optional item", ["Remove", "Keep"], llList2Integer(g_lChannels, -1));
             else
                 llDialog(llGetOwner(), "[OpenCollar Installer]\nCurrent Item: "+g_sItemName+"\n\n* Install\t\t- This optional item is not installed. If you wish to install, select this item\n* Skip\t\t- Skip and do not install this optional item", ["Install", "Skip"], llList2Integer(g_lChannels, -1));
         }

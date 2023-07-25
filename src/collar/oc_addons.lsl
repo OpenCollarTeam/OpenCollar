@@ -9,6 +9,14 @@ Medea (medea.destiny)
     Sept 2021           -   Provided auth failure mode for menu. Insufficient auth now
                             provides suitable notification to user and respawns main menu. 
                             Fixes issue #665   
+
+KristenMynx
+    Dec 2021            -   Fix timeout removal stride
+    May 2022            -   Fix offline removal stride
+                        -   Reduce chatter
+    Jun 2022            -   Reduce chatter more
+    
+    
     
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
@@ -18,7 +26,7 @@ https://github.com/OpenCollarTeam/OpenCollar
 string g_sParentMenu = "Main";
 string g_sSubMenu = "Addons";
 
-string COLLAR_VERSION = "8.1.0000";
+string COLLAR_VERSION = "8.2.3000";
 
 string Auth2Str(integer iAuth){
     if(iAuth == CMD_OWNER)return "Owner";
@@ -286,8 +294,8 @@ state active
                         llOwnerSay("Pre-Addon Deletion List: "+llDumpList2String(g_lAddons,"~"));
                     }
                     SayToAddonX((key)llList2String(g_lAddons,i), "dc", 0, "", llGetOwner());
-                    llMessageLinked(LINK_SET, NOTIFY, "0Addon: "+llList2String(g_lAddons,i+1)+" has been removed because it has not been seen for 5 minutes or more.", g_kWearer);
-                    g_lAddons = llDeleteSubList(g_lAddons, i, i+5);
+                    //llMessageLinked(LINK_SET, NOTIFY, "0Addon: "+llList2String(g_lAddons,i+1)+" has been removed because it has not been seen for 5 minutes or more.", g_kWearer);
+                    g_lAddons = llDeleteSubList(g_lAddons, i, i+4);
                     i=-5; // if we change the stride of the list this must be updated
                     end=llGetListLength(g_lAddons);
                     if(g_iVerbosityLevel>=4)
@@ -369,7 +377,7 @@ state active
                         {
                             llOwnerSay("Pre-Addon Deletion List: "+llDumpList2String(g_lAddons,"~"));
                         }
-                        g_lAddons = llDeleteSubList(g_lAddons, iPos, iPos+5);
+                        g_lAddons = llDeleteSubList(g_lAddons, iPos, iPos+4);
                         if(g_iVerbosityLevel>=4)
                         {
                             llOwnerSay("Post-Addon Deletion List: "+llDumpList2String(g_lAddons,"~"));
@@ -550,3 +558,4 @@ state active
         //llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
     }
 }
+

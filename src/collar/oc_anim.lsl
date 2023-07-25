@@ -5,15 +5,21 @@ Copyright 2021
 : Contributors :
 
 Aria (Tashia Redrose)
-    * July 2020         - Rewrote oc_anim
-    * Dec 2020          - Fix bug where animations were not treated case insensitive, and where animations with a space in the name could not be played by chat command or menu button
-    * Feb 2021          - Fix Public Access
+    July 2020 - Rewrote oc_anim
+    Dec 2020  - Fix bug where animations were not treated case insensitive, and where animations
+                     with a space in the name could not be played by chat command or menu button
+    Feb 2021  - Fix Public Access
     
 Felkami (Caraway Ohmai)
-    * Dec 2020          - Fixed #456, #462, #461, added LockMeister AO suppress
+    Dec 2020  - Fixed #456, #462, #461, added LockMeister AO suppress
 
 et al.
 
+K9K8E
+    Apr 2022    - Remove CONTROL_ML_LBUTTON from take controls to allow left mouse in mouselook.
+
+Tayaphidoux
+    Jun 2022    - Restore AO pause functionality
 
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
@@ -51,6 +57,8 @@ integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
 integer MENUNAME_REMOVE = 3003;
 
+integer AO_SETOVERRIDE=40501;
+
 integer RLV_CMD = 6000;
 //integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
 
@@ -78,6 +86,7 @@ string UPMENU = "BACK";
 //integer TIMEOUT_READY = 30497;
 //integer TIMEOUT_REGISTER = 30498;
 //integer TIMEOUT_FIRED = 30499;
+
 
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
@@ -312,7 +321,8 @@ integer g_iStoppedAdjust;
 string g_sPose = "";
 
 MessageAOs(string sONOFF) { // send string as "ON" / "OFF" saves 2 llToUpper
-    llRegionSayTo(g_kWearer, -8888, (string)g_kWearer + "boot" + llToLower(sONOFF)); // for Firestorm AO
+    llMessageLinked(LINK_SET,AO_SETOVERRIDE, llToLower(sONOFF), g_kWearer);
+    //llRegionSayTo(g_kWearer, -8888, (string)g_kWearer + "boot" + llToLower(sONOFF)); // for Firestorm AO
 }
 
 integer g_iTimerMode;
@@ -472,7 +482,6 @@ state active
                 CONTROL_ROT_RIGHT |
                 CONTROL_UP |
                 CONTROL_DOWN |
-                CONTROL_ML_LBUTTON | 
                 0x02 |
                 0x04,
                 TRUE,TRUE);
@@ -723,3 +732,4 @@ state inUpdate{
         }
     }
 }
+

@@ -3,7 +3,6 @@
 This file is part of OpenCollar.
 Copyright (c) 2018 - 2019 Tashia Redrose, Silkie Sabra, lillith xue, Medea Destiny, Nirea Mercury et al.                           
 Licensed under the GPLv2.  See LICENSE for full details. 
-
 Medea Destiny -
     Sept 2021   -   Moved Exceptions menu into RLV as a main directory, and folded Menu Settings into
                     RLVSuite menu customize
@@ -41,7 +40,15 @@ Medea Destiny -
                     automatically for owners. 
                 -   Added explanatory text to exceptions and force sit menus
                 -   Renamed Refuse TP to Force TP to reflect what the button actually does.                  
-
+    Dec2021     -   Fixed filtering of unsit - > sit unsit for chat command and remote (issue #703 )
+                -   Fix to disengaging strict sit when disabled via menu when already sitting.
+    Feb2022     -   SetAllExes triggered on RLV_REFRESH / RLV_ON was saving values, causing exception
+                    settings to be restored to defaults if trigged before settings are received.
+                    (fixes #740, #720, #719)
+    Aug2022     -   Fix auth filtering for changing exceptions. Issue #844 & #848
+ 
+Krysten Minx -
+   May2022      - Added check for valid UUID when setting custom exception
 */
 string g_sParentMenu = "RLV";
 string g_sSubMenu1 = "Force Sit";
@@ -401,6 +408,7 @@ integer g_iLastSitAuth = 599;
 UserCommand(integer iNum, string sStr, key kID) {
     if (iNum<CMD_OWNER || iNum>CMD_EVERYONE) return;
     sStr=llToLower(sStr);
+    if(sStr=="unsit") sStr="sit unsit";
    // if ((llSubStringIndex(sStr,"exceptions") && sStr != "menu "+g_sSubMenu1) || (llSubStringIndex(sStr,"exceptions") && sStr != "menu "+g_sSubMenu2)) return;
     if (sStr=="sit" || sStr == "menu "+llToLower(g_sSubMenu1)) MenuForceSit(kID, iNum);
     else if (sStr=="exceptions" || sStr == "menu "+llToLower(g_sSubMenu2)) MenuExceptions(kID,iNum);
@@ -423,10 +431,6 @@ UserCommand(integer iNum, string sStr, key kID) {
     else { 
         string sChangetype = llList2String(llParseString2List(sStr, [" "], []),0);
         string sChangekey = llList2String(llParseString2List(sStr, [" "], []),1);
-        if(sChangetype=="unsit")  {
-            sChangetype="sit";
-            sChangekey="unsit";
-        }
         if (sChangetype == "sit") {
             if ((sChangekey == "[unsit]" || sChangekey == "unsit")) {
                 if(iNum> g_iLastSitAuth ) {
@@ -557,6 +561,12 @@ state active
                 
                 if(sMenu == "Exceptions~Main"){
                     if(sMsg == UPMENU)  llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
+                    else if (iAuth!=CMD_OWNER)
+                    {
+                        llMessageLinked(LINK_SET,NOTIFY,"0No access to changing exceptions!", kAv);
+                        llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
+                        return;
+                    }
                     else if(sMsg == "Custom")MenuCustomExceptionsSelect(kAv,iAuth);
                     else MenuSetExceptions(kAv,iAuth,sMsg);
                 } else if(sMenu == "Exceptions~Custom"){
@@ -586,12 +596,15 @@ state active
                     g_sTmpExceptionName=sMsg;
                     MenuAddCustomExceptionID(kAv,iAuth);
                 } else if(sMenu == "Exceptions~AddCustomID"){
-                    g_kTmpExceptionID = (key)sMsg;
-                    llMessageLinked(LINK_SET,NOTIFY,"0Adding exception..", kAv);
-                    g_lCustomExceptions += [g_sTmpExceptionName,g_kTmpExceptionID,0];
-                    
-                    Save(SAVE_CUSTOM);
-                    MenuSetExceptions(kAv, iAuth, "Custom");
+                    if ((key)sMsg) { // true if valid UUID, false if not
+                         g_kTmpExceptionID = (key)sMsg;
+                         llMessageLinked(LINK_SET,NOTIFY,"0Adding exception..", kAv);
+                         g_lCustomExceptions += [g_sTmpExceptionName,g_kTmpExceptionID,0];
+                         Save(SAVE_CUSTOM);
+                         MenuSetExceptions(kAv, iAuth, "Custom");
+                    } else {
+                         llMessageLinked(LINK_SET,NOTIFY,"0Invalid UUID "+sMsg, kAv);
+                    }
                 } else if (sMenu == "Exceptions~Set") {
                     if (sMsg == UPMENU) MenuExceptions(kAv,iAuth);
                     else {
@@ -629,6 +642,7 @@ state active
                             MenuForceSit(kAv,iAuth);
                         } else{
                             g_iStrictSit=1-g_iStrictSit;
+                            if(!g_iStrictSit) llMessageLinked(LINK_SET,RLV_CMD,"unsit=y","strictsit");
                             llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvext_strict="+(string)g_iStrictSit, "");
                             MenuForceSit(kAv,iAuth);
                         }
@@ -828,7 +842,7 @@ state active
             g_iRLV = FALSE;
         } else if (iNum == RLV_REFRESH || iNum == RLV_ON) {
             g_iRLV = TRUE;
-            SetAllExes(FALSE,EX_TYPE_OWNER|EX_TYPE_TRUSTED|EX_TYPE_CUSTOM,TRUE);
+            SetAllExes(FALSE,EX_TYPE_OWNER|EX_TYPE_TRUSTED|EX_TYPE_CUSTOM,FALSE);
             SetMuffle(g_bMuffle);
             llSleep(1);
             llMessageLinked(LINK_SET,LINK_CMD_RESTDATA,"MinCamDist="+(string)g_fMinCamDist,kID);
