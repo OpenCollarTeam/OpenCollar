@@ -70,6 +70,7 @@ integer in_range(key kID){
     }
 }
 integer NOTIFY = 1002;
+integer NOTIFY_OWNERS=1003;
 integer LINK_CMD_DEBUG=1999;
 integer REBOOT = -1000;
 
@@ -140,9 +141,12 @@ UserCommand(integer iNum, string sStr, key kID) {
         return;
     }
     if (sStr==g_sSubMenu || sStr == "menu "+g_sSubMenu) {
-        if(iNum == CMD_OWNER)
+        if(g_iCaptured){ // ask stop capture before any other changes to capture settings.
+            StopCapture(kID, iNum);
+        } 
+        else if(iNum == CMD_OWNER)
             Menu(kID, iNum);
-        else if (kID == g_kCaptor) StopCapture(kID, iNum); // if we are the Captor ask if we want to stop capture instead.
+        else if (kID == g_kCaptor) StopCapture(kID, iNum); 
         else llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to capture settings", kID);
     }
     //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
@@ -182,9 +186,10 @@ UserCommand(integer iNum, string sStr, key kID) {
                 // Attempt to capture
                 if(!g_iEnabled)return;
                 if(g_iCaptured){
-                    // Check if ID is captor, as they may be trying to release
-                    if(kID == g_kCaptor){
+                    // Check if ID is captor or owner, as they may be trying to release
+                    if((kID == g_kCaptor)||(iNum == CMD_OWNER)){
                         // Initiate release now
+                        llMessageLinked(LINK_SET, NOTIFY_OWNERS, llGetUsername(g_kWearer)+" is no longer captured by secondlife:///app/agent/"+(string)g_kCaptor+"/about", g_kWearer);
                         llMessageLinked(LINK_SET, NOTIFY, "0Capture has ended", g_kCaptor);
                         llMessageLinked(LINK_SET, NOTIFY, "0You are no longer captured by secondlife:///app/agent/"+(string)g_kCaptor+"/about !", g_kWearer);
                         g_iCaptured=FALSE;
@@ -210,6 +215,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                             g_kCaptor=kID;
                             llMessageLinked(LINK_SET, NOTIFY, "0Successfuly captured secondlife:///app/agent/"+(string)g_kWearer+"/about", g_kCaptor);
                             g_iCaptured=TRUE;
+                            llMessageLinked(LINK_SET, NOTIFY_OWNERS, llGetUsername(g_kWearer)+" is captured by secondlife:///app/agent/"+(string)g_kCaptor+"/about", g_kWearer);
                             llMessageLinked(LINK_SET, NOTIFY, "0You have been captured by secondlife:///app/agent/"+(string)g_kCaptor+"/about ! If you need to free yourself, you can always use your safeword '"+g_sSafeword+"'. Also by saying your prefix capture", g_kWearer);
                             Commit();
                         } else {
@@ -322,6 +328,10 @@ state active
     }
 
     link_message(integer iSender,integer iNum,string sStr,key kID){
+        if(iNum == CMD_BLOCKED) {
+            llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to capture because you have been blocked on this collar", kID);
+            return;
+        }
         if(iNum == CMD_NOACCESS && sStr == "menu" && g_iEnabled && !g_iCaptured && in_range(kID)) StartCapture(kID, iNum); // When the collar is touched by someone without permission and capture is enabled show the Capture dialog.
         if(iNum >= CMD_OWNER && iNum <= CMD_NOACCESS) UserCommand(iNum, sStr, kID);
         if(iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
@@ -395,6 +405,7 @@ state active
                     } else if(sMsg == "YES"){
                         g_iCaptured=TRUE;
                         llMessageLinked(LINK_SET, NOTIFY, "0Success", g_kCaptor);
+                        llMessageLinked(LINK_SET, NOTIFY_OWNERS, llGetUsername(g_kWearer)+" is captured by secondlife:///app/agent/"+(string)g_kCaptor+"/about", g_kWearer);
                         Commit();
                     }
                     g_iExpire=0;
@@ -408,8 +419,10 @@ state active
                         llMessageLinked(LINK_SET, NOTIFY, "0Confirmed. Not Ending Capture", g_kExpireFor);
                     }else if(sMsg == "YES"){
                         llMessageLinked(LINK_SET, NOTIFY, "1Capture has ended", g_kCaptor);
+                        llMessageLinked(LINK_SET, NOTIFY_OWNERS, llGetUsername(g_kWearer)+" is no longer captured by secondlife:///app/agent/"+(string)g_kCaptor+"/about", g_kWearer);
                         g_iCaptured=FALSE;
                         g_kCaptor=NULL_KEY;
+                        if (iNum == CMD_OWNER) Menu(kID, iNum); // Capture ended by owner, now show Menu
                         Commit();
                     }
 
@@ -437,8 +450,6 @@ state active
                     if(Flag&2)g_iRisky=TRUE;
                     if(Flag&4)g_iCaptured=TRUE;
                     if(Flag&8)g_iAutoRelease=TRUE;
-
-
                     g_iFlagAtLoad=Flag;
                 }
             } else if(llList2String(lSettings,0) == "auth"){
@@ -507,6 +518,5 @@ state active
             g_iReleaseTime = 0;
         }
     }
-
 
 }
