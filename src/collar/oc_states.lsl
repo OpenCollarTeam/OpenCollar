@@ -12,14 +12,22 @@ Medea (Medea Destiny)
                                 up their #RLV 
     Sept 2021           -       Tighten timings and number of passes on reboot process and reduced sleep padding.                               
                                             
-Yosty7B3
-    Mar 2023            -       Speed up boot time & Linkset Data integration
     
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
-*/
 
+      ~~ boot states ~~
+default: REBOOT reboot
+            ALIVE                   from oc_api & oc_core
+            llGetScriptState(oc_settings)
+startup: STARTUP     
+            0 initialize            from oc_core
+            LM_SETTING_REQUEST ALL  from oc_api
+            "settings=sent"         from oc_settings
+running: TIMEOUT_READY
+
+*/
 
 //integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
@@ -37,32 +45,15 @@ integer TIMEOUT_READY = 30497;
 integer TIMEOUT_REGISTER = 30498;
 integer TIMEOUT_FIRED = 30499;
 
-integer g_iVerbosityLevel = 1;
-
-/*list StrideOfList(list src, integer stride, integer start, integer end)
-{
-    list l = [];
-    integer ll = llGetListLength(src);
-    if(start < 0)start += ll;
-    if(end < 0)end += ll;
-    if(end < start) return llList2List(src, start, start);
-    while(start <= end)
-    {
-        l += llList2List(src, start, start);
-        start += stride;
-    }
-    return l;
-}*/
-//integer NOTIFY_OWNERS=1003;
-
+integer g_iVerbosityLevel = 1;                                                            
 integer NOTIFY = 1002;
 integer REBOOT = -1000;
 
-//integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved
+integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved
 //str must be in form of "token=value"
 integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
 integer LM_SETTING_RESPONSE = 2002;//the settings script sends responses on this channel
-//integer LM_SETTING_DELETE = 2003;//delete token from settings
+integer LM_SETTING_DELETE = 2003;//delete token from settings
 //integer LM_SETTING_EMPTY = 2004;//sent when a token has no value
 
 integer MENUNAME_REQUEST = 3000;
@@ -82,16 +73,12 @@ string UPMENU = "BACK";
 //string ALL = "ALL";
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
-    key kMenuID = llGenerateKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
-
-    integer iIndex = llListFindList(g_lMenuIDs, [kID]);
-    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
-    else g_lMenuIDs += [kID, kMenuID, sName];
+    llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "\n|"+(string)iPage+"|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, sName+"~"+llGetScriptName());
 }
+
+list g_lSettings;
+integer g_iLoading;
 //key g_kWearer;
-list g_lMenuIDs;
-integer g_iMenuStride;
 //list g_lOwner;
 //list g_lTrust;
 key g_kMenuUser;
@@ -100,7 +87,7 @@ integer g_iLastAuth;
 string g_sVariableView;
 //integer g_iLocked=FALSE;
 string g_sTokenView="";
-integer g_iLastStride;
+integer g_iWaitMenu;
 
 list g_lTimers; // signal, start_time, seconds_from
 
@@ -122,28 +109,34 @@ SettingsMenu(integer stridePos, key kAv, integer iAuth)
         return;
     }
     if(stridePos == 0){
-        list lKeys = llLinksetDataListKeys(0,-1);
-        while(llGetListLength(lKeys)){
-            string sToken = llList2String(llParseString2List(llList2String(lKeys,0), ["_"],[]),0);
-            if(llListFindList(lBtns,[sToken])==-1)lBtns+=sToken;
-            lKeys = llDeleteSubList(lKeys,0,0);
+        integer i=0;
+        integer end = llGetListLength(g_lSettings);
+        for(i=0;i<end;i+=3){
+            if(llListFindList(lBtns,[llList2String(g_lSettings,i)])==-1)lBtns+=llList2String(g_lSettings,i);
         }
         sText+="\nCurrently viewing Tokens";
     } else if(stridePos==1){
-        lBtns =  llParseString2List((string)llLinksetDataFindKeys("^"+g_sTokenView+"_",0,-1), [g_sTokenView+"_"],[]);
+        integer i=0;
+        integer end = llGetListLength(g_lSettings);
+        for(i=0;i<end;i+=3){
+            if(llList2String(g_lSettings,i)==g_sTokenView){
+                lBtns+=llList2String(g_lSettings,i+1);
+            }
+        }
         sText+="\nCurrently viewing Variables for token '"+g_sTokenView+"'";
     } else if(stridePos == 2){
-        string sVal = llLinksetDataRead(g_sTokenView+"_"+g_sVariableView);
-        if(sVal==""){
+        integer iPos = llListFindList(g_lSettings,[g_sTokenView,g_sVariableView]);
+        if(iPos==-1){
             // cannot do it
             lBtns=[];
             sText+="\nCurrently viewing the variable '"+g_sTokenView+"_"+g_sVariableView+"'\nNo data found";
         } else {
             lBtns = ["DELETE", "MODIFY"];
-            sText = "\nCurrently viewing the variable '"+g_sTokenView+"_"+g_sVariableView+"'\nData contained in var: "+sVal;
+            sText = "\nCurrently viewing the variable '"+g_sTokenView+"_"+g_sVariableView+"'\nData contained in var: "+llList2String(g_lSettings, iPos+2);
         }
     } else if(stridePos==3){
-        sText+="\n\nPlease enter a new value for: "+g_sTokenView+"_"+g_sVariableView+"\n\nCurrent value: "+llLinksetDataRead(g_sTokenView+"_"+g_sVariableView);
+        integer iPos = llListFindList(g_lSettings,[g_sTokenView,g_sVariableView]);
+        sText+="\n\nPlease enter a new value for: "+g_sTokenView+"_"+g_sVariableView+"\n\nCurrent value: "+llList2String(g_lSettings, iPos+2);
         lBtns =[];
     } else if(stridePos==8){
         sText+= "\n\nPlease enter the token name";
@@ -153,7 +146,6 @@ SettingsMenu(integer stridePos, key kAv, integer iAuth)
         lBtns=[];
     }
     
-    g_iLastStride=stridePos;
     Dialog(kAv, sText,lBtns, llCSV2List(llList2String(["+ NEW,"+UPMENU,""],lBtns==[])), 0, iAuth, "settings~edit~"+(string)stridePos);
 }
 
@@ -197,9 +189,6 @@ Reboot(){
     llSetTimerEvent(5);
 }
 
-Startup(string scriptName){
-    llMessageLinked(LINK_SET, STARTUP, scriptName, "");
-}
 default
 {
     state_entry()
@@ -209,19 +198,25 @@ default
         Reboot();
 
         if(g_iVerbosityLevel>=1)
-            llOwnerSay("Collar is preparing to start up, please be patient.");
+            llOwnerSay("Preparing to startup, please be patient.");
     }
-    timer(){    
+    
+    timer(){
         llMessageLinked(LINK_SET, READY, "","");
-        
-        if(Alive(llList2String(g_lWaiting,0))) state startup;
+                
+        if(Alive("")){
+            state startup;
+        }        
         
         if(llGetTime()<15) return;
     
-        if(g_iVerbosityLevel>=1)
-            llOwnerSay("ALIVE check failed for "+llDumpList2String(g_lWaiting," & "));            
-            
-        g_iVerbosityLevel=0;    // quietly keep trying
+        
+        if(g_iVerbosityLevel>=1){
+            if(!llGetScriptState("oc_settings")) llOwnerSay("oc_settings is not running");
+            else llOwnerSay("ALIVE check failed for "+llDumpList2String(g_lWaiting," & "));
+            g_iVerbosityLevel=0;    // quietly keep trying
+        }
+               
         Reboot();   
     }
     
@@ -241,8 +236,8 @@ state startup
     state_entry()
     {
         g_iStartup=0;
-        Startup("ALL");
-        llSetTimerEvent(60);
+        llMessageLinked(LINK_SET, STARTUP, "ALL", "");
+        llSetTimerEvent(60); 
         
         if(g_iVerbosityLevel>=2)
             llOwnerSay("Waiting for settings to load.");
@@ -254,18 +249,19 @@ state startup
     }
     
     timer(){
-        if(g_iVerbosityLevel>=1)
-            llOwnerSay("Startup timeout on other scripts feedback. code:"+(string)g_iStartup);  
-        state running; // move on anyway
+        if(g_iVerbosityLevel>=1){
+            if(g_iStartup&1) llOwnerSay("oc_core failed to 'initialize'");
+            if(g_iStartup&2) llOwnerSay("oc_api failed to request 'ALL'");
+            if(g_iStartup&4) llOwnerSay("oc_settings failed to sent settings'"); 
+        }
+        state running; // move on anyway        
     }     
     
     changed(integer iChange){
         if(iChange&CHANGED_INVENTORY){
             llResetScript();
         }
-        
     }
-        
     link_message(integer iSender, integer iNum, string sStr, key kID){
         if(iNum == REBOOT && sStr == "reboot --f")llResetScript();
         if(iNum == 0 && sStr=="initialize"){
@@ -275,12 +271,12 @@ state startup
         }else if(iNum == LM_SETTING_RESPONSE && sStr == "settings=sent"){
             g_iStartup=g_iStartup|4;
         } else if(iNum == ALIVE){
-            Startup(sStr);
-        } else if(iNum == MENUNAME_REQUEST && sStr == "Settings"){
+            llMessageLinked(LINK_SET, STARTUP, sStr, "");
+        } else if(iNum == MENUNAME_REQUEST && sStr == "Settings") {
             llMessageLinked(iSender, MENUNAME_RESPONSE, "Settings|"+g_sSubmenu,"");
         }
         if(g_iStartup>=7) state running;
-    }          
+    }
 }
 
 state running
@@ -289,16 +285,13 @@ state running
     {
         llSetTimerEvent(5);
         llMessageLinked(LINK_SET, TIMEOUT_READY, "","");
-
-        // check if any haven't started up yet
-        llMessageLinked(LINK_SET, READY, "","");
-
+        
         if(g_iVerbosityLevel>=2)
             llOwnerSay("Startup Complete.");
     }
     
     on_rez(integer iRez){
-       llResetScript();
+        llMessageLinked(LINK_SET, STARTUP, "ALL", "");
     }
     changed(integer iChange){
         if(iChange&CHANGED_INVENTORY){
@@ -308,8 +301,9 @@ state running
     }
     
     timer(){
-        if( llGetListLength(g_lTimers) == 0)
+        if(!g_iWaitMenu && llGetListLength(g_lTimers) == 0){
             llSetTimerEvent(15);
+        }
         // Check all script states, then check list of managed scripts
         integer i=0;
         integer end = llGetInventoryNumber(INVENTORY_SCRIPT);
@@ -338,7 +332,10 @@ state running
             }
         }
         
-        //llWhisper(0, "oc_states max used over time: "+(string)llGetSPMaxMemory());
+        if(!g_iLoading && g_iWaitMenu){
+            g_iWaitMenu=FALSE;
+            SettingsMenu(0,g_kMenuUser,g_iLastAuth);
+        }
     }
     
     
@@ -350,17 +347,22 @@ state running
                 llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "ALL", "");
             }
             if(llToLower(sStr)=="settings edit" || sStr=="menu "+g_sSubmenu){
-                SettingsMenu(0,kID,iNum);
+                g_lSettings=[];
+                g_iLoading=TRUE;
+                g_iWaitMenu=TRUE;
+                g_kMenuUser=kID;
+                g_iLastAuth=iNum;
+                llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "ALL","");
+                llSetTimerEvent(1);
             }
         } else if(iNum == TIMEOUT_REGISTER){
             g_lTimers += [(string)kID, llGetUnixTime(), (integer)sStr];
-            llResetTime();
             llSetTimerEvent(1);
+                        
         } else if(iNum == DIALOG_RESPONSE){
-            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            if(iMenuIndex!=-1){
-                string sMenu = llList2String(g_lMenuIDs, iMenuIndex+1);
-                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
+            integer iPos = llSubStringIndex((string)kID, "~"+llGetScriptName());
+            if(iPos>0){
+                string sMenu = llGetSubString(kID, 0, iPos-1);
                 list lMenuParams = llParseString2List(sStr, ["|"],[]);
                 key kAv = llList2Key(lMenuParams,0);
                 string sMsg = llList2String(lMenuParams,1);
@@ -403,15 +405,20 @@ state running
                     if(sMsg == UPMENU){
                         SettingsMenu(1,kAv,iAuth);
                         return;
-                    } else if(sMsg == "DELETE"){
-                        if(llLinksetDataRead(g_sTokenView+"_"+g_sVariableView)==""){
+                    } else if(sMsg == "DELETE"){    
+                        integer iPosx = llListFindList(g_lSettings,[g_sTokenView,g_sVariableView]);
+                        if(iPosx==-1){
                             SettingsMenu(2,kAv,iAuth);
                             return;
                         }
-                        llLinksetDataDelete(g_sTokenView+"_"+g_sVariableView);
+                        llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sTokenView+"_"+g_sVariableView,"");
                         llMessageLinked(LINK_SET, RLV_REFRESH,"","");
                         llMessageLinked(LINK_SET, NOTIFY, "1"+g_sTokenView+"_"+g_sVariableView+" has been deleted from settings", kAv);
-                        SettingsMenu(0,kAv,iAuth);
+                        g_iLoading=TRUE;
+                        g_lSettings=[];
+                        g_iWaitMenu=TRUE;
+                        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "ALL","");
+                        llSetTimerEvent(1);
                         return;
                     } else if(sMsg == "MODIFY"){
                         SettingsMenu(3, kAv,iAuth);
@@ -420,9 +427,11 @@ state running
                     if(sMsg == UPMENU){
                         SettingsMenu(2,kAv,iAuth);
                     } else {
-                        if(sMsg=="")SettingsMenu(2,kAv,iAuth);
+                        integer iPosx = llListFindList(g_lSettings, [g_sTokenView, g_sVariableView]);
+                        if(iPosx == -1)SettingsMenu(2,kAv,iAuth);
                         else{
-                            llLinksetDataWrite(g_sTokenView+"_"+g_sVariableView, sMsg);
+                            g_lSettings = llListReplaceList(g_lSettings, [sMsg], iPosx+2,iPosx+2);
+                            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sTokenView+"_"+g_sVariableView+"="+sMsg,"");
                             llMessageLinked(LINK_SET, NOTIFY, "1Settings modified: "+g_sTokenView+"_"+g_sVariableView+"="+sMsg,kAv);
                             SettingsMenu(1,kAv,iAuth);
                             return;
@@ -433,14 +442,31 @@ state running
                     SettingsMenu(9, kAv,iAuth);
                 } else if(sMenu == "settings~edit~9"){
                     g_sVariableView=sMsg;
+                    g_lSettings += [g_sTokenView,g_sVariableView,"not set"];
+                    
                     SettingsMenu(3, kAv,iAuth);
+                }                        
+            }
+        }else if(iNum == LM_SETTING_RESPONSE){
+            // Detect here the Settings
+            list lSettings = llParseString2List(sStr, ["_","="],[]);
+            string sToken = llList2String(lSettings,0);
+            string sVar = llList2String(lSettings,1);
+            string sVal = llList2String(lSettings, 2);
+            if(sToken == "global"){
+                if(sVar == "verbosity"){
+                    g_iVerbosityLevel = (integer)sVal;
                 }
-                        
             }
             
-        } else if (iNum == DIALOG_TIMEOUT) {
-            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
+            if(sStr == "settings=sent"){
+                g_iStartup=g_iStartup|4;
+                g_iLoading=FALSE;
+                return;
+            }
+            
+            if(g_iLoading && llListFindList(g_lSettings, [sToken, sVar, sVal]) == -1 )g_lSettings+=[sToken, sVar, sVal];
+
         } else if(iNum == 0){
             if(sStr == "initialize"){
                 llMessageLinked(LINK_SET, TIMEOUT_READY, "","");
@@ -448,7 +474,7 @@ state running
         }else if(iNum == -99999){
             if(sStr == "update_active")state inUpdate;
         } else if(iNum == ALIVE){
-            Startup(sStr);
+            llMessageLinked(LINK_SET, STARTUP, sStr, "");
             llSleep(1);
             llMessageLinked(LINK_SET, 0, "initialize", llGetKey());
         } else if(iNum == MENUNAME_REQUEST && sStr == "Settings") {
