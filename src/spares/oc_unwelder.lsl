@@ -4,10 +4,7 @@ Copyright ©2021
 : Contributors :
 Aria (Tashia Redrose)
     * Feb 2021       -       Created oc_unwelder
-Autumn Jersey (autumnerilyx.littlepaws)
-    * Aug 2022   -    Edited wording of local chat messages to improve user comprehension 
-Medea (Medea Destiny)
-      Aug 2022    -  Fix for issue #862, allow wearer with trusted perm to operate
+    
     
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
@@ -151,9 +148,9 @@ default
             }
         }else {
             
-    //        llSay(0, "Unwelder now in use");
+            llSay(0, "Unwelder now in use");
             llSetText("In use by\n" + llKey2Name (llDetectedKey(0)), <1,0,0>,1);
-            //llSetText("In use..", <1,0,0>,1);
+    //        llSetText("In use..", <1,0,0>,1);
             g_iLMLastSent = llGetUnixTime();
             g_kUser=llDetectedKey(0);
             API_CHANNEL = ((integer)("0x" + llGetSubString((string)g_kUser, 0, 8))) + 0xf6eb - 0xd2;
@@ -241,12 +238,6 @@ default
                     }
                     
                     if(sStr == "settings=sent"){
-                        if(g_iAddonLimitation){
-                            llSay(0, "Addons Limited is checked. To unweld, someone with Owner access (including wearer if they are Owner) must: 1) Open the collar menu. 2)Click Settings. 3) Click the Addons button in Settings. UNCHECK AddOns Limited. Leave WearerAdd and Addons CHECKED. The Wearer can then proceed to unweld.");
-                            Link("offline", 0, "", g_kUser);
-                            llSleep(2);
-                            llResetScript();
-                        } else {
                             llSay(0, "Checking for a existing collar weld");
                             if(g_iWelded){
                                 llSay(0, "Unweld tool now ready.");
@@ -259,6 +250,12 @@ default
                                 llSleep(2);
                                 llResetScript();
                             }
+                            
+                    if(g_iAddonLimitation){
+                            llSay(0, "Addons Limited is checked. To unweld, a collar owner (including unowned wearer) must go to the collar Settings menu and find the AddOn Settings button.  Uncheck AddOns Limited and then proceed to unweld.");
+                            Link("offline", 0, "", g_kUser);
+                            llSleep(2);
+                            llResetScript();                                
                         }
                     }
                 }
@@ -292,7 +289,7 @@ default
                             }
                             else if (sMsg == "UNWELD NOW")
                             {
-                                if(iAuth == CMD_OWNER || g_kUser == llGetOwnerKey(id)){
+                                if(iAuth == CMD_OWNER || iAuth == CMD_WEARER){
                                     Link("from_addon", NOTIFY_OWNERS, "The unweld tool was used.", "");
                                     llSay(0, "Consent : Valid");
                                     Link("from_addon", LM_SETTING_DELETE, "intern_weld","origin");
