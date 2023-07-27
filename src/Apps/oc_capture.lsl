@@ -450,6 +450,7 @@ state active
                     if(Flag&2)g_iRisky=TRUE;
                     if(Flag&4)g_iCaptured=TRUE;
                     if(Flag&8)g_iAutoRelease=TRUE;
+                    if(g_iCaptured && g_iAutoRelease) llSetTimerEvent(10);  // #858
                     g_iFlagAtLoad=Flag;
                 }
             } else if(llList2String(lSettings,0) == "auth"){
