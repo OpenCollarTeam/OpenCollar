@@ -6,7 +6,9 @@
 
 
 // Based on a split of OpenCollar - appearance by Romka Swallowtail
-// Virtual Disgrace - Resizer is derivative of OpenCollar - adjustment
+// Resizer is derivative of OpenCollar - adjustment
+
+// Ping (Pingout Duffield) Jan 2023 Fix behavior of BACK button in Position, Rotation, and Size menus
 
 string g_sScriptVersion = "8.1.0000";
 
@@ -274,7 +276,7 @@ state active
                     else if (sMessage == SIZEMENU) SizeMenu(kAv, iAuth);
                 } else if (sMenuType == POSMENU) {
                     if (sMessage == UPMENU) {
-                        llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
+                        DoMenu(kAv, iAuth); //llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
                         return;
                     } else if (llGetAttached()) {
                         if (sMessage == "forward ↳") AdjustPos(<g_fNudge, 0, 0>);
@@ -290,7 +292,7 @@ state active
                     PosMenu(kAv, iAuth);
                 } else if (sMenuType == ROTMENU) {
                     if (sMessage == UPMENU) {
-                        llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
+                        DoMenu(kAv, iAuth); //llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
                         return;
                     } else if (llGetAttached()) {
                         if (sMessage == "tilt right ↘") AdjustRot(<g_fRotNudge, 0, 0>);
@@ -303,7 +305,7 @@ state active
                     RotMenu(kAv, iAuth);
                 } else if (sMenuType == SIZEMENU) {
                     if (sMessage == UPMENU) {
-                        llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
+                        DoMenu(kAv, iAuth); //llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
                         return;
                     } else {
                         integer iMenuCommand = llListFindList(SIZEMENU_BUTTONS, [sMessage]);
