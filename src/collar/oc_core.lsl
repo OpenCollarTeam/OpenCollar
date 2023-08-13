@@ -115,12 +115,7 @@ key g_kWeldBy;
 list g_lMainMenu=["Apps", "Access", "Settings", "Help/About"];
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
-    key kMenuID = llGenerateKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
-
-    integer iIndex = llListFindList(g_lMenuIDs, [kID]);
-    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
-    else g_lMenuIDs += [kID, kMenuID, sName];
+    llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|0|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, sName+"~"+llGetScriptName());
 }
 integer g_iHide=FALSE;
 integer g_iAllowHide=TRUE;
@@ -369,8 +364,6 @@ integer g_iUpdateAuth;
 integer g_iWaitUpdate;
 integer g_iUpdateChan = -7483213;
 key g_kWearer;
-list g_lMenuIDs;
-integer g_iMenuStride;
 integer g_iLocked=FALSE;
 Compare(string V1, string V2){
     V2=llStringTrim(V2,STRING_TRIM);
@@ -497,10 +490,9 @@ state active
 
         }
         else if(iNum == DIALOG_RESPONSE){
-            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            if(iMenuIndex!=-1){
-                string sMenu = llList2String(g_lMenuIDs, iMenuIndex+1);
-                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
+            integer iPos = llSubStringIndex(kID, "~"+llGetScriptName());
+            if(iPos>0){
+                string sMenu = llGetSubString(kID, 0, iPos-1);
                 list lMenuParams = llParseString2List(sStr, ["|"],[]);
                 key kAv = llList2Key(lMenuParams,0);
                 string sMsg = llList2String(lMenuParams,1);
@@ -713,9 +705,6 @@ state active
                     }
                 }
             }
-        }else if (iNum == DIALOG_TIMEOUT) {
-            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
         } else if(iNum == LM_SETTING_RESPONSE){
             list lPar = llParseString2List(sStr, ["_","="],[]);
             string sToken = llList2String(lPar,0);
