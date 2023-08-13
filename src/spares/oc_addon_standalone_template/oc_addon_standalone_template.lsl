@@ -374,14 +374,14 @@ state online
                         {
                             if(sVar == "owner")
                             {
-                                if(sVal != "" && sVal != llLinksetDataRead("auth_owner"))
+                                if(sVal != llLinksetDataRead("auth_owner"))
                                 {
                                     llLinksetDataWrite("auth_owner",sVal);
                                 }
                             }
                             if(sVar == "trust")
                             {
-                                if(sVal != "" && sVal != llLinksetDataRead("auth_trust"))
+                                if(sVal != llLinksetDataRead("auth_trust"))
                                 {
                                     llLinksetDataWrite("auth_trust",sVal);
                                 }
