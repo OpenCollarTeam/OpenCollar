@@ -396,6 +396,7 @@ UserCommand(integer iAuth, string sCmd, key kID){
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_owner","origin");
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_trust","origin");
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_block","origin");
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_group","origin");
             llMessageLinked(LINK_SET, NOTIFY, "0Runaway complete", g_kWearer);
             return;
         }
