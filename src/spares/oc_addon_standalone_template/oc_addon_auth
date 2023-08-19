@@ -1,0 +1,380 @@
+/*
+    This file is a part of OpenCollar.
+    Copyright ©2021
+    : Contributors :
+    Phidoux (taya.Maruti)
+        * Aug 18 2023 - Created this Authroization script to manage authorizations from inside the addon.
+*/
+string g_sPlugin = "Access"; // this is used to create the button that will bring up this scripts menu.
+
+//integer CMD_ZERO                = 0;
+//integer CMD_OWNER               = 500;
+//integer CMD_TRUSTED             = 501;
+//integer CMD_GROUP               = 502;
+integer CMD_WEARER              = 503;
+//integer CMD_EVERYONE            = 504;
+//integer CMD_BLOCKED             = 598; // <--- Used in auth_request, will not return on a CMD_ZERO
+
+integer DIALOG                  = -9000;
+integer DIALOG_RESPONSE         = -9001;
+//integer DIALOG_TIMEOUT         = -9002;
+integer MENU_REQUEST            = -9003;
+integer MENU_REGISTER           = -9004;
+integer MENU_REMOVE             = -9005;
+integer MENU_RESPONCE           = -9006;
+
+string UPMENU = "BACK";
+list g_lCheckBoxes = ["▢","▣"];
+string b_sGroup;
+
+list Nearby2List()
+{
+    list lAuth = llParseString2List(llLinksetDataRead("scan_nearby"), [","], []);
+    integer iIndex;
+    integer iEnd = llGetListLength(lAuth);
+    list lButtons;
+    for(iIndex = 0; iIndex < iEnd; iIndex++)
+    {
+        lButtons += [iIndex+1];
+    }
+    return lButtons;
+}
+
+list Auth2List()
+{
+    list lMod = llParseString2List( llLinksetDataRead("auth_mod"), ["_"], []);
+    list lAuth = llParseString2List( llLinksetDataRead("auth_"+llList2String(lMod,1)), [","], []);
+    //llOwnerSay("[addon auth list]auth_"+llList2String(lMod,1)+":"+llLinksetDataRead("auth_"+llList2String(lMod,1)));
+    integer iIndex;
+    integer iEnd = llGetListLength(lAuth);
+    list lButtons;
+    for(iIndex = 0; iIndex < iEnd; iIndex++)
+    {
+        lButtons += [iIndex+1];
+    }
+    return lButtons;
+}
+
+string Nearby2Prompt()
+{
+    string sPrompt = "";
+    list lAuth = llParseString2List(llLinksetDataRead("scan_nearby"), [","], []);
+    integer iIndex;
+    integer iEnd = llGetListLength(lAuth);
+    list lButtons;
+    for(iIndex = 0; iIndex < iEnd; iIndex++)
+    {
+        sPrompt += "\n"+(string)(iIndex+1)+") secondlife:///app/agent/"+llList2String(lAuth,iIndex)+"\About";
+    }
+    return sPrompt;
+}
+
+string Auth2Prompt()
+{
+    string sPrompt = "";
+    list lMod = llParseString2List( llLinksetDataRead("auth_mod"), ["_"], []);
+    list lAuth = llParseString2List( llLinksetDataRead("auth_"+llList2String(lMod,1)), [","], []);
+    integer iIndex;
+    integer iEnd = llGetListLength(lAuth);
+    list lButtons;
+    for(iIndex = 0; iIndex < iEnd; iIndex++)
+    {
+        sPrompt += "\n"+(string)(iIndex+1)+") secondlife:///app/agent/"+llList2String(lAuth,iIndex)+"\About";
+    }
+    return sPrompt;
+}
+
+key process_auth(integer iIndex)
+{
+    iIndex = iIndex-1;
+    list lMod = llParseString2List( llLinksetDataRead("auth_mod"), ["_"], []);
+    list lAuth = llParseString2List( llLinksetDataRead("auth_"+llList2String(lMod,1)), [","], []);
+    return llList2Key( lAuth, iIndex);
+}
+
+Dialog(key kID, string sPrompt, list lButtons, list lUtilityButtons, integer iAuth, string sName)
+{
+    llMessageLinked( LINK_SET, DIALOG, sPrompt+"^"+llDumpList2String(lButtons,"`")+"^"+llDumpList2String(lUtilityButtons,"`")+"^"+(string)iAuth+"^"+sName, kID);
+}
+
+Menu(key kID, integer iAuth)
+{
+    b_sGroup = llList2String(g_lCheckBoxes,(llLinksetDataRead("global_group")!=NULL_KEY))+"Group";
+    string sPrompt =    "|=====Main=====|";
+    list lButtons   = ["-"];
+    if(iAuth == CMD_WEARER && (integer)llLinksetDataRead("addon_noaccess"))
+    {
+        sPrompt += "!!!NOT AUTHORIZED!!!";
+        lButtons = ["-"];
+    }
+    else
+    {
+        lButtons = ["+Owners","+Trusted","+Blocked","-Owners","-Trusted","-Blocked",b_sGroup,"Access List"];
+    }
+    list lUtilityButtons = [UPMENU];
+    Dialog(kID, sPrompt, lButtons, lUtilityButtons, iAuth, "Auth~Main");
+}
+
+Menu_Add(key kID, integer iAuth)
+{
+    string sPrompt = "|=====Adding to auth=====|";
+    list lButtons = ["-"];
+    if(lButtons == [])
+    {
+        sPrompt += "\n No users nearby please move closer";
+        lButtons = ["-"];
+    }
+    list lUtilityButtons = [UPMENU];
+    Dialog(kID, sPrompt, lButtons, lUtilityButtons, iAuth, "Auth~Add");
+}
+
+Menu_Rem(key kID, integer iAuth)
+{
+    string sPrompt = "|=====Removing from Auth=====|";
+    list lButtons = Auth2List();
+    if(lButtons == [])
+    {
+        sPrompt += "\n No users in list please move closer";
+        lButtons = ["-"];
+    }
+    else
+    {
+        sPrompt += Auth2Prompt();
+    }
+    list lUtilityButtons = [UPMENU];
+    Dialog(kID, sPrompt, lButtons, lUtilityButtons, iAuth, "Auth~Rem");
+}
+
+Print_Auth(key kID)
+{
+    string sOwners;
+    string sTrusted;
+    string sBlocked;
+    list lAuth = llParseString2List(llLinksetDataRead("auth_owner"),[","],[]);
+    llOwnerSay("[Addon auth owners]"+llLinksetDataRead("auth_owner"));
+    integer iIndex;
+    integer iEnd = llGetListLength(lAuth);
+    for(iIndex; iIndex < iEnd; iIndex++)
+    {
+        sOwners += "        secondlife:///app/agent/"+llList2String(lAuth,iIndex)+"/about\n";
+    }
+    lAuth = llParseString2List(llLinksetDataRead("auth_trust"),[","],[]);
+    llOwnerSay("[Addon auth owners]"+llLinksetDataRead("auth_trust"));
+    iIndex = 0;
+    iEnd = llGetListLength(lAuth);
+    for(iIndex; iIndex < iEnd; iIndex++)
+    {
+        sTrusted += "       secondlife:///app/agent/"+llList2String(lAuth,iIndex)+"/about\n";
+    }
+    lAuth = llParseString2List(llLinksetDataRead("auth_block"),[","],[]);
+    llOwnerSay("[Addon auth owners]"+llLinksetDataRead("auth_block"));
+    iIndex = 0;
+    iEnd = llGetListLength(lAuth);
+    for(iIndex; iIndex < iEnd; iIndex++)
+    {
+        sBlocked += "       secondlife:///app/agent/"+llList2String(lAuth,iIndex)+"/about\n";
+    }
+    llRegionSayTo( kID, 0, "\n\nAccess List:\n"+
+        "   Owners:\n"+sOwners+"\n"+
+        "   Trusted:\n"+sTrusted+"\n"+
+        "   Blocked:\n"+sBlocked+"\n"+
+        "   Group:\n        secondlife:///app/group/"+llLinksetDataRead("auth_group")+"/about"
+    );
+    lAuth       = [];
+    iEnd        = 0;
+    iIndex      = 0;
+    sOwners     = "";
+    sTrusted    = "";
+    sBlocked    = "";
+}
+
+default
+{
+    state_entry ()
+    {
+        //llOwnerSay("[addon auth starting]");
+        llMessageLinked( LINK_SET, MENU_REGISTER, g_sPlugin, "");
+    }
+    linkset_data(integer iAction, string sName, string sValue)
+    {
+        if(iAction == LINKSETDATA_UPDATE)
+        {
+            if( sName == "addon_ready" && (integer)sValue)
+            {
+                //llOwnerSay("[Addon Ready]");
+                llMessageLinked( LINK_SET, MENU_REGISTER, g_sPlugin, "");
+            }
+        }
+    }
+    link_message(integer iLink, integer iNum, string sMsg, key kID)
+    {
+        if(iNum == DIALOG_RESPONSE)
+        {
+            list lPar = llParseString2List(sMsg,[","],[]);
+            integer iAuth = llList2Integer(lPar,0);
+            string sMenu = llList2String(lPar,1);
+            sMsg = llList2String(lPar,2);
+            integer iRespring = TRUE;
+            if (sMenu == "Auth~Main")
+            {
+                if ( sMsg == UPMENU)
+                {
+                    // Return to main menu.
+                    iRespring = FALSE;
+                    llMessageLinked(LINK_SET, MENU_REQUEST, (string)iAuth+"|MenuMain",kID);
+                }
+                else if( sMsg == "+Owners")
+                {
+                    iRespring = FALSE;
+                    //llOwnerSay("[Addon set auth_mod]");
+                    llLinksetDataWrite( "auth_mod", "add_owner_"+(string)kID+"_"+(string)iAuth);
+                    llSensor("","",AGENT,20,PI);
+                }
+                else if ( sMsg == "+Trusted")
+                {
+                    iRespring = FALSE;
+                    llLinksetDataWrite( "auth_mod", "add_trust_"+(string)kID+"_"+(string)iAuth);
+                    llSensor("","",AGENT,20,PI);
+                }
+                else if ( sMsg == "+Blocked")
+                {
+                    iRespring = FALSE;
+                    llLinksetDataWrite("auth_mod","add_block_"+(string)kID+"_"+(string)iAuth);
+                    llSensor("","",AGENT,20,PI);
+                }
+                else if( sMsg == "-Owners")
+                {
+                    iRespring = FALSE;
+                    llLinksetDataWrite( "auth_mod", "rem_owner_"+(string)kID+"_"+(string)iAuth);
+                    Menu_Rem(kID,iAuth);
+                }
+                else if ( sMsg == "-Trusted")
+                {
+                    iRespring = FALSE;
+                    llLinksetDataWrite( "auth_mod", "rem_trust_"+(string)kID+"_"+(string)iAuth);
+                    Menu_Rem(kID,iAuth);
+                }
+                else if ( sMsg == "-Blocked")
+                {
+                    iRespring = FALSE;
+                    llLinksetDataWrite("auth_mod","rem_block_"+(string)kID+"_"+(string)iAuth);
+                    Menu_Rem(kID,iAuth);
+                }
+                else if ( sMsg == "Access List")
+                {
+                    Print_Auth(kID);
+                }
+                else if ( sMsg == b_sGroup)
+                {
+                }
+                if(iRespring)
+                {
+                        Menu(kID, iAuth);
+                }
+            }
+            else if ( sMenu == "Auth~Add")
+            {
+                list lMod = llParseString2List(llLinksetDataRead("auth_mod"), ["_"], []);
+                if ( sMsg == UPMENU)
+                {
+                    // Return to main menu.
+                    iRespring = FALSE;
+                    Menu(kID,iAuth);
+                }
+                else if((integer)sMsg > 0)
+                {
+                    //llOwnerSay("[Addon auth processing target]"+sMsg);
+                    list lAuth = llParseString2List(llLinksetDataRead("scan_nearby"), [","], []);
+                    key kTarget = llList2Key(lAuth,((integer)sMsg-1));
+                    if(kTarget != NULL_KEY)
+                    {
+                        if(llLinksetDataRead("auth_"+llList2String(lMod,1)) == "")
+                        {
+                            llLinksetDataWrite("auth_"+llList2String(lMod,1),(string)kTarget);
+                        }
+                        else
+                        {
+                            llLinksetDataWrite("auth_"+llList2String(lMod,1),llLinksetDataRead("auth_"+llList2String(lMod,1))+","+(string)kTarget);
+                        }
+                        llInstantMessage(kID,"Added user secondlife:///app/agent/"+(string)kTarget+"/about to "+llList2String(lMod,1));
+                        iRespring = FALSE;
+                        Menu(kID,iAuth);
+                    }
+                }
+                if(iRespring)
+                {
+                    Menu_Add(kID,iAuth);
+                }
+            }
+            else if ( sMenu == "Auth~Rem")
+            {
+                list lMod = llParseString2List(llLinksetDataRead("auth_mod"), ["_"], []);
+                if ( sMsg == UPMENU)
+                {
+                    // Return to main menu.
+                    iRespring = FALSE;
+                    Menu(kID,iAuth);
+                }
+                else if((integer)sMsg > 0)
+                {
+                    sMsg = (string)((integer)sMsg-1);
+                    //llOwnerSay("[Addon auth processing target]"+sMsg);
+                    list lAuth = llParseString2List( llLinksetDataRead("auth_"+llList2String(lMod,1)), [","], []);
+                    key kTarget = llList2Key(lAuth,((integer)sMsg));
+                    if(kTarget != NULL_KEY)
+                    {
+                        llLinksetDataWrite("auth_"+llList2String(lMod,1),llDumpList2String(llDeleteSubList(lAuth,(integer)sMsg,(integer)sMsg),","));
+                        llInstantMessage(kID,"Removed user secondlife:///app/agent/"+(string)kTarget+"/about from "+llList2String(lMod,1));
+                        iRespring = FALSE;
+                        Menu(kID,iAuth);
+                    }
+                }
+                if(iRespring)
+                {
+                    Menu_Add(kID,iAuth);
+                }
+            }
+        }
+        else if(iNum == MENU_REQUEST)
+        {
+            list lPar = llParseString2List(sMsg,["|"],[]);
+            integer iAuth = llList2Integer(lPar,0);
+            string sMenu = llList2String(lPar,1);
+            if(sMenu == "Access")
+            {
+                Menu( kID, iAuth);
+            }
+        }
+    }
+    no_sensor()
+    {
+        
+        llLinksetDataWrite("scan_nearby","_");
+        list lAuthMod = llParseString2List(llLinksetDataRead("auth_mod"), ["_"], []);
+        if( llList2String(lAuthMod,0) == "add")
+        {
+            Menu_Add(llList2Key(lAuthMod,2),llList2Integer(lAuthMod,3));
+        }
+        else if( llList2String(lAuthMod,0) == "rem")
+        {
+            Menu_Rem(llList2Key(lAuthMod,2),llList2Integer(lAuthMod,3));
+        }
+    }
+    sensor( integer detected )
+    {
+        llLinksetDataDelete("scan_nearby");
+        while(detected--)
+        {
+            if(llLinksetDataRead("scan_nearby") == "")
+            {
+                llLinksetDataWrite("scan_nearby",(string)llDetectedKey(detected));
+            }
+            else
+            {
+                llLinksetDataWrite("scan_nearby",llLinksetDataRead("scan_nearby")+","+(string)llDetectedKey(detected));
+            }
+        }
+        list lAuthMod = llParseString2List(llLinksetDataRead("auth_mod"), ["_"], []);
+        Menu_Add(llList2Key(lAuthMod,2),llList2Integer(lAuthMod,3));
+    }
+}
