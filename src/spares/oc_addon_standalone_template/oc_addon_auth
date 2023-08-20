@@ -4,6 +4,7 @@
     : Contributors :
     Phidoux (taya.Maruti)
         * Aug 18 2023 - Created this Authroization script to manage authorizations from inside the addon.
+        * Aug 20 2023 - Added comments.
 */
 string g_sPlugin = "Access"; // this is used to create the button that will bring up this scripts menu.
 
@@ -15,20 +16,23 @@ integer CMD_WEARER              = 503;
 //integer CMD_EVERYONE            = 504;
 //integer CMD_BLOCKED             = 598; // <--- Used in auth_request, will not return on a CMD_ZERO
 
-integer DIALOG                  = -9000;
-integer DIALOG_RESPONSE         = -9001;
-//integer DIALOG_TIMEOUT         = -9002;
-integer MENU_REQUEST            = -9003;
-integer MENU_REGISTER           = -9004;
-integer MENU_REMOVE             = -9005;
-integer MENU_RESPONCE           = -9006;
 
+integer DIALOG                  = -9000; // send a message to oc_addon_menu to generate dialog.
+integer DIALOG_RESPONSE         = -9001; // reutrn the button pressed to the external script.
+//integer DIALOG_TIMEOUT          = -9002;
+integer MENU_REQUEST            = -9003; // Request a menu from another script.
+integer MENU_REGISTER           = -9004; // Register a button to Main menu.
+integer MENU_REMOVE             = -9005; // Remove a button from Main menu.
+integer MENU_RESPONCE           = -9006; // Responce from Registration or Removal of button.
+
+integer TO_COLLAR               = 9000; // Relay link messages to the collar from apps
 string UPMENU = "BACK";
 list g_lCheckBoxes = ["▢","▣"];
 string b_sGroup;
 
 list Nearby2List()
 {
+    // process the list of nearby users to creat buttons to add.
     list lAuth = llParseString2List(llLinksetDataRead("scan_nearby"), [","], []);
     integer iIndex;
     integer iEnd = llGetListLength(lAuth);
@@ -42,6 +46,7 @@ list Nearby2List()
 
 list Auth2List()
 {
+    // process the list of current users to crate buttons to remove
     list lMod = llParseString2List( llLinksetDataRead("auth_mod"), ["_"], []);
     list lAuth = llParseString2List( llLinksetDataRead("auth_"+llList2String(lMod,1)), [","], []);
     //llOwnerSay("[addon auth list]auth_"+llList2String(lMod,1)+":"+llLinksetDataRead("auth_"+llList2String(lMod,1)));
@@ -57,6 +62,7 @@ list Auth2List()
 
 string Nearby2Prompt()
 {
+    // process the list of nearby users to create a list of users to coencide with the buttons.
     string sPrompt = "";
     list lAuth = llParseString2List(llLinksetDataRead("scan_nearby"), [","], []);
     integer iIndex;
@@ -71,6 +77,7 @@ string Nearby2Prompt()
 
 string Auth2Prompt()
 {
+    // process the list of current users to show names to go with the buttons.
     string sPrompt = "";
     list lMod = llParseString2List( llLinksetDataRead("auth_mod"), ["_"], []);
     list lAuth = llParseString2List( llLinksetDataRead("auth_"+llList2String(lMod,1)), [","], []);
@@ -86,6 +93,7 @@ string Auth2Prompt()
 
 key process_auth(integer iIndex)
 {
+    // process authorisation based on position in list and return key so that we can do somthing with it.
     iIndex = iIndex-1;
     list lMod = llParseString2List( llLinksetDataRead("auth_mod"), ["_"], []);
     list lAuth = llParseString2List( llLinksetDataRead("auth_"+llList2String(lMod,1)), [","], []);
@@ -94,6 +102,7 @@ key process_auth(integer iIndex)
 
 Dialog(key kID, string sPrompt, list lButtons, list lUtilityButtons, integer iAuth, string sName)
 {
+    // we send our dialog requests to the menu script this way we only have one listen and timer for menues.
     llMessageLinked( LINK_SET, DIALOG, sPrompt+"^"+llDumpList2String(lButtons,"`")+"^"+llDumpList2String(lUtilityButtons,"`")+"^"+(string)iAuth+"^"+sName, kID);
 }
 
@@ -147,6 +156,7 @@ Menu_Rem(key kID, integer iAuth)
 
 Print_Auth(key kID)
 {
+    // we output authorization list like it would be in the collar.
     string sOwners;
     string sTrusted;
     string sBlocked;
@@ -193,15 +203,17 @@ default
     state_entry ()
     {
         //llOwnerSay("[addon auth starting]");
+        // we want the main menu of this script as a button for the addon.
         llMessageLinked( LINK_SET, MENU_REGISTER, g_sPlugin, "");
     }
     linkset_data(integer iAction, string sName, string sValue)
     {
         if(iAction == LINKSETDATA_UPDATE)
         {
-            if( sName == "addon_ready" && (integer)sValue)
+            if( sName == "addon_ready" && (integer)sValue) // this is what the addon_ready flag is for.
             {
                 //llOwnerSay("[Addon Ready]");
+                // we want the main menu of this script as a button for the addon.
                 llMessageLinked( LINK_SET, MENU_REGISTER, g_sPlugin, "");
             }
         }
@@ -210,10 +222,11 @@ default
     {
         if(iNum == DIALOG_RESPONSE)
         {
+            //buttons pressed from dialog get returned and processed here.
             list lPar = llParseString2List(sMsg,[","],[]);
-            integer iAuth = llList2Integer(lPar,0);
-            string sMenu = llList2String(lPar,1);
-            sMsg = llList2String(lPar,2);
+            integer iAuth = llList2Integer(lPar,0); // user auhtorization.
+            string sMenu = llList2String(lPar,1); // menu it came from.
+            sMsg = llList2String(lPar,2); // button pressed.
             integer iRespring = TRUE;
             if (sMenu == "Auth~Main")
             {
@@ -227,6 +240,7 @@ default
                 {
                     iRespring = FALSE;
                     //llOwnerSay("[Addon set auth_mod]");
+                    // auth_mod is complicated so that i could keep the script small and keep track of whats going on when doing scan.
                     llLinksetDataWrite( "auth_mod", "add_owner_"+(string)kID+"_"+(string)iAuth);
                     llSensor("","",AGENT,20,PI);
                 }
@@ -266,6 +280,7 @@ default
                 }
                 else if ( sMsg == b_sGroup)
                 {
+                    // this button is not configured yet because i need to work out how to manage it.
                 }
                 if(iRespring)
                 {
@@ -337,10 +352,11 @@ default
         }
         else if(iNum == MENU_REQUEST)
         {
+            // this is how we know when the button was pressed or the menu was called.
             list lPar = llParseString2List(sMsg,["|"],[]);
             integer iAuth = llList2Integer(lPar,0);
             string sMenu = llList2String(lPar,1);
-            if(sMenu == "Access")
+            if(sMenu == g_sPlugin) // we use the same button that was defined at the start or ready prompt.
             {
                 Menu( kID, iAuth);
             }
@@ -348,20 +364,17 @@ default
     }
     no_sensor()
     {
-        
+        // incase there is no one near by don't return an empty button.
         llLinksetDataWrite("scan_nearby","_");
         list lAuthMod = llParseString2List(llLinksetDataRead("auth_mod"), ["_"], []);
         if( llList2String(lAuthMod,0) == "add")
         {
             Menu_Add(llList2Key(lAuthMod,2),llList2Integer(lAuthMod,3));
         }
-        else if( llList2String(lAuthMod,0) == "rem")
-        {
-            Menu_Rem(llList2Key(lAuthMod,2),llList2Integer(lAuthMod,3));
-        }
     }
     sensor( integer detected )
     {
+        // generate a list of users to add to authization.
         llLinksetDataDelete("scan_nearby");
         while(detected--)
         {
