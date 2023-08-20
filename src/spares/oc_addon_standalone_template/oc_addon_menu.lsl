@@ -8,6 +8,7 @@
           for easier use by scripters to get a project of the ground.
         * Aug 18 2023 - added lock and access denial.
         * Aug 18 2023 - Added ability to goggle individual sync options for authorizations.
+        * Aug 20 2023 - Added comments.
 */
 
 //integer CMD_ZERO                = 0;
@@ -18,13 +19,15 @@ integer CMD_WEARER              = 503;
 //integer CMD_EVERYONE            = 504;
 //integer CMD_BLOCKED             = 598; // <--- Used in auth_request, will not return on a CMD_ZERO
 
-integer DIALOG                  = -9000;
-integer DIALOG_RESPONSE         = -9001;
-//integer DIALOG_TIMEOUT         = -9002;
-integer MENU_REQUEST            = -9003;
-integer MENU_REGISTER           = -9004;
-integer MENU_REMOVE             = -9005;
-integer MENU_RESPONCE           = -9006;
+integer DIALOG                  = -9000; // send a message to oc_addon_menu to generate dialog.
+integer DIALOG_RESPONSE         = -9001; // reutrn the button pressed to the external script.
+//integer DIALOG_TIMEOUT          = -9002;
+integer MENU_REQUEST            = -9003; // Request a menu from another script.
+integer MENU_REGISTER           = -9004; // Register a button to Main menu.
+integer MENU_REMOVE             = -9005; // Remove a button from Main menu.
+integer MENU_RESPONCE           = -9006; // Responce from Registration or Removal of button.
+
+integer TO_COLLAR               = 9000; // Relay link messages to the collar from apps
 
 list g_lMenuIDs;
 
@@ -46,6 +49,7 @@ string b_sSyncLock;
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iAuth, string sName)
 {
+    // Generate menu and keeps track of it.
     integer iChannel = llRound(llFrand(10000000)) + 100000;
     while (~llListFindList(g_lMenuIDs, [iChannel]))
     {
@@ -118,7 +122,7 @@ Menu(key kID, integer iPage, integer iAuth)
     list lMenuButtons = llParseString2List(llLinksetDataRead("menu_main"),[","],[]);
     list lButtons   = [];
     list lUtilityButtons = ["Admin"];
-    if (llGetListLength(lMenuButtons))
+    if (llGetListLength(lMenuButtons)) // if we have unique buttons from other scripts add them.
     {
         lButtons += lMenuButtons;
         if(llGetListLength(lButtons)>11)
@@ -128,7 +132,7 @@ Menu(key kID, integer iPage, integer iAuth)
             lButtons = llList2List(lButtons,iPage*9,iPage*9+8);
         }
     }
-    else
+    else // other wise display example button as backup.
     {
         lButtons = ["Example"];
     }
@@ -137,12 +141,14 @@ Menu(key kID, integer iPage, integer iAuth)
 
 Menu_Admin(key kID, integer iAuth)
 {
+    // set toggle visiabliity.
     b_sLock         = llList2String(g_lCheckBoxes,(integer)llLinksetDataRead("addon_lock"))+"Lock";
     b_sAccess       = llList2String(g_lCheckBoxes,(integer)llLinksetDataRead("addon_noaccess"))+"NoAccess";
+    // set prompt text.
     string sPrompt  = "|=====Adnimistration=====|";
     list lButtons = [];
     list lUtilityButtons = [];// this is only here so we can set ultities to respect online and offline mode.
-    if(iAuth == CMD_WEARER && (integer)llLinksetDataRead("addon_noaccess"))
+    if(iAuth == CMD_WEARER && (integer)llLinksetDataRead("addon_noaccess")) //if user has no access deny access.
     {
         sPrompt += "\n!!!NOT AUTHORIZED!!!";
         lButtons = ["-"];
@@ -159,23 +165,25 @@ Menu_Admin(key kID, integer iAuth)
         }
         else
         {
-            lUtilityButtons = ["RESET"];
+            lUtilityButtons = ["RESET"]; // reset is always availble incase of emergencies.
         }
     }
-    else
+    else // if user has acces or generate true menu.
     {
         sPrompt +=  "\n"+b_sLock+" - Toggles the addon lock!"+
                     "\n"+b_sAccess+" - Toggles sub's access to menues!";
         lButtons = [b_sLock,b_sAccess,"Sync"];
         if((integer)llLinksetDataRead("addon_mode"))
         {
+            // only show these buttons in addon mode.
             if( (integer)llLinksetDataRead("addon_online")) // we only need certain buttons when they are nesissary.
             {
-                lButtons += ["Collar"];
+                lButtons += ["Collar"]; // if connected allow collar menu and disconnect.
                 lUtilityButtons = ["RESET","DISCONNECT"];
             }
             else
             {
+                // if not connected allow connect to collar.
                 lUtilityButtons = ["RESET","CONNECT"];
             }
         }
@@ -191,6 +199,7 @@ Menu_Admin(key kID, integer iAuth)
 
 Menu_Sync(key kID, integer iAuth)
 {
+    // configure butons visibility at the start of menu generation.
     b_sAddon        = llList2String(g_lCheckBoxes,(integer)llLinksetDataRead("addon_mode"))+"Addon";
     b_sSyncPrefix   = llList2String(g_lCheckBoxes,(integer)llLinksetDataRead("sync_prefix"))+"Prefix";
     b_sSyncOwner    = llList2String(g_lCheckBoxes,(integer)llLinksetDataRead("sync_owner"))+"Owners";
@@ -211,6 +220,7 @@ Menu_Sync(key kID, integer iAuth)
         lButtons = [b_sAddon];
         if((integer)llLinksetDataRead("addon_mode"))
         {
+            // only show these buttons when addon_mode is set.
             sPrompt += "\n"+b_sSyncPrefix+" - Addon assumes same prefix as collar when connected!"+
                     "\n"+b_sSyncLock+" - Addon lock will take on the same lock status as the collar!"+
                     "\n"+b_sSyncOwner+" - Addon will include owners from collar list!"+
@@ -227,6 +237,7 @@ Menu_Sync(key kID, integer iAuth)
 
 Menu_Confirm(key kID, integer iAuth)
 {
+    // this prompt confirms weather you actualy want to clear data and reset scripts.
     string sPrompt = "|=====Confirmation=====|"+
                      "\nAre you sure you want to reset scripts and memory?";
     list lButtons = ["Yes"];
@@ -235,16 +246,19 @@ Menu_Confirm(key kID, integer iAuth)
 
 Add_MenuItem(string sButton)
 {
+    // if we want to add a button we need to make sure it don't use offlimits strings.
     if( ~llListFindList(["-","Admin","◄","►",""," "],[sButton]) )
     {
         llMessageLinked(LINK_SET, MENU_RESPONCE, sButton+"|Invalid", "");
     }
     else if(~llSubStringIndex(llLinksetDataRead("menu_main"), sButton))
     {
+        // we want to make sure the button does not already exist
         llMessageLinked(LINK_SET, MENU_RESPONCE, sButton+"|Exists", "");
     }
     else
     {
+        // if we make it here we add the button to the menu and let the scripts know its done incase the creator wants to do somthing with that information.
         if(llLinksetDataRead("menu_main") == "")
         {
             llLinksetDataWrite("menu_main",sButton);
@@ -259,6 +273,7 @@ Add_MenuItem(string sButton)
 
 Remove_MenuItem(string sButton)
 {
+    // same process as add but for removing button.
     if(~llListFindList(["-","Admin","◄","►",""," "],[sButton]))
     {
         llMessageLinked(LINK_SET,MENU_RESPONCE,sButton+"|Invalid","");
@@ -284,6 +299,7 @@ default
 {
     timer()
     {
+        //remove menues that have timed out from the information.
         integer n = llGetListLength(g_lMenuIDs) - 5;
         integer iNow = llGetUnixTime();
         for ( n; n>=0; n=n-5 )
@@ -304,8 +320,10 @@ default
 
     listen(integer iChannel, string sName, key kID, string sMsg)
     {
+        // this is where menu buttons are processed.
         if (llListFindList(g_lMenuIDs,[kID,iChannel]) != -1)
         {
+            // convert g_lMenuIDs into usable information.
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             integer iAuth = llList2Integer(g_lMenuIDs,iMenuIndex+5);
             string sMenu = llList2String(g_lMenuIDs, iMenuIndex+4);
@@ -320,36 +338,43 @@ default
                 }
                 else if (sMsg == "Admin")
                 {
+                    // call up admin menu.
                     iRespring = FALSE;
                     Menu_Admin(kID, iAuth);
                 }
                 else if (sMsg == "►")
                 {
+                    // go to next page
                     if (++g_iPage > g_iNumberOfPages) g_iPage = 0;
                 }
                 else if (sMsg == "◄")
                 {
+                    // go to previous page
                     if (--g_iPage < 0) g_iPage = g_iNumberOfPages;
                 }
                 else
                 {
+                    // otherwise send the button call to the script that uses it.
                     iRespring = FALSE;
                     llMessageLinked( LINK_SET, MENU_REQUEST, (string)iAuth+"|"+sMsg, kID);
                 }
                 if(iRespring)
                 {
-                        Menu(kID, g_iPage, iAuth);
+                    // bring back the menu after button press if it don't call another menu.
+                    Menu(kID, g_iPage, iAuth);
                 }
             }
             else if( sMenu == "Admin~Main")
             {
                 if (sMsg == UPMENU)
                 {
+                    // return to main menu.
                     iRespring = FALSE;
                     Menu(kID, 0, iAuth);
                 }
                 else if (sMsg == b_sLock)
                 {
+                    // lock and unlock the collar now you see the value of b_sButton
                     llLinksetDataWrite("addon_lock",(string)(!(integer)llLinksetDataRead("addon_lock")));
                     if((integer)llLinksetDataRead("addon_lock"))
                     {
@@ -362,10 +387,12 @@ default
                 }
                 else if (sMsg == b_sAccess)
                 {
+                    // grant or deny access for the wearer to menu options and commands.
                     llLinksetDataWrite("addon_noaccess",(string)(!(integer)llLinksetDataRead("addon_noaccess")));
                 }
                 else if (sMsg == "Sync")
                 {
+                    // call the syncronize menu.
                     iRespring = FALSE;
                     Menu_Sync(kID,iAuth);
                 }
@@ -376,22 +403,26 @@ default
                 }
                 else if (sMsg == "Collar")
                 {
+                    // go to collar menu.
                     iRespring = FALSE;
                     llMessageLinked(LINK_SET,iAuth,"CollarMenu",kID);
                 }
                 else if (sMsg == "DISCONNECT")
                 {
+                    // disconnect from collar.
                     iRespring = FALSE;
                     llLinksetDataWrite("addon_online",(string)FALSE);
                 }
                 else if (sMsg == "CONNECT")
                 {
+                    //connect to collar.
                     iRespring = FALSE;
                     // if the collar disconects but is available we want the user to be able to connect it if they don't wish to safe word.
                     llLinksetDataWrite("addon_online",(string)TRUE);
                 }
                 if(iRespring)
                 {
+                    // bring menu back if not calling a diferent menu.
                     Menu_Admin(kID,iAuth);
                 }
             }
@@ -399,11 +430,13 @@ default
             {
                 if (sMsg == UPMENU)
                 {
+                    // return to admin menu.
                     iRespring = FALSE;
                     Menu_Admin(kID, iAuth);
                 }
                 else if (sMsg == b_sSyncLock)
                 {
+                    // toggle lock syncronization.
                     llLinksetDataWrite("sync_lock",(string)(!(integer)llLinksetDataRead("sync_lock")));
                 }
                 else if (sMsg == b_sSyncPrefix)
@@ -428,6 +461,7 @@ default
                 }
                 else if (sMsg == b_sAddon)
                 {
+                    // toggle addon mode.
                     llLinksetDataWrite("addon_mode",(string)(!(integer)llLinksetDataRead("addon_mode")));
                 }
                 if(iRespring)
@@ -437,6 +471,7 @@ default
             }
             else if(sMenu == "Reset~Query")
             {
+                // what did the user say to do about the reset.
                 if( sMsg == "Yes")
                 {
                     llOwnerSay("Addon memory is being wiped and scripts being reset");
@@ -449,7 +484,7 @@ default
             }
             else
             {
-                // Return the output
+                // if the information don't apply to built in menues of this script they likely belong to another.
                 llMessageLinked( LINK_SET, DIALOG_RESPONSE, (string)iAuth+","+sMenu+","+sMsg, kID);
             }
         }
@@ -461,30 +496,35 @@ default
         {
             // Process and display menu.
             list lPar = llParseString2List(sMsg,["^"],[]);
-            string sPrompt = llList2String(lPar,0);
-            list lButtons = llParseString2List(llList2String(lPar,1),["`"],[]);
-            list lUtilityButtons = llParseString2List(llList2String(lPar,2),["`"],[]);
-            integer iAuth = llList2Integer(lPar,3);
-            string sName = llList2String(lPar,4);
-            Dialog( kID, sPrompt, lButtons, lUtilityButtons, iAuth, sName);
+            string sPrompt = llList2String(lPar,0); // gerate prompt from string.
+            list lButtons = llParseString2List(llList2String(lPar,1),["`"],[]); // generate buttons from string.
+            list lUtilityButtons = llParseString2List(llList2String(lPar,2),["`"],[]); // generate utilitybuttons from string.
+            integer iAuth = llList2Integer(lPar,3); // what level of authorization does the user have.
+            string sMenu = llList2String(lPar,4); // what is the menu Name
+            // and like with the built in menues send a dialog box.
+            Dialog( kID, sPrompt, lButtons, lUtilityButtons, iAuth, sMenu);
         }
         else if(iNum == MENU_REQUEST)
         {
+            // this is how we process a call for a menu within the script.
             list lPar = llParseString2List(sMsg,["|"],[]);
-            integer iAuth = llList2Integer(lPar,0);
-            string sMenu = llList2String(lPar,1);
-            if(sMenu == "MenuMain")
+            integer iAuth = llList2Integer(lPar,0); // get the authorization
+            string sMenu = llList2String(lPar,1); // get the menu 
+            if(sMenu == "MenuMain") // here is how we define what menues the script sends.
             {
+                // in this case we want the main menu of the script.
                 Menu(kID, 0, iAuth);
             }
         }
         else if(iNum == MENU_REGISTER)
         {
+            // when this is caleld we process the information to determine if the button can be added then add it.
             //llOwnerSay("[addon register button request.]");
             Add_MenuItem(sMsg);
         }
         else if(iNum == MENU_REMOVE)
         {
+            // when this is caleld we process the information to determine if the button can be removed then remove it.
             Remove_MenuItem(sMsg);
         }
     }
