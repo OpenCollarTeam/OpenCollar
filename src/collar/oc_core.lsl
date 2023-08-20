@@ -38,7 +38,9 @@ Stormed Darkshade (StormedStormy)
     March 2022  -   Added a button for reboot to help/about menu.  
 
 Yosty7B3
-    Nov 2022  -     Removed Setor() and bool() functions for streamlining.
+    Nov 2022    -   Removed Setor() and bool() functions for streamlining.
+    Aug 2023    -   Combine all menu functions into the Dialog function to save memory.
+
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
 */
