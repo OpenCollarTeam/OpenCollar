@@ -5,7 +5,9 @@
 // Joy Stipe, Wendy Starfall, Romka Swallowtail, littlemousy,       
 // Garvin Twine et al.   
 // Licensed under the GPLv2.  See LICENSE for full details. 
-
+//
+// Ping (Pingout Duffield) 
+//         *Aug 2023 - Revise visibility when collar is hidden Ref Issue #932
 // How to use:
 // 
 // - You need a Mesh-Strip with 6 Faces next to each other. Each Face should have 1 Material.
