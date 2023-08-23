@@ -3,7 +3,10 @@
 // Thraxis Epsilon, Gigs Taggart, Strife Onizuka, Huney Jewell,      
 // Salahzar Stenvaag, Lulu Pink, Nandana Singh, Cleo Collins, Satomi Ahn, 
 // Joy Stipe, Wendy Starfall, Romka Swallowtail, littlemousy,       
-// Garvin Twine et al.   
+// Garvin Twine et al.
+
+// Ping (Pingout Duffield) -
+//      * Aug 2023 - Revision to make the meshlabel hide when the collar is hidden Ref Issue #932
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 // How to use:
