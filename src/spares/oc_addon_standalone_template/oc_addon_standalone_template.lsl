@@ -8,6 +8,7 @@
         * Aug 18 2023 - added the collar sync toggles for collar settings.
         * Aug 20 2023 - Added comments.
         * Aug 20 2023 - Added a way to relay information between collar and other scripts in addon.
+        * Aug 22 2023 - Fixed some issue with command relay.
 */
 
 integer API_CHANNEL             = 0x60b97b5e;
@@ -70,7 +71,7 @@ string g_sUnlockSound   = "82fa6d06-b494-f97c-2908-84009380c8d1";
 
 UserCommand ( integer iNum, string sStr, key kID )
 {
-    if ( iNum != CMD_BLOCKED && (iNum < CMD_OWNER || iNum > CMD_WEARER  || iNum == CMD_GROUP || (integer)llLinksetDataRead("auth_open")))
+    if ( iNum == CMD_BLOCKED && (iNum < CMD_OWNER || iNum > CMD_WEARER  || iNum != CMD_GROUP || !(integer)llLinksetDataRead("auth_open")))
     {
         llInstantMessage ( kID, "you are not authorized to access this addon!" );
         return;
@@ -114,17 +115,21 @@ UserCommand ( integer iNum, string sStr, key kID )
             // Disconnect the addon from the collar
             llLinksetDataWrite ( "addon_online", (string) FALSE );
         }
-        else if( ~llSubStringIndex(llToLower(llLinksetDataRead("menu_main")),sValue))
+        else if( ~llSubStringIndex(llToLower(llLinksetDataRead("menu_main")),sToken) || ~llSubStringIndex(llLinksetDataRead("menu_main"),sToken))
         {
-            // if the command exists in main menu as a button make the call as if clicking the button.
-            llMessageLinked ( LINK_SET, MENU_REQUEST, (string)iNum + "|"+sValue, kID);
+            // if command exists as a button.
+            if(sValue == "") // if the command has no following value treat as button.
+            {
+                llMessageLinked ( LINK_SET, MENU_REQUEST, (string)iNum + "|"+sToken, kID);
+            }
+            else // treat as comand.
+            {
+                llMessageLinked ( LINK_SET, iNum, sToken+" "+sValue, kID);
+            }
         }
         else
         { 
-            // pass along the command so that other scripts can make use without the addon_name
-            sValue = llDumpList2String(llList2List(lCommands,1,llGetListLength(lCommands)-1)," ");
-            llMessageLinked ( LINK_SET, iNum, sValue, kID);
-            //llInstantMessage ( kID, "Wrong comand or you are not authroized" );
+            llMessageLinked ( LINK_SET, iNum, sToken+" "+sValue, kID);
         }
         sValue = "";
         sToken = "";
