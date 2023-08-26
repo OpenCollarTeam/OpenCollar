@@ -345,6 +345,19 @@ default
                 {
                     llInstantMessage(kID,"This is an example button!");
                 }
+                else if (sMsg == b_sLock)
+                {
+                    // lock and unlock the collar now you see the value of b_sButton
+                    llLinksetDataWrite("addon_lock",(string)(!(integer)llLinksetDataRead("addon_lock")));
+                    if((integer)llLinksetDataRead("addon_lock"))
+                    {
+                        llSay(0,"The lock clicks as secondlife:///app/agent/"+(string)kID+"/about locks it!");
+                    }
+                    else
+                    {
+                        llSay(0,"The lock clicks as secondlife:///app/agent/"+(string)kID+"/about unlocks it!");
+                    }
+                }
                 else if (sMsg == "Admin")
                 {
                     // call up admin menu.
@@ -380,19 +393,6 @@ default
                     // return to main menu.
                     iRespring = FALSE;
                     Menu(kID, 0, iAuth);
-                }
-                else if (sMsg == b_sLock)
-                {
-                    // lock and unlock the collar now you see the value of b_sButton
-                    llLinksetDataWrite("addon_lock",(string)(!(integer)llLinksetDataRead("addon_lock")));
-                    if((integer)llLinksetDataRead("addon_lock"))
-                    {
-                        llSay(0,"The lock clicks as secondlife:///app/agent/"+(string)kID+"/about locks it!");
-                    }
-                    else
-                    {
-                        llSay(0,"The lock clicks as secondlife:///app/agent/"+(string)kID+"/about unlocks it!");
-                    }
                 }
                 else if (sMsg == b_sAccess)
                 {
