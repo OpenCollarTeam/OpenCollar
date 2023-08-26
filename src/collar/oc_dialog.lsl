@@ -695,9 +695,17 @@ state active
             } else if (sToken == g_sGlobalToken+"prefix"){
                 if (sValue != "") g_sPrefix=sValue;
             } else if (sToken == g_sGlobalToken+"channel") g_iListenChan = (integer)sValue;
-            else if (sToken == "auth_owner")
-                g_lOwners = llParseString2List(sValue, [","], []);
-            else if(sToken == g_sGlobalToken + "showlevel") g_iShowLevel = (integer)sValue;
+            else if (sToken == "auth_owner") {
+                list t_lOwners = llParseString2List(sValue, [","], []);
+                integer iPos =0;
+                integer iEnd = llGetListLength(g_lOwners);
+                for(iPos=0;iPos<iEnd;iPos++){
+                    // Clear users that are removed from owners list
+                    if (llListFindList(t_lOwners,llList2List(g_lOwners,iPos,iPos))==-1)
+                        ClearUser((key)llList2String(g_lOwners, iPos));
+                }                
+                g_lOwners = t_lOwners;
+            } else if(sToken == g_sGlobalToken + "showlevel") g_iShowLevel = (integer)sValue;
             else if(sToken == "auth_block"){
                 list lBlock = llParseString2List(sValue,[","],[]);
 
@@ -708,6 +716,16 @@ state active
                 }
             } else if(sToken == g_sGlobalToken+"verbosity"){
                 g_iVerbosityLevel=(integer)sValue;
+            }
+        } else if (iNum == LM_SETTING_EMPTY) {
+            if (sStr == "auth_owner") {
+                // Invalidate all owner menus 
+                integer iPos =0;
+                integer iEnd = llGetListLength(g_lOwners);
+                for(iPos=0;iPos<iEnd;iPos++){
+                    ClearUser((key)llList2String(g_lOwners, iPos));
+                }
+                g_lOwners = [];
             }
         } else if (iNum == NOTIFY )    Notify(kID,llGetSubString(sStr,1,-1),(integer)llGetSubString(sStr,0,0));
         else if (iNum == SAY )         Say(llGetSubString(sStr,1,-1),(integer)llGetSubString(sStr,0,0));
