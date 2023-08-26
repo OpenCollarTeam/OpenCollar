@@ -9,6 +9,7 @@
         * Aug 20 2023 - Added comments.
         * Aug 20 2023 - Added a way to relay information between collar and other scripts in addon.
         * Aug 22 2023 - Fixed some issue with command relay.
+        * Aug 25 2023 - Organized commands relay to CMD_ZERO localy
 */
 
 integer API_CHANNEL             = 0x60b97b5e;
@@ -16,7 +17,7 @@ integer API_CHANNEL             = 0x60b97b5e;
 //list g_lCollars;
 string g_sAddon                 = "Standalone";
 
-//integer CMD_ZERO                = 0;
+integer CMD_ZERO                = 0;
 integer CMD_OWNER               = 500;
 integer CMD_TRUSTED             = 501;
 integer CMD_GROUP               = 502;
@@ -41,7 +42,7 @@ integer CMD_BLOCKED             = 598; // <--- Used in auth_request, will not re
 //integer AUTH_REQUEST            = 600;
 //integer AUTH_REPLY              = 601;
 
-//integer LM_SETTING_SAVE         = 2000; //scripts send messages on this channel to have settings saved, <string> must be in form of "token=value"
+integer LM_SETTING_SAVE         = 2000; //scripts send messages on this channel to have settings saved, <string> must be in form of "token=value"
 integer LM_SETTING_REQUEST      = 2001; //when startup, scripts send requests for settings on this channel
 integer LM_SETTING_RESPONSE     = 2002; //the settings script sends responses on this channel
 //integer LM_SETTING_DELETE       = 2003; //delete token from settings
@@ -118,18 +119,19 @@ UserCommand ( integer iNum, string sStr, key kID )
         else if( ~llSubStringIndex(llToLower(llLinksetDataRead("menu_main")),sToken) || ~llSubStringIndex(llLinksetDataRead("menu_main"),sToken))
         {
             // if command exists as a button.
+            llOwnerSay("[Command in Menu]");
             if(sValue == "") // if the command has no following value treat as button.
             {
                 llMessageLinked ( LINK_SET, MENU_REQUEST, (string)iNum + "|"+sToken, kID);
             }
             else // treat as comand.
             {
-                llMessageLinked ( LINK_SET, iNum, sToken+" "+sValue, kID);
+                llMessageLinked ( LINK_SET, CMD_ZERO, (string)iNum+" "+sToken+" "+sValue, kID);
             }
         }
         else
         { 
-            llMessageLinked ( LINK_SET, iNum, sToken+" "+sValue, kID);
+            llMessageLinked ( LINK_SET, CMD_ZERO, (string)iNum+" "+sToken+" "+sValue, kID);
         }
         sValue = "";
         sToken = "";
@@ -429,6 +431,7 @@ state online
                 llListenRemove ( (integer) llLinksetDataRead ( "addon_listen" ) ); // remove previous listen if any
                 llLinksetDataWrite ( "addon_listen", (string) llListen ( API_CHANNEL, sName, kID, "" ) ); //generate new listen.
                 llLinksetDataWrite ( "addon_LMLastRecv", (string) llGetUnixTime () ); // update recive timer
+                //Link ( "from_addon", LM_SETTING_SAVE, "auth_group=","");
                 Link ( "from_addon", LM_SETTING_REQUEST, "ALL", "" ); // ask for settings
                 llLinksetDataWrite ( "addon_LMLastSent", (string) llGetUnixTime() ); // update send timer cause we asked for settings.
                 llSetTimerEvent( 10 );// move the timer here in order to wait for collar responce.
@@ -472,6 +475,7 @@ state online
                         string sValue   = llList2String ( lPar, 2 );
                         if ( sToken == "auth" )
                         {
+                                llOwnerSay(sStr);
                             if ( sVar == "owner"  && (integer)llLinksetDataRead( "sync_owner"))
                             {
                                 //llOwnerSay("[addon auth_owener]"+sStr);
