@@ -9,6 +9,7 @@
         * Aug 18 2023 - added lock and access denial.
         * Aug 18 2023 - Added ability to goggle individual sync options for authorizations.
         * Aug 20 2023 - Added comments.
+        * Aug 26 2023 - Moved lock button to main menu.
 */
 
 //integer CMD_ZERO                = 0;
@@ -118,10 +119,20 @@ Menu(key kID, integer iPage, integer iAuth)
     {
         g_iPage = 0;
     }
+    b_sLock         = llList2String(g_lCheckBoxes,(integer)llLinksetDataRead("addon_lock"))+"Lock";
     string sPrompt =    "|=====Main=====|";
     list lMenuButtons = llParseString2List(llLinksetDataRead("menu_main"),[","],[]);
-    list lButtons   = [];
+    list lButtons   = [b_sLock];
     list lUtilityButtons = ["Admin"];
+    
+    if(iAuth == CMD_WEARER && (integer)llLinksetDataRead("addon_noaccess")) //if user has no access deny access.
+    {
+        lButtons = [];
+    }
+    else
+    {
+        sPrompt += "\n"+b_sLock+" - Toggles the addon lock!";
+    }
     if (llGetListLength(lMenuButtons)) // if we have unique buttons from other scripts add them.
     {
         lButtons += lMenuButtons;
@@ -142,7 +153,6 @@ Menu(key kID, integer iPage, integer iAuth)
 Menu_Admin(key kID, integer iAuth)
 {
     // set toggle visiabliity.
-    b_sLock         = llList2String(g_lCheckBoxes,(integer)llLinksetDataRead("addon_lock"))+"Lock";
     b_sAccess       = llList2String(g_lCheckBoxes,(integer)llLinksetDataRead("addon_noaccess"))+"NoAccess";
     // set prompt text.
     string sPrompt  = "|=====Adnimistration=====|";
@@ -170,8 +180,7 @@ Menu_Admin(key kID, integer iAuth)
     }
     else // if user has acces or generate true menu.
     {
-        sPrompt +=  "\n"+b_sLock+" - Toggles the addon lock!"+
-                    "\n"+b_sAccess+" - Toggles sub's access to menues!";
+        sPrompt +=  "\n"+b_sAccess+" - Toggles sub's access to menues!";
         lButtons = [b_sLock,b_sAccess,"Sync"];
         if((integer)llLinksetDataRead("addon_mode"))
         {
