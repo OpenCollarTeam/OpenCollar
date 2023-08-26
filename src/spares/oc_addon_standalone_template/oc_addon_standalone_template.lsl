@@ -120,7 +120,6 @@ UserCommand ( integer iNum, string sStr, key kID )
         else if( ~llSubStringIndex(llToLower(llLinksetDataRead("menu_main")),sToken) || ~llSubStringIndex(llLinksetDataRead("menu_main"),sToken))
         {
             // if command exists as a button.
-            llOwnerSay("[Command in Menu]");
             if(sValue == "") // if the command has no following value treat as button.
             {
                 llMessageLinked ( LINK_SET, MENU_REQUEST, (string)iNum + "|"+sToken, kID);
