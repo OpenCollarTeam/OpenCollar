@@ -10,6 +10,7 @@
         * Aug 20 2023 - Added a way to relay information between collar and other scripts in addon.
         * Aug 22 2023 - Fixed some issue with command relay.
         * Aug 25 2023 - Organized commands relay to CMD_ZERO localy
+        * Aug 26 2023 - Forgot to remove the breadcrumbs so this update does that.
 */
 
 integer API_CHANNEL             = 0x60b97b5e;
@@ -475,7 +476,6 @@ state online
                         string sValue   = llList2String ( lPar, 2 );
                         if ( sToken == "auth" )
                         {
-                                llOwnerSay(sStr);
                             if ( sVar == "owner"  && (integer)llLinksetDataRead( "sync_owner"))
                             {
                                 //llOwnerSay("[addon auth_owener]"+sStr);
