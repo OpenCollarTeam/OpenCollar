@@ -11,6 +11,10 @@
         * Aug 22 2023 - Fixed some issue with command relay.
         * Aug 25 2023 - Organized commands relay to CMD_ZERO localy
         * Aug 26 2023 - Forgot to remove the breadcrumbs so this update does that.
+        * Aug 28 2023 - Added Custom Lock Sound Ability.
+        * Aug 30 2023 - Simplified the sync menu to all or custom.
+        * Aug 31 2023 - Separated out global lock sync.
+        * Sep  2 2023 - made it so sync all only uses global and auth information, also added delete settings to remove settings.
 */
 
 integer API_CHANNEL             = 0x60b97b5e;
@@ -46,8 +50,8 @@ integer CMD_BLOCKED             = 598; // <--- Used in auth_request, will not re
 integer LM_SETTING_SAVE         = 2000; //scripts send messages on this channel to have settings saved, <string> must be in form of "token=value"
 integer LM_SETTING_REQUEST      = 2001; //when startup, scripts send requests for settings on this channel
 integer LM_SETTING_RESPONSE     = 2002; //the settings script sends responses on this channel
-//integer LM_SETTING_DELETE       = 2003; //delete token from settings
-//integer LM_SETTING_EMPTY        = 2004; //sent when a token has no value
+integer LM_SETTING_DELETE       = 2003; //delete token from settings
+integer LM_SETTING_EMPTY        = 2004; //sent when a token has no value
 
 //integer DIALOG                  = -9000; // send a message to oc_addon_menu to generate dialog.
 //integer DIALOG_RESPONSE         = -9001; // reutrn the button pressed to the external script.
@@ -70,6 +74,26 @@ integer TO_COLLAR               = 9000; // Relay link messages to the collar fro
 list g_lOptedLM         = [];
 string g_sLockSound     = "dec9fb53-0fef-29ae-a21d-b3047525d312";
 string g_sUnlockSound   = "82fa6d06-b494-f97c-2908-84009380c8d1";
+
+custom_locks()
+{
+    if(llGetInventoryType("LockSound") == INVENTORY_SOUND)
+    {
+        llLinksetDataWrite("addon_locksound","LockSound");
+    }
+    else if(llLinksetDataRead("addon_locksound") == "")
+    {
+        llLinksetDataWrite("addon_locksound",(string)g_sLockSound);
+    }
+    if(llGetInventoryType("UnlockSound") == INVENTORY_SOUND)
+    {
+        llLinksetDataWrite("addon_unlocksound","UnlockSound");
+    }
+    else if(llLinksetDataRead("addon_unlocksound") == "")
+    {
+        llLinksetDataWrite("addon_unlocksound",(string)g_sUnlockSound);
+    }
+}
 
 UserCommand ( integer iNum, string sStr, key kID )
 {
@@ -169,7 +193,6 @@ Link ( string packet, integer iNum, string sStr, key kID )
 
 Input_Auth(key kID, string sMsg)
 {
-    //llOwnerSay("[Addon processing input]");
     if ( kID == llGetOwner () )
     {
         // if the wearer is kID always do CMD_WEARER.
@@ -222,12 +245,12 @@ do_lock()
 {
     if((integer)llLinksetDataRead("addon_lock"))
     {
-        llPlaySound(g_sLockSound,1);
+        llPlaySound(llLinksetDataRead("addon_locksound"),1);
         llOwnerSay("@Detach=n");
     }
     else 
     {
-        llPlaySound(g_sUnlockSound,1);
+        llPlaySound(llLinksetDataRead("addon_unlocksound"),1);
         llOwnerSay("@Detach=y");
     }
 }
@@ -259,6 +282,7 @@ default
         llLinksetDataWrite( "addon_ready", (string)FALSE);
         llLinksetDataWrite( "addon_name", g_sAddon );
         llLinksetDataWrite ( "auth_wearer", (string) llGetOwner () );
+        custom_locks();
         do_lock();
         check_settings ( "global_prefix", llToLower( llGetSubString ( llKey2Name( llGetOwner () ), 0, 1 ) ) );
         check_settings ( "addon_online", (string) TRUE ); // so that when addon mode is enabled it can be connected 
@@ -279,6 +303,7 @@ default
             state offline;
         }
     }
+    
     attach ( key kID )
     {
         if ( kID != NULL_KEY )
@@ -363,6 +388,10 @@ state online
         {
             // we want to ensure stable connection with the collar so on a sim change we say hello
             Link ( "update", 0, "", (key) llLinksetDataRead ( "collar_uuid" ) );
+        }
+        if( change & CHANGED_INVENTORY)
+        {
+            custom_locks();
         }
     }
 
@@ -467,103 +496,117 @@ state online
                     {
                         UserCommand ( iNum, sStr, kAv );
                     }
+                    else if ( iNum == LM_SETTING_DELETE)
+                    {
+                        list lPar       = llParseString2List ( sStr, [ "_", "=" ], [] );
+                        string sToken   = llList2String ( lPar, 0 );
+                        string sVar     = llList2String ( lPar, 1 );
+                        string sValue   = llList2String ( lPar, 2 );
+                        llLinksetDataDelete(sToken+"_"+sVar);
+                        
+                    }
                     else if ( iNum == LM_SETTING_RESPONSE)
                     {
                         list lPar       = llParseString2List ( sStr, [ "_", "=" ], [] );
                         string sToken   = llList2String ( lPar, 0 );
                         string sVar     = llList2String ( lPar, 1 );
                         string sValue   = llList2String ( lPar, 2 );
-                        if ( sToken == "auth" )
+                        if((integer)llLinksetDataRead("sync_lock"))
                         {
-                            if ( sVar == "owner"  && (integer)llLinksetDataRead( "sync_owner"))
+                            if( sToken == "global" )
                             {
-                                //llOwnerSay("[addon auth_owener]"+sStr);
-                                list lAuth = llParseString2List( sValue, [","], []);
-                                integer iIndex;
-                                integer iEnd = llGetListLength(lAuth);
-                                //llOwnerSay("[addon auth_owner count]"+(string)iEnd);
-                                for(iIndex = 0; iIndex < iEnd; iIndex++)
+                                if( sVar == "locked")
                                 {
-                                    // loop through keys given if more than one.
-                                    if ( !~llSubStringIndex( llLinksetDataRead( "auth_owner"), llList2String( lAuth, iIndex)))
-                                    {
-                                        if ( llLinksetDataRead( "auth_owner") == "")
-                                        {
-                                            // if auth_owner is empty just add the frist key.
-                                            llLinksetDataWrite( "auth_owner", llList2String( lAuth, iIndex));
-                                        }
-                                        else
-                                        {
-                                            // other wise append it to the end.
-                                            llLinksetDataWrite( "auth_owner", llLinksetDataRead( "auth_owner")+","+llList2String( lAuth, iIndex));
-                                        }
-                                    }
-                                }
-                            }
-                            if ( sVar == "trust" && (integer)llLinksetDataRead( "sync_trust"))
-                            {
-                                // see auth_owner.
-                                list lAuth = llParseString2List(sValue,[","],[]);
-                                integer iIndex;
-                                integer iEnd = llGetListLength(lAuth);
-                                for(iIndex = 0; iIndex < iEnd; iIndex++)
-                                {
-                                    if ( !~llSubStringIndex( llLinksetDataRead ("auth_trust"), llList2String( lAuth, iIndex)))
-                                    {
-                                        if ( llLinksetDataRead( "auth_trust") == "")
-                                        {
-                                            llLinksetDataWrite ("auth_trust", llList2String( lAuth, iIndex));
-                                        }
-                                        else
-                                        {
-                                            llLinksetDataWrite( "auth_trust", llLinksetDataRead("auth_trust")+","+llList2String( lAuth, iIndex));
-                                        }
-                                    }
-                                }
-                            }
-                            if ( sVar == "block" && (integer)llLinksetDataRead("sync_block"))
-                            {
-                                
-                                // see auth_owner.
-                                //llOwnerSay("[addon auth_block]"+sStr);
-                                list lAuth = llParseString2List(sValue,[","],[]);
-                                integer iIndex;
-                                integer iEnd = llGetListLength(lAuth);
-                                for(iIndex = 0; iIndex < iEnd; iIndex++)
-                                {
-                                    if ( !~llSubStringIndex( llLinksetDataRead ("auth_block"), llList2String( lAuth, iIndex)))
-                                    {
-                                        if ( llLinksetDataRead( "auth_block") == "")
-                                        {
-                                            llLinksetDataWrite ("auth_block", llList2String( lAuth, iIndex));
-                                        }
-                                        else
-                                        {
-                                            llLinksetDataWrite( "auth_block", llLinksetDataRead("auth_block")+","+llList2String( lAuth, iIndex));
-                                        }
-                                    }
-                                }
-                            }
-                            if ( sVar == "group" && (integer)llLinksetDataRead("sync_group"))
-                            {
-                                // update group value if it is different.
-                                if( sValue != llLinksetDataRead ( "auth_group" ) )
-                                {
-                                    llLinksetDataWrite ( "auth_group", sValue );
+                                    // make the lock state match the collar.
+                                    llLinksetDataWrite ( "addon_lock", sValue );
                                 }
                             }
                         }
-                        else if( sToken == "global" )
+                        if((integer)llLinksetDataRead("sync_all") || ~llSubStringIndex(llLinksetDataRead("sync_list"),sToken))
                         {
-                            if ( sVar == "prefix"  && (integer)llLinksetDataRead("sync_prefix"))
+                            if ( sToken == "auth" )
                             {
-                                // set the addons prefix to what the collar uses.
-                                llLinksetDataWrite ( "global_prefix", sValue );
+                                if ( sVar == "owner")
+                                {
+                                    list lAuth = llParseString2List( sValue, [","], []);
+                                    integer iIndex;
+                                    integer iEnd = llGetListLength(lAuth);
+                                    for(iIndex = 0; iIndex < iEnd; iIndex++)
+                                    {
+                                        // loop through keys given if more than one.
+                                        if ( !~llSubStringIndex( llLinksetDataRead( "auth_owner"), llList2String( lAuth, iIndex)))
+                                        {
+                                            if ( llLinksetDataRead( "auth_owner") == "")
+                                            {
+                                                // if auth_owner is empty just add the frist key.
+                                                llLinksetDataWrite( "auth_owner", llList2String( lAuth, iIndex));
+                                            }
+                                            else
+                                            {
+                                                // other wise append it to the end.
+                                                llLinksetDataWrite( "auth_owner", llLinksetDataRead( "auth_owner")+","+llList2String( lAuth, iIndex));
+                                            }
+                                        }
+                                    }
+                                }
+                                else if ( sVar == "trust")
+                                {
+                                    // see auth_owner.
+                                    list lAuth = llParseString2List(sValue,[","],[]);
+                                    integer iIndex;
+                                    integer iEnd = llGetListLength(lAuth);
+                                    for(iIndex = 0; iIndex < iEnd; iIndex++)
+                                    {
+                                        if ( !~llSubStringIndex( llLinksetDataRead ("auth_trust"), llList2String( lAuth, iIndex)))
+                                        {
+                                            if ( llLinksetDataRead( "auth_trust") == "")
+                                            {
+                                                llLinksetDataWrite ("auth_trust", llList2String( lAuth, iIndex));
+                                            }
+                                            else
+                                            {
+                                                llLinksetDataWrite( "auth_trust", llLinksetDataRead("auth_trust")+","+llList2String( lAuth, iIndex));
+                                            }
+                                        }
+                                    }
+                                }
+                                else if ( sVar == "block")
+                                {
+                                    // see auth_owner.
+                                    list lAuth = llParseString2List(sValue,[","],[]);
+                                    integer iIndex;
+                                    integer iEnd = llGetListLength(lAuth);
+                                    for(iIndex = 0; iIndex < iEnd; iIndex++)
+                                    {
+                                        if ( !~llSubStringIndex( llLinksetDataRead ("auth_block"), llList2String( lAuth, iIndex)))
+                                        {
+                                            if ( llLinksetDataRead( "auth_block") == "")
+                                            {
+                                                llLinksetDataWrite ("auth_block", llList2String( lAuth, iIndex));
+                                            }
+                                            else
+                                            {
+                                                llLinksetDataWrite( "auth_block", llLinksetDataRead("auth_block")+","+llList2String( lAuth, iIndex));
+                                            }
+                                        }
+                                    }
+                                }
+                                else if ( sVar == "group")
+                                {
+                                    // update group value if it is different.
+                                    if( sValue != llLinksetDataRead ( "auth_group" ) )
+                                    {
+                                        llLinksetDataWrite ( "auth_group", sValue );
+                                    }
+                                }
+                                else
+                                {
+                                    llLinksetDataWrite(sToken+"_"+sVar,sValue);
+                                }
                             }
-                            else if( sVar == "locked" && (integer)llLinksetDataRead("sync_lock"))
+                            else if(sToken == "global")
                             {
-                                // make the lock state match the collar.
-                                llLinksetDataWrite ( "addon_lock", sValue );
+                                llLinksetDataWrite(sToken+"_"+sVar,sValue);
                             }
                         }
                         lPar = [];
@@ -635,6 +678,13 @@ state offline
         // generate listen for offline mode chat commands.
         llLinksetDataWrite ( "addon_listen", (string) llListen ( 1, "", NULL_KEY, "" ) );
         llLinksetDataWrite( "addon_ready", (string)TRUE); // let other scripts know we are online.
+    }
+    changed(integer change)
+    {
+        if( change & CHANGED_INVENTORY)
+        {
+            custom_locks();
+        }
     }
     
     timer ()
