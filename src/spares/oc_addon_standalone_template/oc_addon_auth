@@ -5,6 +5,8 @@
     Phidoux (taya.Maruti)
         * Aug 18 2023 - Created this Authroization script to manage authorizations from inside the addon.
         * Aug 20 2023 - Added comments.
+        * Aug 27 2023 - Fixed group button checkbox not showing correct information, and fixed group link showing when empty.
+        * Sep  2 2023 - Added changes for custom time out setting.
 */
 string g_sPlugin = "Access"; // this is used to create the button that will bring up this scripts menu.
 
@@ -29,6 +31,16 @@ integer TO_COLLAR               = 9000; // Relay link messages to the collar fro
 string UPMENU = "BACK";
 list g_lCheckBoxes = ["▢","▣"];
 string b_sGroup;
+integer g_iMenuTimer = 180;
+
+integer isKey(key kID)
+{
+    if(kID != NULL_KEY && kID != "")
+    {
+        return TRUE;
+    }
+    return FALSE;
+}
 
 list Nearby2List()
 {
@@ -49,7 +61,6 @@ list Auth2List()
     // process the list of current users to crate buttons to remove
     list lMod = llParseString2List( llLinksetDataRead("auth_mod"), ["_"], []);
     list lAuth = llParseString2List( llLinksetDataRead("auth_"+llList2String(lMod,1)), [","], []);
-    //llOwnerSay("[addon auth list]auth_"+llList2String(lMod,1)+":"+llLinksetDataRead("auth_"+llList2String(lMod,1)));
     integer iIndex;
     integer iEnd = llGetListLength(lAuth);
     list lButtons;
@@ -100,15 +111,19 @@ key process_auth(integer iIndex)
     return llList2Key( lAuth, iIndex);
 }
 
-Dialog(key kID, string sPrompt, list lButtons, list lUtilityButtons, integer iAuth, string sName)
+Dialog(key kID, string sPrompt, list lButtons, list lUtilityButtons, integer iAuth, string sName, integer iTimer)
 {
-    // we send our dialog requests to the menu script this way we only have one listen and timer for menues.
-    llMessageLinked( LINK_SET, DIALOG, sPrompt+"^"+llDumpList2String(lButtons,"`")+"^"+llDumpList2String(lUtilityButtons,"`")+"^"+(string)iAuth+"^"+sName, kID);
+    // we send our dialog requests to the menu script this way we only have one listen and timer for menues.Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iAuth, string sName,integer iTimer)
+    if(iTimer < 60)
+    {
+        iTimer = 60;
+    }
+    llMessageLinked( LINK_SET, DIALOG, sPrompt+"^"+llDumpList2String(lUtilityButtons,"`")+"^"+llDumpList2String(lUtilityButtons,"`")+"^"+(string)iAuth+"^"+sName+"^"+(string)iTimer, kID);
 }
 
 Menu(key kID, integer iAuth)
 {
-    b_sGroup = llList2String(g_lCheckBoxes,(llLinksetDataRead("global_group")!=NULL_KEY))+"Group";
+    b_sGroup = llList2String(g_lCheckBoxes,isKey((key)llLinksetDataRead("global_group")))+"Group";
     string sPrompt =    "|=====Main=====|";
     list lButtons   = ["-"];
     if(iAuth == CMD_WEARER && (integer)llLinksetDataRead("addon_noaccess"))
@@ -121,7 +136,7 @@ Menu(key kID, integer iAuth)
         lButtons = ["+Owners","+Trusted","+Blocked","-Owners","-Trusted","-Blocked",b_sGroup,"Access List"];
     }
     list lUtilityButtons = [UPMENU];
-    Dialog(kID, sPrompt, lButtons, lUtilityButtons, iAuth, "Auth~Main");
+    Dialog(kID, sPrompt, lButtons, lUtilityButtons, iAuth, "Auth~Main",g_iMenuTimer);
 }
 
 Menu_Add(key kID, integer iAuth)
@@ -134,7 +149,7 @@ Menu_Add(key kID, integer iAuth)
         lButtons = ["-"];
     }
     list lUtilityButtons = [UPMENU];
-    Dialog(kID, sPrompt, lButtons, lUtilityButtons, iAuth, "Auth~Add");
+    Dialog(kID, sPrompt, lButtons, lUtilityButtons, iAuth, "Auth~Add",g_iMenuTimer);
 }
 
 Menu_Rem(key kID, integer iAuth)
@@ -151,7 +166,7 @@ Menu_Rem(key kID, integer iAuth)
         sPrompt += Auth2Prompt();
     }
     list lUtilityButtons = [UPMENU];
-    Dialog(kID, sPrompt, lButtons, lUtilityButtons, iAuth, "Auth~Rem");
+    Dialog(kID, sPrompt, lButtons, lUtilityButtons, iAuth, "Auth~Rem",g_iMenuTimer);
 }
 
 Print_Auth(key kID)
@@ -160,8 +175,8 @@ Print_Auth(key kID)
     string sOwners;
     string sTrusted;
     string sBlocked;
+    string sGroup;
     list lAuth = llParseString2List(llLinksetDataRead("auth_owner"),[","],[]);
-    llOwnerSay("[Addon auth owners]"+llLinksetDataRead("auth_owner"));
     integer iIndex;
     integer iEnd = llGetListLength(lAuth);
     for(iIndex; iIndex < iEnd; iIndex++)
@@ -169,7 +184,6 @@ Print_Auth(key kID)
         sOwners += "        secondlife:///app/agent/"+llList2String(lAuth,iIndex)+"/about\n";
     }
     lAuth = llParseString2List(llLinksetDataRead("auth_trust"),[","],[]);
-    llOwnerSay("[Addon auth owners]"+llLinksetDataRead("auth_trust"));
     iIndex = 0;
     iEnd = llGetListLength(lAuth);
     for(iIndex; iIndex < iEnd; iIndex++)
@@ -177,18 +191,21 @@ Print_Auth(key kID)
         sTrusted += "       secondlife:///app/agent/"+llList2String(lAuth,iIndex)+"/about\n";
     }
     lAuth = llParseString2List(llLinksetDataRead("auth_block"),[","],[]);
-    llOwnerSay("[Addon auth owners]"+llLinksetDataRead("auth_block"));
     iIndex = 0;
     iEnd = llGetListLength(lAuth);
     for(iIndex; iIndex < iEnd; iIndex++)
     {
         sBlocked += "       secondlife:///app/agent/"+llList2String(lAuth,iIndex)+"/about\n";
     }
+    if(llLinksetDataRead("auth_group") != "")
+    {
+        sGroup = "secondlife:///app/group/"+llLinksetDataRead("auth_group")+"/about";
+    }
     llRegionSayTo( kID, 0, "\n\nAccess List:\n"+
         "   Owners:\n"+sOwners+"\n"+
         "   Trusted:\n"+sTrusted+"\n"+
         "   Blocked:\n"+sBlocked+"\n"+
-        "   Group:\n        secondlife:///app/group/"+llLinksetDataRead("auth_group")+"/about"
+        "   Group:\n"+sGroup
     );
     lAuth       = [];
     iEnd        = 0;
@@ -196,13 +213,13 @@ Print_Auth(key kID)
     sOwners     = "";
     sTrusted    = "";
     sBlocked    = "";
+    sGroup      = "";
 }
 
 default
 {
     state_entry ()
     {
-        //llOwnerSay("[addon auth starting]");
         // we want the main menu of this script as a button for the addon.
         llMessageLinked( LINK_SET, MENU_REGISTER, g_sPlugin, "");
     }
@@ -212,7 +229,6 @@ default
         {
             if( sName == "addon_ready" && (integer)sValue) // this is what the addon_ready flag is for.
             {
-                //llOwnerSay("[Addon Ready]");
                 // we want the main menu of this script as a button for the addon.
                 llMessageLinked( LINK_SET, MENU_REGISTER, g_sPlugin, "");
             }
@@ -239,7 +255,6 @@ default
                 else if( sMsg == "+Owners")
                 {
                     iRespring = FALSE;
-                    //llOwnerSay("[Addon set auth_mod]");
                     // auth_mod is complicated so that i could keep the script small and keep track of whats going on when doing scan.
                     llLinksetDataWrite( "auth_mod", "add_owner_"+(string)kID+"_"+(string)iAuth);
                     llSensor("","",AGENT,20,PI);
@@ -298,7 +313,6 @@ default
                 }
                 else if((integer)sMsg > 0)
                 {
-                    //llOwnerSay("[Addon auth processing target]"+sMsg);
                     list lAuth = llParseString2List(llLinksetDataRead("scan_nearby"), [","], []);
                     key kTarget = llList2Key(lAuth,((integer)sMsg-1));
                     if(kTarget != NULL_KEY)
@@ -333,7 +347,6 @@ default
                 else if((integer)sMsg > 0)
                 {
                     sMsg = (string)((integer)sMsg-1);
-                    //llOwnerSay("[Addon auth processing target]"+sMsg);
                     list lAuth = llParseString2List( llLinksetDataRead("auth_"+llList2String(lMod,1)), [","], []);
                     key kTarget = llList2Key(lAuth,((integer)sMsg));
                     if(kTarget != NULL_KEY)
