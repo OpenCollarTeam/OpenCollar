@@ -10,6 +10,11 @@
         * Aug 18 2023 - Added ability to goggle individual sync options for authorizations.
         * Aug 20 2023 - Added comments.
         * Aug 26 2023 - Moved lock button to main menu.
+        * Aug 28 2023 - Removed Duplicate Lock button under Admin.
+        * Aug 28 2023 - Added the Dialog Timeout function to report dialog timeout.
+        * Aug 30 2023 - Simplified the sync menu to all or custom.
+        * Aug 31 2023 - Separated lock syncronization from the others.
+        * Sep  2 2023 - Fixed Dialog timeout bugs, allowed menues to set their own timeout.
 */
 
 //integer CMD_ZERO                = 0;
@@ -22,7 +27,7 @@ integer CMD_WEARER              = 503;
 
 integer DIALOG                  = -9000; // send a message to oc_addon_menu to generate dialog.
 integer DIALOG_RESPONSE         = -9001; // reutrn the button pressed to the external script.
-//integer DIALOG_TIMEOUT          = -9002;
+integer DIALOG_TIMEOUT          = -9002; // reports the menu that timed out.
 integer MENU_REQUEST            = -9003; // Request a menu from another script.
 integer MENU_REGISTER           = -9004; // Register a button to Main menu.
 integer MENU_REMOVE             = -9005; // Remove a button from Main menu.
@@ -30,51 +35,59 @@ integer MENU_RESPONCE           = -9006; // Responce from Registration or Remova
 
 integer TO_COLLAR               = 9000; // Relay link messages to the collar from apps
 
-list g_lMenuIDs;
-
 //integer g_iMenuStride;
 integer g_iPage = 0;
 integer g_iNumberOfPages;
+integer g_iMenuTimer = 180; // how long should the menu last.
 
 string UPMENU = "BACK";
 list g_lCheckBoxes = ["▢","▣"];
 string b_sLock;
 string b_sAccess;
 string b_sAddon;
+string b_sSyncAll;
+string b_sSyncLock;
+/*
 string b_sSyncPrefix;
 string b_sSyncOwner;
 string b_sSyncTrust;
 string b_sSyncBlock;
 string b_sSyncGroup;
-string b_sSyncLock;
+*/
 
-Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iAuth, string sName)
+Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iAuth, string sName,integer iTimer)
 {
+    if(iTimer < 60)
+    {
+        iTimer = 60;
+    }
     // Generate menu and keeps track of it.
+    list lMenuIDs = llParseString2List(llLinksetDataRead("addon_menuids"),[","],[]);
     integer iChannel = llRound(llFrand(10000000)) + 100000;
-    while (~llListFindList(g_lMenuIDs, [iChannel]))
+    while (~llListFindList(lMenuIDs, [(string)iChannel]))
     {
         iChannel = llRound(llFrand(10000000)) + 100000;
     }
     integer iListener = llListen(iChannel, "",kID, "");
-    integer iTime = llGetUnixTime() + 180;
-    if(llGetListLength(g_lMenuIDs))
+    integer iTime = llGetUnixTime() + iTimer;
+    if(llGetListLength(lMenuIDs))
     {
-        integer iIndex = llListFindList(g_lMenuIDs, [kID]);
+        integer iIndex = llListFindList(lMenuIDs, [(string)kID]);
         if (~iIndex)
         {
-            g_lMenuIDs = llListReplaceList(g_lMenuIDs,[kID, iChannel, iListener, iTime, sName, iAuth],iIndex,iIndex+5);
+            lMenuIDs = llListReplaceList(lMenuIDs,[kID, iChannel, iListener, iTime, sName, iAuth],iIndex,iIndex+5);
         }
         else
         {
-            g_lMenuIDs += [kID, iChannel, iListener, iTime, sName, iAuth];
+            lMenuIDs += [kID, iChannel, iListener, iTime, sName, iAuth];
         }
     }
     else
     {
-            g_lMenuIDs += [kID, iChannel, iListener, iTime, sName, iAuth];
+            lMenuIDs += [kID, iChannel, iListener, iTime, sName, iAuth];
     }
-    llSetTimerEvent(180);
+    llLinksetDataWrite("addon_menuids",llDumpList2String(lMenuIDs,","));
+    llSetTimerEvent(60);
     llDialog(kID,sPrompt,SortButtons(lChoices,lUtilityButtons),iChannel);
 }
 
@@ -147,7 +160,7 @@ Menu(key kID, integer iPage, integer iAuth)
     {
         lButtons = ["Example"];
     }
-    Dialog(kID, sPrompt, lButtons, lUtilityButtons, iAuth, "Menu~Main");
+    Dialog(kID, sPrompt, lButtons, lUtilityButtons, iAuth, "Menu~Main",g_iMenuTimer);
 }
 
 Menu_Admin(key kID, integer iAuth)
@@ -181,7 +194,7 @@ Menu_Admin(key kID, integer iAuth)
     else // if user has acces or generate true menu.
     {
         sPrompt +=  "\n"+b_sAccess+" - Toggles sub's access to menues!";
-        lButtons = [b_sLock,b_sAccess,"Sync"];
+        lButtons = [b_sAccess,"Sync"];
         if((integer)llLinksetDataRead("addon_mode"))
         {
             // only show these buttons in addon mode.
@@ -203,19 +216,15 @@ Menu_Admin(key kID, integer iAuth)
     }
     lUtilityButtons += [UPMENU];
 
-    Dialog(kID, sPrompt, lButtons, lUtilityButtons, iAuth, "Admin~Main");
+    Dialog(kID, sPrompt, lButtons, lUtilityButtons, iAuth, "Admin~Main",g_iMenuTimer);
 }
 
 Menu_Sync(key kID, integer iAuth)
 {
     // configure butons visibility at the start of menu generation.
     b_sAddon        = llList2String(g_lCheckBoxes,(integer)llLinksetDataRead("addon_mode"))+"Addon";
-    b_sSyncPrefix   = llList2String(g_lCheckBoxes,(integer)llLinksetDataRead("sync_prefix"))+"Prefix";
-    b_sSyncOwner    = llList2String(g_lCheckBoxes,(integer)llLinksetDataRead("sync_owner"))+"Owners";
-    b_sSyncTrust    = llList2String(g_lCheckBoxes,(integer)llLinksetDataRead("sync_trust"))+"Trusted";
-    b_sSyncBlock    = llList2String(g_lCheckBoxes,(integer)llLinksetDataRead("sync_block"))+"Blocked";
-    b_sSyncGroup    = llList2String(g_lCheckBoxes,(integer)llLinksetDataRead("sync_group"))+"Group";
-    b_sSyncLock     = llList2String(g_lCheckBoxes,(integer)llLinksetDataRead("sync_lock"))+"Lock";
+    b_sSyncAll      = llList2String(g_lCheckBoxes,(integer)llLinksetDataRead("sync_all"))+"Sync All";
+    b_sSyncLock      = llList2String(g_lCheckBoxes,(integer)llLinksetDataRead("sync_lock"))+"Sync Lock";
     string sPrompt = "|=====Collar Sync=====|";
     list lButtons = [];
     if(iAuth == CMD_WEARER && (integer)llLinksetDataRead("addon_noaccess"))
@@ -229,19 +238,26 @@ Menu_Sync(key kID, integer iAuth)
         lButtons = [b_sAddon];
         if((integer)llLinksetDataRead("addon_mode"))
         {
-            // only show these buttons when addon_mode is set.
-            sPrompt += "\n"+b_sSyncPrefix+" - Addon assumes same prefix as collar when connected!"+
-                    "\n"+b_sSyncLock+" - Addon lock will take on the same lock status as the collar!"+
-                    "\n"+b_sSyncOwner+" - Addon will include owners from collar list!"+
-                    "\n"+b_sSyncTrust+" - Addon will include trusted from collar list!"+
-                    "\n"+b_sSyncBlock+" - Addon will include blocked from collar list!"+
-                    "\n"+b_sSyncGroup+" - Addon Will include group from the collar list!";
-            lButtons += [b_sSyncLock,b_sSyncPrefix,b_sSyncOwner,b_sSyncTrust,b_sSyncBlock,b_sSyncGroup];
+            sPrompt +=  "\n "+b_sSyncAll+" - Syncronize all global and auth settings with collar except lock."+
+                        "\n "+b_sSyncLock+" - Synconize lock setting with the collar aka Global Lock."+
+                        "\n You can create a list of custom settings, this requires understanding of what settings get sent.";
+            lButtons +=[b_sSyncAll,b_sSyncLock,"Sync Custom"];
         }
     }
     list lUtilityButtons = [UPMENU];
 
-    Dialog(kID, sPrompt, lButtons, lUtilityButtons, iAuth, "Admin~Sync");
+    Dialog(kID, sPrompt, lButtons, lUtilityButtons, iAuth, "Admin~Sync",g_iMenuTimer);
+}
+
+Menu_CustomSync(key kID, integer iAuth)
+{
+    string sPrompt = "|=====Sync Custom=====|"+
+                     "\n Use "+UPMENU+" to return to the previous menu."+
+                     "\n You may add cusotm sync variables here they must match the same ones used by the collar for example auth_owner is the owner authorization list.";
+    list lButtons = ["!!llTextBox!!"];
+    list lUtilityButtons = [UPMENU];
+
+    Dialog(kID, sPrompt, lButtons, lUtilityButtons, iAuth, "Sync~Custom",g_iMenuTimer);
 }
 
 Menu_Confirm(key kID, integer iAuth)
@@ -250,7 +266,7 @@ Menu_Confirm(key kID, integer iAuth)
     string sPrompt = "|=====Confirmation=====|"+
                      "\nAre you sure you want to reset scripts and memory?";
     list lButtons = ["Yes"];
-    Dialog(kID, sPrompt, lButtons, ["No"], iAuth, "Reset~Query");
+    Dialog(kID, sPrompt, lButtons, ["No"], iAuth, "Reset~Query",g_iMenuTimer);
 }
 
 Add_MenuItem(string sButton)
@@ -308,36 +324,46 @@ default
 {
     timer()
     {
+        /* menu structure
+            [kID, iChannel, iListener, iTime, sName, iAuth]
+            [  0,        1,         2,     3,     4,     5]
+            total of 6
+        */
         //remove menues that have timed out from the information.
-        integer n = llGetListLength(g_lMenuIDs) - 5;
+        list lMenuIDs = llParseString2List(llLinksetDataRead("addon_menuids"),[","],[]);
+        integer n = llGetListLength(lMenuIDs) - 6;
         integer iNow = llGetUnixTime();
-        for ( n; n>=0; n=n-5 )
+        for ( n; n>=0; n=n-6 )
         {
-            integer iDieTime = llList2Integer(g_lMenuIDs,n+3);
+            integer iDieTime = llList2Integer(lMenuIDs,n+3);
             if ( iNow > iDieTime )
             {
-                llInstantMessage(llList2Key(g_lMenuIDs,n-1),"Menu Timed out!");
-                llListenRemove(llList2Integer(g_lMenuIDs,n+2));
-                g_lMenuIDs = llDeleteSubList(g_lMenuIDs,n,n+5);
+                llMessageLinked(LINK_SET,DIALOG_TIMEOUT,llList2String(lMenuIDs,n+4),llList2Key(lMenuIDs,n));
+                llInstantMessage(llList2Key(lMenuIDs,n),"Menu Timed out for "+llList2String(lMenuIDs,n+4)+"!");
+                llListenRemove(llList2Integer(lMenuIDs,n+2));
+                lMenuIDs = llDeleteSubList(lMenuIDs,n,n+6);
+                llLinksetDataWrite("addon_menuids",llDumpList2String(lMenuIDs,","));
             }
         }
-        if(!llGetListLength(g_lMenuIDs))
+        if(!llGetListLength(lMenuIDs))
         {
-            llSetTimerEvent(0.0);
+            llSetTimerEvent(0);
         }
     }
 
     listen(integer iChannel, string sName, key kID, string sMsg)
     {
         // this is where menu buttons are processed.
-        if (llListFindList(g_lMenuIDs,[kID,iChannel]) != -1)
+        list lMenuIDs = llParseString2List(llLinksetDataRead("addon_menuids"),[","],[]);
+        if (llListFindList(lMenuIDs,[(string)kID,(string)iChannel]) != -1)
         {
-            // convert g_lMenuIDs into usable information.
-            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            integer iAuth = llList2Integer(g_lMenuIDs,iMenuIndex+5);
-            string sMenu = llList2String(g_lMenuIDs, iMenuIndex+4);
-            llListenRemove(llList2Integer(g_lMenuIDs,iMenuIndex+2));
-            g_lMenuIDs = llDeleteSubList(g_lMenuIDs,iMenuIndex, iMenuIndex+5);
+            // convert lMenuIDs into usable information.
+            integer iMenuIndex = llListFindList(lMenuIDs, [(string)kID]);
+            integer iAuth = llList2Integer(lMenuIDs,iMenuIndex+5);
+            string sMenu = llList2String(lMenuIDs, iMenuIndex+4);
+            llListenRemove(llList2Integer(lMenuIDs,iMenuIndex+2));
+            lMenuIDs = llDeleteSubList(lMenuIDs,iMenuIndex, iMenuIndex+5);
+            llLinksetDataWrite("addon_menuids",llDumpList2String(lMenuIDs,","));
             integer iRespring = TRUE;
             if (sMenu == "Menu~Main")
             {
@@ -443,39 +469,56 @@ default
                     iRespring = FALSE;
                     Menu_Admin(kID, iAuth);
                 }
-                else if (sMsg == b_sSyncLock)
-                {
-                    // toggle lock syncronization.
-                    llLinksetDataWrite("sync_lock",(string)(!(integer)llLinksetDataRead("sync_lock")));
-                }
-                else if (sMsg == b_sSyncPrefix)
-                {
-                    llLinksetDataWrite("sync_prefix",(string)(!(integer)llLinksetDataRead("sync_prefix")));
-                }
-                else if (sMsg == b_sSyncOwner)
-                {
-                    llLinksetDataWrite("sync_owner",(string)(!(integer)llLinksetDataRead("sync_owner")));
-                }
-                else if (sMsg == b_sSyncTrust)
-                {
-                    llLinksetDataWrite("sync_trust",(string)(!(integer)llLinksetDataRead("sync_trust")));
-                }
-                else if (sMsg == b_sSyncBlock)
-                {
-                    llLinksetDataWrite("sync_block",(string)(!(integer)llLinksetDataRead("sync_block")));
-                }
-                else if (sMsg == b_sSyncGroup)
-                {
-                    llLinksetDataWrite("sync_group",(string)(!(integer)llLinksetDataRead("sync_group")));
-                }
                 else if (sMsg == b_sAddon)
                 {
                     // toggle addon mode.
                     llLinksetDataWrite("addon_mode",(string)(!(integer)llLinksetDataRead("addon_mode")));
                 }
+                else if (sMsg == b_sSyncAll)
+                {
+                    // toggle sync all.
+                    llLinksetDataWrite("sync_all",(string)(!(integer)llLinksetDataRead("sync_all")));
+                }
+                else if(sMsg == b_sSyncLock)
+                {
+                    llLinksetDataWrite("sync_lock",(string)(!(integer)llLinksetDataRead("sync_lock")));
+                }
+                else if (sMsg == "Sync Custom")
+                {
+                    iRespring = FALSE;
+                    Menu_CustomSync(kID,iAuth);
+                }
                 if(iRespring)
                 {
                     Menu_Sync(kID,iAuth);
+                }
+            }
+            else if(sMenu == "Sync~Custom")
+            {
+                if (sMsg == UPMENU)
+                {
+                    iRespring = FALSE;
+                    Menu_Sync(kID,iAuth);
+                }
+                else if (llGetListLength(llParseString2List(sMsg,["_"],[])) > 1 && llGetListLength(llParseString2List(sMsg,["_"],[])) < 3)
+                {
+                    // if we have a sync token add it to the list.
+                    if(llLinksetDataRead("sync_list") != "")
+                    {
+                        llLinksetDataWrite("sync_list",llLinksetDataRead("sync_list")+","+sMsg);
+                    }
+                    else
+                    {
+                        llLinksetDataWrite("sync_list",sMsg);
+                    }
+                }
+                else
+                {
+                    llInstantMessage(kID, "[ERROR] Invalid token format");
+                }
+                if(iRespring)
+                {
+                    Menu_CustomSync(kID,iAuth);
                 }
             }
             else if(sMenu == "Reset~Query")
@@ -510,8 +553,9 @@ default
             list lUtilityButtons = llParseString2List(llList2String(lPar,2),["`"],[]); // generate utilitybuttons from string.
             integer iAuth = llList2Integer(lPar,3); // what level of authorization does the user have.
             string sMenu = llList2String(lPar,4); // what is the menu Name
+            integer iTimer = llList2Integer(lPar,5); // determines the time the menu will wait for.
             // and like with the built in menues send a dialog box.
-            Dialog( kID, sPrompt, lButtons, lUtilityButtons, iAuth, sMenu);
+            Dialog( kID, sPrompt, lButtons, lUtilityButtons, iAuth, sMenu, iTimer);
         }
         else if(iNum == MENU_REQUEST)
         {
@@ -528,7 +572,6 @@ default
         else if(iNum == MENU_REGISTER)
         {
             // when this is caleld we process the information to determine if the button can be added then add it.
-            //llOwnerSay("[addon register button request.]");
             Add_MenuItem(sMsg);
         }
         else if(iNum == MENU_REMOVE)
