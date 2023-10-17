@@ -2,7 +2,7 @@
 THIS FILE IS HEREBY RELEASED UNDER THE Public Domain
 This script is released public domain, unlike other OC scripts for a specific and limited reason, because we want to encourage third party plugin creators to create for OpenCollar and use whatever permissions on their own work they see fit.  No portion of OpenCollar derived code may be used excepting this script,  without the accompanying GPLv2 license.
 -Authors Attribution-
-Aria (tiff589) - (August 2020)
+Aria (Tashia Redrose) - (August 2020)
 Lysea - (December 2020)
 Taya'Phidoux' (taya.maruti) - (july 2021)
 */
