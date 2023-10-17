@@ -423,7 +423,6 @@ state active
     link_message(integer iSender,integer iNum,string sStr,key kID){
 
         if(llGetListLength(g_lAddons)>0){
-            // The below code will create a race condition where an addon might function perfectly, but if an addon that has that filtering, but it is improperly opting in, it will suddenly not work. - Aria
             if(llListFindList(g_lAddonFiltered, [iNum])!=-1){
                 // check if any addons want this link number
                 // filtering list proposed by Caraway Ohmai via Discord
