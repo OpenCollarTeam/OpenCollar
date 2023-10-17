@@ -19,7 +19,7 @@ integer API_CHANNEL = 0x60b97b5e;
 //list g_lCollars;
 string g_sAddon = "-notset-bridge-";
 
-//integer CMD_ZERO            = 0;
+integer CMD_ZERO            = 0;
 integer CMD_OWNER           = 500;
 //integer CMD_TRUSTED         = 501;
 //integer CMD_GROUP           = 502;
@@ -40,6 +40,15 @@ integer LM_SETTING_RESPONSE = 2002; //the settings script sends responses on thi
 integer DIALOG          = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT  = -9002;
+integer REBOOT = -1000;
+integer STARTUP = -57;
+
+
+integer MENUNAME_REQUEST = 3000;
+integer MENUNAME_RESPONSE = 3001;
+
+integer MENUNAME_REMOVE = 3003;
+
 
 /*
  * Since Release Candidate 1, Addons will not receive all link messages without prior opt-in.
@@ -48,10 +57,11 @@ integer DIALOG_TIMEOUT  = -9002;
  * Following LMs require opt-in:
  * [ALIVE, READY, STARTUP, CMD_ZERO, MENUNAME_REQUEST, MENUNAME_RESPONSE, MENUNAME_REMOVE, SAY, NOTIFY, DIALOG, SENSORDIALOG]
  */
-list g_lOptedLM     = [];
+list g_lOptedLM     = [CMD_ZERO, MENUNAME_REQUEST, MENUNAME_RESPONSE, MENUNAME_REMOVE];
 
 list g_lMenuIDs;
 integer g_iMenuStride;
+list g_lApps;
 
 string UPMENU = "BACK";
 
@@ -66,11 +76,11 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 }
 
 Menu(key kID, integer iAuth) {
-    string sPrompt = "\n[Menu App]";
-    list lButtons  = ["A Button"];
+    string sPrompt = "\n[Bridge Addon]";
+    list lButtons  = [];
     
     //llSay(0, "opening menu");
-    Dialog(kID, sPrompt, lButtons, ["DISCONNECT", UPMENU], 0, iAuth, "Menu~Main");
+    Dialog(kID, sPrompt, lButtons, ["DISCONNECT", UPMENU], 0, iAuth, "Menu~addon~bridge");
 }
 
 UserCommand(integer iNum, string sStr, key kID) {
@@ -120,7 +130,7 @@ default
 {
     state_entry()
     {
-        if(llGetObjectDesc() == "(No Description)"){
+        if(llGetObjectDesc() == "(No Description)" || llGetObjectDesc() == ""){
             string sName = llGetObjectName();
             if(llStringLength(sName) > 12) sName = llGetSubString(sName, 0, 11);
             
@@ -132,11 +142,52 @@ default
             g_sAddon = sDesc;
 
         }
+        if(llGetLinkNumber() == LINK_ROOT)
+        {
+            // Refuse to function!!
+            llOwnerSay("I am set up incorrectly.\n \nTo set me up, place this script into a linked prim.\nPlace plugins into the root prim, or any other prim than the one that the bridge resides in.");
+
+            llRemoveInventory(llGetScriptName());
+        }
+        llMessageLinked(LINK_ROOT, REBOOT, "reboot", ""); // Reboot any plugins
+
+        llSleep (2);
+        llMessageLinked(LINK_ROOT, STARTUP, "", ""); // Send the startup signal to any plugins.
+
         API_CHANNEL = ((integer)("0x" + llGetSubString((string)llGetOwner(), 0, 8))) + 0xf6eb - 0xd2;
         llListen(API_CHANNEL, "", "", "");
         Link("online", 0, "", llGetOwner()); // This is the signal to initiate communication between the addon and the collar
         g_iLMLastRecv = llGetUnixTime(); // Need to initialize this here in order to prevent resetting before we can receive our first pong
         llSetTimerEvent(60);
+    }
+
+    changed(integer iChange)
+    {
+        if(iChange & CHANGED_INVENTORY)
+        {
+            if(g_kCollar == NULL_KEY) return;
+
+            integer i = 0;
+            for(i = 0; i< llGetListLength(g_lApps); i++)
+            {
+                Link("from_addon", MENUNAME_REMOVE, "Apps|" + llList2String(g_lApps,i), "");
+            }
+
+            llSleep(2); // Give SL time for possible lag...
+            Link("offline", 0, "", llGetOwnerKey(g_kCollar));
+            g_lMenuIDs = [];
+            g_kCollar = NULL_KEY;
+
+
+        }
+    }
+
+    touch_start(integer iNum)
+    {
+        if(g_kCollar == NULL_KEY)
+        {
+            llResetScript();
+        }
     }
     
     attach(key id)
@@ -175,6 +226,17 @@ default
 
     link_message(integer iSender, integer iNum, string sMsg, key kID)
     {
+        if(iNum == MENUNAME_RESPONSE)
+        {
+            list lReply = llParseString2List(sMsg, ["|"],[]);
+            string sName = llList2String(lReply,0);
+            string sMenu = llList2String(lReply,1);
+
+            if(sName == "Apps")
+            {
+                g_lApps += [sMenu]; // <-- Store the menu for later. We'll use this to deregister the app when disconnecting.
+            }
+        }
         Link("from_addon", iNum, sMsg, kID);
     }
     
@@ -185,12 +247,13 @@ default
             // This signal, indicates the collar has approved the addon and that communication requests will be responded to if the requests are valid collar LMs.
             g_kCollar = id;
             g_iLMLastRecv = llGetUnixTime(); // Initial message should also count as a pong for timing reasons
+            llMessageLinked(LINK_ROOT, MENUNAME_REQUEST, "Apps", "");
             Link("from_addon", LM_SETTING_REQUEST, "ALL", "");
         }
         else if (sPacketType == "dc" && g_kCollar == id)
         {
             g_kCollar = NULL_KEY;
-            llResetScript(); // This addon is designed to always be connected because it is a test
+            // We're not currently connected.
         }
         else if (sPacketType == "pong" && g_kCollar == id)
         {
@@ -205,7 +268,46 @@ default
                 string sStr  = llJsonGetValue(msg, ["sMsg"]);
                 key kID      = (key) llJsonGetValue(msg, ["kID"]);
 
-                llMessageLinked(LINK_SET, iNum, sStr, kID);
+
+                if (iNum == DIALOG_RESPONSE)
+                {
+                    integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
+                    if (iMenuIndex != -1)
+                    {
+                        string sMenu = llList2String(g_lMenuIDs, iMenuIndex + 1);
+                        g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
+                        list lMenuParams = llParseString2List(sStr, ["|"], []);
+                        key kAv = llList2Key(lMenuParams, 0);
+                        string sMsg = llList2String(lMenuParams, 1);
+                        integer iAuth = llList2Integer(lMenuParams, 3);
+                        
+                        if (sMenu == "Menu~addon~bridge")
+                        {
+                            if (sMsg == UPMENU)
+                            {
+                                Link("from_addon", iAuth, "menu Addons", kAv);
+                            }
+                            else if (sMsg == "DISCONNECT")
+                            {
+                                integer i = 0;
+                                for(i = 0; i< llGetListLength(g_lApps); i++)
+                                {
+                                    Link("from_addon", MENUNAME_REMOVE, "Apps|" + llList2String(g_lApps,i), "");
+                                }
+
+                                llSleep(2); // Give SL time for possible lag...
+                                Link("offline", 0, "", llGetOwnerKey(g_kCollar));
+                                g_lMenuIDs = [];
+                                g_kCollar = NULL_KEY;
+                            }
+
+                            return;
+                        }
+                    }
+                }
+
+
+                llMessageLinked(LINK_ROOT, iNum, sStr, kID);
             }
         }
     }
