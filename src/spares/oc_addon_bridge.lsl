@@ -288,7 +288,17 @@ default
                 key kID      = (key) llJsonGetValue(msg, ["kID"]);
 
 
-                if (iNum == DIALOG_RESPONSE)
+                if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE)
+                {
+                    UserCommand(iNum, sStr, kID);
+                    
+                }
+                else if (iNum == DIALOG_TIMEOUT)
+                {
+                    integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
+                    g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex + 3);  //remove stride from g_lMenuIDs
+                }
+                else if (iNum == DIALOG_RESPONSE)
                 {
                     integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
                     if (iMenuIndex != -1)
