@@ -139,6 +139,16 @@ default
 {
     state_entry()
     {
+        ///
+        /*
+        The following section is for a safety check in the event of a single prim object.
+        */
+        integer iFail = 0;
+        if(llGetNumberOfPrims() == 1)
+        {
+            iFail=1;
+        }
+        ///
         if(llGetObjectDesc() == "(No Description)" || llGetObjectDesc() == ""){
             string sName = llGetObjectName();
             if(llStringLength(sName) > 12) sName = llGetSubString(sName, 0, 11);
@@ -151,7 +161,7 @@ default
             g_sAddon = sDesc;
 
         }
-        if(llGetLinkNumber() == LINK_ROOT)
+        if(llGetLinkNumber() == LINK_ROOT || iFail)
         {
             // Refuse to function!!
             llOwnerSay("I am set up incorrectly.\n \nTo set me up, place this script into a linked prim.\nPlace plugins into the root prim");
