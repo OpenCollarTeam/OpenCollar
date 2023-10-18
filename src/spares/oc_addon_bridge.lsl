@@ -145,7 +145,7 @@ default
         if(llGetLinkNumber() == LINK_ROOT)
         {
             // Refuse to function!!
-            llOwnerSay("I am set up incorrectly.\n \nTo set me up, place this script into a linked prim.\nPlace plugins into the root prim, or any other prim than the one that the bridge resides in.");
+            llOwnerSay("I am set up incorrectly.\n \nTo set me up, place this script into a linked prim.\nPlace plugins into the root prim");
 
             llRemoveInventory(llGetScriptName());
         }
