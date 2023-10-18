@@ -135,6 +135,16 @@ key g_kCollar=NULL_KEY;
 integer g_iLMLastRecv;
 integer g_iLMLastSent;
 
+DCApps()
+{
+
+    integer i = 0;
+    for(i = 0; i< llGetListLength(g_lApps); i++)
+    {
+        Link("from_addon", MENUNAME_REMOVE, "Apps|" + llList2String(g_lApps,i), "");
+    }
+}
+
 default
 {
     state_entry()
@@ -223,6 +233,7 @@ default
         }
         else
         {
+            DCApps();
             Link("offline", 0, "", llGetOwnerKey(g_kCollar));
         }
     }
@@ -320,11 +331,7 @@ default
                             }
                             else if (sMsg == "DISCONNECT")
                             {
-                                integer i = 0;
-                                for(i = 0; i< llGetListLength(g_lApps); i++)
-                                {
-                                    Link("from_addon", MENUNAME_REMOVE, "Apps|" + llList2String(g_lApps,i), "");
-                                }
+                                DCApps();
 
                                 llSleep(2); // Give SL time for possible lag...
                                 Link("offline", 0, "", llGetOwnerKey(g_kCollar));
