@@ -1,8 +1,17 @@
-// This file is part of OpenCollar.
-// Copyright (c) 2009 - 2016 Cleo Collins, Nandana Singh, Satomi Ahn,   
-// Joy Stipe, Wendy Starfall, Medea Destiny, littlemousy,         
-// Romka Swallowtail, Garvin Twine et al.  
-// Licensed under the GPLv2.  See LICENSE for full details. 
+/*
+This file is a part of OpenCollar.
+Copyright ©2023
+: Contributors :
+Aria (Tashia Redrose)
+    *October 2023       -       Fixed and updated to work on latest addons
+    *January 2021       -       Created oc_addons_bridge
+    
+    
+    
+et al.
+Licensed under the GPLv2. See LICENSE for full details.
+https://github.com/OpenCollarTeam/OpenCollar
+*/
 
 // * This file is GPL because it is considered feature complete, and should work out of the box to integrate plugins as an addon.
 // In discussions with Nirea originally, the template was determined to be public domain, because it was not feature complete, and required edits by the end user to create a product.
