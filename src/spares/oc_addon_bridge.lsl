@@ -199,11 +199,7 @@ default
         {
             if(g_kCollar == NULL_KEY) return;
 
-            integer i = 0;
-            for(i = 0; i< llGetListLength(g_lApps); i++)
-            {
-                Link("from_addon", MENUNAME_REMOVE, "Apps|" + llList2String(g_lApps,i), "");
-            }
+            DCApps();
 
             llSleep(2); // Give SL time for possible lag...
             Link("offline", 0, "", llGetOwnerKey(g_kCollar));
@@ -257,6 +253,9 @@ default
         }
         
         if (g_kCollar == NULL_KEY) Link("online", 0, "", llGetOwner());
+
+
+        llMessageLinked(LINK_ROOT, READY, "", ""); // Watch for any newly added plugins just incase SL doesn't alert with changed()
     }
 
     link_message(integer iSender, integer iNum, string sMsg, key kID)
@@ -271,6 +270,17 @@ default
             {
                 g_lApps += [sMenu]; // <-- Store the menu for later. We'll use this to deregister the app when disconnecting.
             }
+        } else if(iNum == ALIVE)
+        {
+            if(g_kCollar != NULL_KEY)
+            {
+                llOwnerSay("New script added: " + sMsg+". I need to restart now.");
+                DCApps();
+                llSleep(2);
+                Link("offline", 0, "", llGetOwnerKey(g_kCollar));
+                llSleep(0.5);
+                llResetScript();
+            }
         }
         Link("from_addon", iNum, sMsg, kID);
     }
@@ -279,6 +289,11 @@ default
         string sPacketType = llJsonGetValue(msg, ["pkt_type"]);
         if (sPacketType == "approved" && g_kCollar == NULL_KEY)
         {
+            /*
+            Send a few other extra messages to try to catch any edge-cases where plugins have a state machine waiting for specific signals
+            */
+            llMessageLinked(LINK_ROOT, READY, "", "");
+            llSleep(0.25);
             llMessageLinked(LINK_ROOT, STARTUP, "", ""); // Send the startup signal to any plugins.
             llSleep (2);
             // This signal, indicates the collar has approved the addon and that communication requests will be responded to if the requests are valid collar LMs.
