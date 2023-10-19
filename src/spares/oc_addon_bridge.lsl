@@ -185,8 +185,6 @@ default
         }
         llMessageLinked(LINK_ROOT, REBOOT, "reboot", ""); // Reboot any plugins
 
-        llSleep (2);
-        llMessageLinked(LINK_ROOT, STARTUP, "", ""); // Send the startup signal to any plugins.
 
         API_CHANNEL = ((integer)("0x" + llGetSubString((string)llGetOwner(), 0, 8))) + 0xf6eb - 0xd2;
         llListen(API_CHANNEL, "", "", "");
@@ -281,6 +279,8 @@ default
         string sPacketType = llJsonGetValue(msg, ["pkt_type"]);
         if (sPacketType == "approved" && g_kCollar == NULL_KEY)
         {
+            llMessageLinked(LINK_ROOT, STARTUP, "", ""); // Send the startup signal to any plugins.
+            llSleep (2);
             // This signal, indicates the collar has approved the addon and that communication requests will be responded to if the requests are valid collar LMs.
             g_kCollar = id;
             g_iLMLastRecv = llGetUnixTime(); // Initial message should also count as a pong for timing reasons
