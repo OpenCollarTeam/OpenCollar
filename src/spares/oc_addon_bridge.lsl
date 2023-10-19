@@ -292,8 +292,6 @@ default
             /*
             Send a few other extra messages to try to catch any edge-cases where plugins have a state machine waiting for specific signals
             */
-            llMessageLinked(LINK_ROOT, READY, "", "");
-            llSleep(0.25);
             llMessageLinked(LINK_ROOT, STARTUP, "", ""); // Send the startup signal to any plugins.
             llSleep (2);
             // This signal, indicates the collar has approved the addon and that communication requests will be responded to if the requests are valid collar LMs.
