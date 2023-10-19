@@ -53,6 +53,10 @@ integer REBOOT = -1000;
 integer STARTUP = -57;
 
 
+// A signal specific to the addon bridge to allow plugins to be adapted so they can switch to more object-specific behavior.
+integer IN_BRIDGE = -43;
+
+
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
 
@@ -297,6 +301,7 @@ default
             // This signal, indicates the collar has approved the addon and that communication requests will be responded to if the requests are valid collar LMs.
             g_kCollar = id;
             g_iLMLastRecv = llGetUnixTime(); // Initial message should also count as a pong for timing reasons
+            llMessageLinked(LINK_ROOT, IN_BRIDGE, "", "");
             llMessageLinked(LINK_ROOT, MENUNAME_REQUEST, "Apps", "");
             Link("from_addon", LM_SETTING_REQUEST, "ALL", "");
         }
