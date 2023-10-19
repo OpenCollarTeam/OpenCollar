@@ -41,8 +41,8 @@ integer CMD_EVERYONE        = 504;
 //integer CMD_NOACCESS        = 599;
 
 //integer LM_SETTING_SAVE     = 2000; //scripts send messages on this channel to have settings saved, <string> must be in form of "token=value"
-//integer LM_SETTING_REQUEST  = 2001; //when startup, scripts send requests for settings on this channel
-//integer LM_SETTING_RESPONSE = 2002; //the settings script sends responses on this channel
+integer LM_SETTING_REQUEST  = 2001; //when startup, scripts send requests for settings on this channel
+integer LM_SETTING_RESPONSE = 2002; //the settings script sends responses on this channel
 //integer LM_SETTING_DELETE   = 2003; //delete token from settings
 //integer LM_SETTING_EMPTY    = 2004; //sent when a token has no value
 
@@ -50,6 +50,9 @@ integer DIALOG          = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT  = -9002;
 integer REBOOT = -1000;
+
+integer ALIVE = -55;
+integer READY = -56;
 integer STARTUP = -57;
 
 
