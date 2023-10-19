@@ -105,6 +105,11 @@ UserCommand(integer iNum, string sStr, key kID) {
     } //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else
     {
+        list lTemp = llParseString2List(sStr, [" "], []);
+        if(llToLower(llList2String(lTemp,0)) == g_sAddon)
+        {
+            llMessageLinked(LINK_ROOT, iNum, llDumpList2String(llList2List(lTemp,1,-1), " "), kID);
+        }
         //integer iWSuccess   = 0; 
         //string sChangetype  = llList2String(llParseString2List(sStr, [" "], []),0);
         //string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),1);
