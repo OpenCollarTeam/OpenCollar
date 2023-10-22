@@ -33,7 +33,12 @@ Medea (Medea Destiny)
                     And kAv == g_kWearer instead of iAuth == CMD_WEARER in meu dialog responses for:
                     + / - trusted / blacklist when wearer is permitted, displaying access list, print settings  
     Oct 2022    -   Fix for full version>beta version checking. Added menu text to clarify versioning for beta users.
-                    
+    Oct 2023    -   Refactor of safeword function in usercommand. 'Safeword off' now no longer sets safeword to 'off'
+                    before disabling, resulting in confusing "Safeword is now set to 'off'" message. Instead safeword
+                    off is clearly notified. Wearer can now set their own safeword, but only owners can disable it still.
+                    See issue # 986. Attempting to access safeword without permission now gives no access response. 
+                -   Provide no access notification for device name, and allow non-owner wearer to name. Notify wearer
+                    as well when another person changes device name. See issue # 987           
 Stormed Darkshade (StormedStormy)
     March 2022  -   Added a button for reboot to help/about menu.  
 
@@ -250,27 +255,22 @@ UserCommand(integer iNum, string sStr, key kID) {
                 g_iWaitUpdate = TRUE;
                 llSetTimerEvent(5);
             } else llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to update the collar", kID);
-        } else if(sChangetype == "safeword"){
-            if(sChangevalue!=""){
-                if(iNum == CMD_OWNER){
-                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_safeword="+sChangevalue, "");
-                    llMessageLinked(LINK_SET,NOTIFY,"1Safeword is now set to '"+sChangevalue,kID);
-
-                    if(sChangevalue == "RED"){
-                        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "global_safeword","");
-                    }
-
-                    if(llToLower(sChangevalue) == "off"){
-                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_safeworddisable=1", "");
-                    } else {
-                        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "global_safeworddisable","");
-                    }
-                }
-            } else {
-                if(iNum == CMD_OWNER || kID == g_kWearer){
-                    llMessageLinked(LINK_SET, NOTIFY, "0The safeword is current set to: '"+g_sSafeword+"'",kID);
-                }
-            }
+        } else if(sChangetype == "safeword") {
+            if(iNum!=CMD_OWNER && kID!=g_kWearer) {
+                llMessageLinked(LINK_SET,NOTIFY,"No access to safeword!",kID);
+                return;
+            } if(llToLower(sChangevalue) == "off") {
+                if(iNum==CMD_OWNER) {
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_safeworddisable=1", "");
+                    llMessageLinked(LINK_SET,NOTIFY,"1Safeword Disabled.",kID);
+                } else llOwnerSay("Only an owner can disable Safeword!");
+                return;
+            } else if(sChangevalue!="") {
+                if(sChangevalue == "RED") llMessageLinked(LINK_SET, LM_SETTING_DELETE, "global_safeword","");
+                else llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_safeword="+sChangevalue,"");
+                llMessageLinked(LINK_SET,NOTIFY,"1Safeword is now set to '"+sChangevalue+"'.",kID);
+                llMessageLinked(LINK_SET, LM_SETTING_DELETE, "global_safeworddisable","");
+            } else llMessageLinked(LINK_SET, NOTIFY, "0The safeword is current set to: '"+g_sSafeword+"'",kID);
         } else if(sChangetype == "menu"){
             if(llToLower(sChangevalue) == "access"){
                 Dialog(kID,"",[],[],0,iNum,"Menu~Auth");
@@ -312,7 +312,11 @@ UserCommand(integer iNum, string sStr, key kID) {
             }
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_wearername="+sChangevalue, "");
             llMessageLinked(LINK_SET, NOTIFY, "0The wearer's name is now set to %WEARERNAME%", kID);
-        } else if(llToLower(sChangetype) == "device" && iNum == CMD_OWNER){
+        } else if(llToLower(sChangetype) == "device"){
+            if(iNum!=CMD_OWNER && kID!=g_kWearer){
+                llMessageLinked(LINK_THIS,NOTIFY,"No access to device name.",kID);
+                return;
+            }
             if(llToLower(sChangevalue) == "name"){
                 sChangevalue = llDumpList2String(llList2List(lParameters,2,-1), " ");
                 if(llGetListLength(lParameters) == 2){
@@ -322,7 +326,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                 }
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_devicename="+sChangevalue,"");
                 llSleep(0.4); //To ensure the notify happens AFTER the new device name is in place.
-                llMessageLinked(LINK_SET, NOTIFY, "0The device name is now set to: %DEVICENAME%", kID);
+                llMessageLinked(LINK_SET, NOTIFY, "1The device name is now set to: %DEVICENAME%", kID);
             }
         } else if(llToLower(sChangetype) == "allowhide"){
             if(iNum == CMD_OWNER){
@@ -934,4 +938,3 @@ state active
         }
     }
 }
-
