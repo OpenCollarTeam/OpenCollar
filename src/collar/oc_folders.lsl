@@ -155,11 +155,11 @@ Browser(key kID, integer iAuth, string sPath){
 	g_iMenuUser=iAuth;
 	g_sPath = sPath;
 
-	if(iAuth == CMD_TRUSTED && !Bool((g_iAccessBitSet&1)))return;
-	if(iAuth == CMD_EVERYONE && !Bool((g_iAccessBitSet&2)))return;
-	if(iAuth == CMD_GROUP && !Bool((g_iAccessBitSet&4)))return;
-	if(iAuth == CMD_WEARER && !Bool((g_iAccessBitSet&8)))return;
-	if (iAuth<CMD_OWNER || iAuth>CMD_EVERYONE) return;
+	if(iAuth == CMD_TRUSTED && !Bool((g_iAccessBitSet&1))) { R(); return; } //Opensimulator workaround (YEngine cannot "return R()").
+	if(iAuth == CMD_EVERYONE && !Bool((g_iAccessBitSet&2))) { R(); return; } //Opensimulator workaround (YEngine cannot "return R()").
+	if(iAuth == CMD_GROUP && !Bool((g_iAccessBitSet&4))) { R(); return; }  //Opensimulator workaround (YEngine cannot "return R()").
+	if(iAuth == CMD_WEARER && !Bool((g_iAccessBitSet&8))) { R(); return; }  //Opensimulator workaround (YEngine cannot "return R()").
+	if (iAuth<CMD_OWNER || iAuth>CMD_EVERYONE)  { R(); return; }  //Opensimulator workaround (YEngine cannot "return R()").
 
 
 
@@ -207,10 +207,10 @@ UserCommand(integer iNum, string sStr, key kID) {
 			return;
 		}
 		g_kChatUser=kID;
-		if(iNum == CMD_TRUSTED && !Bool((g_iAccessBitSet&1)))return;
-		if(iNum == CMD_EVERYONE && !Bool((g_iAccessBitSet&2)))return;
-		if(iNum == CMD_GROUP && !Bool((g_iAccessBitSet&4)))return;
-		if(iNum == CMD_WEARER && !Bool((g_iAccessBitSet&8)))return;
+		if(iNum == CMD_TRUSTED && !Bool((g_iAccessBitSet&1))) { R(); return; }  //Opensimulator workaround (YEngine cannot "return R()").
+		if(iNum == CMD_EVERYONE && !Bool((g_iAccessBitSet&2))) { R(); return; }  //Opensimulator workaround (YEngine cannot "return R()").
+		if(iNum == CMD_GROUP && !Bool((g_iAccessBitSet&4))) { R(); return; }  //Opensimulator workaround (YEngine cannot "return R()").
+		if(iNum == CMD_WEARER && !Bool((g_iAccessBitSet&8))) { R(); return; }  //Opensimulator workaround (YEngine cannot "return R()").
 		if(g_iFindLstn != -1)llListenRemove(g_iFindLstn);
 
 		g_iFindChn = llRound(llFrand(99999999));
