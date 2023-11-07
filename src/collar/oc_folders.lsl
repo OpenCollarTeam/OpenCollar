@@ -1,25 +1,25 @@
 /*
-	This file is a part of OpenCollar.
-		Copyright 2020
-			: Contributors :
-				Aria (Tashia Redrose)
-					* Aug 2020      -           Rewrote oc_folders for 8.0 Alpha 5
-						Medea (Medea Destiny)
-							* June 2021     -   *Fix issue #570, Allow hiding folders starting with ~ via HideTilde option, defaults to ON.
-								*Fix issue  #581, filtering input to UserCommand to only folder-auth check actual folder
-									commands rather than folder-authing and processing EVERYTHING THE COLLAR DOES BY ANY USER
-										* May 2022      -   *Fix issue #775, changed string handling to ensure command is not issued as part of search
-											term, added sanity checking for chat commands to ensure we don't try to search for nothing,
-	and no longer operate on empty search results. Issuer of chat command now stored as
-		g_kChatUser so they can be notified if findfolder fails.
+This file is a part of OpenCollar.
+Copyright 2020
+: Contributors :
+Aria (Tashia Redrose)
+    * Aug 2020      -           Rewrote oc_folders for 8.0 Alpha 5
+Medea (Medea Destiny)
+    * June 2021     -   *Fix issue #570, Allow hiding folders starting with ~ via HideTilde option, defaults to ON. 
+                        *Fix issue  #581, filtering input to UserCommand to only folder-auth check actual folder
+                        commands rather than folder-authing and processing EVERYTHING THE COLLAR DOES BY ANY USER 
+    * May 2022      -   *Fix issue #775, changed string handling to ensure command is not issued as part of search
+                        term, added sanity checking for chat commands to ensure we don't try to search for nothing,
+                        and no longer operate on empty search results. Issuer of chat command now stored as 
+                        g_kChatUser so they can be notified if findfolder fails.
+                         
+et al.
+Licensed under the GPLv2. See LICENSE for full details.
+https://github.com/OpenCollarTeam/OpenCollar
+*/
 
-            et al.
-                Licensed under the GPLv2. See LICENSE for full details.
-                    https://github.com/OpenCollarTeam/OpenCollar
-                        */
 
-
-                            string g_sParentMenu = "RLV";
+string g_sParentMenu = "RLV";
 string g_sSubMenu = "# Folders";
 
 
@@ -119,7 +119,7 @@ ConfigureMenu(key kID, integer iAuth){
 
 
     }else {
-            llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to folders configuration", kID);
+        llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to folders configuration", kID);
         Menu(kID,iAuth);
     }
 }
@@ -155,11 +155,11 @@ Browser(key kID, integer iAuth, string sPath){
     g_iMenuUser=iAuth;
     g_sPath = sPath;
 
-    if(iAuth == CMD_TRUSTED && !Bool((g_iAccessBitSet&1))) { R(); return; } //Opensimulator workaround (YEngine cannot "return R()").
-    if(iAuth == CMD_EVERYONE && !Bool((g_iAccessBitSet&2))) { R(); return; } //Opensimulator workaround (YEngine cannot "return R()").
-    if(iAuth == CMD_GROUP && !Bool((g_iAccessBitSet&4))) { R(); return; }  //Opensimulator workaround (YEngine cannot "return R()").
-    if(iAuth == CMD_WEARER && !Bool((g_iAccessBitSet&8))) { R(); return; }  //Opensimulator workaround (YEngine cannot "return R()").
-    if (iAuth<CMD_OWNER || iAuth>CMD_EVERYONE)  { R(); return; }  //Opensimulator workaround (YEngine cannot "return R()").
+    if(iAuth == CMD_TRUSTED && !Bool((g_iAccessBitSet&1))){ R(); return; }
+    if(iAuth == CMD_EVERYONE && !Bool((g_iAccessBitSet&2))){ R(); return; }
+    if(iAuth == CMD_GROUP && !Bool((g_iAccessBitSet&4))){ R(); return; }
+    if(iAuth == CMD_WEARER && !Bool((g_iAccessBitSet&8))){ R(); return; }
+    if (iAuth<CMD_OWNER || iAuth>CMD_EVERYONE) { R(); return; }
 
 
 
@@ -203,14 +203,14 @@ UserCommand(integer iNum, string sStr, key kID) {
         string sChangevalue = llStringTrim(llDeleteSubString(sStr, 0, 1), STRING_TRIM);
         //string sText;
         if(sChangevalue==""){ // don't search for empty strings.
-            llMessageLinked(LINK_SET, NOTIFY, "0You have to supply a string to search for to use add/remove/wear commands.", kID);
-            return;
-        }
+             llMessageLinked(LINK_SET, NOTIFY, "0You have to supply a string to search for to use add/remove/wear commands.", kID);
+             return; 
+        } 
         g_kChatUser=kID;
-        if(iNum == CMD_TRUSTED && !Bool((g_iAccessBitSet&1))) { R(); return; }  //Opensimulator workaround (YEngine cannot "return R()").
-        if(iNum == CMD_EVERYONE && !Bool((g_iAccessBitSet&2))) { R(); return; }  //Opensimulator workaround (YEngine cannot "return R()").
-        if(iNum == CMD_GROUP && !Bool((g_iAccessBitSet&4))) { R(); return; }  //Opensimulator workaround (YEngine cannot "return R()").
-        if(iNum == CMD_WEARER && !Bool((g_iAccessBitSet&8))) { R(); return; }  //Opensimulator workaround (YEngine cannot "return R()").
+        if(iNum == CMD_TRUSTED && !Bool((g_iAccessBitSet&1))){ R(); return; }
+        if(iNum == CMD_EVERYONE && !Bool((g_iAccessBitSet&2))){ R(); return; }
+        if(iNum == CMD_GROUP && !Bool((g_iAccessBitSet&4))){ R(); return; }
+        if(iNum == CMD_WEARER && !Bool((g_iAccessBitSet&8))){ R(); return; }
         if(g_iFindLstn != -1)llListenRemove(g_iFindLstn);
 
         g_iFindChn = llRound(llFrand(99999999));
@@ -222,12 +222,12 @@ UserCommand(integer iNum, string sStr, key kID) {
             llOwnerSay("@findfolder:"+sChangevalue+"="+(string)g_iFindChn);
             return;
         } else if(sChangetype == "&&"){
-                g_iCmdMode = F_ADD | F_RECURSIVE;
+            g_iCmdMode = F_ADD | F_RECURSIVE;
             //llOwnerSay("@attachallover:"+sChangevalue+"=force");
             llOwnerSay("@findfolder:"+sChangevalue+"="+(string)g_iFindChn);
             return;
         } else if(sChangetype == "++"){
-                g_iCmdMode = F_ADD;
+            g_iCmdMode = F_ADD;
             //llOwnerSay("@attachall:"+sChangevalue+"=force");
             llOwnerSay("@findfolder:"+sChangevalue+"="+(string)g_iFindChn);
             return;
@@ -236,8 +236,8 @@ UserCommand(integer iNum, string sStr, key kID) {
         sChangetype = llGetSubString(sStr,0,0);
         sChangevalue = llStringTrim(llDeleteSubString(sStr, 0, 0), STRING_TRIM);
         if(sChangevalue==""){ // don't search for empty strings.
-            llMessageLinked(LINK_SET, NOTIFY, "0You have to supply a string to search for to use add/remove/wear commands.", kID);
-            return;
+             llMessageLinked(LINK_SET, NOTIFY, "0You have to supply a string to search for to use add/remove/wear commands.", kID);
+             return; 
         }
         if(sChangetype == "&"){
             // add folder path
@@ -246,13 +246,13 @@ UserCommand(integer iNum, string sStr, key kID) {
             llOwnerSay("@findfolder:"+sChangevalue+"="+(string)g_iFindChn);
             return;
         } else if(sChangetype == "-"){
-                //llOwnerSay("@detach:"+sChangevalue+"=force");
-                g_iCmdMode = F_REMOVE;
+            //llOwnerSay("@detach:"+sChangevalue+"=force");
+            g_iCmdMode = F_REMOVE;
             llOwnerSay("@findfolder:"+sChangevalue+"="+(string)g_iFindChn);
             return;
         } else if(sChangetype == "+"){
-                //llOwnerSay("@attach:"+sChangevalue+"=force");
-                g_iCmdMode=F_WEAR;
+            //llOwnerSay("@attach:"+sChangevalue+"=force");
+            g_iCmdMode=F_WEAR;
             llOwnerSay("@findfolder:"+sChangevalue+"="+(string)g_iFindChn);
             return;
         }
@@ -330,9 +330,9 @@ default
                 llResetScript();
             }
         } else if(iNum == READY){
-                llMessageLinked(LINK_SET, ALIVE, llGetScriptName(), "");
+            llMessageLinked(LINK_SET, ALIVE, llGetScriptName(), "");
         } else if(iNum == STARTUP){
-                state active;
+            state active;
         }
     }
 }
@@ -355,13 +355,13 @@ state active
     listen(integer iChan, string sName, key kID, string sMsg){
         if(iChan == g_iTmpLstnChn){
             /*
-                0 : No item is present in that folder
-                    1 : Some items are present in that folder, but none of them is worn
-                        2 : Some items are present in that folder, and some of them are worn
-                            3 : Some items are present in that folder, and all of them are worn
-                                */
+        0 : No item is present in that folder
+        1 : Some items are present in that folder, but none of them is worn
+        2 : Some items are present in that folder, and some of them are worn
+        3 : Some items are present in that folder, and all of them are worn
+            */
 
-                                    list lFolders = llParseString2List(sMsg, [","],[]);
+            list lFolders = llParseString2List(sMsg, [","],[]);
             list lButtons = [];
 
             list lTmp1 = llParseStringKeepNulls(llList2String(lFolders,0),["|"],[]);
@@ -396,31 +396,31 @@ state active
             if(llGetInventoryType("oc_folders_locks")==INVENTORY_SCRIPT)lLockOption += ["Locks.."];
             Dialog(g_kMenuUser, sPrompt, lButtons, ["+ Add Items", "- Rem Items", setor((g_sPath == ""), UPMENU, "^ UP")]+lLockOption, 0, g_iMenuUser, "FolderBrowser~");
         } else if(iChan == g_iFindChn)
-    {
-        if(llStringTrim(sMsg,STRING_TRIM)==""){
-            llMessageLinked(LINK_SET, NOTIFY, "0Nothing matching that term was found in #RLV!", g_kChatUser);
-            return; // don't do anything if
-        } if(g_iCmdMode & F_RECURSIVE){
+        {
+            if(llStringTrim(sMsg,STRING_TRIM)==""){
+                 llMessageLinked(LINK_SET, NOTIFY, "0Nothing matching that term was found in #RLV!", g_kChatUser);
+                 return; // don't do anything if 
+            } if(g_iCmdMode & F_RECURSIVE){
                 if(g_iCmdMode & F_ADD){
                     llOwnerSay("@attachallover:"+sMsg+"=force");
                 } else if(g_iCmdMode & F_WEAR){
-                        llOwnerSay("@attachall:"+sMsg+"=force");
+                    llOwnerSay("@attachall:"+sMsg+"=force");
                 }else if(g_iCmdMode & F_REMOVE){
-                        llOwnerSay("@detachall:"+sMsg+"=force");
+                    llOwnerSay("@detachall:"+sMsg+"=force");
                 }
-        } else {
+            } else {
                 if(g_iCmdMode & F_ADD){
                     llOwnerSay("@attachover:"+sMsg+"=force");
                 }else if(g_iCmdMode & F_WEAR){
-                        llOwnerSay("@attach:"+sMsg+"=force");
+                    llOwnerSay("@attach:"+sMsg+"=force");
                 }else if(g_iCmdMode & F_REMOVE){
-                        llOwnerSay("@detach:"+sMsg+"=force");
+                    llOwnerSay("@detach:"+sMsg+"=force");
                 }
-        }
+            }
 
-        llListenRemove(g_iFindLstn);
-        g_iFindLstn=-1;
-    }
+            llListenRemove(g_iFindLstn);
+            g_iFindLstn=-1;
+        }
     }
 
 
@@ -445,129 +445,129 @@ state active
                         iRespring=FALSE;
                         Menu(kAv,iAuth);
                     } else if(sMsg == "+ Add Items"){
-                            llOwnerSay("@attachallover:"+g_sPath+"=force");
+                        llOwnerSay("@attachallover:"+g_sPath+"=force");
                         llSleep(2.0);
                     } else if(sMsg == "- Rem Items"){
-                            llOwnerSay("@detachall:"+g_sPath+"=force");
+                        llOwnerSay("@detachall:"+g_sPath+"=force");
                         llSleep(2.0);
                     } else if(sMsg == "Locks..")
-                {
-                    iRespring=FALSE;
-                    //LocksMenu(kAv, iAuth);
-                    g_kMenuUser=kAv;
-                    g_iMenuAuth = iAuth;
-                    llMessageLinked(LINK_SET, QUERY_FOLDER_LOCKS, g_sPath, "");
-                } else if(sMsg == "^ UP"){
+                    {
                         iRespring=FALSE;
-                    Browser(kAv,iAuth, GoBackOneFolder(g_sPath));
-                } else {
+                        //LocksMenu(kAv, iAuth);
+                        g_kMenuUser=kAv;
+                        g_iMenuAuth = iAuth;
+                        llMessageLinked(LINK_SET, QUERY_FOLDER_LOCKS, g_sPath, "");
+                    } else if(sMsg == "^ UP"){
+                        iRespring=FALSE;
+                        Browser(kAv,iAuth, GoBackOneFolder(g_sPath));
+                    } else {
                         list lTmpBtn = llParseString2List(sMsg, [" "], []);
-                    string TheButton = llDumpList2String(llList2List(lTmpBtn,1,-1), " ");
-                    Browser(kAv,iAuth, MakePath(g_sPath,TheButton));
-                    iRespring=FALSE;
-                }
+                        string TheButton = llDumpList2String(llList2List(lTmpBtn,1,-1), " ");
+                        Browser(kAv,iAuth, MakePath(g_sPath,TheButton));
+                        iRespring=FALSE;
+                    }
 
 
                     if(iRespring)Browser(kAv,iAuth, g_sPath);
                 } else if(sMenu == "Folders~Locks"){
-                        if(sMsg == UPMENU){
-                            iRespring=FALSE;
-                            Browser(kAv,iAuth, g_sPath);
-                        }else if(sMsg == Checkbox(TRUE, "det. this") || sMsg==Checkbox(FALSE, "det. this")){
-                                llMessageLinked(LINK_SET, SET_FOLDER_LOCK, "detachthis", g_sPath);
-                        } else if(sMsg == Checkbox(TRUE, "att. this") || sMsg == Checkbox(FALSE, "att. this"))
-                {
-                    llMessageLinked(LINK_SET, SET_FOLDER_LOCK, "attachthis", g_sPath);
-                } else if(sMsg == Checkbox(TRUE, "det. subfolder") || sMsg == Checkbox(FALSE, "det. subfolder")){
+                    if(sMsg == UPMENU){
+                        iRespring=FALSE;
+                        Browser(kAv,iAuth, g_sPath);
+                    }else if(sMsg == Checkbox(TRUE, "det. this") || sMsg==Checkbox(FALSE, "det. this")){
+                        llMessageLinked(LINK_SET, SET_FOLDER_LOCK, "detachthis", g_sPath);
+                    } else if(sMsg == Checkbox(TRUE, "att. this") || sMsg == Checkbox(FALSE, "att. this"))
+                    {
+                        llMessageLinked(LINK_SET, SET_FOLDER_LOCK, "attachthis", g_sPath);
+                    } else if(sMsg == Checkbox(TRUE, "det. subfolder") || sMsg == Checkbox(FALSE, "det. subfolder")){
                         llMessageLinked(LINK_SET, SET_FOLDER_LOCK, "detachallthis", g_sPath);
-                } else if(sMsg == Checkbox(TRUE, "att. subfolder") || sMsg == Checkbox(FALSE, "att. subfolder")){
+                    } else if(sMsg == Checkbox(TRUE, "att. subfolder") || sMsg == Checkbox(FALSE, "att. subfolder")){
                         llMessageLinked(LINK_SET, SET_FOLDER_LOCK, "attachallthis", g_sPath);
-                }
+                    }
 
                     if(iRespring)llMessageLinked(LINK_SET, QUERY_FOLDER_LOCKS, g_sPath, "");
                 } else if(sMenu == "Menu~Folders"){
-                        if(sMsg == "Browse"){
-                            Browser(kAv,iAuth,"");
-                            iRespring=FALSE;
-                        } else if(sMsg == CONFIG){
-                                ConfigureMenu(kAv,iAuth);
-                            iRespring=FALSE;
-                        } else if(sMsg == "Clear Locks"){
-                                llMessageLinked(LINK_SET, CLEAR_FOLDER_LOCKS, "", "");
-                        } else if(sMsg == UPMENU){
-                                iRespring=FALSE;
+                    if(sMsg == "Browse"){
+                        Browser(kAv,iAuth,"");
+                        iRespring=FALSE;
+                    } else if(sMsg == CONFIG){
+                        ConfigureMenu(kAv,iAuth);
+                        iRespring=FALSE;
+                    } else if(sMsg == "Clear Locks"){
+                        llMessageLinked(LINK_SET, CLEAR_FOLDER_LOCKS, "", "");
+                    } else if(sMsg == UPMENU){
+                        iRespring=FALSE;
 
-                            llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
-                        }
+                        llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
+                    }
 
 
                     if(iRespring)Menu(kAv,iAuth);
                 } else if(sMenu == "Folders~Configure"){
 
-                        // configuration menu
-                        if(sMsg==UPMENU){
-                            iRespring=FALSE;
-                            Menu(kAv,iAuth);
-                        } else {
+                    // configuration menu
+                    if(sMsg==UPMENU){
+                        iRespring=FALSE;
+                        Menu(kAv,iAuth);
+                    } else {
 
-                                list ButtonFlags = llParseString2List(sMsg,[" "],[]);
-                            string ButtonLabel = llDumpList2String(llList2List(ButtonFlags,1,-1), " ");
-                            integer Enabled = llListFindList(g_lFolderCheckboxes, [llList2String(ButtonFlags,0)]);
-                            if(ButtonLabel=="Hide ~")
-                            {
-                                g_iHideTilde=!g_iHideTilde;
-                                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "folders_hidetilde="+(string)g_iHideTilde,"");
-                            }
-                            else if(Enabled){
-                                // Disable flag
-                                if(ButtonLabel == "Trusted")g_iAccessBitSet -=1;
-                                else if(ButtonLabel == "Public")g_iAccessBitSet-=2;
-                                else if(ButtonLabel == "Group")g_iAccessBitSet-=4;
-                                else if(ButtonLabel == "Wearer")g_iAccessBitSet-=8;
-                            }else{
-                                    if(ButtonLabel == "Trusted")g_iAccessBitSet+=1;
-                                else if(ButtonLabel == "Public")g_iAccessBitSet+=2;
-                                else if(ButtonLabel == "Group")g_iAccessBitSet+=4;
-                                else if(ButtonLabel == "Wearer") g_iAccessBitSet+=8;
-                            }
-
-                            // save
-                            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "folders_accessflags="+(string)g_iAccessBitSet, "");
+                        list ButtonFlags = llParseString2List(sMsg,[" "],[]);
+                        string ButtonLabel = llDumpList2String(llList2List(ButtonFlags,1,-1), " ");
+                        integer Enabled = llListFindList(g_lFolderCheckboxes, [llList2String(ButtonFlags,0)]);
+                        if(ButtonLabel=="Hide ~")
+                        {
+                            g_iHideTilde=!g_iHideTilde;
+                            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "folders_hidetilde="+(string)g_iHideTilde,"");
                         }
+                        else if(Enabled){
+                            // Disable flag
+                            if(ButtonLabel == "Trusted")g_iAccessBitSet -=1;
+                            else if(ButtonLabel == "Public")g_iAccessBitSet-=2;
+                            else if(ButtonLabel == "Group")g_iAccessBitSet-=4;
+                            else if(ButtonLabel == "Wearer")g_iAccessBitSet-=8;
+                        }else{
+                            if(ButtonLabel == "Trusted")g_iAccessBitSet+=1;
+                            else if(ButtonLabel == "Public")g_iAccessBitSet+=2;
+                            else if(ButtonLabel == "Group")g_iAccessBitSet+=4;
+                            else if(ButtonLabel == "Wearer") g_iAccessBitSet+=8;
+                        }
+
+                        // save
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "folders_accessflags="+(string)g_iAccessBitSet, "");
+                    }
 
                     if(iRespring) ConfigureMenu(kAv,iAuth);
                 }
             }
         } else if (iNum == DIALOG_TIMEOUT) {
-                integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
+            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
         } else if(iNum == LM_SETTING_RESPONSE){
-                // Detect here the Settings
-                list lSettings = llParseString2List(sStr, ["_","="],[]);
+            // Detect here the Settings
+            list lSettings = llParseString2List(sStr, ["_","="],[]);
 
             //integer ind = llListFindList(g_lSettingsReqs, [llList2String(lSettings,0)+"_"+llList2String(lSettings,1)]);
-            // if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+           // if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
 
 
             if(llList2String(lSettings,0)=="global"){
                 if(llList2String(lSettings,1)=="locked"){
                     g_iLocked=llList2Integer(lSettings,2);
                 } else if(llList2String(lSettings,1) == "checkboxes"){
-                        g_lFolderCheckboxes = llParseString2List(llList2String(lSettings,2),[","],[])+["◑"];
+                    g_lFolderCheckboxes = llParseString2List(llList2String(lSettings,2),[","],[])+["◑"];
                 }
             } else if(llList2String(lSettings,0)=="folders"){
-                    if(llList2String(lSettings,1) == "accessflags"){
-                        g_iAccessBitSet=(integer)llList2String(lSettings,2);
-                    } else if(llList2String(lSettings,1) =="hidetilde"){
-                            g_iHideTilde=(integer)llList2String(lSettings,2);
-                    }
-
+                if(llList2String(lSettings,1) == "accessflags"){
+                    g_iAccessBitSet=(integer)llList2String(lSettings,2);
+                } else if(llList2String(lSettings,1) =="hidetilde"){
+                    g_iHideTilde=(integer)llList2String(lSettings,2);
+                }
+                
             }
         } else if(iNum == REPLY_FOLDER_LOCKS)
-    {
-        integer iMask = (integer)((string)kID);
-        LocksMenu(g_kMenuUser, g_iMenuAuth, iMask);
-    }
+        {
+            integer iMask = (integer)((string)kID);
+            LocksMenu(g_kMenuUser, g_iMenuAuth, iMask);
+        }
         //llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
     }
 }
