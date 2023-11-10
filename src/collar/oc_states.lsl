@@ -283,6 +283,7 @@ state running
 {
     state_entry()
     {
+        llResetTime();
         llSetTimerEvent(5);
         llMessageLinked(LINK_SET, TIMEOUT_READY, "","");
         
@@ -291,7 +292,7 @@ state running
     }
     
     on_rez(integer iRez){
-        llMessageLinked(LINK_SET, STARTUP, "ALL", "");
+        llResetTime();
     }
     changed(integer iChange){
         if(iChange&CHANGED_INVENTORY){
@@ -474,9 +475,15 @@ state running
         }else if(iNum == -99999){
             if(sStr == "update_active")state inUpdate;
         } else if(iNum == ALIVE){
-            llMessageLinked(LINK_SET, STARTUP, sStr, "");
-            llSleep(1);
-            llMessageLinked(LINK_SET, 0, "initialize", llGetKey());
+            if(sStr == "oc_api" || llGetTime() > 5){
+                llMessageLinked(LINK_SET, STARTUP, "ALL", "");
+                                
+                if (llGetTime() > 5){ // prevent initialize spam
+                    llSleep(1);
+                    llMessageLinked(LINK_SET, 0, "initialize", llGetKey());
+                }
+                llResetTime();
+            }
         } else if(iNum == MENUNAME_REQUEST && sStr == "Settings") {
             llMessageLinked(iSender, MENUNAME_RESPONSE, "Settings|"+g_sSubmenu,"");
         }
