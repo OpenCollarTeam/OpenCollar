@@ -158,12 +158,19 @@ integer samelist(list a, list b) //Returns TRUE if a and b are identical
 
 list g_lMuffleReplace = [
     "p" , "h",
+    "P" , "H",
     "t" , "k",
+    "T" , "K",
     "m" , "n",
+    "M" , "N",
     "o" , "e",
+    "O" , "E",
     "u" , "o",
+    "U" , "O",
     "w" , "o",
-    "b" , "h"
+    "W" , "O",
+    "b" , "h",
+    "B" , "H"
 ];
 
 integer g_iMuffleListener;

@@ -110,7 +110,7 @@ string Checkbox(integer iValue, string sLabel) {
 
 
 // Default presets will look like the old oc_rlvsuite Buttons
-list g_lMacros = ["Hear", 4, 0, "Talk" , 3, 0, "Touch", 0, 16384, "Stray", 29360128, 524288, "Inventory", 1342179328, 96, "Dress", 0, 30, "IM", 384, 0, "Names/Map", 323584, 0, "Blur", 0, 33554432];
+list g_lMacros = ["Hear", 4, 0, "Talk" , 3, 0, "Touch", 0, 16384, "Stray", 29360128, 1048576, "Inventory", 1342179328, 96, "Dress", 0, 30, "IM", 384, 0, "Names/Map", 323584, 0, "Blur", 0, 33554432];
 /*NOTE: When changing these values for defaults, they should also be changed in the restrictions~restore section of dialogue response in link_message event, where this variable is restored to default settings. This is hardcoded inthe dialog response to save storing defaults and current as separate permanent lists*/
 
 
