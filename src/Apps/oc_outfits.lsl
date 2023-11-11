@@ -21,7 +21,9 @@ et al.
     *Mar 2023       - Fixed lock issues with "~" and some navigation errors. (issue #910)
     *June 2023      - Fixed Lock issue kAv instead of kID on the button check.
     *June 20 2023   - Fixed Stray ~ that was causing detach to not work.
-
+Medea (Medea Destiny)
+   *Nov 2023        - Fix for #902 (kAV instead of kID on button check) was not complete, 
+                      No Access notify also changed to kAV
 
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
@@ -438,7 +440,7 @@ state active
                         llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
                     }else if(sMsg == TickBox(g_iLockCore, "Lock Core")){
                         if(iAuth != CMD_OWNER && kAv != g_kWearer) {
-                            llMessageLinked(LINK_SET,NOTIFY, "0%NOACCESS% to core", kID);
+                            llMessageLinked(LINK_SET,NOTIFY, "0%NOACCESS% to core", kAv);
                             return;
                         }
                         g_iLockCore=1-g_iLockCore;
