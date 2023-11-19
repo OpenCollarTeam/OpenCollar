@@ -19,7 +19,9 @@ Kristen Mynx,  Phidoux (taya Maruti)
     Also removed DO_RLV_REFRESH which cleared all restrictions and exceptions.
 
    *July 2022  - Fixed bug: Ask mode only accepted one RLV command from the object.
-    
+
+Nikki Lacrima 
+   *Nov 2023   - Remove extra CMD_SAFEWORD to CMD_RELAY_SAFEWORD processing
 et al.
 
 Licensed under the GPLv2. See LICENSE for full details.
@@ -94,12 +96,7 @@ string Checkbox(integer iValue, string sLabel) {
 }
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
-    key kMenuID = llGenerateKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
-
-    integer iIndex = llListFindList(g_lMenuIDs, [kID]);
-    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
-    else g_lMenuIDs += [kID, kMenuID, sName];
+    llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, sName+"~"+llGetScriptName());
 }
 
 integer g_iWearer=TRUE; // Lockout wearer option
@@ -206,8 +203,6 @@ string tf(integer a){
     else return "false";
 }
 key g_kWearer;
-list g_lMenuIDs;
-integer g_iMenuStride;
 list g_lOwner;
 list g_lTrust;
 list g_lBlock;
@@ -423,10 +418,9 @@ state active
             //We're hard coding page 0 because new menu calls should always be page 0
             if(llSubStringIndex(sStr, g_sSubMenu + "|0|" + (string)CMD_EVERYONE) != -1) llMessageLinked(LINK_SET, CMD_ZERO, "menu "+g_sParentMenu, llGetSubString(sStr, 0, 35));
 
-            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            if(iMenuIndex!=-1){
-                string sMenu = llList2String(g_lMenuIDs, iMenuIndex+1);
-                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
+            integer iPos = llSubStringIndex(kID, "~"+llGetScriptName());
+            if(iPos>0){
+                string sMenu = llGetSubString(kID, 0, iPos-1);
                 list lMenuParams = llParseString2List(sStr, ["|"],[]);
                 key kAv = llList2Key(lMenuParams,0);
                 string sMsg = llList2String(lMenuParams,1);
@@ -527,10 +521,6 @@ state active
                     }
                 }
             }
-
-        } else if (iNum == DIALOG_TIMEOUT) {
-            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
         } else if(iNum == LM_SETTING_RESPONSE){
             // Detect here the Settings
             list lSettings = llParseString2List(sStr, ["_","="],[]);
@@ -595,8 +585,8 @@ state active
                 }
             }
         } else if(iNum == CMD_SAFEWORD){
-            // Process safeword
-            llMessageLinked(LINK_SET, CMD_RELAY_SAFEWORD, "safeword", "");
+            // Process safeword, can be removed, is done by SafeWord() in oc_rlvsys sending RLV_CLEAR
+            //llMessageLinked(LINK_SET, CMD_RELAY_SAFEWORD, "safeword", "");
         } else if(iNum == RLV_CLEAR){
             llMessageLinked(LINK_SET, CMD_RELAY_SAFEWORD, "","");
         } else if(iNum == CMD_RELAY_SAFEWORD){
