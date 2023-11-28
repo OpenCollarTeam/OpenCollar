@@ -1,10 +1,16 @@
-// This file is part of OpenCollar.
-// Copyright (c) 2008 - 2016 Nandana Singh, Lulu Pink, Garvin Twine,    
-// Joy Stipe, Cleo Collins, Satomi Ahn, Master Starship, Toy Wylie,    
-// Kaori Gray, Sei Lisa, Wendy Starfall, littlemousy, Romka Swallowtail,  
-// Sumi Perl, Karo Weirsider, Kurt Burleigh, Marissa Mistwallow et al.   
-// Licensed under the GPLv2.  See LICENSE for full details. 
-string g_sScriptVersion = "8.1";
+/* This file is part of OpenCollar.
+ Copyright (c) 2008 - 2016 Nandana Singh, Lulu Pink, Garvin Twine,    
+ Joy Stipe, Cleo Collins, Satomi Ahn, Master Starship, Toy Wylie,    
+ Kaori Gray, Sei Lisa, Wendy Starfall, littlemousy, Romka Swallowtail,  
+ Sumi Perl, Karo Weirsider, Kurt Burleigh, Marissa Mistwallow et al.   
+ Licensed under the GPLv2.  See LICENSE for full details. 
+
+Medea (medea.destiny)
+    Nov 2023    -   Added EXC_REFRESH call after releasing strict leash
+                to ensure that exceptions that should be in place get 
+                restored.
+*/
+string g_sScriptVersion = "8.3";
 integer LINK_CMD_DEBUG=1999;
 
 // ------ TOKEN DEFINITIONS ------
@@ -52,6 +58,7 @@ integer RLV_CMD = 6000;
 
 integer RLV_OFF = 6100;
 integer RLV_ON = 6101;
+integer EXC_REFRESH=6200; // send to request exceptions are refreshed.
 
 integer LEASH_START_MOVEMENT = 6200;
 integer LEASH_END_MOVEMENT = 6201;
@@ -220,6 +227,8 @@ ApplyRestrictions() {
     }
     //Debug("Releasing restrictions");
     llMessageLinked(LINK_SET, RLV_CMD, "clear", "realleash");     //release all restrictions
+    llSleep(1);
+    if(g_iStrictModeOn) llMessageLinked(LINK_SET,EXC_REFRESH,"","");
 }
 key g_kPassLeashFrom;
 list g_lPasslPoints;
