@@ -222,7 +222,7 @@ MenuExceptions(key kID, integer iAuth) {
 list g_lCustomExceptions = []; // Exception name, Exception UUID, integer bitmask
 
 MenuCustomExceptionsSelect(key kID,integer iAuth){
-    string sPrompt = "\n[Exceptions]\n\nSet custom exceptions here\n\nNOTE: Group exceptions can be set, but not all are meaningful applies to a group.";
+    string sPrompt = "\n[Exceptions]\n\nSet custom exceptions here\n\nNOTE: Group exceptions can be set, but not all are meaningful applied to a group.";
     Dialog(kID, sPrompt, llList2ListStrided(g_lCustomExceptions, 0,-1,3),["+ ADD", "- REM", UPMENU], 0, iAuth, "Exceptions~Custom");
 }
 
