@@ -68,6 +68,7 @@ integer g_iVerbosityLevel=1;
 integer g_iNotifyInfo=FALSE;
 
 string g_sSafeword="RED";
+integer g_iSafewordDisable=0;
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
@@ -257,7 +258,7 @@ UserCommand(integer iNum, string sStr, key kID) {
             } else llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to update the collar", kID);
         } else if(sChangetype == "safeword") {
             if(iNum!=CMD_OWNER && kID!=g_kWearer) {
-                llMessageLinked(LINK_SET,NOTIFY,"No access to safeword!",kID);
+                llMessageLinked(LINK_SET,NOTIFY,"0No access to safeword!",kID);
                 return;
             } if(llToLower(sChangevalue) == "off") {
                 if(iNum==CMD_OWNER) {
@@ -266,6 +267,10 @@ UserCommand(integer iNum, string sStr, key kID) {
                 } else llOwnerSay("Only an owner can disable Safeword!");
                 return;
             } else if(sChangevalue!="") {
+                if(g_iSafewordDisable==TRUE && iNum!=CMD_OWNER) {
+                    llMessageLinked(LINK_SET,NOTIFY,"0Only Owners can set a safeword when disabled!",kID);
+                    return;
+                }
                 if(sChangevalue == "RED") llMessageLinked(LINK_SET, LM_SETTING_DELETE, "global_safeword","");
                 else llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_safeword="+sChangevalue,"");
                 llMessageLinked(LINK_SET,NOTIFY,"1Safeword is now set to '"+sChangevalue+"'.",kID);
@@ -723,6 +728,8 @@ state active
                     }
                 } else if(sVar == "safeword"){
                     g_sSafeword = sVal;
+                } else if(sVar == "safeworddisable"){
+                    g_iSafewordDisable=1;
                 } else if(sVar == "prefix"){
                     g_sPrefix = sVal;
                 } else if(sVar == "channel"){
@@ -792,7 +799,9 @@ state active
                     g_iLocked=FALSE;
                     llOwnerSay("@detach=y");
                 }
-                else if(sVar == "safeword"){
+                else if(sVar == "safeworddisable"){
+                    g_iSafewordDisable=0;
+                } else if(sVar == "safeword"){
                     g_sSafeword = "RED";
                     llMessageLinked(LINK_SET, CMD_OWNER, "safeword-enable","");
                 } else if(sVar == "prefix"){
