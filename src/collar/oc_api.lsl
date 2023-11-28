@@ -1,3 +1,4 @@
+
 /*
 This file is a part of OpenCollar.
 Copyright ©2021
@@ -19,9 +20,27 @@ Medea (Medea Destiny)
                     blacklist when permitted when also trusted (issue #849)
                 -   Fixed instance where interface channel is 0, also streamlined function, fix issue #819 
                 -   Prefix reset now works, and notifications sent when changing prefix.
+   *Nov 2023    -   Restored # prefix functionality, issue #897 and reformatted chat command handling for                                     efficiency. Chat commands no longer sent as CMD_ZERO for authing as this script handles
+                    auth so we can auth locally to save a link_message round trip on every chat command. 
+                -   Restored object command handling as per v7.x and previous, using interface channel
+                    rather than HUDchannel as there seems no reason to duplicate and hudchannel stuff hasn't
+                    worked for a few years anyway. Added remote auth function -
+                    llSay(g_iInterfaceChannel,"checkauth 1111"); will return "AuthReply|(wearerkey)|(auth level)"
+                    on channel 1111, reporting the auth level of the object owner. Commands can be prefixed with
+                    "authas:(userkey)=", which will use the LOWER auth level between object owner and userkey. 
+                    Commmand format is targetkey:chat command. Examples: 
+                    "authas:(userkey)=(targetkey):kneel" - will issue kneel command if (userkey) and object owner
+                    both have valid auth
+                    "(targetkey):sit (sittarget key)" - sit wearer on (sittarget key) if object owner has valid
+                     auth
+                -   menuto cleanup requires menuto target to be in sim AND be the owner of the issuing command
+                -   Set g_iStartup to TRUE in active state on_rez event to restore "owned by" message #906             
 Yosty7b3        
     *Oct 2021   -   Remove unused StrideOfList() function.
-    *Feb 2022   -   Only reset when needed (part of boot speedup project).                              
+    *Feb 2022   -   Only reset when needed (part of boot speedup project).    
+    
+Nikki Lacrima
+    *Aug 2023   -  Clear group on runaway issue #935                                
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
@@ -430,7 +449,6 @@ integer SENSORDIALOG = -9003;
 integer SAY = 1004;
 integer g_iInterfaceChannel;
 
-
 integer g_iStartup=TRUE;
 default
 {
@@ -456,6 +474,7 @@ state active
 {
     on_rez(integer iNum){
         llMessageLinked(LINK_SET, ALIVE, llGetScriptName(),"");
+        g_iStartup=TRUE;
     }
     changed(integer change){
         if (change & CHANGED_OWNER) llResetScript();
@@ -498,35 +517,72 @@ state active
     }
     
     listen(integer c,string n,key i,string m){
-        if(c == g_iInterfaceChannel && llGetOwnerKey(i)==g_kWearer){
-            //do nothing if wearer isnt owner of the object
-            if (llGetOwnerKey(i) != g_kWearer) return;
-            //play ping pong with the Sub AO
-            if (m == "OpenCollar?") llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar=Yes");
-            else if (m == "OpenCollar=Yes") {
-                llOwnerSay("\n\nATTENTION: You are attempting to wear more than one OpenCollar core. This causes errors with other compatible accessories and your RLV relay. For a smooth experience, and to avoid wearing unnecessary script duplicates, please consider to take off \""+n+"\" manually if it doesn't detach automatically.\n");
-                llRegionSayTo(i,g_iInterfaceChannel,"There can be only one!");
-            } else if (m == "There can be only one!" ) {
-                llOwnerSay("/me has been detached.");
-                llRequestPermissions(g_kWearer,PERMISSION_ATTACH);
+         if(c == g_iInterfaceChannel) {
+             if (llGetOwnerKey(i)==g_kWearer){
+                //play ping pong with the Sub AO only if object is owned by wearer
+                if (m == "OpenCollar?") llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar=Yes");
+                else if (m == "OpenCollar=Yes") {
+                    llOwnerSay("\n\nATTENTION: You are attempting to wear more than one OpenCollar core. This causes errors with other compatible accessories and your RLV relay. For a smooth experience, and to avoid wearing unnecessary script duplicates, please consider to take off \""+n+"\" manually if it doesn't detach automatically.\n");
+                    llRegionSayTo(i,g_iInterfaceChannel,"There can be only one!");
+                } else if (m == "There can be only one!" ) {
+                    llOwnerSay("/me has been detached.");
+                    llRequestPermissions(g_kWearer,PERMISSION_ATTACH);
+                }
             }
-            else if(llToLower(llGetSubString(m,0,5))=="menuto")    {
+            if(llToLower(llGetSubString(m,0,5))=="menuto")    {
                 m=llStringTrim(llGetSubString(m,6,-1),STRING_TRIM);
-                if(llGetAgentSize((key)m)) llMessageLinked(LINK_SET,0,"menu",m);
+                if(llGetAgentSize((key)m)!=ZERO_VECTOR && llGetOwnerKey(i)==(key)m) llMessageLinked(LINK_SET,0,"menu",m);
                 return;
+            }
+            else {
+                key kAuthKey=llGetOwnerKey(i);
+                integer iAuth=CalcAuth(kAuthKey);
+                if(llGetSubString(m,0,6)=="authas:"){ //messages prefixed authas:(key)=(cmd) will use the auth level of key if LOWER than object owner auth.
+                    kAuthKey=llGetSubString(m,7,42);
+                    m=llGetSubString(m,44,-1);
+                    if(llGetAgentSize(kAuthKey)){
+                        integer iAKAuth=CalcAuth(kAuthKey);
+                        if(iAKAuth>iAuth) iAuth=iAKAuth;
+                    }
+                    else return;
+                }
+                if(llToLower(llGetSubString(m,0,8))=="checkauth" && CalcAuth(kAuthKey)>=CMD_OWNER && CalcAuth(kAuthKey)<=CMD_EVERYONE) {
+                    integer iReplyChan=(integer)llGetSubString(m,10,-1);
+                    if(iReplyChan) llRegionSayTo(i,iReplyChan,"authreply|"+(string)g_kWearer+"|"+(string)CalcAuth(kAuthKey)+"|"+(string)kAuthKey);
+                } else if (!llSubStringIndex(m,(string)g_kWearer + ":")){
+                    m = llGetSubString(m, 37, -1);
+                    if(llGetAgentSize(kAuthKey)) llMessageLinked(LINK_SET, iAuth , m , llGetOwnerKey(i));
+                }
+            }
+            return;
+        }
+        string CMD;
+        if(llSubStringIndex(llToLower(m),llToLower(g_sPrefix))==0) {
+            CMD=llGetSubString(m,llStringLength(g_sPrefix),-1);
+        } else if(llGetSubString(m,0,0) == "*" || (llGetSubString(m,0,0)=="#" && i!=g_kWearer)) {
+            CMD = llGetSubString(m,1,-1);
+        } if(CMD!="" && CMD!="initialize") {
+            llMessageLinked(LINK_SET, CalcAuth(llGetOwnerKey(i)),llStringTrim(CMD,STRING_TRIM_HEAD),llGetOwnerKey(i));
+        } else if(i==g_kWearer) {
+            list lTmp = llParseString2List(m,[" ","(",")"],[]);
+            string sDump = llToLower(llDumpList2String(lTmp, ""));
+            if(sDump == llToLower(g_sSafeword) && !g_iSafewordDisable) {
+                llMessageLinked(LINK_SET, CMD_SAFEWORD, "","");
+                SW();
             }
         }
             
-        
-        
+       /* 
         if(llToLower(llGetSubString(m,0,llStringLength(g_sPrefix)-1))==llToLower(g_sPrefix)){
             string CMD=llGetSubString(m,llStringLength(g_sPrefix),-1);
             if(llGetSubString(CMD,0,0)==" ")CMD=llDumpList2String(llParseString2List(CMD,[" "],[]), " ");
-            llMessageLinked(LINK_SET, CMD_ZERO, CMD, llGetOwnerKey(i));
-        } else if(llGetSubString(m,0,0) == "*"){
+           // llMessageLinked(LINK_SET, CMD_ZERO, CMD, llGetOwnerKey(i));
+            if (CMD!="initialize") llMessageLinked(LINK_SET, CalcAuth(llGetOwnerKey(i)),CMD,llGetOwnerKey(i));
+        }  else if(llGetSubString(m,0,0) == "*" || (llGetSubString(m,0,0)=="#" && i!=g_kWearer)){
             string CMD = llGetSubString(m,1,-1);
             if(llGetSubString(CMD,0,0)==" ")CMD=llDumpList2String(llParseString2List(CMD,[" "],[])," ");
-            llMessageLinked(LINK_SET, CMD_ZERO, CMD, llGetOwnerKey(i));
+            //llMessageLinked(LINK_SET, CMD_ZERO, CMD, llGetOwnerKey(i));
+            if (CMD!="initialize") llMessageLinked(LINK_SET, CalcAuth(llGetOwnerKey(i)),CMD,llGetOwnerKey(i));
         } else {
             list lTmp = llParseString2List(m,[" ","(",")"],[]);
             string sDump = llToLower(llDumpList2String(lTmp, ""));
@@ -535,7 +591,7 @@ state active
                 llMessageLinked(LINK_SET, CMD_SAFEWORD, "","");
                 SW();
             }
-        }
+        }*/
     }
     
     link_message(integer iSender, integer iNum, string sStr, key kID){
