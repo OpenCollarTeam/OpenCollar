@@ -181,18 +181,12 @@ list g_lMuffleReplace = [
 
 integer g_iMuffleListener;
 
-/*string strReplace(string str, string search, string replace) 
-{
-    return llDumpList2String(llParseStringKeepNulls((str = "") + str, [search], []), replace);
-}*/
-
 string MuffleText(string sText)
 {
     integer i;
     for (i=0; i<llGetListLength(g_lMuffleReplace);i+=2)
     {
         sText = llDumpList2String(llParseStringKeepNulls(sText,llList2List(g_lMuffleReplace,i,i),[]),llList2String(g_lMuffleReplace,i+1));
-        //sText = strReplace(sText, llList2String(g_lMuffleReplace,i),llList2String(g_lMuffleReplace,i+1));
     }
     return sText;
 }
