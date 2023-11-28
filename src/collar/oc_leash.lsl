@@ -8,7 +8,7 @@
 Medea (medea.destiny)
     Nov 2023    -   Added EXC_REFRESH call after releasing strict leash
                 to ensure that exceptions that should be in place get 
-                restored.
+                restored. issue #1008
 */
 string g_sScriptVersion = "8.3";
 integer LINK_CMD_DEBUG=1999;
