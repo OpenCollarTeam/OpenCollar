@@ -347,9 +347,7 @@ default
                 iChan=-1000-(integer)llFrand(99999);
                 list buttons=["1","2","3","4","5","6","7","8"];
                 integer i=llGetListLength(lHits);
-                llOwnerSay("i="+(string)i);
                 buttons=llList2List(buttons,0,(i/2)-1); //trim button list to length of hit list;
-                llOwnerSay("buttons="+llList2CSV(buttons));
                 if(i>2)buttons=llList2List(buttons,0,0)+["Rescan","Quit"]+llList2List(buttons,1,-1);
                 else buttons+=["Rescan","Quit"]; //put the rescan and quit buttons on the bottom row
                 string text="Pick a target. Options as follows: (access / name)\n";
