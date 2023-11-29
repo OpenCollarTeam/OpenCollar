@@ -97,7 +97,7 @@ UserCommand(integer iNum, string sStr, key kID) {
         string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),1);
         string sText;
         
-    }/
+    }/*
 }
 
 key g_kWearer;
