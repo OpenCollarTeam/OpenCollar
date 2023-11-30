@@ -26,7 +26,7 @@ Nikki Lacrima
     *Nov 2023   -   Only wearer can initiate and confirm runaway, add link message "runaway_confirmed" and 
                     remove the g_iRunawayMode. 
                 -   Add "#" prefix wildcard, issue #897
-                -   Remove g_lMenuIDs, similar tp pr #963
+                -   implemented Yosty7b3's menu streamlining, see pr#963 
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
@@ -703,27 +703,21 @@ state active
                     } else if(sMsg == "Disable"){
                         g_kDenyRunawayRequester=kAv;
                         Dialog(g_kWearer, "\nsecondlife:///app/agent/"+(string)kAv+"/about wants to disable your ability to 'Runaway'. This can only be reversed by an owner. \n\nYou may accept or deny this action.", [], ["Accept", "Deny"], 0, CMD_WEARER, "confirmdenyrunaway");
-                      // g_iRunaway=FALSE;
-                      // llMessageLinked(LINK_SET, LM_SETTING_SAVE, "AUTH_runaway=0", "origin");
-                      //  llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "5", "spring_access:"+(string)kAv);
                     } else if(sMsg == "No"){
-                        // return
                         llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "spring_access:"+(string)kAv);
                         return;
                     } else if(sMsg == "Yes"){
-                        // trigger runaway
                         if((kAv == g_kWearer || iAuth == CMD_OWNER ) && g_iRunaway){
                             // trigger runaway sequence if approval was given
+                            llMessageLinked(LINK_SET, NOTIFY_OWNERS, "%WEARERNAME% has runaway.", "");
                             llMessageLinked(LINK_SET, CMD_OWNER, "runaway_confirmed", g_kWearer);
                             llMessageLinked(LINK_SET, CMD_SAFEWORD, "safeword", "");
-//                            llMessageLinked(LINK_SET, CMD_OWNER, "clear", g_kWearer);                            
+                            llSleep(0.5); // Wait for notifications before clearing owners
                             llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "5", "spring_access:"+(string)kAv);
                             llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_owner","origin");
                             llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_trust","origin");
                             llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_block","origin");
                             llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_group","origin");
-                            llMessageLinked(LINK_SET, NOTIFY_OWNERS, "%WEARERNAME% has runaway.", "");
-//                            llMessageLinked(LINK_SET, NOTIFY_OWNERS, "Runaway completed on %WEARERNAME%'s collar", kID);
                             llMessageLinked(LINK_SET, NOTIFY, "0Runaway complete", g_kWearer);
                         }
                     }
