@@ -5,7 +5,9 @@ Joy Stipe, Cleo Collins, Satomi Ahn, Master Starship, Toy Wylie,
 Kaori Gray, Sei Lisa, Wendy Starfall, littlemousy, Romka Swallowtail,  
 Sumi Perl, Karo Weirsider, Kurt Burleigh, Marissa Mistwallow et al.   
 
-aug 2023 Nikki Lacrima
+Nikki Larima 
+    Nov 2023    - Remove processing of "runaway" command string, handled by CMD_SATEWORD
+                  implemented Yosty7b3's menu streamlining, see pr#963  
 
 Licensed under the GPLv2.  See LICENSE for full details. 
 https://github.com/OpenCollarTeam/OpenCollar
@@ -485,8 +487,6 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
                 //LeashTo((key)sVal, kMessageID, iAuth, [], TRUE,0);
             } else
                 SensorDialog(g_kCmdGiver, "\nWho shall be followed?\n", sVal,iAuth,"FollowTarget", AGENT);
-        } else if (sMessage == "runaway_confirmed" && iAuth == CMD_OWNER) {
-            Unleash(kMessageID);
         } else if (sMessage == "unleash" || sMessage == "unfollow" || (sMessage == "toggleleash" && NULL_KEY != g_kLeashedTo)) {
             if (CheckCommandAuth(kMessageID, iAuth)) Unleash(kMessageID);
             if (bFromMenu) UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
