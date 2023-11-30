@@ -22,6 +22,7 @@ Kristen Mynx,  Phidoux (taya Maruti)
 
 Nikki Lacrima 
    *Nov 2023   - Remove extra CMD_SAFEWORD to CMD_RELAY_SAFEWORD processing
+               - implemented Yosty7b3's menu streamlining, see pr#963 
 et al.
 
 Licensed under the GPLv2. See LICENSE for full details.
