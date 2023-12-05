@@ -218,8 +218,9 @@ default {
     }
 
     touch_start(integer iNumber) {
-        llWhisper(0, "Hello! In your collar menu, go to Help/About and press Update to begin the update");
+        llOwnerSay("Hello! In your collar menu, go to Help/About and press Update to begin the update");
         return;
+        //If we weren't planning to redo this for 9.x anyway I'd scream right here.
         if (llDetectedKey(0) != llGetOwner()) return;
         if (g_iDone) {
             g_iDone = FALSE;
