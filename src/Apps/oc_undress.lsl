@@ -21,6 +21,7 @@ Medea (Medea Destiny)
                             to handle this cleanly.
                             * Added short llSleep before remenuing after detaching a clothing layer to ensure the viewer 
                             removes the layer before replying to the getoutfit command.
+      * Dec 2023            * Clothing locks now get cleared on RLV_CLEAR/Safeword function.
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
