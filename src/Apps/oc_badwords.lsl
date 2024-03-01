@@ -4,6 +4,8 @@
 // littlemousy, Karo Weirsider, Nori Ovis, Ray Zopf et al.         
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
+//Phuk
+// May 2023 - reset script on transfer
 
 string g_sAppVersion = "¹⋅³";
 
@@ -442,6 +444,7 @@ default {
 
     changed(integer iChange) {
         if (iChange & CHANGED_INVENTORY) PermsCheck();
+        if (iChange & CHANGED_OWNER) llResetScript();
         /*if (iChange & CHANGED_REGION) {
             if (g_iProfiled) {
                 llScriptProfiler(1);
