@@ -1,7 +1,8 @@
 // This file is part of OpenCollar.
 // Copyright (c) 2009 - 2024 Cleo Collins, Nandana Singh, Satomi Ahn,   
 // Joy Stipe, Wendy Starfall, Medea Destiny, littlemousy,         
-// Romka Swallowtail, Garvin Twine et al. TrixAeo
+// Romka Swallowtail, Garvin Twine et al. 
+// Last updated: Trix (TrixAeo) 2024 - Uploaded new sounds.
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 
@@ -47,10 +48,6 @@ string g_sBellOff="OFF"; // menu text of bell off
 integer g_iBellShow=FALSE; // is the bell visible
 string g_sBellShow="SHOW"; //menu text of bell visible
 string g_sBellHide="HIDE"; //menu text of bell hidden
-
-// List of old sounds
-//list g_listBellSounds=["7b04c2ee-90d9-99b8-fd70-8e212a72f90d","b442e334-cb8a-c30e-bcd0-5923f2cb175a","1acaf624-1d91-a5d5-5eca-17a44945f8b0","5ef4a0e7-345f-d9d1-ae7f-70b316e73742","da186b64-db0a-bba6-8852-75805cb10008","d4110266-f923-596f-5885-aaf4d73ec8c0","5c6dd6bc-1675-c57e-0847-5144e5611ef9","1dc1e689-3fd8-13c5-b57f-3fedd06b827a"]; // list with legacy bell sounds
-// list g_listBellSounds=["ae3a836f-4d69-2b74-1d52-9c78a9106206","503d2360-99f8-7a4a-8b89-43c5122927bd","a3ff9ca6-8289-0007-5b6b-d4c993580a6b","843adc44-1189-2d67-6f3a-72a80b3a9ed4","4c84b9b7-b363-b501-c019-8eef5fb4d3c2","3b95831e-8da5-597f-3b4d-713a03945cb6","285b317c-23d1-de51-84bc-938eb3df9e46","074b9b37-f6a3-a0a3-f40e-14bc57502435"]; // list with 4.0 bell sounds
 
 // List of current sounds
 // bell_brass_01.wav       9a1f0d2e-0f32-21f7-7d83-1aeb428ace4a
