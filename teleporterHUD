@@ -1,0 +1,94 @@
+integer Active;
+
+key regionQuery = NULL_KEY;
+
+key http_request_id;
+string url = "https://sldb.app/";
+
+default
+{
+    attach(key id)
+    {
+        if(id)  llResetScript();
+    }
+    state_entry()
+    {
+        //to override NO script zones//
+        llRequestPermissions( llGetOwner(),PERMISSION_TAKE_CONTROLS);
+         
+        //display ON//
+        llSetLinkColor(LINK_ALL_OTHERS, <0,0.6,0>, ALL_SIDES);
+        llSetText("ON", <1,1,1>, 1.0);
+        Active = TRUE;
+        
+        //get location data//
+        regionQuery=llRequestSimulatorData( llGetRegionName(), DATA_SIM_POS );
+    }
+
+    touch_start(integer total_number)
+    {
+        if( Active )
+        {
+            //display OFF//
+            llSetLinkColor(LINK_ALL_OTHERS, <0.6,0,0>, ALL_SIDES);
+            llSetText("OFF", <1,1,1>, 1.0);
+            Active = FALSE;
+        }
+        else
+        {
+            //display ON//
+            llSetLinkColor(LINK_ALL_OTHERS, <0,0.6,0>, ALL_SIDES);
+            llSetText("ON", <1,1,1>, 1.0);
+            Active = TRUE;
+            
+            //get location data//
+            regionQuery=llRequestSimulatorData( llGetRegionName(), DATA_SIM_POS );
+        }
+    }
+    
+    
+    changed(integer change)
+    {
+        if (change & CHANGED_REGION) //note that it's & and not &&... it's bitwise!
+        {
+            if( Active ) 
+                regionQuery=llRequestSimulatorData( llGetRegionName(), DATA_SIM_POS );
+        }
+    }
+    
+    dataserver(key query_id, string data)
+    {
+        if (query_id == regionQuery)
+        {
+            vector pos = llGetPos();
+            string sendData = llGetSubString(data, 1, -2) + "," +  (string)llRound(pos.x) +","+ (string)llRound(pos.y) + ","+ (string)llRound(pos.z);
+            
+            //debug//
+            //llOwnerSay( "data = "  + sendData );
+            
+            
+             //llOwnerSay( llKey2Name(llGetOwner()) + " send data @ "  );
+            llHTTPRequest( url+llEscapeURL((string)llGetOwner())+"/tp", [HTTP_METHOD, "POST"], sendData );
+            
+            //old method//
+            //llHTTPRequest( url+llEscapeURL((string)llGetOwner())+"/tp", [HTTP_METHOD, "POST"], (string)llRound(pos.x)+"/"+(string)llRound(pos.y)+"/"+(string)llRound(pos.z)  );
+        }
+    }
+    
+    http_response(key request_id, integer status, list metadata, string data)
+    {
+        if (request_id == http_request_id)
+        {
+            llOwnerSay( "data sent successful:" + data );
+        } 
+
+    }
+    
+    //override no script zones// 
+     run_time_permissions(integer perm)
+    {
+        if (perm & PERMISSION_TAKE_CONTROLS)
+            llTakeControls(CONTROL_DOWN,TRUE,TRUE);
+    }
+    
+}
