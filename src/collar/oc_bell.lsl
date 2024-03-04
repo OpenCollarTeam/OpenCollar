@@ -442,7 +442,6 @@ state active
 
     control( key kID, integer nHeld, integer nChange ) {
         if (!g_iBellOn) return;
-        if(!g_iBellShow)return;
         //the user is pressing a movement key
         if ((nChange & (CONTROL_LEFT|CONTROL_RIGHT|CONTROL_DOWN|CONTROL_UP|CONTROL_FWD|CONTROL_BACK)) && llGetTime()>g_fNextRing)
             llPlaySound(g_kCurrentBellSound,g_fVolume);
