@@ -12,8 +12,10 @@ Medea (medea.destiny)
                 restored. issue #1008
 Nikki Larima 
     Nov 2023    - Remove processing of "runaway" command string, handled by CMD_SATEWORD
-                  implemented Yosty7b3's menu streamlining, see pr#963                  
-                
+                  implemented Yosty7b3's menu streamlining, see pr#963    
+
+Licensed under the GPLv2.  See LICENSE for full details. 
+https://github.com/OpenCollarTeam/OpenCollar               
 */
 
 string g_sScriptVersion = "8.3";
