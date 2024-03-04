@@ -1,3 +1,4 @@
+
 /* This file is part of OpenCollar.
  Copyright (c) 2008 - 2016 Nandana Singh, Lulu Pink, Garvin Twine,    
  Joy Stipe, Cleo Collins, Satomi Ahn, Master Starship, Toy Wylie,    
@@ -9,7 +10,12 @@ Medea (medea.destiny)
     Nov 2023    -   Added EXC_REFRESH call after releasing strict leash
                 to ensure that exceptions that should be in place get 
                 restored. issue #1008
+Nikki Larima 
+    Nov 2023    - Remove processing of "runaway" command string, handled by CMD_SATEWORD
+                  implemented Yosty7b3's menu streamlining, see pr#963                  
+                
 */
+
 string g_sScriptVersion = "8.3";
 integer LINK_CMD_DEBUG=1999;
 
@@ -47,7 +53,7 @@ integer LM_SETTING_SAVE       = 2000;
 integer LM_SETTING_REQUEST    = 2001;
 integer LM_SETTING_RESPONSE   = 2002;
 integer LM_SETTING_DELETE     = 2003;
-integer LM_SETTING_EMPTY            = 2004;
+integer LM_SETTING_EMPTY      = 2004;
 
 // -- MENU/DIALOG
 integer MENUNAME_REQUEST    = 3000;
@@ -65,7 +71,7 @@ integer LEASH_END_MOVEMENT = 6201;
 
 integer DIALOG              = -9000;
 integer DIALOG_RESPONSE     = -9001;
-integer DIALOG_TIMEOUT      = -9002;
+//integer DIALOG_TIMEOUT      = -9002;
 integer SENSORDIALOG = -9003;
 
 integer CMD_PARTICLE     = 20000;
@@ -79,8 +85,6 @@ string BUTTON_SUBMENU      = "Leash";
 // ---------------------------------------------
 // ------ VARIABLE DEFINITIONS ------
 // ----- menu -----
-list     g_lMenuIDs;
-integer g_iMenuStride = 3;
 integer g_iPreviousAuth;
 key g_kLeashCmderID;
 
@@ -145,20 +149,12 @@ string NameURI(key kID){
 }
 
 Dialog(key kRCPT, string sPrompt, list lButtons, list lUtilityButtons, integer iPage, integer iAuth, string sMenuID) {
-    key kMenuID = llGenerateKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lButtons, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
-    integer iIndex = llListFindList(g_lMenuIDs, [kRCPT]);
-    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kRCPT, kMenuID, sMenuID], iIndex, iIndex + g_iMenuStride - 1);
-    else g_lMenuIDs += [kRCPT, kMenuID, sMenuID];
+    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lButtons, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, sMenuID+"~"+llGetScriptName());
 }
 
 SensorDialog(key kRCPT, string sPrompt, string sSearchName, integer iAuth, string sMenuID, integer iSensorType) {
-    key kMenuID = llGenerateKey();
     if (sSearchName != "") sSearchName = "`"+sSearchName+"`1";
-    llMessageLinked(LINK_SET, SENSORDIALOG, (string)kRCPT +"|"+sPrompt+"|0|``"+(string)iSensorType+"`10`"+(string)PI+sSearchName+"|"+BUTTON_UPMENU+"|" + (string)iAuth, kMenuID);
-    integer iIndex = llListFindList(g_lMenuIDs, [kRCPT]);
-    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kRCPT, kMenuID, sMenuID], iIndex, iIndex + g_iMenuStride - 1);
-    else g_lMenuIDs += [kRCPT, kMenuID, sMenuID];
+    llMessageLinked(LINK_SET, SENSORDIALOG, (string)kRCPT +"|"+sPrompt+"|0|``"+(string)iSensorType+"`10`"+(string)PI+sSearchName+"|"+BUTTON_UPMENU+"|" + (string)iAuth, sMenuID+"~"+llGetScriptName());
 }
 
 ConfirmDialog(key kAv, key kCmdGiver, string sType, integer iAuth) {
@@ -497,8 +493,6 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
                 //LeashTo((key)sVal, kMessageID, iAuth, [], TRUE,0);
             } else
                 SensorDialog(g_kCmdGiver, "\nWho shall be followed?\n", sVal,iAuth,"FollowTarget", AGENT);
-        } else if (sMessage == "runaway" && iAuth == CMD_OWNER) {
-            Unleash(kMessageID);
         } else if (sMessage == "unleash" || sMessage == "unfollow" || (sMessage == "toggleleash" && NULL_KEY != g_kLeashedTo)) {
             if (CheckCommandAuth(kMessageID, iAuth)) Unleash(kMessageID);
             if (bFromMenu) UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
@@ -823,15 +817,14 @@ state active
             g_iRLVOn = FALSE;
             ApplyRestrictions();
         } else if (iNum == DIALOG_RESPONSE) {
-            integer iMenuIndex = llListFindList(g_lMenuIDs, [kMessageID]);
-            if (~iMenuIndex) {
+            integer iPos = llSubStringIndex(kMessageID, "~"+llGetScriptName());
+            if (iPos>0) {
                 list lMenuParams = llParseString2List(sMessage, ["|"], []);
                 key kAV = (key)llList2String(lMenuParams, 0);
                 string sButton = llList2String(lMenuParams, 1);
                 //integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
-                string sMenu=llList2String(g_lMenuIDs, iMenuIndex + 1);
-                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
+                string sMenu = llGetSubString(kMessageID, 0, iPos-1);
                 if (sMenu == "MainDialog"){
                     if (sButton == BUTTON_UPMENU)
                         llMessageLinked(LINK_SET, iAuth, "menu "+BUTTON_PARENTMENU, kAV);
@@ -879,9 +872,6 @@ state active
                     g_kLeashCmderID = "";
                 }
             }
-        } else if (iNum == DIALOG_TIMEOUT) {
-            integer iMenuIndex = llListFindList(g_lMenuIDs, [kMessageID]);
-            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
         } else if (iNum == REBOOT && sMessage == "reboot") llResetScript();
         else if(iNum == AUTH_REPLY){
             list lParams = llParseString2List(sMessage, ["|"],[]);
