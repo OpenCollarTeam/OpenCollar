@@ -550,6 +550,7 @@ state active
                 llMessageLinked(LINK_SET, CMD_SAFEWORD, "","");
                 SW();
                 return;
+            }
         }
         if(CMD!="" && CMD!="initialize" && CMD!="runaway_confirmed") {
             llMessageLinked(LINK_SET, CalcAuth(llGetOwnerKey(i)),llStringTrim(CMD,STRING_TRIM_HEAD),llGetOwnerKey(i));
