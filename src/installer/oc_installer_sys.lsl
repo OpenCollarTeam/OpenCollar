@@ -218,8 +218,9 @@ default {
     }
 
     touch_start(integer iNumber) {
-        llWhisper(0, "Hello! In your collar menu, go to Help/About and press Update to begin the update");
+        llOwnerSay("Hello! In your collar menu, go to Help/About and press Update to begin the update");
         return;
+        //If we weren't planning to redo this for 9.x anyway I'd scream right here.
         if (llDetectedKey(0) != llGetOwner()) return;
         if (g_iDone) {
             g_iDone = FALSE;
@@ -311,7 +312,7 @@ default {
 
     on_rez(integer iStartParam) {
         string sPrefix = llToLower(llGetSubString(llKey2Name(llGetOwner()),0,1));
-        llSay(0, "Thank you for rezzing me.  Next:  In the Collar menu, go to Help/About and press Update. Or, use the chat command '"+sPrefix+" update'.");
+        llOwnerSay("Thank you for rezzing me.  Next:  In the Collar menu, go to Help/About and press Update. Or, use the chat command '"+sPrefix+" update'.");
         llResetScript();
     }
     no_sensor()
