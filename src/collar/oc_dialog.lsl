@@ -12,6 +12,11 @@ Medea Destiny -
                 version of function now works with prompts of any length and does not break up words.
               - Changed prompt for button descriptions in local chat from "Please check..." to "See..." to trigger it less often
               - Added warning text to prompt when prompt is trunctated, so menu prompt text will now show "(CONT. IN LOCAL CHAT)"
+    Mar 2024  - Emergency fix for extended sensor function flooding memory and crashing script
+
+Nikki Lacrima
+    Aug 2023 - Changed functions for clearing auth so  auth doesn't persist for open menus
+
 */
 integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
@@ -566,6 +571,9 @@ state active
 
 
     sensor(integer num_detected){
+        if(num_detected>16) num_detected=16;
+        //LL just expanded sensor to up to 32 hits. Thanks LL, but there's a ton of content 
+        //out there not designed to cope with that which are gonna stack-heap now. For now at least we'll trim back to 16.
         //get sensot request info from list
         list lParams=llParseStringKeepNulls(llList2String(g_lSensorDetails,0), ["|"], []);
         key kID = (key)llList2String(g_lSensorDetails,1);
