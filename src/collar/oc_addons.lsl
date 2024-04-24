@@ -330,6 +330,7 @@ state active
             } else if(PacketType == "from_collar")return; // We should never listen to another collar's LMs, wearer should not be wearing more than one anyway.
             else if(PacketType == "online"){
                 // this is a initial handshake
+                if(llJsonGetValue(m,["addon_name"])=="OpenCollar") return;
                 if(llJsonGetValue(m,["kID"])==(string)llGetOwner()){
 
                     // begin to pass stuff to link messages!
@@ -558,4 +559,3 @@ state active
         //llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
     }
 }
-
