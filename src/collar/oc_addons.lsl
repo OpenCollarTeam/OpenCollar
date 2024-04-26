@@ -9,12 +9,13 @@ Medea (medea.destiny)
     Sept 2021           -   Provided auth failure mode for menu. Insufficient auth now
                             provides suitable notification to user and respawns main menu. 
                             Fixes issue #665   
-
 KristenMynx
     Dec 2021            -   Fix timeout removal stride
     May 2022            -   Fix offline removal stride
                         -   Reduce chatter
     Jun 2022            -   Reduce chatter more
+Ping (pingout.duffield)
+   April 2024            -  Fix at Initial Handshake to disregard any nearby rezzed collar. Ref Issue #1038
     
     
     
