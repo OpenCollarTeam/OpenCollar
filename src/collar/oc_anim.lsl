@@ -20,6 +20,9 @@ K9K8E
 
 Tayaphidoux
     Jun 2022    - Restore AO pause functionality
+    
+Ping (Pingout Duffield) 
+    April 2024  - Port to OpenSim, Changes to disregard pose names starting with ~
 
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
@@ -43,7 +46,6 @@ integer CMD_EVERYONE = 504;
 
 integer NOTIFY = 1002;
 integer REBOOT = -1000;
-
 
 
 integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved
@@ -142,8 +144,29 @@ PoseMenu(key kID, integer iAuth, integer iPage){
     }
     Dialog(kID, sPrompt, GetPoseList(-1), [ UP_ARROW, DOWN_ARROW, "STOP",UPMENU], iPage, iAuth, "Animations~Poses");
 }
+/**
+Return a list with all the animatons in the inventory without filtering '~xxxx' animations
+*/
+list GetAllPoseList(integer iType)
+{
+    // -1 = as it exists in inventory
+    // 0 = lower case
+    
+    list lTmp;
+    integer i=0;
+    integer end = llGetInventoryNumber(INVENTORY_ANIMATION);
+    for(i=0;i<end;i++){
+        
+        string name = llGetInventoryName(INVENTORY_ANIMATION, i);
 
-list GetPoseList(integer iType)
+            if(iType == -1)lTmp += [name];
+            else lTmp += [llToLower(name)];
+        
+    }
+    
+    return lTmp;
+}
+/**list GetPoseList(integer iType)
 {
     // -1 = as it exists in inventory
     // 0 = lower case
@@ -162,7 +185,7 @@ list GetPoseList(integer iType)
     
     return lTmp;
 }
-
+*/
 UserCommand(integer iNum, string sStr, key kID) {
     string ssStr = llToLower(sStr);
     if (iNum == CMD_OWNER && ssStr == "runaway") {
@@ -198,11 +221,22 @@ UserCommand(integer iNum, string sStr, key kID) {
             // this is a pose
             if (g_sPose != "")StopAnimation(g_sPose);
             // get actual pose name as it exists in inventory
-            integer index = llListFindList(GetPoseList(0), [llToLower(sChangetype)]);
+            // This is wrong for OpenSim
+            // integer index = llListFindList(GetPoseList(0), [llToLower(sChangetype)]);
+            // g_sPose = llGetInventoryName(INVENTORY_ANIMATION,index);
+
+            // Function GetPoseList() lists will filter those staring with ~, 
+            // But Get inventory by index will no filter them
+            // so the index does not match the actual index in the inventory
+
+            // Correct one uses a new function GetAllPoseList()
+            integer index = llListFindList(GetAllPoseList(0), [llToLower(sChangetype)]);
             g_sPose = llGetInventoryName(INVENTORY_ANIMATION,index);
+            
             StartAnimation(g_sPose);
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, "anim_pose="+llList2String(g_lCurrentAnimations, 0),"");
             iRespringPoses=TRUE;
+            
         } else if(llToLower(sChangetype) == "stop" || llToLower(sChangetype)=="release"){
             if(g_iAnimLock && kID == g_kWearer){
                 llMessageLinked(LINK_SET,NOTIFY,"0%NOACCESS% to stopping animation", g_kWearer);
@@ -732,4 +766,3 @@ state inUpdate{
         }
     }
 }
-
