@@ -1,7 +1,11 @@
 // This file is part of OpenCollar.
 // Copyright (c) 2004 - 2021 Francis Chung, Ilse Mannonen, Nandana Singh, 
 // Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, Garvin Twine,   
-// littlemousy, Romka Swallowtail, Sumi Perl et al. 
+// littlemousy, Romka Swallowtail, Sumi Perl, Rosalyn Russell et al.
+
+//Rosalyn (RosalynRussell)
+//    *Apr 2024   -   Added partner controlled couples pose system to remove legacy ask box if both individuals have access
+ 
 // Licensed under the GPLv2.  See LICENSE for full details. 
 string g_sScriptVersion="8.1";
 integer LINK_CMD_DEBUG=1999;
@@ -66,6 +70,7 @@ string g_sDeviceName;
 integer g_iTargetID;
 string g_sSubAnim;
 string g_sDomAnim;
+string g_sPartnerAnim;
 integer g_iVerbose = TRUE;
 
 //MESSAGE MAP
@@ -112,6 +117,10 @@ integer g_iStopChan = 99;
 integer g_iLMChannel = -8888;
 integer g_iListener;    //stop listener handle
 
+string timer_reason;
+integer listenHandlePartner;
+string anim_powered;
+
 /*
 integer g_iProfiled;
 Debug(string sStr) {
@@ -125,6 +134,13 @@ Debug(string sStr) {
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
 }
 */
+
+integer getChannel(key kAv)
+{
+    integer chan= -llAbs((integer)("0x" + llGetSubString(kAv,30,-1)));
+    if(chan==0) chan= -9876; //I mean it COULD happen. 
+    return chan;
+}
 
 Dialog(key kRCPT, string sPrompt, list lButtons, list lUtilityButtons, integer iPage, integer iAuth, string sMenuID) {
     key kMenuID = llGenerateKey();
@@ -191,13 +207,23 @@ string StrReplace(string sSrc, string sFrom, string sTo) {
 StopAnims() {
     if (llGetInventoryType(g_sSubAnim) == INVENTORY_ANIMATION) llMessageLinked(LINK_SET, ANIM_STOP, g_sSubAnim, "");
     if (llGetInventoryType(g_sDomAnim) == INVENTORY_ANIMATION) {
-        if (llKey2Name(g_kPartner) != "") {
-            llStopAnimation(g_sDomAnim);
+        if (llKey2Name(g_kPartner) != "")
+        {
+            if (anim_powered == "PARTNER")
+            {
+                integer iChannel = getChannel(g_kPartner);
+                llSay(iChannel, (string)g_kPartner + ":partnerstop "+g_sDomAnim);
+            }
+            else
+            {
+                llStopAnimation(g_sDomAnim);
+            }
             llRegionSayTo(g_kPartner,g_iLMChannel,(string)g_kPartner+"booton");
         }
     }
     g_sSubAnim = "";
     g_sDomAnim = "";
+    anim_powered = "";
 }
 
 // Calmly walk up to your partner and face them. Does not position the avatar precicely
@@ -215,9 +241,17 @@ MoveToPartner() {
 
 GetPartnerPermission() {
     string sObjectName = llGetObjectName();
+    g_sSubAnim = llList2String(g_lAnimSettings, g_iCmdIndex * 4);
+    g_sDomAnim = llList2String(g_lAnimSettings, g_iCmdIndex * 4 + 1);
     llSetObjectName(g_sDeviceName);
-    llRequestPermissions(g_kPartner, PERMISSION_TRIGGER_ANIMATION);
-    llSetObjectName(sObjectName);
+    //Ping their oc_couples_partner script
+    integer iChannel = getChannel(g_kPartner);
+    llSay(iChannel, (string)g_kPartner + ":partnerping "+g_sDomAnim);
+    //Set Timeout
+    timer_reason = "PING";
+    llSetTimerEvent(2.5);    
+    //llRequestPermissions(g_kPartner, PERMISSION_TRIGGER_ANIMATION);
+    //llSetObjectName(sObjectName);
 }
 
 StartNotecards() {
@@ -277,10 +311,11 @@ state active
         //Debug("Starting");
     }
 
-    listen(integer iChannel, string sName, key kID, string sMessage) {
+    listen(integer iChannel, string sName, key kID, string sMessage)
+    {
         //Debug("listen: " + sMessage + ", iChannel=" + (string)channel);
         llListenRemove(g_iListener);
-        if (iChannel == g_iStopChan) StopAnims();
+        if (iChannel == g_iStopChan) StopAnims();       
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID){
@@ -328,6 +363,36 @@ state active
                     llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken + "verbose", "");
                 }
                 llMessageLinked(LINK_SET,NOTIFY,"0"+"Verbose for couple animations is now turned "+sValue+".",kID);
+            }
+            else if (sCommand == "partnerping")
+            {
+                if(llGetInventoryType(sValue)==INVENTORY_ANIMATION)
+                {
+                    //vector pointTo = llList2Vector(llGetObjectDetails(llGetOwnerKey(id),[OBJECT_POS]),0) - llGetPos();
+                    vector pointTo = llList2Vector(llGetObjectDetails(g_kCmdGiver,[OBJECT_POS]),0) - llGetPos();
+                    float  turnAngle = llAtan2(pointTo.x, pointTo.y);// - myAngle;
+                    llOwnerSay("@setrot:" + (string)(turnAngle) + "=force");
+                    llRequestPermissions(llGetOwner(), PERMISSION_TRIGGER_ANIMATION);
+                }
+            }
+            else if (sCommand == "partnerpong")
+            {
+                timer_reason = "";
+                llSetTimerEvent(0.0);
+                anim_powered = "PARTNER";
+                MoveToPartner();
+            }
+            if (sCommand == "partnerpose")
+            {
+                g_sPartnerAnim = sValue;
+                //llStartAnimation(g_sPartnerAnim);
+                llMessageLinked(LINK_SET, ANIM_START, g_sPartnerAnim, "");
+            }
+            if (sCommand == "partnerstop")
+            {
+                g_sPartnerAnim = sValue;
+                //llStopAnimation(g_sPartnerAnim);
+                llMessageLinked(LINK_SET, ANIM_STOP, g_sPartnerAnim, "");
             }
         } else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
@@ -405,8 +470,6 @@ state active
                         g_sPartnerName = "secondlife:///app/agent/"+(string)g_kPartner+"/about";
                         StopAnims();
                         GetPartnerPermission();
-                        llMessageLinked(LINK_SET,NOTIFY,"0"+"Inviting "+ g_sPartnerName + " to a couples animation.",g_kWearer);
-                        llMessageLinked(LINK_SET,NOTIFY,"0"+"%WEARERNAME% invited you to a couples animation! Click [Yes] to accept.",g_kPartner);
                     }
                 } else if (sMenu == "timer") {
                     //Debug("Response from timer menu"+sStr);
@@ -463,12 +526,20 @@ state active
         llMoveToTarget(target, g_fAlignTau);
         llSleep(g_fAlignDelay);
         llStopMoveToTarget();
-        g_sSubAnim = llList2String(g_lAnimSettings, g_iCmdIndex * 4);
-        g_sDomAnim = llList2String(g_lAnimSettings, g_iCmdIndex * 4 + 1);
+        //g_sSubAnim = llList2String(g_lAnimSettings, g_iCmdIndex * 4);
+        //g_sDomAnim = llList2String(g_lAnimSettings, g_iCmdIndex * 4 + 1);
 
         llMessageLinked(LINK_SET, ANIM_START, g_sSubAnim, "");
         llRegionSayTo(g_kPartner,g_iLMChannel,(string)g_kPartner+"bootoff");
-        llStartAnimation(g_sDomAnim);
+        if (anim_powered == "PARTNER")
+        {
+            integer iChannel = getChannel(g_kPartner);
+            llSay(iChannel, (string)g_kPartner + ":partnerpose "+g_sDomAnim);
+        }
+        else
+        {
+            llStartAnimation(g_sDomAnim);
+        }
         g_iListener = llListen(g_iStopChan, "", g_kPartner, g_sStopString);
         llMessageLinked(LINK_SET,NOTIFY,"0"+"If you would like to stop the animation early, say /" + (string)g_iStopChan + g_sStopString + " to stop.",g_kPartner);
 
@@ -485,8 +556,20 @@ state active
         else g_iAnimTimeout=0;
         refreshTimer();
     }
-    timer() {
-        refreshTimer();
+    timer()
+    {
+        if (timer_reason == "PING")
+        {
+            //No Response, Fail
+            timer_reason = "";
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"Inviting "+ g_sPartnerName + " to a couples animation using legacy permissions.",g_kWearer);
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"%WEARERNAME% invited you to a couples animation! Click [Yes] to accept.",g_kPartner);
+            llRequestPermissions(g_kPartner, PERMISSION_TRIGGER_ANIMATION);
+        }
+        else
+        {
+            refreshTimer();
+        }
     }
     dataserver(key kID, string sData) {
         if (sData == EOF) iCardComplete++;
@@ -531,7 +614,12 @@ state active
         if (perm & PERMISSION_TRIGGER_ANIMATION) {
             key kID = llGetPermissionsKey();
             //Debug("changed anim permissions\nPerm ID="+(string)kID+"g_kPartner="+(string)g_kPartner);
-            if (kID == g_kPartner) {
+            if (kID == llGetOwner())
+            {
+                integer iChannel = getChannel(g_kCmdGiver);
+                llSay(iChannel, (string)g_kCmdGiver + ":partnerpong");
+            }
+            else if (kID == g_kPartner) {
                 g_iPermissionTimeout=0;
                 MoveToPartner();
             } else {
