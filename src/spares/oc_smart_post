@@ -15,7 +15,7 @@ to send commands directly to the collar, but this functionality got wrapped into
 the interface channel a while back, and then lost when the OC Remote started using
 the add-on interface.
 
-The interface channel already supports the menutu command, whereby the collar 
+The interface channel already supports the menuto command, whereby the collar 
 can be asked to send a menu to someone with the command:
 menuto:target_key
 
