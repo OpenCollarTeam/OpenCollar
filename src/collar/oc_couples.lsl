@@ -4,7 +4,7 @@
 // littlemousy, Romka Swallowtail, Sumi Perl, Rosalyn Russell et al.
 
 //Rosalyn (RosalynRussell)
-//    *Apr 2024   -   Added partner controlled couples pose system to remove legacy ask box if both individuals have access
+//    *Apr 2024   -   Added optional partner controlled couples pose system to remove legacy ask box if initiator is trusted
  
 // Licensed under the GPLv2.  See LICENSE for full details. 
 string g_sScriptVersion="8.1";
@@ -37,6 +37,7 @@ key g_kWearer;
 //list g_lSettingsReqs = [];
 string STOP_COUPLES = "STOP";
 string TIME_COUPLES = "TIME";
+
 
 integer g_iLine1;
 integer g_iLine2;
@@ -120,6 +121,9 @@ integer g_iListener;    //stop listener handle
 string timer_reason;
 integer listenHandlePartner;
 string anim_powered;
+integer g_iAutomate = FALSE;
+integer auto_busy = FALSE;
+key ping_sent_to_key = NULL_KEY;
 
 /*
 integer g_iProfiled;
@@ -179,6 +183,7 @@ CoupleAnimMenu(key kID, integer iAuth) {
     else sPrompt += "for "+(string)llCeil(g_fTimeOut)+" seconds.";
     list lButtons = g_lAnimCmds;
     lButtons += [TIME_COUPLES, STOP_COUPLES];
+    if(g_iAutomate) lButtons+="▣ Auto"; else lButtons+="▢ Auto";
     Dialog(kID, sPrompt, lButtons, [UPMENU],0, iAuth,"couples");
 }
 
@@ -241,12 +246,13 @@ MoveToPartner() {
 
 GetPartnerPermission() {
     string sObjectName = llGetObjectName();
-    g_sSubAnim = llList2String(g_lAnimSettings, g_iCmdIndex * 4);
-    g_sDomAnim = llList2String(g_lAnimSettings, g_iCmdIndex * 4 + 1);
+    //g_sSubAnim = llList2String(g_lAnimSettings, g_iCmdIndex * 4);
+    string temp_g_sDomAnim = llList2String(g_lAnimSettings, g_iCmdIndex * 4 + 1);
     llSetObjectName(g_sDeviceName);
     //Ping their oc_couples_partner script
+	ping_sent_to_key = g_kPartner;
     integer iChannel = getChannel(g_kPartner);
-    llSay(iChannel, (string)g_kPartner + ":partnerping "+g_sDomAnim);
+    llSay(iChannel, (string)g_kPartner + ":partnerping "+temp_g_sDomAnim);
     //Set Timeout
     timer_reason = "PING";
     llSetTimerEvent(2.5);    
@@ -299,6 +305,7 @@ state active
         //added to stop anims after relog when you logged off while in an endless couple anim
         if (g_sSubAnim != "" && g_sDomAnim != "") {
              llSleep(1.0);  // wait a second to make sure the poses script reseted properly
+             auto_busy = FALSE;
              StopAnims();
         }
         llResetScript();
@@ -319,6 +326,41 @@ state active
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID){
+		if ((kID == ping_sent_to_key)&&(kID != NULL_KEY))//Is this from the person we sent a ping to?
+		{
+			list lParams = llParseString2List(sStr, [" "], []);
+            string sCommand = llToLower(llList2String(lParams, 0));
+            string sValue = llToLower(llList2String(lParams, 1));
+			g_kCmdGiver = kID; 
+			g_kPartner = g_kCmdGiver;
+            g_sPartnerName = "secondlife:///app/agent/"+(string)g_kPartner+"/about";
+			if (sCommand == "partnerpong")
+            {
+                timer_reason = "";
+                llSetTimerEvent(0.0);
+                anim_powered = "PARTNER";
+                MoveToPartner();
+            }
+            else if (sCommand == "partnererror")
+            {
+                if (sValue == "autooff")
+                {
+                    timer_reason = "";
+                    llSetTimerEvent(0.0);
+                    llMessageLinked(LINK_SET,NOTIFY,"0"+g_sPartnerName + " has auto accept disabled, using legacy permissions instead.",g_kWearer);
+                    llMessageLinked(LINK_SET,NOTIFY,"0"+"%WEARERNAME% invited you to a couples animation! Click [Yes] to accept.",g_kPartner);
+                    llRequestPermissions(g_kPartner, PERMISSION_TRIGGER_ANIMATION);
+                }
+                if (sValue == "autobusy")
+                {
+                    timer_reason = "";
+                    llSetTimerEvent(0.0);
+                    llMessageLinked(LINK_SET,NOTIFY,"0"+g_sPartnerName + " is currently being animated, please wait.",g_kWearer);
+                    //llMessageLinked(LINK_SET,NOTIFY,"0"+"%WEARERNAME% invited you to a couples animation! Click [Yes] to accept.",g_kPartner);
+                    //llRequestPermissions(g_kPartner, PERMISSION_TRIGGER_ANIMATION);
+                }
+            }
+		}
         //if you don't care who gave the command, so long as they're one of the above, you can just do this instead:
         if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) {
             //the command was given by either owner, secowner, group member, wearer, or public user
@@ -368,29 +410,37 @@ state active
             {
                 if(llGetInventoryType(sValue)==INVENTORY_ANIMATION)
                 {
-                    //vector pointTo = llList2Vector(llGetObjectDetails(llGetOwnerKey(id),[OBJECT_POS]),0) - llGetPos();
-                    vector pointTo = llList2Vector(llGetObjectDetails(g_kCmdGiver,[OBJECT_POS]),0) - llGetPos();
-                    float  turnAngle = llAtan2(pointTo.x, pointTo.y);// - myAngle;
-                    llOwnerSay("@setrot:" + (string)(turnAngle) + "=force");
-                    llRequestPermissions(llGetOwner(), PERMISSION_TRIGGER_ANIMATION);
+                    if (g_iAutomate == FALSE)
+                    {
+                        integer iChannel = getChannel(g_kCmdGiver);
+                        llSay(iChannel, (string)g_kCmdGiver + ":partnererror autooff");
+                    }
+                    else if (auto_busy == TRUE)
+                    {
+                        integer iChannel = getChannel(g_kCmdGiver);
+                        llSay(iChannel, (string)g_kCmdGiver + ":partnererror autobusy");
+                    }
+                    else
+                    {
+                        //vector pointTo = llList2Vector(llGetObjectDetails(llGetOwnerKey(id),[OBJECT_POS]),0) - llGetPos();
+                        auto_busy = TRUE;
+                        vector pointTo = llList2Vector(llGetObjectDetails(g_kCmdGiver,[OBJECT_POS]),0) - llGetPos();
+                        float  turnAngle = llAtan2(pointTo.x, pointTo.y);// - myAngle;
+                        llOwnerSay("@setrot:" + (string)(turnAngle) + "=force");
+                        llRequestPermissions(llGetOwner(), PERMISSION_TRIGGER_ANIMATION);
+                    }
                 }
             }
-            else if (sCommand == "partnerpong")
-            {
-                timer_reason = "";
-                llSetTimerEvent(0.0);
-                anim_powered = "PARTNER";
-                MoveToPartner();
-            }
-            if (sCommand == "partnerpose")
+			else if (sCommand == "partnerpose")
             {
                 g_sPartnerAnim = sValue;
                 //llStartAnimation(g_sPartnerAnim);
                 llMessageLinked(LINK_SET, ANIM_START, g_sPartnerAnim, "");
             }
-            if (sCommand == "partnerstop")
+            else if (sCommand == "partnerstop")
             {
                 g_sPartnerAnim = sValue;
+                auto_busy = FALSE;
                 //llStopAnimation(g_sPartnerAnim);
                 llMessageLinked(LINK_SET, ANIM_STOP, g_sPartnerAnim, "");
             }
@@ -410,6 +460,8 @@ state active
                 g_iVerbose = (integer)sValue;
             else if (sToken == g_sGlobalToken+"devicename")
                 g_sDeviceName = sValue;
+            else if (sToken == g_sSettingToken+"autocouple")
+                g_iAutomate = (integer)sValue;
         } else if(iNum == LM_SETTING_EMPTY){
             
             //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
@@ -419,7 +471,7 @@ state active
             
             //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
             //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
-            
+            if(sStr==g_sSettingToken+"autocouple") g_iAutomate=FALSE;        
         } else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (~iMenuIndex) {
@@ -441,7 +493,33 @@ state active
                         if(g_fTimeOut == 0) sPrompt += "ENDLESS.\n\nNOTE: The non-looped \"pet\" sequence is an exception to this rule and can only play for 20 seconds at a time." ;
                         else sPrompt += "for "+(string)llCeil(g_fTimeOut)+" seconds.";
                         Dialog(kAv, sPrompt, ["10","20","30","40","60","90","120", "ENDLESS"], [UPMENU],0, iAuth,"timer");
-                    } else if (llGetSubString(sMessage,0,6) == "Verbose") {
+                    } else if(sMessage=="▣ Auto")
+					{
+						if (iAuth==CMD_OWNER || kAv==g_kWearer)
+						{
+							g_iAutomate=FALSE;
+							llMessageLinked(LINK_SET,LM_SETTING_DELETE,g_sSettingToken+"autocouple","");
+						}
+						else
+						{
+							llMessageLinked(LINK_SET,NOTIFY,"0%NOACCESS% to this setting",kAv);
+						}
+						CoupleAnimMenu(kAv, iAuth);
+                    }
+					else if(sMessage=="▢ Auto")
+                    {
+						if (iAuth==CMD_OWNER || kAv==g_kWearer)
+						{
+							g_iAutomate=TRUE;
+							llMessageLinked(LINK_SET,LM_SETTING_SAVE,g_sSettingToken+"autocouple=1","");
+						}
+						else
+						{
+							llMessageLinked(LINK_SET,NOTIFY,"0%NOACCESS% to this setting",kAv);
+						}
+						CoupleAnimMenu(kAv, iAuth);
+                    } 
+					else if (llGetSubString(sMessage,0,6) == "Verbose") {
                         if (llGetSubString(sMessage,8,-1) == "Off") {
                             g_iVerbose = FALSE;
                             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "verbose=" + (string)g_iVerbose, "");
@@ -526,8 +604,8 @@ state active
         llMoveToTarget(target, g_fAlignTau);
         llSleep(g_fAlignDelay);
         llStopMoveToTarget();
-        //g_sSubAnim = llList2String(g_lAnimSettings, g_iCmdIndex * 4);
-        //g_sDomAnim = llList2String(g_lAnimSettings, g_iCmdIndex * 4 + 1);
+        g_sSubAnim = llList2String(g_lAnimSettings, g_iCmdIndex * 4);
+        g_sDomAnim = llList2String(g_lAnimSettings, g_iCmdIndex * 4 + 1);
 
         llMessageLinked(LINK_SET, ANIM_START, g_sSubAnim, "");
         llRegionSayTo(g_kPartner,g_iLMChannel,(string)g_kPartner+"bootoff");
@@ -561,7 +639,9 @@ state active
         if (timer_reason == "PING")
         {
             //No Response, Fail
+			llSetTimerEvent(0.0);
             timer_reason = "";
+			ping_sent_to_key = NULL_KEY;
             llMessageLinked(LINK_SET,NOTIFY,"0"+"Inviting "+ g_sPartnerName + " to a couples animation using legacy permissions.",g_kWearer);
             llMessageLinked(LINK_SET,NOTIFY,"0"+"%WEARERNAME% invited you to a couples animation! Click [Yes] to accept.",g_kPartner);
             llRequestPermissions(g_kPartner, PERMISSION_TRIGGER_ANIMATION);
