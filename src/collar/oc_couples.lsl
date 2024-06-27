@@ -178,12 +178,13 @@ refreshTimer(){
 }
 
 CoupleAnimMenu(key kID, integer iAuth) {
-    string sPrompt = "\n[Couples]\n\nChoose an animation to play.\n\nAnimations will play ";
-    if(g_fTimeOut == 0) sPrompt += "ENDLESS.\n\nNOTE: The non-looped \"pet\" sequence is an exception to this rule and can only play for 20 seconds at a time." ;
+    string sPrompt = "\n[Couples]\n\nChoose an animation to play.\nAnimations will play ";
+    if(g_fTimeOut == 0) sPrompt += "ENDLESS.\n\nNOTE: The non-looped \"pet\" sequence is an exception to this rule and can only play for 20 seconds at a time.";
     else sPrompt += "for "+(string)llCeil(g_fTimeOut)+" seconds.";
+	sPrompt += "\n\nAuto Acc. will auto accept animation permission from trusted or owners.";
     list lButtons = g_lAnimCmds;
     lButtons += [TIME_COUPLES, STOP_COUPLES];
-    if(g_iAutomate) lButtons+="▣ Auto"; else lButtons+="▢ Auto";
+    if(g_iAutomate) lButtons+="▣ Auto Acc."; else lButtons+="▢ Auto Acc.";
     Dialog(kID, sPrompt, lButtons, [UPMENU],0, iAuth,"couples");
 }
 
@@ -493,7 +494,7 @@ state active
                         if(g_fTimeOut == 0) sPrompt += "ENDLESS.\n\nNOTE: The non-looped \"pet\" sequence is an exception to this rule and can only play for 20 seconds at a time." ;
                         else sPrompt += "for "+(string)llCeil(g_fTimeOut)+" seconds.";
                         Dialog(kAv, sPrompt, ["10","20","30","40","60","90","120", "ENDLESS"], [UPMENU],0, iAuth,"timer");
-                    } else if(sMessage=="▣ Auto")
+                    } else if(sMessage=="▣ Auto Acc.")
 					{
 						if (iAuth==CMD_OWNER || kAv==g_kWearer)
 						{
@@ -502,11 +503,11 @@ state active
 						}
 						else
 						{
-							llMessageLinked(LINK_SET,NOTIFY,"0%NOACCESS% to this setting",kAv);
+							llMessageLinked(LINK_SET,NOTIFY,"0%NOACCESS% to changing this setting except by wearer or Owners.",kAv);
 						}
 						CoupleAnimMenu(kAv, iAuth);
                     }
-					else if(sMessage=="▢ Auto")
+					else if(sMessage=="▢ Auto Acc.")
                     {
 						if (iAuth==CMD_OWNER || kAv==g_kWearer)
 						{
@@ -515,7 +516,7 @@ state active
 						}
 						else
 						{
-							llMessageLinked(LINK_SET,NOTIFY,"0%NOACCESS% to this setting",kAv);
+							llMessageLinked(LINK_SET,NOTIFY,"0%NOACCESS% to changing this setting except by wearer or Owners.",kAv);
 						}
 						CoupleAnimMenu(kAv, iAuth);
                     } 
