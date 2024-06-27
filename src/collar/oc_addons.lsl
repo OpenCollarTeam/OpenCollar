@@ -344,7 +344,7 @@ state active
                         if(AddonOwnerAuth == CMD_OWNER || AddonOwnerAuth == CMD_TRUSTED){
 
                             g_lAddons += [i, llJsonGetValue(m,["addon_name"]), llGetUnixTime(), llJsonGetValue(m,["optin"]), noMenu];
-                            SayToAddonX(i, "approved", 0, "", "");
+                            SayToAddonX(i, "approved", 0, llJsonGetValue(m,["addon_name"]), i);
                             llMessageLinked(LINK_SET, NOTIFY, "0Addon connected successfully: "+llJsonGetValue(m,["addon_name"]), g_kWearer);
                         }
                         else{
