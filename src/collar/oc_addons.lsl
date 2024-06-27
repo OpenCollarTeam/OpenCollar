@@ -17,7 +17,7 @@ KristenMynx
 Ping (pingout.duffield)
    April 2024            -  Fix at Initial Handshake to disregard any nearby rezzed collar. Ref Issue #1038
 Phidoux (taya.maruti)
-   June 2024            -   Make Aproval message targeted to help prevent AddOns mistaking aprovla from others when they have yet to be Approved. #1048    
+   June 2024            -   Make Aproval message targeted to help prevent AddOns mistaking aproval from others when they have yet to be Approved. #1048    
     
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
