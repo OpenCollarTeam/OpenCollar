@@ -4,7 +4,9 @@ This script is released public domain, unlike other OC scripts for a specific an
 -Authors Attribution-
 Aria (tiff589) - (August 2020)
 Lysea - (December 2020)
-Taya'Phidoux' (taya.maruti) - (july 2021)
+Taya'Phidoux' (taya.maruti)
+    (july 2021)
+    (June 2024)        -    Add filter to prevent addons confusing aproval message meant for other addons. #1048
 */
 
 integer API_CHANNEL = 0x60b97b5e;
@@ -156,7 +158,7 @@ default
     
     listen(integer channel, string name, key id, string msg){
         string sPacketType = llJsonGetValue(msg, ["pkt_type"]);
-        if (sPacketType == "approved" && g_kCollar == NULL_KEY)
+        if (sPacketType == "approved" && (msg == g_sAddon || (key)llJsonGetValue(msg,["kID"]) == llGetKey()) &&g_kCollar == NULL_KEY)
         {
             // This signal, indicates the collar has approved the addon and that communication requests will be responded to if the requests are valid collar LMs.
             g_kCollar = id;
