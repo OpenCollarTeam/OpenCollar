@@ -12,8 +12,11 @@ Medea (Medea Destiny)
                         term, added sanity checking for chat commands to ensure we don't try to search for nothing,
                         and no longer operate on empty search results. Issuer of chat command now stored as 
                         g_kChatUser so they can be notified if findfolder fails.
-                         
+SueCripter
+    * June 2024     -   Changed instances of return R(); to {R(); return;} for OS compatibility.                   
+
 et al.
+
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
 */
