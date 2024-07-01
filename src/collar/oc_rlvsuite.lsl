@@ -1,6 +1,7 @@
 /*// This file is part of OpenCollar.
 //  Copyright (c) 2018 - 2019 Tashia Redrose, Silkie Sabra, lillith xue                            
 // Licensed under the GPLv2.  See LICENSE for full details. 
+
 medea (medea destiny)
     June 2021   -   Fix for issue #492 / issue #432, command to update camera settings (blur amount, 
                     maxcamera and mincamera) when numeric value changed via RLV/RLV settings/Camera 
@@ -51,7 +52,8 @@ medea (medea destiny)
                     restrictions which was coded but rejected before hit, but filters to only pass to 
                     ApplyCommand if there is a command following that is not "on" or "off" to avoid collision
                     with RLV menu
-                -   Removed double menu for (prefix) restrictions           
+                -   Removed double menu for (prefix) restrictions
+      Jun 2024  -   Extended chat command function above to allow for capitalization of individual restriction names.                     
                              
 */        
 string g_sScriptVersion = "8.2";
@@ -436,7 +438,18 @@ ApplyCommand(string sCommand, integer iAdd,key kID, integer iAuth)
 {
    // llSay(0, "Apply CMD "+sCommand+"|"+(string)iAdd);
     integer iMenuIndex = llListFindList(g_lRLVList,[sCommand]);
-    if(iMenuIndex==-1) return; //command not found.
+    if(iMenuIndex==-1)
+    {
+        //command not found, let's do a capitalization check
+        integer max=llGetListLength(g_lRLVList);
+        integer iter;
+        while (iter<max && iMenuIndex==-1)
+        {
+            if(llToLower(llList2String(g_lRLVList,iter))==llToLower(sCommand)) iMenuIndex=iter;
+            ++iter;
+        }
+        if(iMenuIndex==-1) return;
+    }         
     if(!(iMenuIndex-1)%3) return; //Hit on CategorIndex, i.e someone tried (prefix) restriction add 1
     if(iMenuIndex%3) iMenuIndex-=2; //convert RLVCMD to ButtonText (i.e. tploc becomes TP Location)
     integer iActualIndex=iMenuIndex;
@@ -841,4 +854,3 @@ state active
     }
     
 }
-
