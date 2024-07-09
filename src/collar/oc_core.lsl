@@ -33,6 +33,8 @@ Medea (Medea Destiny)
                     And kAv == g_kWearer instead of iAuth == CMD_WEARER in meu dialog responses for:
                     + / - trusted / blacklist when wearer is permitted, displaying access list, print settings  
     Oct 2022    -   Fix for full version>beta version checking. Added menu text to clarify versioning for beta users.
+    Jul 2024    -   added delay after name change to ensure report is correct and added clarification text here
+                    and in device name. Issue #1053
                     
 Stormed Darkshade (StormedStormy)
     March 2022  -   Added a button for reboot to help/about menu.  
@@ -316,7 +318,8 @@ UserCommand(integer iNum, string sStr, key kID) {
                 return;
             }
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_wearername="+sChangevalue, "");
-            llMessageLinked(LINK_SET, NOTIFY, "0The wearer's name is now set to %WEARERNAME%", kID);
+            llSleep(0.5);
+            llMessageLinked(LINK_SET, NOTIFY, "0The wearer's name is now set to %WEARERNAME% (if this is the old name, please type '/1 (prefix) name' to confirm the change went through, we may just have lagged)", kID);
         } else if(llToLower(sChangetype) == "device" && iNum == CMD_OWNER){
             if(llToLower(sChangevalue) == "name"){
                 sChangevalue = llDumpList2String(llList2List(lParameters,2,-1), " ");
@@ -327,7 +330,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                 }
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_devicename="+sChangevalue,"");
                 llSleep(0.4); //To ensure the notify happens AFTER the new device name is in place.
-                llMessageLinked(LINK_SET, NOTIFY, "0The device name is now set to: %DEVICENAME%", kID);
+                llMessageLinked(LINK_SET, NOTIFY, "0The device name is now set to: %DEVICENAME% (if this is the old name, please type '/1 (prefix) device name' to confirm the change went through, we may just have lagged)", kID);
             }
         } else if(llToLower(sChangetype) == "allowhide"){
             if(iNum == CMD_OWNER){
