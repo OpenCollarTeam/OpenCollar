@@ -38,7 +38,11 @@ Medea (Medea Destiny)
                     off is clearly notified. Wearer can now set their own safeword, but only owners can disable it still.
                     See issue # 986. Attempting to access safeword without permission now gives no access response. 
                 -   Provide no access notification for device name, and allow non-owner wearer to name. Notify wearer
-                    as well when another person changes device name. See issue # 987           
+                    as well when another person changes device name. See issue # 987 
+   Jul 2024     -   Further work on above safeword stuff, see PR #999 
+                -   added delay after name change to ensure report is correct and added clarification text here
+                    and in device name. Issue #1053
+                            
 Stormed Darkshade (StormedStormy)
     March 2022  -   Added a button for reboot to help/about menu.  
 
@@ -275,6 +279,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                 else llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_safeword="+sChangevalue,"");
                 llMessageLinked(LINK_SET,NOTIFY,"1Safeword is now set to '"+sChangevalue+"'.",kID);
                 llMessageLinked(LINK_SET, LM_SETTING_DELETE, "global_safeworddisable","");
+                llMessageLinked(LINK_SET, CMD_OWNER, "safeword-enable","");
             } else llMessageLinked(LINK_SET, NOTIFY, "0The safeword is current set to: '"+g_sSafeword+"'",kID);
         } else if(sChangetype == "menu"){
             if(llToLower(sChangevalue) == "access"){
@@ -316,7 +321,8 @@ UserCommand(integer iNum, string sStr, key kID) {
                 return;
             }
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_wearername="+sChangevalue, "");
-            llMessageLinked(LINK_SET, NOTIFY, "0The wearer's name is now set to %WEARERNAME%", kID);
+            llSleep(0.5);
+            llMessageLinked(LINK_SET, NOTIFY, "0The wearer's name is now set to %WEARERNAME% (if this is the old name, please type '/1 (prefix) name' to confirm the change went through, we may just have lagged)", kID);
         } else if(llToLower(sChangetype) == "device"){
             if(iNum!=CMD_OWNER && kID!=g_kWearer){
                 llMessageLinked(LINK_THIS,NOTIFY,"No access to device name.",kID);
@@ -330,8 +336,8 @@ UserCommand(integer iNum, string sStr, key kID) {
                     return;
                 }
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_devicename="+sChangevalue,"");
-                llSleep(0.4); //To ensure the notify happens AFTER the new device name is in place.
-                llMessageLinked(LINK_SET, NOTIFY, "1The device name is now set to: %DEVICENAME%", kID);
+                llSleep(0.5); //To ensure the notify happens AFTER the new device name is in place.
+                llMessageLinked(LINK_SET, NOTIFY, "0The device name is now set to: %DEVICENAME% (if this is the old name, please type '/1 (prefix) device name' to confirm the change went through, we may just have lagged)", kID);
             }
         } else if(llToLower(sChangetype) == "allowhide"){
             if(iNum == CMD_OWNER){
@@ -728,6 +734,7 @@ state active
                     }
                 } else if(sVar == "safeword"){
                     g_sSafeword = sVal;
+                    
                 } else if(sVar == "safeworddisable"){
                     g_iSafewordDisable=1;
                 } else if(sVar == "prefix"){
