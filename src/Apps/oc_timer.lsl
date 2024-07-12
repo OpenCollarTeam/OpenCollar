@@ -1,580 +1,495 @@
-// This file is part of OpenCollar.
-// Copyright (c) 2008 - 2017 Satomi Ahn, Nandana Singh, Joy Stipe,     
-// Wendy Starfall, Master Starship, Medea Destiny, littlemousy,      
-// Romka Swallowtail, Sumi Perl, Keiyra Aeon, Garvin Twine et al.     
-// Licensed under the GPLv2.  See LICENSE for full details. 
+/*
+This file is a part of OpenCollar.
+Created by Medea Destiny
+Copyright ©2024 
 
-string g_sAppVersion = "¹⋅⁴";
+: Contributors :
 
-string g_sSubMenu = "Timer";
-string g_sParentMenu = "Apps";
+Medea (Medea Destiny)
+    *May 2024   -   Created script                             
+et al.
+Licensed under the GPLv2. See LICENSE for full details.
+https://github.com/OpenCollarTeam/OpenCollar
+*/
 
-//MESSAGE MAP
-//integer CMD_ZERO = 0;
+
+integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
-//integer CMD_TRUSTED = 501;
-//integer CMD_GROUP = 502;
+integer CMD_TRUSTED = 501;
+integer CMD_GROUP = 502;
 integer CMD_WEARER = 503;
 integer CMD_EVERYONE = 504;
-//integer CMD_RLV_RELAY = 507;
-//integer CMD_SAFEWORD = 510;
-//integer CMD_RELAY_SAFEWORD = 511;
-//integer CMD_BLOCKED = 520;
+integer CMD_SAFEWORD = 510;
 
-//integer ATTACHMENT_COMMAND = 602;
-integer ATTACHMENT_FORWARD = 610;
-
-//integer WEARERLOCKOUT = 620;
-
-integer NOTIFY = 1002;
-//integer NOTIFY_OWNERS = 1003;
-integer REBOOT  = -1000;
-
-// integer LM_SETTING_SAVE = 2000;
-integer LM_SETTING_RESPONSE = 2002;
-// integer LM_SETTING_DELETE = 2003;
-integer LM_SETTING_EMPTY = 2004;
+integer REBOOT = -1000;
+string UPMENU = "BACK";
+integer DIALOG = -9000;
+integer DIALOG_RESPONSE = -9001;
+integer DIALOG_TIMEOUT = -9002;
+//integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved
+//str must be in form of "token=value"
+//integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+//integer LM_SETTING_RESPONSE = 2002;//the settings script sends responses on this channel
+//integer LM_SETTING_DELETE = 2003;//delete token from settings
+//integer LM_SETTING_EMPTY = 2004;//sent when a token has no value
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
 integer MENUNAME_REMOVE = 3003;
 
-integer DIALOG = -9000;
-integer DIALOG_RESPONSE = -9001;
-integer DIALOG_TIMEOUT = -9002;
+integer NOTIFY = 1002;
 
-// Added by WhiteFire
-integer TIMER_EVENT = -10000; // str = "start" or "end". For start, either "online" or "realtime".
+string LSDPrefix="timer"; //All LSD used by this script has this prefix.
+integer LSD_REQUEST=-500; //Sends LSDPrefix when received, for flushing no longer used LSD.
+integer LSD_RESPONSE=-501; //Reply to above
 
-string UPMENU = "BACK";
-list g_lTimeButtons = ["RESET","+00:01","+00:05","+00:30","+03:00","+24:00","-00:01","-00:05","-00:30","-03:00","-24:00"];
+integer AUTH_WEARERLOCKOUT=602;
 
-integer MAX_TIME=0x7FFFFFFF;
-
-list g_lTimes;
-integer g_iTimesLength;
-integer g_iCurrentTime;
-integer g_iOnTime;
-integer g_iLastTime;
-integer g_iFirstOnTime;
-integer g_iFirstRealTime;
-integer g_iLastRez;
-integer n;//for loops
-string g_sMessage;
-
-//these can change
-integer REAL_TIME=1;
-integer REAL_TIME_EXACT=5;
-integer ON_TIME=3;
-integer ON_TIME_EXACT=7;
-
-integer g_iInterfaceChannel;
-// end time keeper
-
-integer g_iOnRunning;
-integer g_iOnSetTime;
-integer g_iOnTimeUpAt;
-integer g_iRealRunning;
-integer g_iRealSetTime;
-integer g_iRealTimeUpAt;
-
-integer g_iCollarLocked;
-integer g_iUnlockCollar = 0;
-integer g_iClearRLVRestions = 0;
-integer g_iUnleash = 0;
-integer g_iBoth = 0;
-integer g_iWhoCanChangeTime = 504;
-integer g_iWhoCanChangeLeash = 504;
-
-integer g_iTimeChange;
-
-list g_lLocalMenu;
-
-key g_kWearer;
-// handles
-list g_lMenuIDs;
+string g_sSubMenu = "Timer";
+string g_sParentMenu = "Apps";
+list g_lMenuIDs;  //three strided list of avkey, dialogid, and menuname
 integer g_iMenuStride = 3;
+key g_kMenuUser;
+key g_kWearer;
 
-
-/*
-integer g_iProfiled;
-Debug(string sStr) {
-    //if you delete the first // from the preceeding and following  lines,
-    //  profiling is off, debug is off, and the compiler will remind you to
-    //  remove the debug calls from the code, we're back to production mode
-    if (!g_iProfiled){
-        g_iProfiled=1;
-        llScriptProfiler(1);
-    }
-    llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
-}
-*/
-
-Dialog(key kID, string sPrompt, list lChoices, list lUtility, integer iPage, integer iAuth, string sName) {
+Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
     key kMenuID = llGenerateKey();
-    llMessageLinked(LINK_THIS, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtility, "`") + "|" + (string)iAuth, kMenuID);
+    llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
 
-    integer i = llListFindList(g_lMenuIDs, [kID]);
-    if (~i) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], i, i + g_iMenuStride - 1);
+    integer iIndex = llListFindList(g_lMenuIDs, [kID]);
+    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
     else g_lMenuIDs += [kID, kMenuID, sName];
 }
-
-DoMenu(key keyID, integer iAuth) {
-    //Debug("timeremaning:"+(string)(g_iOnTimeUpAt-g_iOnTime));
-    string sPrompt = "\n[Legacy Timer]\t"+g_sAppVersion+"\n\nA frozen pizza takes ~12 min to bake.\n";
-    list lMyButtons = ["Real Timer","Online Timer"];
-
-    sPrompt += "\n Online Timer: "+Int2Time(g_iOnSetTime);
-    if (g_iOnRunning==1) sPrompt += "\n Online Timer: "+Int2Time(g_iOnTimeUpAt-g_iOnTime)+" left\n";
-    else sPrompt += "\n Online Timer: not running\n";
-
-    sPrompt += "\n RL Timer: "+Int2Time(g_iRealSetTime);
-    if (g_iRealRunning==1) sPrompt += "\n RL Timer: "+Int2Time(g_iRealTimeUpAt-g_iCurrentTime)+" left";
-    else sPrompt += "\n RL Timer: not running";
-
-    if (g_iBoth) lMyButtons += ["☒ combined"];
-    else lMyButtons += ["☐ combined"];
-
-    if (g_iUnlockCollar) lMyButtons += ["☑ unlock"];
-    else lMyButtons += ["☐ unlock"];
-
-    if (g_iUnleash) lMyButtons += ["☑ unleash"];
-    else lMyButtons += ["☐ unleash"];
-
-    if (g_iClearRLVRestions) lMyButtons += ["☑ clear RLV"];
-    else lMyButtons += ["☐ clear RLV"];
-
-    if (g_iRealRunning || g_iOnRunning) lMyButtons += ["STOP","RESET"];
-    else if (g_iRealSetTime || g_iOnSetTime) lMyButtons += ["START","RESET"];
-
-    Dialog(keyID, sPrompt, lMyButtons + g_lLocalMenu, [UPMENU], 0, iAuth, "menu");
+string buttonize(string token)
+{
+    string t=LSDRead(token);
+    if(t=="0" || t=="") return "⬜ "+token;
+    else return "⬛ "+token;
+    
+}
+mainMenu(key kAv, integer iAuth)
+{
+    list buttons;
+   string sPrompt="Timer menu \n\n";
+   
+   
+   if(LSDRead("TimerActive")=="1")
+   {
+       integer tl=(integer)LSDRead("LockTime")-(integer)llGetTime();
+       if(tl<10) tl=10;
+       llSetTimerEvent(tl); // let's improve accuracy while we're here!
+       sPrompt+="Active! Time left:"+timeDisplay(tl)+"\n\nClick 'EndNow' to end timer early, or 'Cancel' to stop the timer without triggering commands.\nPermissive mode allows collar users (apart from wearer) to end the timer even if they have lower auth than the timer setter";
+       buttons+=["EndNow","Cancel",buttonize("Permissive")];
+    }
+    else 
+    {
+        buttons=["Time",buttonize("Lockout"),buttonize("Customs"),buttonize("Unleash"),buttonize("Unpose"),buttonize("ClearRLV"),"Start",buttonize("Permissive")];
+        sPrompt+="Timer: "+timeDisplay((integer)LSDRead("LockTime"))+"\n\nClick 'Start' to activate timer.\n'Time' to change the timer length. 'Lockout' locks wearer out of collar while timer is active (only wearer may set this). 'Unleash','Unpose' and 'ClearRLV' clear restrictions when timer ends. 'Custom' sets custom commands to be issued when timer ends (if checked, there are some set). Permissive mode allows collar users (apart from wearer) to end the timer even if they have lower auth than the timer setter";
+    }
+    Dialog(kAv,sPrompt,buttons,[UPMENU],0,iAuth,"timer~app");
+}
+customMenu(key kAv,integer iAuth)
+{
+    string text=LSDRead("Customs");
+    if(text=="") text="None.";
+    else text=llDumpList2String(llCSV2List(text),"\n");
+    text="Enter chat commands (without prefix, e.g. 'preset clear dress' or 'tp home') separating commands with a comma. Leave blank to clear.\nCurrent: "+text;
+    Dialog(kAv,text,[],[],0,iAuth,"timer~custom");
+}  
+timerMenu(key kAv, integer iAuth)
+{
+    Dialog(kAv,"Set timer time\n\nCurrent time: "+timeDisplay((integer)LSDRead("LockTime"))+"\n",["+1 min","+5 min","+30 min","-1 min","-5 min","-30 min","+1 hr","+6 hrs","-6 hrs","-1 hr"],[UPMENU],0,iAuth,"timer~timerset");
 }
 
-DoOnMenu(key keyID, integer iAuth) {
-    string sPrompt = "\n Online Time Settings\n";
-    sPrompt += "\n Online Timer: "+Int2Time(g_iOnSetTime);
-    if (g_iOnRunning) sPrompt += "\n Online Timer: "+Int2Time(g_iOnTimeUpAt-g_iOnTime)+" left";
-    else sPrompt += "\n Online Timer: not running";
-    Dialog(keyID, sPrompt, g_lTimeButtons, [UPMENU], 0, iAuth, "online");
+string LSDRead(string token)
+{
+    return llLinksetDataRead(LSDPrefix+"_"+token);
+}
+LSDWrite(string token, string val)
+{
+    llLinksetDataWrite(LSDPrefix+"_"+token,val);
+}
+/* LSD settings
+timer_Lockout
+timer_Unleash
+timer_UnPose
+timer_Stand
+timer_ClearRLV
+timer_Customs
+timer_TimerSetterKey
+timer_LastAuth
+timer_LockTime
+timer_TimerActive
+timer_Permissive
+*/
+reset()
+{
+    list defaults=["Lockout","0","Unleash","0","Unpose","0","ClearRLV","0","Customs","","TimerSetterKey","","LastAuth","0","LockTime","600","TimerActive","0","Permissive","0"];
+    integer i=llGetListLength(defaults);
+    integer x;
+    while(x<i)
+    {
+        LSDWrite(llList2String(defaults,x),llList2String(defaults,x+1));
+        x=x+2;
+    }
+    list t=llLinksetDataListKeys(0,0);
+    i=llGetListLength(t);
+    x=0;
+
+}
+string timeDisplay(integer secs)
+{
+
+    integer days=secs/86400;
+    secs=secs%86400;
+    integer hours=secs/3600;
+    secs=secs%3600;
+    integer mins=secs/60;
+    secs=secs%60;
+
+    list out;
+    if(days) out+=[(string)days+"d"];
+    if(hours) out+=[(string)hours+"h"];
+    if(mins) out+=[(string)mins+"m"];
+    if(secs || llGetListLength(out)==0) out+=[(string)secs+"s"];
+    return llDumpList2String(out,", ");
 }
 
-DoRealMenu(key keyID, integer iAuth) {
-    string sPrompt = "\n RL Time Settings\n";
-    sPrompt += "\n RL timer: " + Int2Time(g_iRealSetTime);
-    if (g_iRealRunning) sPrompt += "\n RL Timer: "+Int2Time(g_iRealTimeUpAt-g_iCurrentTime)+" left";
-    else sPrompt += "\n RL Timer: not running";
-    Dialog(keyID, sPrompt, g_lTimeButtons, [UPMENU], 0, iAuth, "real");
-}
 
-string Int2Time(integer sTime) {
-    if (sTime<0) sTime=0;
-    integer iSecs=sTime%60;
-    sTime = (sTime-iSecs)/60;
-    integer iMins=sTime%60;
-    sTime = (sTime-iMins)/60;
-    integer iHours=sTime%24;
-    integer iDays = (sTime-iHours)/24;
-
-    //this is the onley line that needs changing...
-    return ( (string)iDays+" days "+
-        llGetSubString("0"+(string)iHours,-2,-1) + ":"+
-        llGetSubString("0"+(string)iMins,-2,-1) + ":"+
-        llGetSubString("0"+(string)iSecs,-2,-1) );
-    //return (string)iDays+":"+(string)iHours+":"+(string)iMins+":"+(string)iSecs;
-}
-
-TimerFinish() {
-    if (g_iBoth && (g_iOnRunning == 1 || g_iRealRunning == 1)) return;
-//    llMessageLinked(LINK_SET, WEARERLOCKOUT, "off", "");
-    if (g_iUnlockCollar) llMessageLinked(LINK_SET, CMD_OWNER, "unlock", g_kWearer);
-    if (g_iClearRLVRestions) {
-        llMessageLinked(LINK_SET, CMD_OWNER, "clear", g_kWearer);
-        if (!g_iUnlockCollar && g_iCollarLocked) {
-            llSleep(2);
-            llMessageLinked(LINK_SET, CMD_OWNER, "lock", g_kWearer);
+    
+UserCommand(integer iAuth, string sCmd, key kAv)
+{
+    if (iAuth <CMD_OWNER || iAuth>CMD_EVERYONE) return;
+    sCmd=llToLower(sCmd);
+    if (kAv==g_kWearer && sCmd == "runaway") 
+    {
+        stopTimer(FALSE);
+        return;
+    }
+    if(sCmd==llToLower(g_sSubMenu) || sCmd=="menu timer")
+    {
+         mainMenu(kAv,iAuth);
+         return;
+    }
+    list lParams=llParseString2List(sCmd,[" "],[]);
+    if(llList2String(lParams,0)!="timer") return;
+    integer remenu;
+    if(llList2String(lParams,-1)=="remenu")
+    {
+        remenu=TRUE;
+        lParams=llDeleteSubList(lParams,-1,-1);
+    }
+    string sCmd=llList2String(lParams,1);
+    string sVal=llList2String(lParams,2);
+    if(sVal=="on") sVal="1";
+    else if(sVal=="off") sVal="0";
+    if(sCmd=="permissive" && (sVal=="1" || sVal=="0"))
+    {
+        if(iAuth!=CMD_OWNER && kAv!=g_kWearer) llRegionSayTo(kAv,0,"Only wearer and owners can change this setting.");
+        else if(LSDRead("TimerActive")=="1" && kAv==g_kWearer) llOwnerSay("You cannot change this while the timer is active.");
+        else
+        {
+            LSDWrite("Permissive",sVal);
+            llMessageLinked(LINK_THIS,NOTIFY,"1Setting timer permissive to "+llList2String(["off","on"],(integer)sVal)+".",kAv);
         }
     }
-    if (g_iUnleash && g_iWhoCanChangeTime <= g_iWhoCanChangeLeash)
-        llMessageLinked(LINK_SET, CMD_OWNER, "unleash", g_kWearer);
-    g_iUnlockCollar=g_iClearRLVRestions=g_iUnleash=0;
-    g_iOnSetTime=g_iRealSetTime=0;
-    g_iOnRunning=g_iRealRunning=0;
-    g_iOnTimeUpAt=g_iRealTimeUpAt=0;
-    g_iWhoCanChangeTime=504;
-    llMessageLinked(LINK_THIS,CMD_OWNER,"lockout false","");
-    llMessageLinked(LINK_THIS,NOTIFY,"0"+"Yay! Timer expired!",g_kWearer);
-    llMessageLinked(LINK_SET, TIMER_EVENT, "end", "");
-}
-
-TimerStart(integer perm) {
-    // do What has to be Done
-    g_iWhoCanChangeTime = perm;
-    if (g_iRealSetTime) {
-        g_iRealTimeUpAt=g_iCurrentTime+g_iRealSetTime;
-//        llMessageLinked(LINK_SET, WEARERLOCKOUT, "on", "");
-        llMessageLinked(LINK_THIS,CMD_OWNER,"lockout true","");
-        llMessageLinked(LINK_SET, TIMER_EVENT, "START", "RL");
-        g_iRealRunning=1;
-    } else g_iRealRunning=3;
-
-    if (g_iOnSetTime) {
-        g_iOnTimeUpAt=g_iOnTime+g_iOnSetTime;
-//        llMessageLinked(LINK_SET, WEARERLOCKOUT, "on", "");
-        llMessageLinked(LINK_THIS,CMD_OWNER,"lockout true","");
-        llMessageLinked(LINK_SET, TIMER_EVENT, "START", "Online Timer");
-        g_iOnRunning=1;
-    } else g_iOnRunning=3;
-}
-
-PermsCheck() {
-    string sName = llGetScriptName();
-    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY)) {
-        llOwnerSay("You have been given a no-modify OpenCollar object.  This could break future updates.  Please ask the provider to make the object modifiable.");
-    }
-
-    if (!(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)) {
-        llOwnerSay("You have put an OpenCollar script into an object that the next user cannot modify.  This could break future updates.  Please leave your OpenCollar objects modifiable.");
-    }
-
-    integer FULL_PERMS = PERM_COPY | PERM_MODIFY | PERM_TRANSFER;
-    if (!((llGetInventoryPermMask(sName,MASK_OWNER) & FULL_PERMS) == FULL_PERMS)) {
-        llOwnerSay("The " + sName + " script is not mod/copy/trans.  This is a violation of the OpenCollar license.  Please ask the person who gave you this script for a full-perms replacement.");
-    }
-
-    if (!((llGetInventoryPermMask(sName,MASK_NEXT) & FULL_PERMS) == FULL_PERMS)) {
-        llOwnerSay("You have removed mod/copy/trans permissions for the next owner of the " + sName + " script.  This is a violation of the OpenCollar license.  Please make the script full perms again.");
-    }
-}
-
-
-UserCommand(integer iAuth, string sStr, key kID, integer iMenu) {
-    if ((g_iOnRunning || g_iRealRunning) && kID == g_kWearer) {
-        if (!llSubStringIndex(llToLower(sStr),"timer")) {
-            llMessageLinked(LINK_THIS,NOTIFY,"0"+"You can't access here until the timer went off.",kID);
+    if(LSDRead("TimerActive")=="1")
+    {
+        if(iAuth>(integer)LSDRead("LastAuth")&& LSDRead("Permissive")!="1")
+        {
+            llMessageLinked(LINK_THIS,NOTIFY,"0Timer has been set by a user with higher auth than you, you can't override the current timer or settings.",kAv);
+            if(remenu==TRUE && (kAv!=g_kWearer || LSDRead("Lockout")=="0") ) mainMenu(kAv,iAuth);
             return;
         }
-    }
-    if (llToLower(sStr) == "rm timer" && (iAuth == CMD_OWNER || kID ==  g_kWearer))
-        Dialog(kID, "\nDo you really want to uninstall the "+g_sSubMenu+" App?", ["Yes","No","Cancel"], [], 0, iAuth,"rmtimer");
-    if (llToLower(sStr) == "timer" || sStr == "menu "+g_sSubMenu) DoMenu(kID, iAuth);
-    else if (llGetSubString(sStr, 0, 5) == "timer ") {
-        //Debug(sStr);
-        string sMsg = llGetSubString(sStr, 6, -1);
-        //we got a response for something we handle locally
-        if (sMsg == "START") {
-            TimerStart(iAuth);
-            if (kID == g_kWearer) iMenu = FALSE;
-        } else if (sMsg == "STOP") TimerFinish();
-        else if (sMsg == "RESET") {
-            g_iRealSetTime = g_iRealTimeUpAt = 0;
-            g_iOnSetTime = g_iOnTimeUpAt = 0;
-            if (g_iRealRunning == 1 || g_iOnRunning == 1) {
-                g_iRealRunning = 0;
-                g_iOnRunning = 0;
-                TimerFinish();
-            }
-        } else if (sMsg == "☒ combined") g_iBoth = FALSE;
-        else if (sMsg == "☐ combined") g_iBoth = TRUE;
-        else if (sMsg == "☑ unlock") {
-            if (iAuth == CMD_OWNER) g_iUnlockCollar = 0;
-            else llMessageLinked(LINK_THIS,NOTIFY,"0"+"%NOACCESS%",kID);
-        } else if (sMsg == "☐ unlock") {
-            if (iAuth == CMD_OWNER) g_iUnlockCollar = 1;
-            else llMessageLinked(LINK_THIS,NOTIFY,"0"+"%NOACCESS%",kID);
-        } else if (sMsg == "☑ clear RLV") {
-            if (iAuth == CMD_WEARER) llMessageLinked(LINK_THIS,NOTIFY,"0"+"%NOACCESS%",kID);
-            else g_iClearRLVRestions = 0;
-        } else if (sMsg == "☐ clear RLV") {
-            if (iAuth == CMD_WEARER) llMessageLinked(LINK_THIS,NOTIFY,"0"+"%NOACCESS%",kID);
-            else g_iClearRLVRestions = 1;
-        } else if (sMsg == "☑ unleash") {
-            if (iAuth <= g_iWhoCanChangeLeash) g_iUnleash = 0;
-            else llMessageLinked(LINK_THIS,NOTIFY,"0"+"%NOACCESS%",kID);
-        } else if (sMsg == "☐ unleash") {
-            if (iAuth <= g_iWhoCanChangeLeash) g_iUnleash = 1;
-            else llMessageLinked(LINK_THIS,NOTIFY,"0"+"%NOACCESS%",kID);
-        } else if (llGetSubString(sMsg, 0, 11) == "Online Timer") {
-            sMsg = "online" + llStringTrim(llGetSubString(sMsg, 12, -1), STRING_TRIM_HEAD);
-        } else if (llGetSubString(sMsg, 0, 9) == "Real Timer") {
-            sMsg = "real" + llStringTrim(llGetSubString(sMsg, 10, -1), STRING_TRIM_HEAD);
+        if(sCmd=="endnow")
+        {
+            llMessageLinked(LINK_THIS,NOTIFY,"1%WEARER%'s timer ended by secondlife:///app/agent/"+(string)kAv+"/about",kAv);
+            stopTimer(TRUE);
         }
+        else if(sCmd=="cancel")
+        {
+             llMessageLinked(LINK_THIS,NOTIFY,"1%WEARER%'s timer cancelled by secondlife:///app/agent/"+(string)kAv+"/about",kAv);
+            stopTimer(FALSE);
+        }
+        else llRegionSayTo(kAv,0,"Sorry, can't change that while timer is active.");
+    }
+    else if(sCmd=="start") startTimer(kAv,iAuth);
+    else if(sCmd=="time")
+    {
+        if(sVal=="")
+        {
+            timerMenu(kAv,iAuth);
+            return;
+        }
+        else
+        {
+            //function to attempt to derive correct seconds value
+            //from whatever meaningful text input is given.
+            sVal=(string)llList2List(lParams,2,-1);
+            string sVal=(string)llList2List(lParams,2,-1);
+            integer ti;
+            list t=llParseString2List(sVal,[","],["hourse","hrs","hr","hs","h"]);
+            if(llGetListLength(t)>1)
+            {
+                ti+=(integer)llList2String(t,0)*3600;
+                t=llDeleteSubList(t,0,1);
+                sVal=(string)t;
+            }
+            t=llParseString2List(sVal,[],["minutes","mins","min","ms","m"]);
+            if(llGetListLength(t)>1)
+            {
+                ti+=(integer)llList2String(t,0)*60;
+                t=llDeleteSubList(t,0,1); 
+                sVal=(string)t;
+            }
+            t=llParseString2List(sVal,[],["s"]);
+            ti+=(integer)llList2String(t,0);
+            if(ti) 
+            {
+                LSDWrite("LockTime",(string)ti);
+                llMessageLinked(LINK_THIS,NOTIFY,"1Setting time to "+timeDisplay(ti)+".",kAv);
+            }
+            else llMessageLinked(LINK_THIS,NOTIFY,"0Invalid setting for timer time.",kAv);
+        }
+    }
+    else if(sCmd=="customs")
+    {
+        if(sVal==""||sVal=="1"||sVal=="0") customMenu(kAv,iAuth);
+        else
+        {
+            LSDWrite("Customs",sVal);
+            llMessageLinked(LINK_THIS,NOTIFY,"0Timer custom commands changed to:\n"+llDumpList2String(llCSV2List(sVal),"\n"),kAv);
+        }
+        return;
+    }
+    else if(sVal=="1" || sVal=="0")
+    {
+        
+        if(sCmd=="lockout")
+        {
+            if(kAv==g_kWearer)
+            {
+                LSDWrite("Lockout",sVal);
+                if(sVal=="1") llOwnerSay("You will be locked out of your collar when the timer is active.");
+                else llOwnerSay("Wearer lockout deactivated for timer");
+            }
+            else llMessageLinked(LINK_THIS,NOTIFY,"0Only wearer can modify timer self-locate mode.",kAv);
+        }
+        else if(sCmd=="clearrlv")
+        {
+            LSDWrite("ClearRLV",sVal);
+            llMessageLinked(LINK_THIS,NOTIFY,"0Setting timer ClearRLV to "+llList2String(["off","on"],(integer)sVal)+".",kAv);
+        }
+        else if(sCmd=="unpose")
+        {
+            LSDWrite("Unpose",sVal);
+            llMessageLinked(LINK_THIS,NOTIFY,"0Setting timer Unpose to "+llList2String(["off","on"],(integer)sVal)+".",kAv);
+        }
+        else if(sCmd=="unleash")
+        {
+            LSDWrite("Unleash",sVal);
+            llMessageLinked(LINK_THIS,NOTIFY,"0Setting timer Unleash to "+llList2String(["off","on"],(integer)sVal)+".",kAv);
+        }
+        else llRegionSayTo(kAv,0,"I didn't understand that command, sorry.");
+            
+    }
+    if(remenu==TRUE &&(kAv!=g_kWearer || llLinksetDataRead("auth_WearerLockout")=="")) mainMenu(kAv,iAuth);
+        
 
-        if (llGetSubString(sMsg, 0, 5) == "online") {
-            sMsg = llStringTrim(llGetSubString(sMsg, 6, -1), STRING_TRIM_HEAD);
-            if (iAuth <= g_iWhoCanChangeTime) {
-                list lTimes = llParseString2List(llGetSubString(sMsg, 1, -1), [":"], []);
-                if (sMsg == "RESET") {
-                    g_iOnSetTime=g_iOnTimeUpAt=0;
-                    if (g_iOnRunning == 1) {   //unlock
-                        g_iOnRunning=0;
-                        TimerFinish();
-                    }
-                } else if (llGetSubString(sMsg, 0, 0) == "+") {
-                    g_iTimeChange=llList2Integer(lTimes,0)*60*60+llList2Integer(lTimes,1)*60;
-                    g_iOnSetTime += g_iTimeChange;
-                    if (g_iOnRunning==1) g_iOnTimeUpAt += g_iTimeChange;
-                    else if (g_iOnRunning==3) {
-                        g_iOnTimeUpAt=g_iOnTime+g_iOnSetTime;
-                        g_iOnRunning=1;
-                    }
-                } else if (llGetSubString(sMsg, 0, 0) == "-") {
-                    g_iTimeChange=-(llList2Integer(lTimes,0)*60*60+llList2Integer(lTimes,1)*60);
-                    g_iOnSetTime += g_iTimeChange;
-                    if (g_iOnSetTime<0) g_iOnSetTime=0;
-                    if (g_iOnRunning==1) {
-                        g_iOnTimeUpAt += g_iTimeChange;
-                        if (g_iOnTimeUpAt<=g_iOnTime) {
-                            //unlock
-                            g_iOnRunning=g_iOnSetTime=g_iOnTimeUpAt=0;
-                            TimerFinish();
-                        }
-                    }
-                } else if (llGetSubString(sMsg, 0, 0) == "=") {
-                    g_iTimeChange=llList2Integer(lTimes,0)*60*60+llList2Integer(lTimes,1)*60;
-                    if (g_iTimeChange <= 0) return; // use clear.
-                    g_iOnSetTime = g_iTimeChange;
-                    if (g_iOnRunning==1) g_iOnTimeUpAt = g_iOnTime + g_iTimeChange;
-                    else if (g_iOnRunning==3) {
-                        g_iOnTimeUpAt=g_iOnTime + g_iTimeChange;
-                        g_iOnRunning=1;
-                    }
-                } else return;
-            }
-            if (iMenu) DoOnMenu(kID, iAuth);
-            return;
-        } else if (llGetSubString(sMsg, 0, 3) == "real") {
-            sMsg = llStringTrim(llGetSubString(sMsg, 4, -1), STRING_TRIM_HEAD);
-            list lTimes = llParseString2List(llGetSubString(sMsg, 1, -1), [":"], []);
-            if (iAuth <= g_iWhoCanChangeTime) {
-                if (sMsg == "RESET") {
-                    g_iRealSetTime=g_iRealTimeUpAt=0;
-                    if (g_iRealRunning == 1) {   //unlock
-                        g_iRealRunning=0;
-                        TimerFinish();
-                    }
-                } else if (llGetSubString(sMsg, 0, 0) == "+") {
-                    g_iTimeChange=llList2Integer(lTimes,0)*60*60+llList2Integer(lTimes,1)*60;
-                    g_iRealSetTime += g_iTimeChange;
-                    if (g_iRealRunning==1) g_iRealTimeUpAt += g_iTimeChange;
-                    else if (g_iRealRunning==3) {
-                        g_iRealTimeUpAt=g_iCurrentTime+g_iRealSetTime;
-                        g_iRealRunning=1;
-                    }
-                } else if (llGetSubString(sMsg, 0, 0) == "-") {
-                    g_iTimeChange=-(llList2Integer(lTimes,0)*60*60+llList2Integer(lTimes,1)*60);
-                    g_iRealSetTime += g_iTimeChange;
-                    if (g_iRealSetTime<0) g_iRealSetTime=0;
-                    if (g_iRealRunning==1) {
-                        g_iRealTimeUpAt += g_iTimeChange;
-                        if (g_iRealTimeUpAt<=g_iCurrentTime) {   //unlock
-                            g_iRealRunning=g_iRealSetTime=g_iRealTimeUpAt=0;
-                            TimerFinish();
-                        }
-                    }
-                } else if (llGetSubString(sMsg, 0, 0) == "=") {
-                    g_iTimeChange=llList2Integer(lTimes,0)*60*60+llList2Integer(lTimes,1)*60;
-                    if (g_iTimeChange <= 0) return ; // Not handled.
-                    g_iRealSetTime = g_iTimeChange;
-                    if (g_iRealRunning==1) g_iRealTimeUpAt = g_iCurrentTime+g_iRealSetTime;
-                    else if (g_iRealRunning==3) {
-                        g_iRealTimeUpAt=g_iCurrentTime+g_iRealSetTime;
-                        g_iRealRunning=1;
-                    }
-                } else return ;
-            }
-            if (iMenu) DoRealMenu(kID, iAuth);
-            return;
-        }
-        if (iMenu) DoMenu(kID, iAuth);
+
+}
+   
+startTimer(key kAv, integer iAuth)
+{
+    integer time=(integer)LSDRead("LockTime");
+    llSetTimerEvent(time*0.6); // we recalculate on timer, this will allow for time dilation
+    llResetTime();
+    LSDWrite("TimerActive","1");
+    LSDWrite("TimerSetterKey",(string)kAv);
+    LSDWrite("LastAuth",(string)iAuth);
+    if(LSDRead("Lockout")=="1")
+    {
+         list temp=llCSV2List(llLinksetDataRead("auth_WearerLockout"));
+         if(llListFindList(temp,[LSDPrefix])==-1) temp+=[LSDPrefix];
+         llLinksetDataWrite("auth_WearerLockout",llList2CSV(temp));
     }
+    string msg=timeDisplay(time)+" timer Started!\nWhen the timer ends, the following commands will be issued:\n";
+    if(LSDRead("Unleash")=="1") msg+="Unleash\n";
+    if(LSDRead("Unpose")=="1") msg+="stop animations\n";
+    if(LSDRead("ClearRLV")=="1") msg+="clear all restrictions\n";
+    list t=llCSV2List(LSDRead("Customs"));
+    msg+=llDumpList2String(t,"\n");
+    llMessageLinked(LINK_THIS,NOTIFY,"1"+msg,kAv);
+    
+}
+stopTimer(integer execute)
+{
+    llSetTimerEvent(0);
+    list temp=llCSV2List(llLinksetDataRead("auth_WearerLockout"));
+    integer i=llListFindList(temp,[LSDPrefix]);
+    if(i!=-1) temp=llDeleteSubList(temp,i,i);
+    llLinksetDataWrite("auth_WearerLockout",llList2CSV(temp));
+    llMessageLinked(LINK_THIS,NOTIFY,"1%WEARERNAME%'s timelock has ended.",(key)LSDRead("TimerSetterKey"));
+    LSDWrite("TimerActive","0");
+    if(execute)
+    {
+        if(LSDRead("Unleash")=="1") llMessageLinked(LINK_THIS,CMD_ZERO,"unleash",(key)LSDRead("TimerSetterKey"));
+        if(LSDRead("Unpose")=="1") llMessageLinked(LINK_THIS,CMD_ZERO,"stop",(key)LSDRead("TimerSetterKey"));
+        if(LSDRead("ClearRLV")=="1") llMessageLinked(LINK_THIS,CMD_ZERO,"clear",(key)LSDRead("TimerSetterKey"));
+        list cTemp=llCSV2List(LSDRead("Customs"));
+        integer max=llGetListLength(cTemp);
+        i=0;
+        string cmd;
+        while(i<max)
+        {
+            cmd=llStringTrim(llList2String(cTemp,i),STRING_TRIM);
+            //llMessageLinked(LINK_THIS,(integer)LSDRead("LastAuth"),cmd,(key)LSDRead("TimerSetterKey"));
+            llMessageLinked(LINK_THIS,CMD_ZERO,cmd,(key)LSDRead("TimerSetterKey"));
+            ++i;
+            llSleep(0.3); //short sleep to ensure commands go in order.
+        }
+    }
+    LSDWrite("TimerSetterKey","");
+    LSDWrite("LastAuth","0");
+    
 }
 
+        
 
-default {
-    on_rez(integer iParam) {
-        g_iLastTime=g_iLastRez=llGetUnixTime();
-        llRegionSayTo(g_kWearer, g_iInterfaceChannel, "timer|sendtimers");
-//        if (g_iRealRunning == 1 || g_iOnRunning == 1) llMessageLinked(LINK_SET,WEARERLOCKOUT,"on","");
+integer ALIVE = -55;
+integer READY = -56;
+integer STARTUP = -57;
+
+
+integer g_iCollarActive;
+integer g_iCatchup; //set if timer expires while collar not active.
+default
+{
+    on_rez(integer iNum)
+    {
+        g_iCollarActive=FALSE;
+        llMessageLinked(LINK_SET, ALIVE, llGetScriptName(),"");
+        if(LSDRead("timeractive")=="1") llSetTimerEvent(30); // recalc in timer, but let's leave a boot time buffer.
     }
-
-    state_entry() {
-        //llSetMemoryLimit(40960);  //2015-05-06 (4238 bytes free)
-        PermsCheck();
-        g_iLastTime=llGetUnixTime();
-        llSetTimerEvent(1);
+    changed(integer change)
+    {
+        if (change & CHANGED_OWNER) llResetScript();
+    }
+    state_entry()
+    {
         g_kWearer = llGetOwner();
-        g_iInterfaceChannel = (integer)("0x" + llGetSubString(g_kWearer,30,-1));
-        if (g_iInterfaceChannel > 0) g_iInterfaceChannel = -g_iInterfaceChannel;
-        g_iFirstOnTime=MAX_TIME;
-        g_iFirstRealTime=MAX_TIME;
-        llRegionSayTo(g_kWearer, g_iInterfaceChannel, "timer|sendtimers");
-        //Debug("Starting");
+        reset();
+        llMessageLinked(LINK_SET, ALIVE, llGetScriptName(),""); 
     }
+    
 
-    link_message(integer iSender, integer iNum, string sStr, key kID) {
-        if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID, FALSE);
-        else if (iNum==ATTACHMENT_FORWARD) {
-            list info = llParseString2List (sStr, ["|"], []);
-            if (llList2String(info, 0)!="timer") return;
-            //Debug(sStr);
-            string sCommand = llList2String(info, 1);
-            integer type = llList2Integer(info, 2);
-            if (sCommand=="settimer") {
-                //should check values but I am not yet.
-                if (type==REAL_TIME) {
-                    integer newtime = llList2Integer(info, 3) +g_iCurrentTime;
-                    g_lTimes=g_lTimes+[REAL_TIME,newtime];
-                    if (g_iFirstRealTime>newtime) g_iFirstRealTime=newtime;
-                    g_sMessage="timer|timeis|"+(string)REAL_TIME+"|"+(string)g_iCurrentTime;
-                } else if (type==REAL_TIME_EXACT) {
-                    integer newtime = llList2Integer(info, 3);
-                    g_lTimes=g_lTimes+[REAL_TIME,newtime];
-                    if (g_iFirstRealTime>newtime) g_iFirstRealTime=newtime;
-                } else if (type==ON_TIME) {
-                    integer newtime = llList2Integer(info, 3) +g_iOnTime;
-                    g_lTimes=g_lTimes+[ON_TIME,newtime];
-                    if (g_iFirstOnTime>newtime) g_iFirstOnTime=newtime;
-                    g_sMessage="timer|timeis|"+(string)ON_TIME+"|"+(string)g_iOnTime;
-                } else if (type==ON_TIME_EXACT) {
-                    integer newtime = llList2Integer(info, 3) +g_iOnTime;
-                    g_lTimes=g_lTimes+[ON_TIME,newtime];
-                    if (g_iFirstOnTime>newtime) g_iFirstOnTime=newtime;
-                }
-            } else if (sCommand=="gettime") {
-                if (type==REAL_TIME) g_sMessage="timer|timeis|"+(string)REAL_TIME+"|"+(string)g_iCurrentTime;
-                else if (type==ON_TIME) g_sMessage="timer|timeis|"+(string)ON_TIME+"|"+(string)g_iOnTime;
-            } else return;
-            llRegionSayTo(g_kWearer, g_iInterfaceChannel, g_sMessage);
-        } else if (iNum == LM_SETTING_EMPTY) {
-            if (sStr == "leash_leashedto") g_iWhoCanChangeLeash=504;
-            if (sStr == "global_locked") g_iCollarLocked=0;
-        } else if (iNum == LM_SETTING_RESPONSE) {
-            list lParams = llParseString2List(sStr, ["="], []);
-            string sToken = llList2String(lParams, 0);
-            string sValue = llList2String(lParams, 1);
-            if (sToken == "global_locked") g_iCollarLocked=(integer)sValue;
-            else if (sToken == "leash_leashedto") {
-                g_iWhoCanChangeLeash = (integer)llList2String(llParseString2List(sValue,[","],[]),1);
-            }
-        } else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu) {
-            // our parent menu requested to receive buttons, so send ours
+    
+    link_message(integer iSender, integer iNum, string sStr, key kID){
+        
+        if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
-            g_lLocalMenu = [] ; // flush submenu buttons
-            llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, "");
-        } else if (iNum == MENUNAME_RESPONSE) {
-            // a button is sned ot be added to a plugin
-            list lParts = llParseString2List(sStr, ["|"], []);
-            if (llList2String(lParts, 0) == g_sSubMenu) {
-                //someone wants to stick something in our menu
-                string sButton = llList2String(lParts, 1);
-                if (llListFindList(g_lLocalMenu, [sButton]) == -1)
-                    g_lLocalMenu = llListSort(g_lLocalMenu+[sButton],1,TRUE);
-            }
-        } else if (iNum == MENUNAME_REMOVE) {
-            list lParts = llParseString2List(sStr, ["|"], []);
-            if (llList2String(lParts, 0) == g_sSubMenu) {
-                string sButton = llList2String(lParts, 1);
-                integer iIndex = llListFindList(g_lLocalMenu, [sButton]);
-                if (~iIndex) g_lLocalMenu = llDeleteSubList(g_lLocalMenu, iIndex, iIndex);
-            }
-        } else if (iNum == DIALOG_RESPONSE) {
+        else if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE)
+            UserCommand(iNum, sStr, kID);
+        else if (iNum == DIALOG_TIMEOUT) 
+        {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            if (iMenuIndex == -1) return;
-            //this is one of our menus
-            string sMenu = llList2String(g_lMenuIDs, iMenuIndex+1);
-            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
-            list lMenuParams = llParseString2List(sStr, ["|"], []);
-            key kAv = (key)llList2String(lMenuParams, 0);
-            string sMsg = llList2String(lMenuParams, 1);
-            // integer iPage = (integer)llList2String(lMenuParams, 2);
-            integer iAuth = (integer)llList2String(lMenuParams, 3);
-            if (sMenu == "menu") {
-                if (sMsg == UPMENU) llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
-                else if (sMsg == "Real Timer") DoRealMenu(kAv, iAuth);
-                else if (sMsg == "Online Timer") DoOnMenu(kAv, iAuth);
-                else if (~llListFindList(g_lLocalMenu, [sMsg])) llMessageLinked(LINK_SET, iAuth, "menu "+sMsg, kAv);
-                else UserCommand(iAuth, "timer " + sMsg, kAv, TRUE);
-            } else if (sMenu == "real") {
-                if (sMsg == UPMENU) DoMenu(kAv, iAuth);
-                else UserCommand(iAuth, "timer real"+sMsg, kAv, TRUE);
-            } else if (sMenu == "online") {
-                if (sMsg == UPMENU) DoMenu(kAv, iAuth);
-                else UserCommand(iAuth, "timer online"+sMsg, kAv, TRUE);
-            } else if (sMenu == "rmtimer") {
-                if (sMsg == "Yes") {
-                    llMessageLinked(LINK_ROOT, MENUNAME_REMOVE, g_sParentMenu+"|"+g_sSubMenu, "");
-                    llMessageLinked(LINK_THIS, NOTIFY, "1"+g_sSubMenu+" App has been removed.", kAv);
-                    if (llGetInventoryType(llGetScriptName()) == INVENTORY_SCRIPT) llRemoveInventory(llGetScriptName());
-                } else llMessageLinked(LINK_THIS, NOTIFY, "0"+g_sSubMenu+" App remains installed.", kAv);
+            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
+        }
+        else if(iNum == LSD_REQUEST) llMessageLinked(LINK_SET,LSD_RESPONSE,LSDPrefix,"");
+        else if(iNum == AUTH_WEARERLOCKOUT)
+        {
+            llOwnerSay("You cannot currently access your collar due to wearer lockout being set on an active timer.");
+        }
+        else if(iNum == REBOOT && sStr=="reboot")
+                llMessageLinked(LINK_SET, ALIVE, llGetScriptName(),"");
+        else if(iNum == READY)
+            llMessageLinked(LINK_SET, ALIVE, llGetScriptName(), "");
+        else if(iNum == STARTUP)
+        {
+            g_iCollarActive=TRUE;
+            if(g_iCatchup)
+            {
+                g_iCatchup=FALSE;
+                stopTimer(TRUE);
             }
-        } else if (iNum == DIALOG_TIMEOUT) {
+        }
+        else if(iNum == CMD_SAFEWORD && LSDRead("TimerActive")=="1") 
+        {
+            llOwnerSay("Timer deactivated due to safeword");
+            stopTimer(FALSE);
+        }
+        else if(iNum == DIALOG_RESPONSE)
+        {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            if (~iMenuIndex) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
-        } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
+            if(iMenuIndex!=-1)
+            {
+                string sMenu = llList2String(g_lMenuIDs, iMenuIndex+1);
+                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
+                list lMenuParams = llParseString2List(sStr, ["|"],[]);
+                key kAv = llList2Key(lMenuParams,0);
+                string sMsg = llList2String(lMenuParams,1);
+                integer iAuth = llList2Integer(lMenuParams,3);
+                //integer iRespring=TRUE;
+                
+                if(sMenu == "timer~app")
+                {
+                    if(sMsg == UPMENU)
+                    {
+                        llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
+                        return;
+                    } 
+                    string sCmd;
+                    string f=llGetSubString(sMsg,0,0);
+                    if(f=="⬜") sCmd=llGetSubString(sMsg,1,-1)+" on";
+                    else if(f=="⬛") sCmd=llGetSubString(sMsg,1,-1)+" off";
+                    if(sCmd=="") sCmd=sMsg;
+                    UserCommand(iAuth,g_sSubMenu+" "+sCmd+" remenu",kAv);
+                    
+                }
+                else if(sMenu=="timer~timerset")
+                {
+                    if(sMsg==UPMENU) mainMenu(kAv,iAuth);
+                    else
+                    {
+                        list t=llParseString2List(sMsg,[" "],[]);
+                        integer ti=(integer)llList2String(t,0);
+                        if(llGetSubString(llList2String(t,1),0,0)=="h") ti*=3600;
+                        else if(llGetSubString(llList2String(t,1),0,0)=="m") ti*=60;
+                        ti+=(integer)LSDRead("LockTime");
+                        if(ti<0) ti=0;
+                        LSDWrite("LockTime",(string)ti);
+                        timerMenu(kAv,iAuth);
+                    }
+                }
+                else if(sMenu=="timer~custom")
+                {
+                    sMsg=llStringTrim(sMsg,STRING_TRIM);
+                    LSDWrite("Customs",sMsg);
+                    llMessageLinked(LINK_THIS,NOTIFY,"0Timer custom commands changed to:\n"+llDumpList2String(llCSV2List(sMsg),"\n"),kAv);
+                    mainMenu(kAv,iAuth);
+                }
+            }
+        }
+        else if (iNum==CMD_SAFEWORD)
+        {
+            llMessageLinked(LINK_THIS,NOTIFY,"0Timer reset due to safeword.","");
+            stopTimer(FALSE);
+        }
+        else if(iNum == -99999)
+            if(sStr == "update_active")llResetScript();
     }
-
     timer()
     {
-        g_iCurrentTime=llGetUnixTime();
-        if (g_iCurrentTime<(g_iLastRez+60)) return;
-        if ((g_iCurrentTime-g_iLastTime)<60) g_iOnTime+=g_iCurrentTime-g_iLastTime;
-        if (g_iOnTime>=g_iFirstOnTime) {
-            //could store which is need but if both are trigered it will have to send both anyway I prefer not to check for that.
-            g_sMessage="timer|timeis|"+(string)ON_TIME+"|"+(string)g_iOnTime;
-            llRegionSayTo(g_kWearer, g_iInterfaceChannel, g_sMessage);
-            g_iFirstOnTime=MAX_TIME;
-            g_iTimesLength=llGetListLength(g_lTimes);
-            for(n = 0; n < g_iTimesLength; n+=2) {
-                // send notice and find the next time.
-                if (llList2Integer(g_lTimes, n)==ON_TIME) {
-                    while(llList2Integer(g_lTimes, n+1)<=g_iOnTime&&llList2Integer(g_lTimes, n)==ON_TIME&&g_lTimes!=[]) {
-                        g_lTimes=llDeleteSubList(g_lTimes, n, n+1);
-                        g_iTimesLength=llGetListLength(g_lTimes);
-                    }
-                    if (llList2Integer(g_lTimes, n)==ON_TIME&&llList2Integer(g_lTimes, n+1)<g_iFirstOnTime) {
-                        g_iFirstOnTime=llList2Integer(g_lTimes, n+1);
-                    }
-                }
-            }
+        integer timeleft=(integer)LSDRead("LockTime")-(integer)llGetTime();
+        if(timeleft<10) //Let's not mess about being too fussy.
+        {
+            if(!g_iCollarActive) g_iCatchup=TRUE;
+            else stopTimer(TRUE);
+            llSetTimerEvent(0);
         }
-        if (g_iCurrentTime>=g_iFirstRealTime) {
-            //could store which is need but if both are trigered it will have to send both anyway I prefer not to check for that.
-            g_sMessage="timer|timeis|"+(string)REAL_TIME+"|"+(string)g_iCurrentTime;
-            llRegionSayTo(g_kWearer, g_iInterfaceChannel, g_sMessage);
-            g_iFirstRealTime=MAX_TIME;
-            g_iTimesLength=llGetListLength(g_lTimes);
-            for(n = 0; n < g_iTimesLength; n+=2) {
-                // send notice and find the next time.
-                if (llList2Integer(g_lTimes, n)==REAL_TIME) {
-                    while(llList2Integer(g_lTimes, n+1)<=g_iCurrentTime&&llList2Integer(g_lTimes, n)==REAL_TIME) {
-                        g_lTimes=llDeleteSubList(g_lTimes, n, n+1);
-                        g_iTimesLength=llGetListLength(g_lTimes);
-                    }
-                    if (llList2Integer(g_lTimes, n)==REAL_TIME&&llList2Integer(g_lTimes, n+1)<g_iFirstRealTime) {
-                        g_iFirstRealTime=llList2Integer(g_lTimes, n+1);
-                    }
-                }
-            }
-        }
-        if (g_iOnRunning == 1 && g_iOnTimeUpAt<=g_iOnTime) {
-            g_iOnRunning = 0;
-            TimerFinish();
-        }
-        if (g_iRealRunning == 1 && g_iRealTimeUpAt<=g_iCurrentTime) {
-            g_iRealRunning = 0;
-            TimerFinish();
-        }
-        g_iLastTime=g_iCurrentTime;
+        else if (timeleft<120) llSetTimerEvent(timeleft); //close enough to ignore time dilation;
+        else llSetTimerEvent(timeleft*0.6);
     }
-
-    changed(integer iChange) {
-        if (iChange & CHANGED_INVENTORY) PermsCheck();
-        if (iChange & CHANGED_OWNER) llResetScript();
-        /*if (iChange & CHANGED_REGION) {
-            if (g_iProfiled) {
-                llScriptProfiler(1);
-                Debug("profiling restarted");
-            }
-        }*/
-    }
+   
 }
+
