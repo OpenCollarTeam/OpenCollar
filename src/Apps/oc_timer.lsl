@@ -21,17 +21,16 @@ integer CMD_WEARER = 503;
 integer CMD_EVERYONE = 504;
 integer CMD_SAFEWORD = 510;
 
+//backwards compatibility stuff for float text;
+integer LM_SETTING_RESPONSE = 2002;//the settings script sends responses on this channel
+integer LM_SETTING_DELETE = 2003;//delete token from settings
+
 integer REBOOT = -1000;
 string UPMENU = "BACK";
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
-//integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved
-//str must be in form of "token=value"
-//integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
-//integer LM_SETTING_RESPONSE = 2002;//the settings script sends responses on this channel
-//integer LM_SETTING_DELETE = 2003;//delete token from settings
-//integer LM_SETTING_EMPTY = 2004;//sent when a token has no value
+
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
@@ -51,6 +50,7 @@ list g_lMenuIDs;  //three strided list of avkey, dialogid, and menuname
 integer g_iMenuStride = 3;
 key g_kMenuUser;
 key g_kWearer;
+
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
     key kMenuID = llGenerateKey();
@@ -77,14 +77,13 @@ mainMenu(key kAv, integer iAuth)
    {
        integer tl=(integer)LSDRead("LockTime")-(integer)llGetTime();
        if(tl<10) tl=10;
-       llSetTimerEvent(tl); // let's improve accuracy while we're here!
-       sPrompt+="Active! Time left:"+timeDisplay(tl)+"\n\nClick 'EndNow' to end timer early, or 'Cancel' to stop the timer without triggering commands.\nPermissive mode allows collar users (apart from wearer) to end the timer even if they have lower auth than the timer setter";
+       sPrompt+="Active! Time left:"+timeDisplay(tl)+"\n\nClick 'EndNow' to end timer early, or 'Cancel' to stop the timer without triggering commands.\nPermissive mode allows collar users (apart from wearer) to end the timer even if they have lower auth than the timer setter. Titler shows time remaining as float text unless a title is set.";
        buttons+=["EndNow","Cancel",buttonize("Permissive")];
     }
     else 
     {
-        buttons=["Time",buttonize("Lockout"),buttonize("Customs"),buttonize("Unleash"),buttonize("Unpose"),buttonize("ClearRLV"),"Start",buttonize("Permissive")];
-        sPrompt+="Timer: "+timeDisplay((integer)LSDRead("LockTime"))+"\n\nClick 'Start' to activate timer.\n'Time' to change the timer length. 'Lockout' locks wearer out of collar while timer is active (only wearer may set this). 'Unleash','Unpose' and 'ClearRLV' clear restrictions when timer ends. 'Custom' sets custom commands to be issued when timer ends (if checked, there are some set). Permissive mode allows collar users (apart from wearer) to end the timer even if they have lower auth than the timer setter";
+        buttons=["Time",buttonize("Lockout"),buttonize("Customs"),buttonize("Unleash"),buttonize("Unpose"),buttonize("Unsit"),buttonize("ClearRLV"),buttonize("Titler"),buttonize("Permissive"),"Start"];
+        sPrompt+="Timer: "+timeDisplay((integer)LSDRead("LockTime"))+"\n\n'Start' to activate timer.  'Time' to change timer length. 'Lockout' locks wearer out of collar when timer active.\n  On timer end: 'ClearRLV' clears restrictions, 'Unsit' makes wearer stand (even strict sit if owner sets timer), 'Unpose' and 'Unleash' as they say, 'Custom' sets custom commands (checked if any set).\n  Permissive lets collar users (not wearer) to end timer even if lower auth than the setter. Titler shows time remaining as float text unless a title is set.";
     }
     Dialog(kAv,sPrompt,buttons,[UPMENU],0,iAuth,"timer~app");
 }
@@ -113,7 +112,7 @@ LSDWrite(string token, string val)
 timer_Lockout
 timer_Unleash
 timer_UnPose
-timer_Stand
+timer_Unsit
 timer_ClearRLV
 timer_Customs
 timer_TimerSetterKey
@@ -121,10 +120,11 @@ timer_LastAuth
 timer_LockTime
 timer_TimerActive
 timer_Permissive
+timer_Titler
 */
 reset()
 {
-    list defaults=["Lockout","0","Unleash","0","Unpose","0","ClearRLV","0","Customs","","TimerSetterKey","","LastAuth","0","LockTime","600","TimerActive","0","Permissive","0"];
+    list defaults=["Lockout","0","Unleash","0","Unpose","0","ClearRLV","0","Unsit","0","Customs","","TimerSetterKey","","LastAuth","0","LockTime","600","TimerActive","0","Permissive","0","Titler","0"];
     integer i=llGetListLength(defaults);
     integer x;
     while(x<i)
@@ -273,23 +273,33 @@ UserCommand(integer iAuth, string sCmd, key kAv)
                 if(sVal=="1") llOwnerSay("You will be locked out of your collar when the timer is active.");
                 else llOwnerSay("Wearer lockout deactivated for timer");
             }
-            else llMessageLinked(LINK_THIS,NOTIFY,"0Only wearer can modify timer self-locate mode.",kAv);
+            else llMessageLinked(LINK_THIS,NOTIFY,"0Only wearer can modify timer self-lockout mode.",kAv);
         }
         else if(sCmd=="clearrlv")
         {
             LSDWrite("ClearRLV",sVal);
-            llMessageLinked(LINK_THIS,NOTIFY,"0Setting timer ClearRLV to "+llList2String(["off","on"],(integer)sVal)+".",kAv);
+            llMessageLinked(LINK_THIS,NOTIFY,"1Setting timer ClearRLV to "+llList2String(["off","on"],(integer)sVal)+".",kAv);
         }
         else if(sCmd=="unpose")
         {
             LSDWrite("Unpose",sVal);
-            llMessageLinked(LINK_THIS,NOTIFY,"0Setting timer Unpose to "+llList2String(["off","on"],(integer)sVal)+".",kAv);
+            llMessageLinked(LINK_THIS,NOTIFY,"1Setting timer Unpose to "+llList2String(["off","on"],(integer)sVal)+".",kAv);
         }
         else if(sCmd=="unleash")
         {
             LSDWrite("Unleash",sVal);
-            llMessageLinked(LINK_THIS,NOTIFY,"0Setting timer Unleash to "+llList2String(["off","on"],(integer)sVal)+".",kAv);
+            llMessageLinked(LINK_THIS,NOTIFY,"1Setting timer Unleash to "+llList2String(["off","on"],(integer)sVal)+".",kAv);
         }
+        else if(sCmd=="unsit")
+        {
+            LSDWrite("Unsit",sVal);
+            llMessageLinked(LINK_THIS,NOTIFY,"1Setting timer Unsit to "+llList2String(["off","on"],(integer)sVal)+".",kAv);
+        }
+        else if(sCmd=="titler")
+        {
+            LSDWrite("Titler",sVal);
+            llMessageLinked(LINK_THIS,NOTIFY,"1Setting timer titling "+llList2String(["off","on"],(integer)sVal)+".",kAv);
+        }    
         else llRegionSayTo(kAv,0,"I didn't understand that command, sorry.");
             
     }
@@ -302,7 +312,7 @@ UserCommand(integer iAuth, string sCmd, key kAv)
 startTimer(key kAv, integer iAuth)
 {
     integer time=(integer)LSDRead("LockTime");
-    llSetTimerEvent(time*0.6); // we recalculate on timer, this will allow for time dilation
+    llSetTimerEvent(60);
     llResetTime();
     LSDWrite("TimerActive","1");
     LSDWrite("TimerSetterKey",(string)kAv);
@@ -313,10 +323,12 @@ startTimer(key kAv, integer iAuth)
          if(llListFindList(temp,[LSDPrefix])==-1) temp+=[LSDPrefix];
          llLinksetDataWrite("auth_WearerLockout",llList2CSV(temp));
     }
+    if(LSDRead("Titler")=="1" && g_iTitlerActive==FALSE) setText(TRUE);
     string msg=timeDisplay(time)+" timer Started!\nWhen the timer ends, the following commands will be issued:\n";
     if(LSDRead("Unleash")=="1") msg+="Unleash\n";
-    if(LSDRead("Unpose")=="1") msg+="stop animations\n";
-    if(LSDRead("ClearRLV")=="1") msg+="clear all restrictions\n";
+    if(LSDRead("Unpose")=="1") msg+="Stop animations\n";
+    if(LSDRead("ClearRLV")=="1") msg+="Clear all restrictions\n";
+    if(LSDRead("Unsit")=="1") msg+="Unsit if seated (even with strict sit when timer set by owner)\n";
     list t=llCSV2List(LSDRead("Customs"));
     msg+=llDumpList2String(t,"\n");
     llMessageLinked(LINK_THIS,NOTIFY,"1"+msg,kAv);
@@ -336,6 +348,7 @@ stopTimer(integer execute)
         if(LSDRead("Unleash")=="1") llMessageLinked(LINK_THIS,CMD_ZERO,"unleash",(key)LSDRead("TimerSetterKey"));
         if(LSDRead("Unpose")=="1") llMessageLinked(LINK_THIS,CMD_ZERO,"stop",(key)LSDRead("TimerSetterKey"));
         if(LSDRead("ClearRLV")=="1") llMessageLinked(LINK_THIS,CMD_ZERO,"clear",(key)LSDRead("TimerSetterKey"));
+        if(LSDRead("Unsit")=="1") llMessageLinked(LINK_THIS,CMD_ZERO,"unsit",(key)LSDRead("TimerSetterKey"));
         list cTemp=llCSV2List(LSDRead("Customs"));
         integer max=llGetListLength(cTemp);
         i=0;
@@ -351,11 +364,50 @@ stopTimer(integer execute)
     }
     LSDWrite("TimerSetterKey","");
     LSDWrite("LastAuth","0");
+    setText(FALSE);
     
 }
 
-        
-
+//stuff for floating text, will be much simpler with LSD elsewhere.
+integer g_iTitlerActive;
+vector g_vTitlerColor=<1,1,1>;
+integer g_iTextPrim;
+integer g_iTitlerOffset=8;
+ScanFloatText()
+{
+    integer end = llGetNumberOfPrims();
+    integer i;
+    while(i<end)
+    {
+        ++i;
+        string Params = (string)llGetLinkPrimitiveParams(i, [PRIM_NAME,PRIM_DESC]);
+        if(llSubStringIndex(Params, "FloatText")!=-1)
+        {
+            g_iTextPrim = i;
+            return;
+        }
+    }
+    g_iTextPrim=LINK_THIS;
+}       
+setText(integer on)
+{
+    if(g_iTitlerActive) return;
+    string msg;
+    if(on)
+    {
+        integer timeleft=(integer)LSDRead("LockTime")-(integer)llGetTime();
+        timeleft=llRound((float)timeleft/60)*60; //Round to nearest minute as we only update each minute
+        msg="Timer:\n"+timeDisplay(timeleft)+"  remaining.";
+        integer i;
+        while(i<g_iTitlerOffset)
+        {
+            ++i;
+            msg+=" \n";
+        }
+    }
+    llSetLinkPrimitiveParamsFast(g_iTextPrim, [PRIM_TEXT, msg, g_vTitlerColor, 1]);
+}
+    
 integer ALIVE = -55;
 integer READY = -56;
 integer STARTUP = -57;
@@ -369,16 +421,18 @@ default
     {
         g_iCollarActive=FALSE;
         llMessageLinked(LINK_SET, ALIVE, llGetScriptName(),"");
-        if(LSDRead("timeractive")=="1") llSetTimerEvent(30); // recalc in timer, but let's leave a boot time buffer.
+        if(LSDRead("TimerActive")=="1") llSetTimerEvent(30); // recalc in timer, but let's leave a boot time buffer.
     }
     changed(integer change)
     {
         if (change & CHANGED_OWNER) llResetScript();
+        if (change & CHANGED_LINK) ScanFloatText();
     }
     state_entry()
     {
         g_kWearer = llGetOwner();
         reset();
+        ScanFloatText();
         llMessageLinked(LINK_SET, ALIVE, llGetScriptName(),""); 
     }
     
@@ -394,6 +448,31 @@ default
         {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
+        }
+         else if(iNum == LM_SETTING_RESPONSE)
+         {
+            if(sStr=="titler_show=1") g_iTitlerActive=TRUE;
+            else if(llSubStringIndex(sStr,"titler_color")==0)
+            {
+                g_vTitlerColor=(vector)llGetSubString(sStr,13,-1);
+                llSleep(1); // buffer because titler will clear title
+                if(LSDRead("TimerActive")=="1" && LSDRead("Titler")=="1" && g_iTitlerActive==FALSE) setText(TRUE);
+            }
+            else if(llSubStringIndex(sStr,"titler_offset")==0)
+            {
+                g_iTitlerOffset=(integer)llGetSubString(sStr,14,-1);
+                llSleep(1); // buffer because titler will clear title
+                if(LSDRead("TimerActive")=="1" && LSDRead("Titler")=="1" && g_iTitlerActive==FALSE) setText(TRUE);
+            }
+         }
+         else if(iNum == LM_SETTING_DELETE)
+         {
+             if(sStr=="titler_show")
+             {
+                 g_iTitlerActive=FALSE;
+                 llSleep(1); // buffer because titler will clear title
+                 if(LSDRead("TimerActive")=="1" && LSDRead("Titler")=="1") setText(TRUE);
+             }
         }
         else if(iNum == LSD_REQUEST) llMessageLinked(LINK_SET,LSD_RESPONSE,LSDPrefix,"");
         else if(iNum == AUTH_WEARERLOCKOUT)
@@ -481,14 +560,14 @@ default
     timer()
     {
         integer timeleft=(integer)LSDRead("LockTime")-(integer)llGetTime();
-        if(timeleft<10) //Let's not mess about being too fussy.
+        if(timeleft<30) //let's not be too fussy
         {
             if(!g_iCollarActive) g_iCatchup=TRUE;
             else stopTimer(TRUE);
             llSetTimerEvent(0);
         }
-        else if (timeleft<120) llSetTimerEvent(timeleft); //close enough to ignore time dilation;
-        else llSetTimerEvent(timeleft*0.6);
+        
+        if(LSDRead("Titler")=="1" && g_iTitlerActive==FALSE) setText(TRUE);
     }
    
 }
