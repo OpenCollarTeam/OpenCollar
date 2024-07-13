@@ -1,3 +1,4 @@
+
 /*
 This file is a part of OpenCollar.
 Copyright ©2021
@@ -19,9 +20,35 @@ Medea (Medea Destiny)
                     blacklist when permitted when also trusted (issue #849)
                 -   Fixed instance where interface channel is 0, also streamlined function, fix issue #819 
                 -   Prefix reset now works, and notifications sent when changing prefix.
+   *Nov 2023    -   Reformatted chat command handling for efficiency. Chat commands no longer sent as 
+                    CMD_ZERO for authing as this script handles
+                    auth so we can auth locally to save a link_message round trip on every chat command. 
+                -   Restored object command handling as per v7.x and previous, using interface channel
+                    rather than HUDchannel as there seems no reason to duplicate and hudchannel stuff hasn't
+                    worked for a few years anyway. Added remote auth function -
+                    llSay(g_iInterfaceChannel,"checkauth 1111"); will return "AuthReply|(wearerkey)|(auth level)"
+                    on channel 1111, reporting the auth level of the object owner. Commands can be prefixed with
+                    "authas:(userkey)=", which will use the LOWER auth level between object owner and userkey. 
+                    Commmand format is targetkey:chat command. Examples: 
+                    "authas:(userkey)=(targetkey):kneel" - will issue kneel command if (userkey) and object owner
+                    both have valid auth
+                    "(targetkey):sit (sittarget key)" - sit wearer on (sittarget key) if object owner has valid
+                     auth
+                -   menuto cleanup requires menuto target to be in sim AND be the owner of the issuing command
+                -   Set g_iStartup to TRUE in active state on_rez event to restore "owned by" message #906             
 Yosty7b3        
     *Oct 2021   -   Remove unused StrideOfList() function.
-    *Feb 2022   -   Only reset when needed (part of boot speedup project).                              
+
+    *Feb 2022   -   Only reset when needed (part of boot speedup project).    
+    
+Nikki Lacrima
+    *Aug 2023   -  Clear group on runaway issue #935  
+    *Nov 2023   -   Only wearer can initiate and confirm runaway, add link message "runaway_confirmed" and 
+                    remove the g_iRunawayMode. 
+                -   Add "#" prefix wildcard, issue #897
+                -   implemented Yosty7b3's menu streamlining, see pr#963 
+
+
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
@@ -45,15 +72,9 @@ integer ACTION_OWNER = 8;
 integer ACTION_TRUST = 16;
 integer ACTION_BLOCK = 32;
 
-//integer g_iLastGranted;
-//key g_kLastGranted;
-//string g_sLastGranted;
-
 //integer TIMEOUT_READY = 30497;
 integer TIMEOUT_REGISTER = 30498;
 integer TIMEOUT_FIRED = 30499;
-
-
 
 //integer RLV_CMD = 6000;
 integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
@@ -100,12 +121,7 @@ integer LM_SETTING_DELETE = 2003;//delete token from settings
 //integer LM_SETTING_EMPTY = 2004;//sent when a token has no value
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
-    key kMenuID = llGenerateKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
-
-    integer iIndex = llListFindList(g_lMenuIDs, [kID]);
-    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
-    else g_lMenuIDs += [kID, kMenuID, sName];
+    llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, sName+"~"+llGetScriptName() );
 }
 string SLURL(key kID){
     return "secondlife:///app/agent/"+(string)kID+"/about";
@@ -143,9 +159,6 @@ integer CalcAuth(key kID) {
     
     return CMD_NOACCESS;
 }
-
-list g_lMenuIDs;
-integer g_iMenuStride;
 
 integer NOTIFY = 1002;
 integer NOTIFY_OWNERS=1003;
@@ -194,25 +207,28 @@ DoListeners(){
 
 integer g_iRunaway=TRUE;
 key g_kDenyRunawayRequester;
+
 RunawayMenu(key kID, integer iAuth){
-    if(iAuth == CMD_OWNER || kID == g_kWearer){
-        string sPrompt = "\n[Runaway]\n\nAre you sure you want to runaway from all owners?\n\n* This action will reset your owners list, trusted list, and your blocked avatars list.";
-        list lButtons = ["Yes", "No"];
-        
+    if(iAuth == CMD_OWNER || ( (kID == g_kWearer) && g_iRunaway ) ){
+        string sPrompt;
+        list lButtons = [];
+
+        if (kID == g_kWearer){
+            sPrompt += "[Runaway]\n\nAre you sure you want to runaway from all owners?\n\n* This action will reset your owners list, trusted list, and your blocked avatars list.";
+            lButtons += ["Yes", "No"];
+        }
         if(iAuth == CMD_OWNER){
             sPrompt+="\n\nAs the owner you have the ability to disable or enable runaway.";
-            if(g_iRunaway)lButtons+=["Disable"];
+            if(g_iRunaway)lButtons += ["Disable"];
             else lButtons += ["Enable"];
-        } else if(kID == g_kWearer){
-            if(g_iRunaway){
-                sPrompt += "\n\nAs the wearer, you can choose to disable your ability to runaway, this action cannot be reversed by you";
-                lButtons += ["Disable"];
-            }
+        }
+        else if (kID == g_kWearer) {
+            sPrompt += "\n\nAs the wearer, you can choose to disable your ability to runaway, this action cannot be reversed by you";
+            lButtons += ["Disable"];
         }
         Dialog(kID, sPrompt, lButtons, [], 0, iAuth, "RunawayMenu");
     } else {
         llMessageLinked(LINK_SET,NOTIFY,"0%NOACCESS% to runaway, or the runaway settings menu", kID);
-        //llMessageLinked(LINK_SET,iAuth,"menu Access", kID);
     }
 }
 
@@ -225,7 +241,6 @@ WearerConfirmListUpdate(key kID, string sReason)
 }
 integer g_iAllowWearerSetTrusted=FALSE;
 integer g_iGrantedConsent=FALSE;
-integer g_iRunawayMode = -1;
 UpdateLists(key kID, key kIssuer){
     //llOwnerSay(llDumpList2String([kID, kIssuer, g_kMenuUser, g_iMode, g_iGrantedConsent], ", "));
     integer iMode = g_iMode;
@@ -328,8 +343,7 @@ UserCommand(integer iAuth, string sCmd, key kID){
             llLoadURL(kID, "Want to open our website for further help?", "https://opencollar.cc");
         }
     }
-    if((llToLower(sCmd) == "menu runaway" || llToLower(sCmd) == "runaway") && g_iRunawayMode!=2){
-        g_iRunawayMode=0;
+    if((llToLower(sCmd) == "menu runaway") || (llToLower(sCmd) == "runaway")){
         RunawayMenu(kID,iAuth);
     }
     
@@ -388,21 +402,8 @@ UserCommand(integer iAuth, string sCmd, key kID){
         } 
     }
     if (iAuth <CMD_OWNER || iAuth>CMD_EVERYONE) return;
-    if (iAuth == CMD_OWNER && sCmd == "runaway") {
-        // trigger runaway sequence if approval was given
-        if(g_iRunawayMode == 2){
-            g_iRunawayMode=-1;
-            llMessageLinked(LINK_SET, NOTIFY_OWNERS, "Runaway completed on %WEARERNAME%'s collar", kID);
-            llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_owner","origin");
-            llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_trust","origin");
-            llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_block","origin");
-            llMessageLinked(LINK_SET, NOTIFY, "0Runaway complete", g_kWearer);
-            return;
-        }
-            
-    }
     
-     if(sCmd == "print auth"){
+    if(sCmd == "print auth"){
          if(iAuth == CMD_OWNER || iAuth == CMD_TRUSTED || iAuth == CMD_WEARER)
             PrintAccess(kID);
         else
@@ -429,7 +430,6 @@ integer SENSORDIALOG = -9003;
 integer SAY = 1004;
 integer g_iInterfaceChannel;
 
-
 integer g_iStartup=TRUE;
 default
 {
@@ -455,6 +455,7 @@ state active
 {
     on_rez(integer iNum){
         llMessageLinked(LINK_SET, ALIVE, llGetScriptName(),"");
+        g_iStartup=TRUE;
     }
     changed(integer change){
         if (change & CHANGED_OWNER) llResetScript();
@@ -488,7 +489,6 @@ state active
         }
     }
     
-    
     run_time_permissions(integer iPerm) {
         if (iPerm & PERMISSION_ATTACH) {
             llOwnerSay("@detach=yes");
@@ -497,49 +497,68 @@ state active
     }
     
     listen(integer c,string n,key i,string m){
-        if(c == g_iInterfaceChannel && llGetOwnerKey(i)==g_kWearer){
-            //do nothing if wearer isnt owner of the object
-            if (llGetOwnerKey(i) != g_kWearer) return;
-            //play ping pong with the Sub AO
-            if (m == "OpenCollar?") llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar=Yes");
-            else if (m == "OpenCollar=Yes") {
-                llOwnerSay("\n\nATTENTION: You are attempting to wear more than one OpenCollar core. This causes errors with other compatible accessories and your RLV relay. For a smooth experience, and to avoid wearing unnecessary script duplicates, please consider to take off \""+n+"\" manually if it doesn't detach automatically.\n");
-                llRegionSayTo(i,g_iInterfaceChannel,"There can be only one!");
-            } else if (m == "There can be only one!" ) {
-                llOwnerSay("/me has been detached.");
-                llRequestPermissions(g_kWearer,PERMISSION_ATTACH);
+         if(c == g_iInterfaceChannel) {
+             if (llGetOwnerKey(i)==g_kWearer){
+                //play ping pong with the Sub AO only if object is owned by wearer
+                if (m == "OpenCollar?") llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar=Yes");
+                else if (m == "OpenCollar=Yes") {
+                    llOwnerSay("\n\nATTENTION: You are attempting to wear more than one OpenCollar core. This causes errors with other compatible accessories and your RLV relay. For a smooth experience, and to avoid wearing unnecessary script duplicates, please consider to take off \""+n+"\" manually if it doesn't detach automatically.\n");
+                    llRegionSayTo(i,g_iInterfaceChannel,"There can be only one!");
+                } else if (m == "There can be only one!" ) {
+                    llOwnerSay("/me has been detached.");
+                    llRequestPermissions(g_kWearer,PERMISSION_ATTACH);
+                }
             }
-            else if(llToLower(llGetSubString(m,0,5))=="menuto")    {
+            if(llToLower(llGetSubString(m,0,5))=="menuto")    {
                 m=llStringTrim(llGetSubString(m,6,-1),STRING_TRIM);
-                if(llGetAgentSize((key)m)) llMessageLinked(LINK_SET,0,"menu",m);
+                if(llGetAgentSize((key)m)!=ZERO_VECTOR && llGetOwnerKey(i)==(key)m) llMessageLinked(LINK_SET,0,"menu",m);
+                return;
+            }
+            else {
+                key kAuthKey=llGetOwnerKey(i);
+                integer iAuth=CalcAuth(kAuthKey);
+                if(llGetSubString(m,0,6)=="authas:"){ //messages prefixed authas:(key)=(cmd) will use the auth level of key if LOWER than object owner auth.
+                    kAuthKey=llGetSubString(m,7,42);
+                    m=llGetSubString(m,44,-1);
+                    if(llGetAgentSize(kAuthKey)){
+                        integer iAKAuth=CalcAuth(kAuthKey);
+                        if(iAKAuth>iAuth) iAuth=iAKAuth;
+                    }
+                    else return;
+                }
+                if(llToLower(llGetSubString(m,0,8))=="checkauth" && CalcAuth(kAuthKey)>=CMD_OWNER && CalcAuth(kAuthKey)<=CMD_EVERYONE) {
+                    integer iReplyChan=(integer)llGetSubString(m,10,-1);
+                    if(iReplyChan) llRegionSayTo(i,iReplyChan,"authreply|"+(string)g_kWearer+"|"+(string)CalcAuth(kAuthKey)+"|"+(string)kAuthKey);
+                } else if (!llSubStringIndex(m,(string)g_kWearer + ":")){
+                    m = llGetSubString(m, 37, -1);
+                    if(llGetAgentSize(kAuthKey)) llMessageLinked(LINK_SET, iAuth , m , llGetOwnerKey(i));
+                }
+            }
+            return;
+        }
+        string CMD;
+        if(llSubStringIndex(llToLower(m),llToLower(g_sPrefix))==0) {
+            CMD=llGetSubString(m,llStringLength(g_sPrefix),-1);
+        } else if(llGetSubString(m,0,0) == "*" || (llGetSubString(m,0,0)=="#" && i!=g_kWearer)) {
+            CMD = llGetSubString(m,1,-1);
+        } 
+        CMD=llStringTrim(CMD,STRING_TRIM);
+        if(i==g_kWearer) {
+            list lTmp = llParseString2List(m,[" ","(",")"],[]);
+            string sDump = llToLower(llDumpList2String(lTmp, ""));
+            if(sDump == llToLower(g_sSafeword) && !g_iSafewordDisable) {
+                llMessageLinked(LINK_SET, CMD_SAFEWORD, "","");
+                SW();
                 return;
             }
         }
-            
-        
-        
-        if(llToLower(llGetSubString(m,0,llStringLength(g_sPrefix)-1))==llToLower(g_sPrefix)){
-            string CMD=llGetSubString(m,llStringLength(g_sPrefix),-1);
-            if(llGetSubString(CMD,0,0)==" ")CMD=llDumpList2String(llParseString2List(CMD,[" "],[]), " ");
-            llMessageLinked(LINK_SET, CMD_ZERO, CMD, llGetOwnerKey(i));
-        } else if(llGetSubString(m,0,0) == "*"){
-            string CMD = llGetSubString(m,1,-1);
-            if(llGetSubString(CMD,0,0)==" ")CMD=llDumpList2String(llParseString2List(CMD,[" "],[])," ");
-            llMessageLinked(LINK_SET, CMD_ZERO, CMD, llGetOwnerKey(i));
-        } else {
-            list lTmp = llParseString2List(m,[" ","(",")"],[]);
-            string sDump = llToLower(llDumpList2String(lTmp, ""));
-            
-            if(sDump == llToLower(g_sSafeword) && !g_iSafewordDisable && i == g_kWearer){
-                llMessageLinked(LINK_SET, CMD_SAFEWORD, "","");
-                SW();
-            }
+        if(CMD!="" && CMD!="initialize" && CMD!="runaway_confirmed") {
+            llMessageLinked(LINK_SET, CalcAuth(llGetOwnerKey(i)),llStringTrim(CMD,STRING_TRIM_HEAD),llGetOwnerKey(i));
         }
+
     }
     
     link_message(integer iSender, integer iNum, string sStr, key kID){
-        
-        
         
         //if(iNum>=CMD_OWNER && iNum <= CMD_NOACCESS) llOwnerSay(llDumpList2String([iSender, iNum, sStr, kID], " ^ "));
         if(iNum == CMD_ZERO){
@@ -552,11 +571,6 @@ state active
             //llOwnerSay("{API} Calculate auth for "+(string)kID+"="+(string)iAuth+";"+sStr);
             llMessageLinked(LINK_SET, AUTH_REPLY, "AuthReply|"+(string)kID+"|"+(string)iAuth,sStr);
         } else if(iNum >= CMD_OWNER && iNum <= CMD_NOACCESS) UserCommand(iNum, sStr, kID);
-            
-        else if (iNum == DIALOG_TIMEOUT) {
-            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
-        }
         else if(iNum == LM_SETTING_RESPONSE){
             list lPar = llParseString2List(sStr, ["_","="],[]);
             string sToken = llList2String(lPar,0);
@@ -671,10 +685,9 @@ state active
         } else if(iNum == STARTUP && sStr=="ALL"){
             llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "ALL","");
         } else if(iNum == DIALOG_RESPONSE){
-            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            if(iMenuIndex!=-1){
-                string sMenu = llList2String(g_lMenuIDs, iMenuIndex+1);
-                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
+            integer iPos = llSubStringIndex(kID, "~"+llGetScriptName());
+            if(iPos>0){
+                string sMenu = llGetSubString(kID, 0, iPos-1);
                 list lMenuParams = llParseString2List(sStr, ["|"],[]);
                 key kAv = llList2Key(lMenuParams,0);
                 string sMsg = llList2String(lMenuParams,1);
@@ -734,24 +747,22 @@ state active
                     } else if(sMsg == "Disable"){
                         g_kDenyRunawayRequester=kAv;
                         Dialog(g_kWearer, "\nsecondlife:///app/agent/"+(string)kAv+"/about wants to disable your ability to 'Runaway'. This can only be reversed by an owner. \n\nYou may accept or deny this action.", [], ["Accept", "Deny"], 0, CMD_WEARER, "confirmdenyrunaway");
-                      // g_iRunaway=FALSE;
-                      // llMessageLinked(LINK_SET, LM_SETTING_SAVE, "AUTH_runaway=0", "origin");
-                      //  llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "5", "spring_access:"+(string)kAv);
                     } else if(sMsg == "No"){
-                        // return
-                        g_iRunawayMode=-1;
                         llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "spring_access:"+(string)kAv);
                         return;
                     } else if(sMsg == "Yes"){
-                        // trigger runaway
                         if((kAv == g_kWearer || iAuth == CMD_OWNER ) && g_iRunaway){
-                            g_iRunawayMode=2;
+                            // trigger runaway sequence if approval was given
                             llMessageLinked(LINK_SET, NOTIFY_OWNERS, "%WEARERNAME% has runaway.", "");
-                            llMessageLinked(LINK_SET, CMD_OWNER, "runaway", g_kWearer);
+                            llMessageLinked(LINK_SET, CMD_OWNER, "runaway_confirmed", g_kWearer);
                             llMessageLinked(LINK_SET, CMD_SAFEWORD, "safeword", "");
-                            llMessageLinked(LINK_SET, CMD_OWNER, "clear", g_kWearer);
-                            
+                            llSleep(0.5); // Wait for notifications before clearing owners
                             llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "5", "spring_access:"+(string)kAv);
+                            llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_owner","origin");
+                            llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_trust","origin");
+                            llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_block","origin");
+                            llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_group","origin");
+                            llMessageLinked(LINK_SET, NOTIFY, "0Runaway complete", g_kWearer);
                         }
                     }
                 } else if(sMenu=="confirmdenyrunaway") {
