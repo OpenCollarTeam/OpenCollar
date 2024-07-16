@@ -21,6 +21,7 @@ Medea (Medea Destiny)
                             to handle this cleanly.
                             * Added short llSleep before remenuing after detaching a clothing layer to ensure the viewer 
                             removes the layer before replying to the getoutfit command.
+      * Dec 2023            * Clothing locks now get cleared on RLV_CLEAR/Safeword function.
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
@@ -58,7 +59,7 @@ integer MENUNAME_RESPONSE = 3001;
 
 //integer RLV_CMD = 6000;
 integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
-
+integer RLV_CLEAR = 6002;//RLV plugins should clear their restriction lists upon receiving this message.
 //integer RLV_OFF = 6100; // send to inform plugins that RLV is disabled now, no message or key needed
 //integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no message or key needed
 
@@ -124,7 +125,7 @@ UserCommand(integer iNum, string sStr, key kID) {
 
 key g_kWearer;
 list g_lMenuIDs;
-integer g_iMenuStride;
+integer g_iMenuStride = 3;
 //list g_lOwner;
 //list g_lTrust;
 //list g_lBlock;
@@ -336,7 +337,11 @@ state active
                 ApplyMask();
             }
         } else if(iNum == RLV_REFRESH)ApplyMask();
-        else if(iNum == LM_SETTING_DELETE){
+        else if(iNum == RLV_CLEAR) {
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "undress_mask=","");
+            g_lMasks = [];
+            ApplyMask();
+        } else if(iNum == LM_SETTING_DELETE){
             // This is recieved back from settings when a setting is deleted
             //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
             //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);

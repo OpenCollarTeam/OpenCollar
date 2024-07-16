@@ -7,8 +7,9 @@ Copyright ©2021
 
 Aria (Tashia Redrose)
     * Dec 2019      - Rewrote Outfits & Reset Script Version to 1.0
-    
-    
+
+Medea (Medea Destiny)
+    Nov 2023        - Fix to ignore case (i.e either "menu detach" or "menu Detach") issue #875
 et al.
 
 Licensed under the GPLv2. See LICENSE for full details.
@@ -84,22 +85,24 @@ Menu(key kID, integer iAuth) {
 }
 
 UserCommand(integer iNum, string sStr, key kID) {
-    if (llSubStringIndex(sStr,llToLower(g_sSubMenu)) && sStr != "menu "+g_sSubMenu) return;
+    sStr=llToLower(sStr);
+    //if (llSubStringIndex(sStr,llToLower(g_sSubMenu)) && sStr != "menu "+llToLower(g_sSubMenu)) return;
     
-    if (sStr==g_sSubMenu || sStr == "menu "+g_sSubMenu) Menu(kID, iNum);
+    if (sStr==llToLower(g_sSubMenu) || sStr == "menu "+llToLower(g_sSubMenu)) Menu(kID, iNum);
+    
     //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
-    else {
+   /* else {
         integer iWSuccess = 0; 
         string sChangetype = llList2String(llParseString2List(sStr, [" "], []),0);
         string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),1);
         string sText;
         
-    }
+    }*/
 }
 
 key g_kWearer;
 list g_lMenuIDs;
-integer g_iMenuStride;
+integer g_iMenuStride = 3;
 integer g_iLocked=FALSE;
 integer ALIVE = -55;
 integer READY = -56;

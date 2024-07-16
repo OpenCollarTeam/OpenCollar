@@ -6,7 +6,8 @@ Aria (Tashia Redrose)
     * Feb 2021       -       Created oc_unwelder_hud
 Medea (Medea Destiny)
       Aug 2022    -  Fix for issue #862, allow wearer with trusted perm to operate    
-    
+Ping (Pingout Duffield)
+   * Dec 2022    -   Fix for issue #907, order of Welded -> Addons Limited checking
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
@@ -227,25 +228,25 @@ default
                         }
                     }
                     
-                    if(sStr == "settings=sent"){
-                        if(g_iAddonLimitation){
-                            llOwnerSay("Addons Limited is checked. To unweld, someone with Owner access (including wearer if they are Owner) must: 1) Open the collar menu. 2)Click Settings. 3) Click the Addons button in Settings. UNCHECK AddOns Limited. Leave WearerAdd and Addons CHECKED. The Wearer can then proceed to unweld.");
-                            Link("offline", 0, "", g_kUser);
-                            llSleep(2);
-                            llResetScript();
-                        } else {
-                            llOwnerSay("Checking for an existing collar weld");
+                   if(sStr == "settings=sent"){
+                            llSay(0, "Checking for a existing collar weld");
                             if(g_iWelded){
-                                llOwnerSay("Unweld tool now ready.");
-                                llOwnerSay("Building consent prompt");
+                                llSay(0, "Unweld tool now ready.");
+                                llSay(0, "Building consent prompt");
                                 Link("from_addon", 0, "menu "+g_sAddon, g_kUser);
-                                llOwnerSay("If for some reason this prompt does not show up, go into your addons menu to find the Unwelder button");
+                                llSay(0, "If for some reason this prompt does not show up, go into your addons menu to find the Unwelder button");
                             }else{
-                                llOwnerSay("Collar is not welded. Aborting");
+                                llSay(0, "Collar is not welded. Aborting");
                                 Link("offline", 0, "", g_kUser);
                                 llSleep(2);
                                 llResetScript();
                             }
+                            
+                    if(g_iAddonLimitation){
+                            llSay(0, "Addons Limited is checked. To unweld, a collar owner (including unowned wearer) must go to the collar Settings menu and find the AddOn Settings button.  Uncheck AddOns Limited and then proceed to unweld.");
+                            Link("offline", 0, "", g_kUser);
+                            llSleep(2);
+                            llResetScript();
                         }
                     }
                 }

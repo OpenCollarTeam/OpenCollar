@@ -12,6 +12,11 @@ Medea Destiny -
                 version of function now works with prompts of any length and does not break up words.
               - Changed prompt for button descriptions in local chat from "Please check..." to "See..." to trigger it less often
               - Added warning text to prompt when prompt is trunctated, so menu prompt text will now show "(CONT. IN LOCAL CHAT)"
+    Mar 2024  - Emergency fix for extended sensor function flooding memory and crashing script
+
+Nikki Lacrima
+    Aug 2023 - Changed functions for clearing auth so  auth doesn't persist for open menus
+
 */
 integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
@@ -566,6 +571,9 @@ state active
 
 
     sensor(integer num_detected){
+        if(num_detected>16) num_detected=16;
+        //LL just expanded sensor to up to 32 hits. Thanks LL, but there's a ton of content 
+        //out there not designed to cope with that which are gonna stack-heap now. For now at least we'll trim back to 16.
         //get sensot request info from list
         list lParams=llParseStringKeepNulls(llList2String(g_lSensorDetails,0), ["|"], []);
         key kID = (key)llList2String(g_lSensorDetails,1);
@@ -695,9 +703,17 @@ state active
             } else if (sToken == g_sGlobalToken+"prefix"){
                 if (sValue != "") g_sPrefix=sValue;
             } else if (sToken == g_sGlobalToken+"channel") g_iListenChan = (integer)sValue;
-            else if (sToken == "auth_owner")
-                g_lOwners = llParseString2List(sValue, [","], []);
-            else if(sToken == g_sGlobalToken + "showlevel") g_iShowLevel = (integer)sValue;
+            else if (sToken == "auth_owner") {
+                list t_lOwners = llParseString2List(sValue, [","], []);
+                integer iPos =0;
+                integer iEnd = llGetListLength(g_lOwners);
+                for(iPos=0;iPos<iEnd;iPos++){
+                    // Clear users that are removed from owners list
+                    if (llListFindList(t_lOwners,llList2List(g_lOwners,iPos,iPos))==-1)
+                        ClearUser((key)llList2String(g_lOwners, iPos));
+                }                
+                g_lOwners = t_lOwners;
+            } else if(sToken == g_sGlobalToken + "showlevel") g_iShowLevel = (integer)sValue;
             else if(sToken == "auth_block"){
                 list lBlock = llParseString2List(sValue,[","],[]);
 
@@ -708,6 +724,16 @@ state active
                 }
             } else if(sToken == g_sGlobalToken+"verbosity"){
                 g_iVerbosityLevel=(integer)sValue;
+            }
+        } else if (iNum == LM_SETTING_EMPTY) {
+            if (sStr == "auth_owner") {
+                // Invalidate all owner menus 
+                integer iPos =0;
+                integer iEnd = llGetListLength(g_lOwners);
+                for(iPos=0;iPos<iEnd;iPos++){
+                    ClearUser((key)llList2String(g_lOwners, iPos));
+                }
+                g_lOwners = [];
             }
         } else if (iNum == NOTIFY )    Notify(kID,llGetSubString(sStr,1,-1),(integer)llGetSubString(sStr,0,0));
         else if (iNum == SAY )         Say(llGetSubString(sStr,1,-1),(integer)llGetSubString(sStr,0,0));

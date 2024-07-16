@@ -1,0 +1,374 @@
+/*
+This file is a part of OpenCollar.
+Created by Medea Destiny copyright 2023
+Licensed under the GPLv2. See LICENSE for full details.
+https://github.com/OpenCollarTeam/OpenCollar
+
+
+This script is intended as an example to demonstrate more complicated
+applications of the OC interface channel. Until OC8.3, the interface channel
+has been used for some very basic inter-object communication -- mainly collars
+sending a ping to check that they are the only collar worn, and triggering
+extra collars to autodetach (formerly known as the highlander system). 
+Previously there was also a hudchannel which was used by the OpenCollar Remote
+to send commands directly to the collar, but this functionality got wrapped into
+the interface channel a while back, and then lost when the OC Remote started using
+the add-on interface.
+
+The interface channel already supports the menuto command, whereby the collar 
+can be asked to send a menu to someone with the command:
+menuto:target_key
+
+This is used by the oc_wearer_hud, a simple script that can be dropped into a prim
+to make a very basic script that allows the wearer to click a hud button to bring
+up their collar menu rather than having to type in a chat command or click their
+collar.
+
+As of 8.3 the interface channel's ability to process chat commands has been restored
+and enhanced. This allows objects to communicate with OpenCollar without having to
+establish a connection between the object and the collar via the add-on system, and 
+is more suitable than add-ons for uses where the object is not intended to share
+variables with the collar, or instert a menu into the collar's own menus.
+
+The interface channel is a private channel which each collar listens
+to, and the channel number will vary from collar to collar, as it is
+derived from the wearer's UUID. The function getChannel(key kAv) below
+shows how to derive the personal channel for any person.
+
+Commands are sent to the collar's interface channel in the format
+
+target_key:command 
+
+where targetkey is the uuid of the target and command is the command
+sequence that will be sent by the collar as a linked message, as if it
+had been issued via chat command. Anything that will work as a chat command
+i.e /1 (prefix) command
+can function through the interface channel.
+
+Auth for commands will normally be processed as the auth for the owner of the object.
+However it is possible to prefix your command with:
+authas:operator_key=target_key:command
+In this case, the collar will use whichever is LOWER of the auth level of the object
+owner and operator_key. Note that as a security measure this will only function when
+operator_key is found in the sim.
+For example, consider an object with this simple script:
+
+default
+{
+    touch_start(integer number)
+    {
+        llSay(getChannel(llGetOwner()),(string)llGetOwner()+":kneel");
+    }
+}
+
+When clicked, the object will chat on the object owner's channel with the
+owner's key followed by ":kneel", which will send the kneel command to the 
+owner's collar. The kneel command will be authed with the owner of the object, 
+and as collar wearers can trigger a kneel command in themselves, it will always
+work.
+
+However if we change the line to:
+
+   llSay(getChannel(llGetOwner()),"authas:"+(string)llDetectedKey(0)+"="+(string)llGetOwner()+":kneel");
+...the command will now be authed according to the auth level of the person touching
+the object, and the auth level returned will be whichever has LEAST authority, between the
+person touching and the owner of the object. So if the collar is on public, anyone can use
+the object to trigger the collar wearer to kneel, while if the collar isn't then anyone
+with owner or trusted permission on the collar can, but other people can't.
+
+Another function that the interface channel handles is CHECKAUTH, which will cause the collar to
+reply with the auth level the object has on a specified channel. For example:
+
+llSay(getChannel(target_key),"checkauth 1111");
+
+... will cause the collar of the target_key to reply on channel 1111 with:
+"authreply|target_key|(auth level)|(key of person authed)"
+
+where auth level is the auth of the owner of the object sending it 
+(so long as the owner of the object has any access at all -- the collar 
+simply won't reply if auth doesn't pass). Normally the key of the person
+authed will be the owner of the object sending the message. However this
+can be combined with authas as follows:
+
+llSay(getChannel(target_key),"authas:(test_key):checkauth 1111");
+
+...in this case, the collar will reply with the auth level of test_key, so:
+"authreply|target_key|(auth level)|test_key"
+
+The idea behind this system is that objects can act with the auth 
+of the person operating them rather than the auth of the object owner. 
+Note that regardless of the auth level of the test subject, this will
+only work if the owner of the object has sufficient auth to get a menu.
+This will never pass an auth level that is greater than the owner of the
+object. For example if an object is owned by someone with trusted 
+permission, even if the person operating the object has owner permission,
+the auth level returned will be trusted.
+
+LIMITATION: the system sends link messages with the auth level returned by
+authas, but it will send linked messages with the owner of the sending object
+as id, noth the authas key. While this has some downsides such as not allowing
+someone else's object to provide you with a menu, it's required to ensure commands
+are not spoofed.
+
+*/
+
+integer getChannel(key kAv) //function to return interface channel of target
+{
+    integer chan= -llAbs((integer)("0x" + llGetSubString(kAv,30,-1)));
+    if(chan==0) chan= -9876; //I mean it COULD happen. 
+    return chan;
+}
+
+integer iTime=5; //This is how long we're going to wait for replies from collars when scanning for a target.
+
+key kTarget; //Once picked, target's key stored here.
+integer iTargetChan;  // and their interface channel stored here
+string sTargetInfo; //Info including user's access level stored here for use in the menu
+
+integer iHandle; //dialog stuff
+integer iChan;
+
+integer iScan; //TRUE while a scan is in progress.
+
+integer iMenuType; //1 for a scan menu to select target, 0 for main menu
+
+list lHits; //temporary list which stores people found who have an accessible collar
+
+key kOperator; //Key of person using device.
+
+
+integer iLeashed; //These three variables store whether these actions have been done yet.
+integer iRestricted;
+integer iKneeling;
+
+scan()
+{
+    kTarget=NULL_KEY; //Blank all target info, we're getting a new target.
+    iTargetChan=-1;
+    sTargetInfo=""; 
+    
+    llRegionSayTo(kOperator,0,"Scanning for accessible collars. Please wait "+(string)iTime+" seconds.");
+    iScan=TRUE; //this tells the script it's mid-scan;
+    lHits=[];
+    list t1=llGetAgentList(AGENT_LIST_PARCEL,[]); //Get List of Agents in Parcel
+    list t2;
+    vector pos;
+    vector mypos=llGetPos();
+    while(llGetListLength(t1)) //Create new list in form distance, key
+    {
+        pos=llList2Vector(llGetObjectDetails(llList2Key(t1,0),[OBJECT_POS]),0);
+        t2+=[llVecDist(pos,mypos),llList2Key(t1,0)];
+        t1=llDeleteSubList(t1,0,0);
+    }
+    t2=llListSort(t2,2,TRUE); // sort list by distance
+    if(llGetListLength(t2)>16) t2=llList2List(t2,0,15); //trim list to 8 nearest keys (16 entries of key/distance pairs
+    iChan=(integer)llFrand(9999)+9999;
+    iHandle=llListen(iChan,"","","");
+    llSetTimerEvent(iTime); 
+    while(llGetListLength(t2))
+    {
+        key try=llList2Key(t2,1); //key is the second element in the distance/key pair
+        llRegionSay(getChannel(try),"authas:"+(string)kOperator+":checkauth="+(string)iChan); //send checkauth command for each found key
+        t2=llDeleteSubList(t2,0,1);
+    }
+}
+menu(key target)
+{
+    if(target!=kOperator) return;
+    iMenuType=0;
+    iChan=(integer)llFrand(9999)+9999;
+    iHandle=llListen(iChan,"",target,"");
+    llSetTimerEvent(60);
+    list buttons;
+    if(!iLeashed) buttons+="Leash"; //Add these buttons if the function hasn't already been used.
+    if(!iRestricted) buttons+="Restrict";
+    if(!iKneeling) buttons+="Kneel";
+    if(iKneeling||iRestricted||iLeashed) buttons+="Release"; //Add release button if anything is set
+    buttons=["Quit","New Target"]+buttons;
+    llDialog(target,sTargetInfo+"\nPick something to do to target!",buttons,iChan);
+}
+default
+{
+    state_entry()
+    {
+        
+    }
+
+    touch_start(integer total_number)
+    {
+        if(iScan)
+        {
+            llRegionSayTo(llDetectedKey(0),0,"Busy scanning, wait a few seconds please!");
+            return;
+        }
+        if(llDetectedKey(0)!=kOperator) //New user, rescan for targets
+        {
+            kOperator=llDetectedKey(0); //store the key of the person operating the device.
+            scan();
+        }
+        else menu(kOperator); //Current operator has clicked again, just give 'em a menu!
+    }
+    listen(integer iChannel, string sName, key kID, string sMsg)
+    {
+        if(iScan)
+        {
+            list t=llParseString2List(sMsg,["|"],[]);
+            if(llList2String(t,0)=="authreply") //reply from collar in the form authreply|Wearer_Key|auth_level|operator key
+            {
+                if(kOperator!=llList2Key(t,3)) 
+                {
+                    //TRUE if message is not intended for current operator. Something went wrong, we start again.
+                    llRegionSayTo(kOperator,0,"Scan failed! Please try again in a moment.");
+                    kOperator=NULL_KEY;
+                    llSetTimerEvent(0);
+                    llListenRemove(iHandle);
+                    iScan=FALSE;
+                    llSleep(3);
+                    return;
+                }
+                    
+                if(llGetOwnerKey(kID)==llList2Key(t,1)) //this should always be true, but we double-check
+                {
+                    integer auth=(integer)llList2String(t,2);
+                    if(auth==500) lHits+=["Owner",llList2Key(t,1)];
+                    else if(auth==501) lHits+=["Trusted",llList2Key(t,1)];
+                    else if(auth==502) lHits+=["Group",llList2Key(t,1)];
+                    else if(auth==503) lHits+=["Wearer",llList2Key(t,1)];
+                    else if(auth==504) lHits+=["Public",llList2Key(t,1)];
+                    //added a pair of values to the hits list auth level, followed by wearer key
+                }
+            }
+        }
+        else
+        {
+            llSetTimerEvent(0);
+            llListenRemove(iHandle);
+            if(iMenuType==1) //Scan results menu. Here we pick a target.
+            {
+                if(sMsg=="rescan")
+                {
+                    scan();
+                    return;
+                }
+                iScan=FALSE; //We're no longer scanning.
+                if(sMsg=="QUIT") return;
+                else
+                {
+                    //A button was clicked representing someone on the lHits hitlist. Find out who
+                    //and set them as a target.
+                    integer index=(integer)sMsg;
+                    if(index)
+                    {
+                        index=index*2-1;
+                        kTarget=llList2String(lHits,index); //Set the target;
+                        iTargetChan=getChannel(kTarget); //Set the target's interface channel
+                        sTargetInfo="Target: secondlife:///app/agent/"+(string)kTarget+"/about\nYour auth level is: "+llList2String(lHits,index-1)+".";
+                        menu(kID);
+                    }
+                    lHits=[];
+                }
+            }
+            else if(iMenuType==0) //Command menu, once a target has been picked.
+            {
+                if(sMsg=="New Target")
+                {
+                    //send the scan command again. As the user is the same we don't need to change kOperator
+                    scan();
+                    return;
+                }
+                if(sMsg=="Quit") return;
+                else if(sMsg=="Leash")
+                {
+                    llRegionSayTo(kTarget,iTargetChan,"authas:"+(string)kID+"="+(string)kTarget+":anchor "+(string)llGetKey());
+                    iLeashed=TRUE;
+                    //We send the command with authas:(operator)=(targetkey):command. Here command is post (obect key)
+                    //which will order the collar to leash to the object sending the command.
+                }
+                else if(sMsg=="Kneel")
+                {
+                    iKneeling=TRUE;
+                    llRegionSayTo(kTarget,iTargetChan,"authas:"+(string)kID+"="+(string)kTarget+":kneel");
+                    //This one is very simple, we're just sending the kneel command. Same as chatting "(prefix) kneel"
+                }
+                else if(sMsg=="Restrict")
+                {
+                    iRestricted=TRUE;
+                    llRegionSayTo(kTarget,iTargetChan,"authas:"+(string)kID+"="+(string)kTarget+":restriction add Sit TP");
+                    llRegionSayTo(kTarget,iTargetChan,"authas:"+(string)kID+"="+(string)kTarget+":restriction add Landmark");
+                    llRegionSayTo(kTarget,iTargetChan,"authas:"+(string)kID+"="+(string)kTarget+":restriction add TP Location");
+                    llRegionSayTo(kTarget,iTargetChan,"authas:"+(string)kID+"="+(string)kTarget+":restriction add Accept TP");
+                    //Although this is a bit more complicated, it's all the same principle. This is really just the same as
+                    //using chat commands to add restrictions, one after the other. Note that you can (as of 8.3) use the
+                    //actual RLV commands (for example tploc rather that TP Location, but we're using the button names from the
+                    //restrictions menu here.
+                }
+                else if(sMsg=="Release")
+                {
+                    if(iKneeling)
+                    {
+                        iKneeling=FALSE;
+                        llRegionSayTo(kTarget,iTargetChan,"authas:"+(string)kID+"="+(string)kTarget+":stop");
+                        //Clear the variable and send the chat command to stop kneeling.
+                    }
+                    if(iLeashed)
+                    {
+                        iLeashed=FALSE;
+                        llRegionSayTo(kTarget,iTargetChan,"authas:"+(string)kID+"="+(string)kTarget+":unleash");
+                        //Clear the variable and send the chat command to unleash
+                    }
+                    if(iRestricted)
+                    {
+                        iRestricted=FALSE;
+                        llRegionSayTo(kTarget,iTargetChan,"authas:"+(string)kID+"="+(string)kTarget+":restriction rem Sit TP");
+                        llRegionSayTo(kTarget,iTargetChan,"authas:"+(string)kID+"="+(string)kTarget+":restriction rem Landmark");
+                        llRegionSayTo(kTarget,iTargetChan,"authas:"+(string)kID+"="+(string)kTarget+":restriction rem TP Location");
+                        llRegionSayTo(kTarget,iTargetChan,"authas:"+(string)kID+"="+(string)kTarget+":restriction rem Accept TP");
+                        //You get the drill by now!
+                    }
+                }
+                menu(kID); //Refresh the menu.
+                    
+                        
+            }
+        }
+    }
+    timer()
+    {
+        llSetTimerEvent(0);
+        llListenRemove(iHandle);
+        if(iScan)
+        {
+            //timer while listening for checkauth responses is up.
+            iScan=FALSE;
+            if(llGetListLength(lHits)==0) llRegionSayTo(kOperator,0,"Sorry, there's nobody on the parcel wearing an OC8.3 or newer collar that you have access to.");
+            else
+            {
+                //We've got at least one collar response, so create a menu to allow user to pick their target from the options
+                iChan=-1000-(integer)llFrand(99999);
+                list buttons=["1","2","3","4","5","6","7","8"];
+                integer i=llGetListLength(lHits);
+                buttons=llList2List(buttons,0,(i/2)-1); //trim button list to length of hit list;
+                if(i>2)buttons=llList2List(buttons,0,0)+["Rescan","Quit"]+llList2List(buttons,1,-1);
+                else buttons+=["Rescan","Quit"]; //put the rescan and quit buttons on the bottom row
+                string text="Pick a target. Options as follows: (access / name)\n";
+                integer x;
+                while(x<i)
+                {
+                    text+=(string)((integer)x/2+1)+": "+llList2String(lHits,x)+" / secondlife:///app/agent/"+llList2String(lHits,x+1)+"/about\n";
+                    x=x+2;
+                }
+                iHandle=llListen(iChan,"",kOperator,"");
+                llSetTimerEvent(60);
+                iMenuType=1; //This variable indicates we're generating a menu to select target
+                llDialog(kOperator,text,buttons,iChan);
+            }
+        }
+        else
+        {
+            if(llGetAgentSize(kOperator)) llRegionSayTo(kOperator,0,"Menu timed out!");
+            kOperator=NULL_KEY;
+        }
+    }
+                
+                    
+}

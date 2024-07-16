@@ -160,12 +160,11 @@ UserCommand(integer iNum, string sStr, key kID) {
         if(iNum !=CMD_OWNER)return;
 
         if(sChangetype == "title"){
-            string sTitle = llDumpList2String(llList2List(llParseString2List(sStr,[" "],[]), 1,-1)," ");
-            if(sTitle == ""){
+            if(sChangevalue == ""){
                 Dialog(kID, "What should the title say?", [], [], 0, iNum, "Textbox~Title");
                 return;
             }
-            g_sTitle=sTitle;
+            g_sTitle=llDumpList2String(llList2List(llParseString2List(sStr,[" "],[]), 1,-1)," ");
             Save(SAVE_TITLE);
         } else if(sChangetype == "titler"){
             if(sChangevalue == "color"){

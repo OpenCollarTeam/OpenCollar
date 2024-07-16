@@ -18,7 +18,12 @@ Lillith (Lillith Xue)
 Phidoux (Taya Maruti)
     *Sept 2022      - Limited core lock/unlock to wearer and owner (issue #855)
 et al.
-
+    *Mar 2023       - Fixed lock issues with "~" and some navigation errors. (issue #910)
+    *June 2023      - Fixed Lock issue kAv instead of kID on the button check.
+    *June 20 2023   - Fixed Stray ~ that was causing detach to not work.
+Medea (Medea Destiny)
+   *Nov 2023        - Fix for #902 (kAV instead of kID on button check) was not complete, 
+                      No Access notify also changed to kAV
 
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
@@ -27,7 +32,7 @@ https://github.com/OpenCollarTeam/OpenCollar
 
 string g_sParentMenu = "Apps";
 string g_sSubMenu = "Outfits";
-string g_sAppVersion = "1.6";
+string g_sAppVersion = "1.7";
 //string g_sScriptVersion = "8.0";
 
 
@@ -239,6 +244,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                 g_sPath=GetFolderName(FALSE)+"/"+sChangevalue;
                 g_iListenTimeout=0;
             }
+            llOwnerSay("[command "+sChangetype+"]"+g_sPath);
 
             if(!g_iLocked){
                 llOwnerSay("@detach=n");
@@ -247,6 +253,7 @@ UserCommand(integer iNum, string sStr, key kID) {
             ForceLockCore();
             TickBrowser();
             llSetTimerEvent(1);
+            llOwnerSay("[command "+sChangetype+"] Attempt detach");
             if(!Bool((g_iAccessBitSet&32))){
                 if(llSubStringIndex(g_sPath, GetFolderName(TRUE))==-1)
                     llOwnerSay("@detachall:"+GetFolderName(FALSE)+"=force");
@@ -257,15 +264,25 @@ UserCommand(integer iNum, string sStr, key kID) {
             }
             llSleep(2); // incase of lag
             string sAppend;
-            if(g_iRLVa)sAppend=RLVA_APPEND;
+            if(g_iRLVa)
+            {
+                sAppend=RLVA_APPEND;
+            }
+            else
+            {
+                sAppend=RLV_APPEND;
+            }
             if (g_sPath == GetOutfitSystem(FALSE)+"/" || g_sPath == GetOutfitSystem(FALSE)+"/"+sAppend) g_sLastOutfit = "NONE";
             else g_sLastOutfit=g_sPath;
 
+            if(!g_iLocked){
+                llOwnerSay("@detach=y");
+            }
             RmCorelock();
             llSleep(1);
         }
         if(sChangetype == "wear"){ //This looks like dead code TODO: Verify for removal?
-            if (g_sPath != "" && g_sPath != ".") llOwnerSay("@attachallover:"+g_sPath+"=force");
+            if (g_sPath != "~" && g_sPath != ".") llOwnerSay("@attachallover:"+g_sPath+"=force");
         }
     }
 }
@@ -307,11 +324,14 @@ ForceLockCore(){
     llOwnerSay("@detachallthis:"+GetOutfitSystem(TRUE)+"=y");
     llSleep(1);
     llOwnerSay("@detachallthis:"+GetOutfitSystem(TRUE)+"=n");
-    llSleep(0.5);
+    llSleep(1); // origionaly 0.5 may be to short and causes ~.core to be open during detach process.
 }
 
 RmCorelock(){
-    llOwnerSay("@detachallthis:"+GetOutfitSystem(TRUE)+"=y");
+    if(!g_iLockCore)
+    {
+        llOwnerSay("@detachallthis:"+GetOutfitSystem(TRUE)+"=y");
+    }
 }
 
 integer ALIVE = -55;
@@ -321,6 +341,7 @@ integer STARTUP = -57;
 integer g_iRLVa = FALSE;
 
 string RLVA_APPEND=".";
+string RLV_APPEND="~";
 
 string GetOutfitSystem(integer iCorePath){
     if(g_iRLVa){
@@ -417,11 +438,10 @@ state active
                     if(sMsg == UPMENU) {
                         iRespring=FALSE;
                         llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
-                    }
-                    else if(sMsg == TickBox(g_iLockCore, "Lock Core")){
-                        if(iAuth != CMD_OWNER && kID != g_kWearer) {
-                           llMessageLinked(LINK_SET,NOTIFY, "0%NOACCESS% to core", kID);
-                           return;
+                    }else if(sMsg == TickBox(g_iLockCore, "Lock Core")){
+                        if(iAuth != CMD_OWNER && kAv != g_kWearer) {
+                            llMessageLinked(LINK_SET,NOTIFY, "0%NOACCESS% to core", kAv);
+                            return;
                         }
                         g_iLockCore=1-g_iLockCore;
                         llSetTimerEvent(120);
