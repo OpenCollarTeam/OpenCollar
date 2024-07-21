@@ -393,7 +393,7 @@ setText(integer on)
 {
     if(g_iTitlerActive) return;
     string msg;
-    if(on)
+    if(on==TRUE && LSDRead("TimerActive")=="1")
     {
         integer timeleft=(integer)LSDRead("LockTime")-(integer)llGetTime();
         timeleft=llRound((float)timeleft/60)*60; //Round to nearest minute as we only update each minute
