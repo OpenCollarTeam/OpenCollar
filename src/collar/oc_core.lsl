@@ -268,7 +268,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                 if(iNum==CMD_OWNER) {
                     llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_safeworddisable=1", "");
                     llMessageLinked(LINK_SET,NOTIFY,"1Safeword Disabled.",kID);
-                } else llOwnerSay("Only an owner can disable Safeword!");
+                } else llMessageLinked(LINK_SET,NOTIFY,"0Only an owner can disable Safeword!",kID);
                 return;
             } else if(sChangevalue!="") {
                 if(g_iSafewordDisable==TRUE && iNum!=CMD_OWNER) {
@@ -280,7 +280,10 @@ UserCommand(integer iNum, string sStr, key kID) {
                 llMessageLinked(LINK_SET,NOTIFY,"1Safeword is now set to '"+sChangevalue+"'.",kID);
                 llMessageLinked(LINK_SET, LM_SETTING_DELETE, "global_safeworddisable","");
                 llMessageLinked(LINK_SET, CMD_OWNER, "safeword-enable","");
-            } else llMessageLinked(LINK_SET, NOTIFY, "0The safeword is current set to: '"+g_sSafeword+"'",kID);
+            } else {
+                if(g_iSafewordDisable) llMessageLinked(LINK_SET, NOTIFY, "0The safeword is currently disabled.",kID);
+                else llMessageLinked(LINK_SET, NOTIFY, "0The safeword is currently set to: '"+g_sSafeword+"'",kID);
+            }
         } else if(sChangetype == "menu"){
             if(llToLower(sChangevalue) == "access"){
                 Dialog(kID,"",[],[],0,iNum,"Menu~Auth");
@@ -322,7 +325,7 @@ UserCommand(integer iNum, string sStr, key kID) {
             }
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_wearername="+sChangevalue, "");
             llSleep(0.5);
-            llMessageLinked(LINK_SET, NOTIFY, "0The wearer's name is now set to %WEARERNAME% (if this is the old name, please type '/1 (prefix) name' to confirm the change went through, we may just have lagged)", kID);
+            llMessageLinked(LINK_SET, NOTIFY, "1The wearer's name is now set to %WEARERNAME% (if this is the old name, please type '/1 (prefix) name' to confirm the change went through, we may just have lagged)", kID);
         } else if(llToLower(sChangetype) == "device"){
             if(iNum!=CMD_OWNER && kID!=g_kWearer){
                 llMessageLinked(LINK_THIS,NOTIFY,"No access to device name.",kID);
@@ -337,7 +340,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                 }
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_devicename="+sChangevalue,"");
                 llSleep(0.5); //To ensure the notify happens AFTER the new device name is in place.
-                llMessageLinked(LINK_SET, NOTIFY, "0The device name is now set to: %DEVICENAME% (if this is the old name, please type '/1 (prefix) device name' to confirm the change went through, we may just have lagged)", kID);
+                llMessageLinked(LINK_SET, NOTIFY, "1The device name is now set to: %DEVICENAME% (if this is the old name, please type '/1 (prefix) device name' to confirm the change went through, we may just have lagged)", kID);
             }
         } else if(llToLower(sChangetype) == "allowhide"){
             if(iNum == CMD_OWNER){
