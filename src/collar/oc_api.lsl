@@ -566,7 +566,7 @@ state active
                 SW();
                 return;
             }
-            else if(llLinksetDataRead("auth_WearerLockout")!="" && CMD!="runaway")
+            else if(llLinksetDataRead("auth_WearerLockout")!="" && CMD!="runaway" && CMD!="")
             {
                 llMessageLinked(LINK_SET,AUTH_WEARERLOCKOUT,"","");
                 return;
