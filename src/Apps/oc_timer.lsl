@@ -6,7 +6,9 @@ Copyright ©2024
 : Contributors :
 
 Medea (Medea Destiny)
-    *May 2024   -   Created script                             
+    *May 2024   -   Created script 
+Ping (Pingout Duffield)
+    *Jul 2024   -   Fixed typos in variable %WEARER% -> %WEARERNAME%                            
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
@@ -195,7 +197,7 @@ UserCommand(integer iAuth, string sCmd, key kAv)
     }
     if(LSDRead("TimerActive")=="1")
     {
-        if(iAuth>(integer)LSDRead("LastAuth")&& LSDRead("Permissive")!="1")
+        if(iAuth>(integer)LSDRead("LastAuth")&& (LSDRead("Permissive")!="1" || kAv==g_kWearer))
         {
             llMessageLinked(LINK_THIS,NOTIFY,"0Timer has been set by a user with higher auth than you, you can't override the current timer or settings.",kAv);
             if(remenu==TRUE && (kAv!=g_kWearer || LSDRead("Lockout")=="0") ) mainMenu(kAv,iAuth);
@@ -203,12 +205,12 @@ UserCommand(integer iAuth, string sCmd, key kAv)
         }
         if(sCmd=="endnow")
         {
-            llMessageLinked(LINK_THIS,NOTIFY,"1%WEARER%'s timer ended by secondlife:///app/agent/"+(string)kAv+"/about",kAv);
+            llMessageLinked(LINK_THIS,NOTIFY,"1%WEARERNAME%'s timer ended by secondlife:///app/agent/"+(string)kAv+"/about",kAv);
             stopTimer(TRUE);
         }
         else if(sCmd=="cancel")
         {
-             llMessageLinked(LINK_THIS,NOTIFY,"1%WEARER%'s timer cancelled by secondlife:///app/agent/"+(string)kAv+"/about",kAv);
+             llMessageLinked(LINK_THIS,NOTIFY,"1%WEARERNAME%'s timer cancelled by secondlife:///app/agent/"+(string)kAv+"/about",kAv);
             stopTimer(FALSE);
         }
         else llRegionSayTo(kAv,0,"Sorry, can't change that while timer is active.");
@@ -325,13 +327,15 @@ startTimer(key kAv, integer iAuth)
     }
     if(LSDRead("Titler")=="1" && g_iTitlerActive==FALSE) setText(TRUE);
     string msg=timeDisplay(time)+" timer Started!\nWhen the timer ends, the following commands will be issued:\n";
-    if(LSDRead("Unleash")=="1") msg+="Unleash\n";
-    if(LSDRead("Unpose")=="1") msg+="Stop animations\n";
-    if(LSDRead("ClearRLV")=="1") msg+="Clear all restrictions\n";
-    if(LSDRead("Unsit")=="1") msg+="Unsit if seated (even with strict sit when timer set by owner)\n";
+    string cmds;
+    if(LSDRead("Unleash")=="1") cmds+="Unleash\n";
+    if(LSDRead("Unpose")=="1") cmds+="Stop animations\n";
+    if(LSDRead("ClearRLV")=="1") cmds+="Clear all restrictions\n";
+    if(LSDRead("Unsit")=="1") cmds+="Unsit if seated (even with strict sit when timer set by owner)\n";
     list t=llCSV2List(LSDRead("Customs"));
-    msg+=llDumpList2String(t,"\n");
-    llMessageLinked(LINK_THIS,NOTIFY,"1"+msg,kAv);
+    cmds+=llDumpList2String(t,"\n");
+    if(cmds=="") cmds="None";
+    llMessageLinked(LINK_THIS,NOTIFY,"1"+msg+cmds,kAv);
     
 }
 stopTimer(integer execute)
@@ -393,7 +397,7 @@ setText(integer on)
 {
     if(g_iTitlerActive) return;
     string msg;
-    if(on)
+    if(on==TRUE && LSDRead("TimerActive")=="1")
     {
         integer timeleft=(integer)LSDRead("LockTime")-(integer)llGetTime();
         timeleft=llRound((float)timeleft/60)*60; //Round to nearest minute as we only update each minute
