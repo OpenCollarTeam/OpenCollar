@@ -197,7 +197,7 @@ UserCommand(integer iAuth, string sCmd, key kAv)
     }
     if(LSDRead("TimerActive")=="1")
     {
-        if(iAuth>(integer)LSDRead("LastAuth")&& LSDRead("Permissive")!="1")
+        if(iAuth>(integer)LSDRead("LastAuth")&& (LSDRead("Permissive")!="1" || kAv==g_kWearer))
         {
             llMessageLinked(LINK_THIS,NOTIFY,"0Timer has been set by a user with higher auth than you, you can't override the current timer or settings.",kAv);
             if(remenu==TRUE && (kAv!=g_kWearer || LSDRead("Lockout")=="0") ) mainMenu(kAv,iAuth);
