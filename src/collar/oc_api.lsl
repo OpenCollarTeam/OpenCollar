@@ -1,3 +1,4 @@
+
 /*
 This file is a part of OpenCollar.
 Copyright ©2021
@@ -19,7 +20,8 @@ Medea (Medea Destiny)
                     blacklist when permitted when also trusted (issue #849)
                 -   Fixed instance where interface channel is 0, also streamlined function, fix issue #819 
                 -   Prefix reset now works, and notifications sent when changing prefix.
-   *Nov 2023    -   Restored # prefix functionality, issue #897 and reformatted chat command handling for                                     efficiency. Chat commands no longer sent as CMD_ZERO for authing as this script handles
+   *Nov 2023    -   Reformatted chat command handling for efficiency. Chat commands no longer sent as 
+                    CMD_ZERO for authing as this script handles
                     auth so we can auth locally to save a link_message round trip on every chat command. 
                 -   Restored object command handling as per v7.x and previous, using interface channel
                     rather than HUDchannel as there seems no reason to duplicate and hudchannel stuff hasn't
@@ -33,16 +35,31 @@ Medea (Medea Destiny)
                     "(targetkey):sit (sittarget key)" - sit wearer on (sittarget key) if object owner has valid
                      auth
                 -   menuto cleanup requires menuto target to be in sim AND be the owner of the issuing command
-                -   Set g_iStartup to TRUE in active state on_rez event to restore "owned by" message #906             
+                -   Set g_iStartup to TRUE in active state on_rez event to restore "owned by" message #906  
+     *May 2024   -  Implemented wearerlockout for timer app and future rework of capture app, as well
+                    as future options for self-bondage, excluding wearer from all collar access etc. This uses
+                    Linkset data, the token being 'auth_WearerLockout". Any script that initiates a lockout
+                    should add its script name (excluding the "oc_" part to a comma-separated list, and remove
+                    itself from that list when removing, so that multiple scripts can apply this without interfering
+                    with each other. 
+                    When llLinksetDataRead("auth_WearerLocout") does not return an empty string,
+                    the only thing the wearer can do is safeword, which will deactivate it.
+                    Any attempt to trigger a menu/command will send the AUTH_WEARERLOCKOUT
+                    Link message. Any script setting a wearer lockout should respond to this with a status
+                    update.                
+                           
 Yosty7b3        
     *Oct 2021   -   Remove unused StrideOfList() function.
     *Feb 2022   -   Only reset when needed (part of boot speedup project).    
     
 Nikki Lacrima
+    *Aug 2023   -  Clear group on runaway issue #935  
     *Nov 2023   -   Only wearer can initiate and confirm runaway, add link message "runaway_confirmed" and 
                     remove the g_iRunawayMode. 
                 -   Add "#" prefix wildcard, issue #897
                 -   implemented Yosty7b3's menu streamlining, see pr#963 
+
+
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
@@ -78,6 +95,7 @@ integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upo
 //MESSAGE MAP
 integer AUTH_REQUEST = 600;
 integer AUTH_REPLY=601;
+integer AUTH_WEARERLOCKOUT=602;
 
 integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
@@ -128,6 +146,7 @@ key g_kMenuUser;
 
 
 integer CalcAuth(key kID) {
+    if(llLinksetDataRead("auth_WearerLockout")!="" && kID==g_kWearer) return CMD_NOACCESS;       
     string sID = (string)kID;
     // First check
     if(llGetListLength(g_lOwner) == 0 && kID==g_kWearer && llListFindList(g_lBlock,[sID])==-1)
@@ -424,7 +443,6 @@ integer SENSORDIALOG = -9003;
 integer SAY = 1004;
 integer g_iInterfaceChannel;
 
-
 integer g_iStartup=TRUE;
 default
 {
@@ -537,16 +555,29 @@ state active
         } else if(llGetSubString(m,0,0) == "*" || (llGetSubString(m,0,0)=="#" && i!=g_kWearer)) {
             CMD = llGetSubString(m,1,-1);
         } 
-        if(CMD!="" && CMD!="initialize") {
-            llMessageLinked(LINK_SET, CalcAuth(llGetOwnerKey(i)),llStringTrim(CMD,STRING_TRIM_HEAD),llGetOwnerKey(i));
-        } else if(i==g_kWearer) {
+
+        CMD=llStringTrim(CMD,STRING_TRIM);
+        if(i==g_kWearer) {
             list lTmp = llParseString2List(m,[" ","(",")"],[]);
             string sDump = llToLower(llDumpList2String(lTmp, ""));
             if(sDump == llToLower(g_sSafeword) && !g_iSafewordDisable) {
                 llMessageLinked(LINK_SET, CMD_SAFEWORD, "","");
+                llLinksetDataDelete("auth_WearerLockout");
                 SW();
+                return;
+            }
+            else if(llLinksetDataRead("auth_WearerLockout")!="" && CMD!="runaway" && CMD!="")
+            {
+                llMessageLinked(LINK_SET,AUTH_WEARERLOCKOUT,"","");
+                return;
             }
         }
+
+
+        if(CMD!="" && CMD!="initialize" && CMD!="runaway_confirmed") {
+            llMessageLinked(LINK_SET, CalcAuth(llGetOwnerKey(i)),llStringTrim(CMD,STRING_TRIM_HEAD),llGetOwnerKey(i));
+        }
+
     }
     
     link_message(integer iSender, integer iNum, string sStr, key kID){
@@ -556,7 +587,10 @@ state active
             if(sStr == "initialize")return;
             integer iAuth = CalcAuth(kID);
             //llOwnerSay( "{API} Calculate auth for "+(string)kID+"="+(string)iAuth+";"+sStr);
-            llMessageLinked(LINK_SET, iAuth, sStr, kID);
+            if(llLinksetDataRead("auth_WearerLockout")!="" && kID==g_kWearer && iAuth==CMD_NOACCESS ) {
+                llMessageLinked(LINK_SET,AUTH_WEARERLOCKOUT,"","");
+                return;
+        } else   llMessageLinked(LINK_SET, iAuth, sStr, kID);
         } else if(iNum == AUTH_REQUEST){
             integer iAuth = CalcAuth(kID);
             //llOwnerSay("{API} Calculate auth for "+(string)kID+"="+(string)iAuth+";"+sStr);
@@ -748,6 +782,7 @@ state active
                             llMessageLinked(LINK_SET, CMD_OWNER, "runaway_confirmed", g_kWearer);
                             llMessageLinked(LINK_SET, CMD_SAFEWORD, "safeword", "");
                             llSleep(0.5); // Wait for notifications before clearing owners
+                            llLinksetDataDelete("auth_WearerLockout");
                             llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "5", "spring_access:"+(string)kAv);
                             llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_owner","origin");
                             llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_trust","origin");

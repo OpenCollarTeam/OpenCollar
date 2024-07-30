@@ -46,7 +46,14 @@ Medea Destiny -
                     settings to be restored to defaults if trigged before settings are received.
                     (fixes #740, #720, #719)
     Aug2022     -   Fix auth filtering for changing exceptions. Issue #844 & #848
- 
+    Nov 20203   -   Added EXC_REFRESH link message capability to request all exceptions are refreshed.
+                    This to fix real leash temporary exception removing permanent exception, but likely to
+                    find other uses. This is less optimal than having a way to refresh individual exceptions,
+                    or even better having this script handle multiple source exceptions the way rlv_sys handles
+                    restrictions. However that's something to consider for 9.x where linkset data can reduce 
+                    memory load, this one's already very tight. Issue #1008
+                -   folded bool() function into checkbox() function with (iValue&1) and strReplace() into
+                    MuffleText() to save memory
 Krysten Minx -
    May2022      - Added check for valid UUID when setting custom exception
 */
@@ -90,6 +97,8 @@ integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upo
 integer RLV_CMD_OVERRIDE=6010; // one-shot (=force) command that will override restrictions. Only use if Auth is owner level
 integer RLV_OFF = 6100; // send to inform plugins that RLV is disabled now, no message or key needed
 integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no message or key needed
+integer EXC_REFRESH=6200; // send to request exceptions are refreshed.
+
 
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
@@ -111,13 +120,10 @@ key g_kWearer;
 
 string g_sCameraBackMenu="menu manage"; //for allowing the camera settings menu to be in 2 places.
 
-integer bool(integer a){
-    if(a)return TRUE;
-    else return FALSE;
-}
+
 list g_lCheckboxes=["⬜","⬛"];
 string Checkbox(integer iValue, string sLabel) {
-    return llList2String(g_lCheckboxes, bool(iValue))+" "+sLabel;
+    return llList2String(g_lCheckboxes, (iValue&1))+" "+sLabel;
 }
 
 list lRLVEx = [
@@ -175,17 +181,12 @@ list g_lMuffleReplace = [
 
 integer g_iMuffleListener;
 
-string strReplace(string str, string search, string replace) 
-{
-    return llDumpList2String(llParseStringKeepNulls((str = "") + str, [search], []), replace);
-}
-
 string MuffleText(string sText)
 {
     integer i;
     for (i=0; i<llGetListLength(g_lMuffleReplace);i+=2)
     {
-        sText = strReplace(sText, llList2String(g_lMuffleReplace,i),llList2String(g_lMuffleReplace,i+1));
+        sText = llDumpList2String(llParseStringKeepNulls(sText,llList2List(g_lMuffleReplace,i,i),[]),llList2String(g_lMuffleReplace,i+1));
     }
     return sText;
 }
@@ -221,7 +222,7 @@ MenuExceptions(key kID, integer iAuth) {
 list g_lCustomExceptions = []; // Exception name, Exception UUID, integer bitmask
 
 MenuCustomExceptionsSelect(key kID,integer iAuth){
-    string sPrompt = "\n[Exceptions]\n\nHere are your custom exceptions that are set\n\nNOTE: For groups, there are obviously some exceptions which will do nothing as there is no support for them viewer-side. We have no way to hide options that are irrelevant.";
+    string sPrompt = "\n[Exceptions]\n\nSet custom exceptions here\n\nNOTE: Group exceptions can be set, but not all are meaningful applied to a group.";
     Dialog(kID, sPrompt, llList2ListStrided(g_lCustomExceptions, 0,-1,3),["+ ADD", "- REM", UPMENU], 0, iAuth, "Exceptions~Custom");
 }
 
@@ -847,6 +848,8 @@ state active
             //ApplyAllExceptions(TRUE,TRUE,7,TRUE);
             SetAllExes(TRUE,EX_TYPE_OWNER|EX_TYPE_TRUSTED|EX_TYPE_CUSTOM,FALSE);
             g_iRLV = FALSE;
+        } else if(iNum==EXC_REFRESH) {
+            SetAllExes(FALSE,EX_TYPE_OWNER|EX_TYPE_TRUSTED|EX_TYPE_CUSTOM,FALSE);
         } else if (iNum == RLV_REFRESH || iNum == RLV_ON) {
             g_iRLV = TRUE;
             SetAllExes(FALSE,EX_TYPE_OWNER|EX_TYPE_TRUSTED|EX_TYPE_CUSTOM,FALSE);
@@ -886,3 +889,4 @@ state active
     }
 
 }
+
