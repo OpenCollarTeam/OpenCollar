@@ -3,7 +3,12 @@
 // Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, Romka Swallowtail,
 // lillith xue, littlemousy, Nikki Lacrima et al.
 // Licensed under the GPLv2.  See LICENSE for full details.
+/*
 
+ Nikki Lacrima
+    Aug 2023: Updated for lockguard chain texture
+    
+*/
 string g_sScriptVersion = "8.3";
 integer LINK_CMD_DEBUG=1999;
 //MESSAGE MAP
