@@ -10,6 +10,16 @@
 //show/hide for elements named: Bell
 //2009-01-30 Cleo Collins - 1. draft
 
+/* Other contributors
+
+Trix7125
+    *Feb 2024 - New bell sounds with normalized volumes
+AdmiralTails
+    *Aug 2023 - Ringing of bell dependent on On status, not Hidden status, as menu states.
+    
+*/
+
+
 string g_sScriptVersion = "8.1";
 integer LINK_CMD_DEBUG=1999;
 DebugOutput(key kID, list ITEMS){
