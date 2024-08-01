@@ -354,7 +354,7 @@ TeleportTo(string sStr,key kIssuer) {  //take a string in region (x,y,z) format,
         llMapDestination(sRegion, g_vLocalPos, ZERO_VECTOR);
     else  //We've got RLV, let's use it
         g_kRequestHandle = llRequestSimulatorData(sRegion, DATA_SIM_POS);
-        llRegionSayTo(kIssuer,0,"Sending "+llGetDisplayName(g_kWearer)+" to http://maps.secondlife.com/secondlife/"+sRegion+"/"+(string)((integer)g_vLocalPos.x) + "/"+(string)((integer)g_vLocalPos.y)+"/"+(string)((integer)g_vLocalPos.z)+".");   
+        llRegionSayTo(kIssuer,0,"Sending "+llGetDisplayName(g_kWearer)+" to http://maps.secondlife.com/secondlife/"+llEscapeURL(sRegion)+"/"+(string)((integer)g_vLocalPos.x) + "/"+(string)((integer)g_vLocalPos.y)+"/"+(string)((integer)g_vLocalPos.z)+".");   
     
    
 }
