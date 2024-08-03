@@ -1,6 +1,6 @@
 
 /* This file is part of OpenCollar.
- Copyright (c) 2008 - 2016 Nandana Singh, Lulu Pink, Garvin Twine,    
+ Copyright (c) 2008 - 2024 Nandana Singh, Lulu Pink, Garvin Twine,    
  Joy Stipe, Cleo Collins, Satomi Ahn, Master Starship, Toy Wylie,    
  Kaori Gray, Sei Lisa, Wendy Starfall, littlemousy, Romka Swallowtail,  
  Sumi Perl, Karo Weirsider, Kurt Burleigh, Marissa Mistwallow et al.   
@@ -10,6 +10,15 @@ Medea (medea.destiny)
     Nov 2023    -   Added EXC_REFRESH call after releasing strict leash
                 to ensure that exceptions that should be in place get 
                 restored. issue #1008
+    Aug 2024    -   Uses the above feature to add an accepttp function to
+                strict leash, so that the leash wearer. Notification now
+                sent to both leashee and leasher when leash is grabbed while
+                strict mode is active, informing them of restrictions/exceptions.
+                -   Refactored timer event to fix bypassed awaycounter functionality
+                so that the strict leash restrictions do not instantly get removed
+                when leash holder is absent. Time buffer now functions as intended and 
+                is extended from 15 to 60 seconds to give leash holder time after a 
+                teleport to send leashee a tp lure.         
 Nikki Larima 
     Nov 2023    - Remove processing of "runaway" command string, handled by CMD_SATEWORD
                   implemented Yosty7b3's menu streamlining, see pr#963    
@@ -121,7 +130,7 @@ integer g_iStrictModeOn=FALSE; //default is Real-Leash OFF
 integer g_iTurnModeOn = FALSE;
 integer g_iLeasherInRange=FALSE; //
 integer g_iRLVOn=FALSE;     // To store if RLV was enabled in the collar
-integer g_iAwayCounter=0;
+integer g_iAwayCounter=-1;
 
 
 
@@ -213,7 +222,9 @@ ApplyRestrictions() {
             if (g_kLeashedTo) {
                 //Debug("Setting restrictions");
                 //llSay(0, "RLV_CMD issue: no fly, notp");
-                llMessageLinked(LINK_SET, RLV_CMD, "fly=n,tplm=n,tplure=n,tploc=n,tplure:" + (string) g_kLeashedTo + "=add,fartouch=n,sittp=n", "realleash");     //set all restrictions
+                llMessageLinked(LINK_SET, RLV_CMD, "fly=n,tplm=n,tplure=n,tploc=n,tplure:" + (string) g_kLeashedTo + "=add,fartouch=n,sittp=n,accepttp:"+(string)g_kLeashedTo+"=add", "realleash"); 
+    //set all restrictions
+                llMessageLinked(LINK_SET,NOTIFY,"1Strict leash mode active. If leash holder leaves range, restrictions will persist for 1 minute. Leash holder may force TP leashee after leaving range during that 1 minute period.",g_kLeashedTo);
                 return;
                 
             }
@@ -690,7 +701,8 @@ state active
     timer() {
         dtext("timer : ping");
         //inlined old isInSimOrJustOutside function
-        if(g_bFollowMode){
+        if(g_bFollowMode)
+        {
             dtext("Mode is follow");
         }
         vector vLeashedToPos=llList2Vector(llGetObjectDetails(g_kLeashedTo,[OBJECT_POS]),0);
@@ -698,9 +710,12 @@ state active
         if(vLeashedToPos == ZERO_VECTOR || llVecDist(llGetPos(), vLeashedToPos)> 255) iIsInSimOrJustOutside=FALSE;
         
         if (iIsInSimOrJustOutside && llVecDist(llGetPos(),vLeashedToPos)<(60+g_iLength)) {   //if the leasher is now in range
+            
             dtext("timer : iIsInSimOrJustOutside && VecDist < (60+(iLength=3))");
-            if(!g_iLeasherInRange) { //and the leasher was previously not in range
-                if (g_iAwayCounter) {
+            if(!g_iLeasherInRange) 
+            { //and the leasher was previously not in range
+                if (g_iAwayCounter) 
+                {
                     g_iAwayCounter = -1;
                     llSetTimerEvent(3.0);
                 }
@@ -718,27 +733,50 @@ state active
                 ApplyRestrictions();
                 
                 if(!g_iAlreadyMoving) llMessageLinked(LINK_SET, LEASH_START_MOVEMENT,"","");
-            } else {
+            } 
+            else 
+            {
                 dtext("timer : LeasherInRange = TRUE");
             }
-        } else {   //the leasher is not now in range
+        } 
+        else 
+        {   //the leasher is not now in range
             dtext("timer : NotInSimOrOutside OR VecDist > (60+(iLength=3))");
-            if(g_iLeasherInRange) {  //but was a short while ago
-                if (g_iAwayCounter <= llGetUnixTime()) {
+            
+            if(g_iLeasherInRange) 
+            {  //but was a short while ago
+                
+                if(g_iAwayCounter==-1)
+                {
+                    
+                    //step 1, set AwayCounterto 0, 3 second timer.
+                    llSetTimerEvent(3);
+                    g_iAwayCounter=0;
+                    dtext("Leash holder was previously in range");
+                }
+                else if(g_iAwayCounter==0)
+                {
+                    //3 seconds after first fail to locate, disable leash motion
                     llTargetRemove(g_iTargetHandle);
                     llStopMoveToTarget();
                     if(!g_bFollowMode)
                         llMessageLinked(LINK_SET, CMD_PARTICLE, "unleash", g_kLeashedTo);
-                    g_iLeasherInRange=FALSE;
-                    ApplyRestrictions();
-                    g_iAwayCounter=-1;
                     dtext("No leash holder in range\n* Stopping leash particles");
                     if(g_iAlreadyMoving)llMessageLinked(LINK_SET, LEASH_END_MOVEMENT,"","");
-                } else if(g_iAwayCounter==-1){
-                    g_iAwayCounter = llGetUnixTime()+15;
-                    dtext("Leash holder was previously in range");
+                    g_iAwayCounter=llGetUnixTime()+60;
+                    g_iLeasherInRange=FALSE;
+                    //set awaycounter to +60 seconds.
                 }
-            } else {
+            } 
+            else 
+            {
+                if (g_iAwayCounter <= llGetUnixTime()) 
+                {
+                    //indicate out of range, clear realleash restrictions, reset awaycounter
+                    
+                    ApplyRestrictions();
+                    g_iAwayCounter=-1;
+                } 
                 // nothing else to do with the away counter
                 // slow down the timer
                 llSetTimerEvent(11);
