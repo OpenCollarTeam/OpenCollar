@@ -7,7 +7,7 @@
 /*
 Medea Destiny -
     Dec 2021   -   Provided clickable SLURL feedback to command issuer
-
+    Aug 2024   -   Fix for above, escaping sim name with spaces, issue #1026
 */
 
 string g_sScriptVersion = "8.2";
