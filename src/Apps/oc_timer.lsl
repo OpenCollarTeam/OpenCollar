@@ -230,7 +230,7 @@ UserCommand(integer iAuth, string sCmd, key kAv)
             sVal=(string)llList2List(lParams,2,-1);
             string sVal=(string)llList2List(lParams,2,-1);
             integer ti;
-            list t=llParseString2List(sVal,[","],["hourse","hrs","hr","hs","h"]);
+            list t=llParseString2List(sVal,[","],["hours","hrs","hr","hs","h"]);
             if(llGetListLength(t)>1)
             {
                 ti+=(integer)llList2String(t,0)*3600;
