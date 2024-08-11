@@ -20,7 +20,7 @@ AdmiralTails
 */
 
 
-string g_sScriptVersion = "8.1";
+string g_sScriptVersion = "8.3";
 integer LINK_CMD_DEBUG=1999;
 DebugOutput(key kID, list ITEMS){
     integer i=0;
