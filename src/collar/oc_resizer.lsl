@@ -10,7 +10,7 @@
 
 // Ping (Pingout Duffield) Jan 2023 Fix behavior of BACK button in Position, Rotation, and Size menus
 
-string g_sScriptVersion = "8.1.0000";
+string g_sScriptVersion = "8.3.0000";
 
 integer LINK_CMD_DEBUG=1999;
 string g_sSubMenu = "Size/Position";
