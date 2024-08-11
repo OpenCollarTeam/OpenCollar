@@ -19,7 +19,7 @@ Kristen Mynx -
         the relay, which is being changed at the same time.  Check the comments in oc_relay.
 */
 
-string g_sScriptVersion = "8.2";
+string g_sScriptVersion = "8.3";
 integer g_iRLVOn = TRUE;
 integer g_iRLVOff = FALSE;
 integer g_iViewerCheck = FALSE;
