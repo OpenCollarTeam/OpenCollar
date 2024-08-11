@@ -53,7 +53,7 @@ https://github.com/OpenCollarTeam/OpenCollar
  *     1.0 - Sharie Criss: Initial Alpha Release
 */
 
-string g_sScriptVersion = "8.0";
+string g_sScriptVersion = "8.3";
 string g_sAppVersion = "1.1";
 
 string g_sParentMenu = "Apps";
