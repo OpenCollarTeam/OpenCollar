@@ -23,7 +23,7 @@ https://github.com/OpenCollarTeam/OpenCollar
 
 string g_sParentMenu = "Apps";
 string g_sSubMenu = "Titler";
-string g_sVersion = "8.2"; // leave unmodified if not changed at all after release, otherwise change to next version number
+string g_sVersion = "8.3"; // leave unmodified if not changed at all after release, otherwise change to next version number
 
 DebugOutput(key kID, list ITEMS){
     integer i=0;
