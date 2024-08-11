@@ -10,7 +10,7 @@ Medea Destiny -
     Aug 2024   -   Fix for above, escaping sim name with spaces, issue #1026
 */
 
-string g_sScriptVersion = "8.2";
+string g_sScriptVersion = "8.3";
 integer LINK_CMD_DEBUG=1999;
 DebugOutput(key kID, list ITEMS){
     integer i=0;
