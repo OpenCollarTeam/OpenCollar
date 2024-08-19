@@ -33,7 +33,7 @@ https://github.com/OpenCollarTeam/OpenCollar
 string g_sParentMenu = "Apps";
 string g_sSubMenu = "Outfits";
 string g_sAppVersion = "1.7";
-//string g_sScriptVersion = "8.0";
+//string g_sScriptVersion = "8.3";
 
 
 //MESSAGE MAP

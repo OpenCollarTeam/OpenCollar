@@ -56,7 +56,7 @@ medea (medea destiny)
       Jun 2024  -   Extended chat command function above to allow for capitalization of individual restriction names.                     
                              
 */        
-string g_sScriptVersion = "8.2";
+string g_sScriptVersion = "8.3";
 
 string g_sParentMenu = "RLV";
 string g_sSubMenu = "Restrictions";

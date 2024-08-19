@@ -28,7 +28,7 @@ string Checkbox(integer iValue, string sLabel) {
 }
 
 
-string g_sScriptVersion = "8.0";
+string g_sScriptVersion = "8.3";
 string g_sAppVersion = "1.1";
 
 DebugOutput(key kDest, list lParams){
