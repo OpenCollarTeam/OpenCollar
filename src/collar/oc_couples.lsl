@@ -643,7 +643,7 @@ state active
 			llSetTimerEvent(0.0);
 			timer_reason = "";
 			ping_sent_to_key = NULL_KEY;
-			llMessageLinked(LINK_SET,NOTIFY,"0"+"Inviting "+ g_sPartnerName + " to a couples animation using legacy permissions.",g_kWearer);
+			llMessageLinked(LINK_SET,NOTIFY,"0"+"Inviting "+ g_sPartnerName + " to a couples animation.",g_kWearer);
 			llMessageLinked(LINK_SET,NOTIFY,"0"+"%WEARERNAME% invited you to a couples animation! Click [Yes] to accept.",g_kPartner);
 			llRequestPermissions(g_kPartner, PERMISSION_TRIGGER_ANIMATION);
 		}
