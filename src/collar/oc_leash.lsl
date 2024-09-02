@@ -75,7 +75,7 @@ integer RLV_CMD = 6000;
 
 integer RLV_OFF = 6100;
 integer RLV_ON = 6101;
-integer EXC_REFRESH=6200; // send to request exceptions are refreshed.
+integer EXC_REFRESH=6109; // send to request exceptions are refreshed.
 
 integer LEASH_START_MOVEMENT = 6200;
 integer LEASH_END_MOVEMENT = 6201;
