@@ -466,7 +466,7 @@ default
         FindLeashpointOrLock();
         RestoreWeldState();
 
-        if (!SettingExists("global_checkboxes")) g_lSettings = SetSetting("global_checkboxes", "▢,▣");
+        if (!SettingExists("global_checkboxes")) g_lSettings = SetSetting("global_checkboxes", "□","▣");
 
         if(llGetInventoryType(g_sSettings)!=INVENTORY_NONE){
             g_iSettingsRead=0;
