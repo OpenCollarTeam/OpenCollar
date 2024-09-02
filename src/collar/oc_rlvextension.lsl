@@ -97,7 +97,7 @@ integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upo
 integer RLV_CMD_OVERRIDE=6010; // one-shot (=force) command that will override restrictions. Only use if Auth is owner level
 integer RLV_OFF = 6100; // send to inform plugins that RLV is disabled now, no message or key needed
 integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no message or key needed
-integer EXC_REFRESH=6200; // send to request exceptions are refreshed.
+integer EXC_REFRESH=6109; // send to request exceptions are refreshed.
 
 
 integer DIALOG = -9000;
@@ -121,7 +121,7 @@ key g_kWearer;
 string g_sCameraBackMenu="menu manage"; //for allowing the camera settings menu to be in 2 places.
 
 
-list g_lCheckboxes=["⬜","⬛"];
+list g_lCheckboxes= ["□","▣"];
 string Checkbox(integer iValue, string sLabel) {
     return llList2String(g_lCheckboxes, (iValue&1))+" "+sLabel;
 }
@@ -849,6 +849,8 @@ state active
             SetAllExes(TRUE,EX_TYPE_OWNER|EX_TYPE_TRUSTED|EX_TYPE_CUSTOM,FALSE);
             g_iRLV = FALSE;
         } else if(iNum==EXC_REFRESH) {
+            SetAllExes(TRUE,EX_TYPE_OWNER|EX_TYPE_TRUSTED|EX_TYPE_CUSTOM,FALSE);
+            llSleep(1);
             SetAllExes(FALSE,EX_TYPE_OWNER|EX_TYPE_TRUSTED|EX_TYPE_CUSTOM,FALSE);
         } else if (iNum == RLV_REFRESH || iNum == RLV_ON) {
             g_iRLV = TRUE;
