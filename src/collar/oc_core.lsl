@@ -211,7 +211,7 @@ integer g_iPublic=FALSE;
 integer g_iCaptured = FALSE;
 integer g_iAllowWearerSetTrusted=FALSE;
 
-list g_lCheckboxes=["▢", "▣"];
+list g_lCheckboxes=["□","▣"];;
 string Checkbox(integer iValue, string sLabel) {
     return llList2String(g_lCheckboxes, (iValue>0))+" "+sLabel;
 }
