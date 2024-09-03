@@ -46,7 +46,7 @@ Medea Destiny -
                     settings to be restored to defaults if trigged before settings are received.
                     (fixes #740, #720, #719)
     Aug2022     -   Fix auth filtering for changing exceptions. Issue #844 & #848
-    Nov 20203   -   Added EXC_REFRESH link message capability to request all exceptions are refreshed.
+    Nov 2023   -   Added EXC_REFRESH link message capability to request all exceptions are refreshed.
                     This to fix real leash temporary exception removing permanent exception, but likely to
                     find other uses. This is less optimal than having a way to refresh individual exceptions,
                     or even better having this script handle multiple source exceptions the way rlv_sys handles
@@ -121,9 +121,9 @@ key g_kWearer;
 string g_sCameraBackMenu="menu manage"; //for allowing the camera settings menu to be in 2 places.
 
 
-list g_lCheckboxes=["⬜","⬛"];
+list g_lCheckboxes= ["□","▣"];
 string Checkbox(integer iValue, string sLabel) {
-    return llList2String(g_lCheckboxes, (iValue&1))+" "+sLabel;
+    return llList2String(g_lCheckboxes, (iValue>0))+" "+sLabel;
 }
 
 list lRLVEx = [
@@ -889,4 +889,3 @@ state active
     }
 
 }
-
