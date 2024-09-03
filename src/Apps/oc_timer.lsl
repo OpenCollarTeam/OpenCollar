@@ -65,10 +65,11 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 string buttonize(string token)
 {
     string t=LSDRead(token);
-    if(t=="0" || t=="") return "⬜ "+token;
-    else return "⬛ "+token;
+    if(t=="0" || t=="") return "□ "+token;
+    else return "▣ "+token;
     
 }
+
 mainMenu(key kAv, integer iAuth)
 {
     list buttons;
@@ -195,7 +196,7 @@ UserCommand(integer iAuth, string sCmd, key kAv)
             llMessageLinked(LINK_THIS,NOTIFY,"1Setting timer permissive to "+llList2String(["off","on"],(integer)sVal)+".",kAv);
         }
     }
-    if(LSDRead("TimerActive")=="1")
+    else if(LSDRead("TimerActive")=="1")
     {
         if(iAuth>(integer)LSDRead("LastAuth")&& (LSDRead("Permissive")!="1" || kAv==g_kWearer))
         {
@@ -523,8 +524,8 @@ default
                     } 
                     string sCmd;
                     string f=llGetSubString(sMsg,0,0);
-                    if(f=="⬜") sCmd=llGetSubString(sMsg,1,-1)+" on";
-                    else if(f=="⬛") sCmd=llGetSubString(sMsg,1,-1)+" off";
+                    if(f=="□") sCmd=llGetSubString(sMsg,1,-1)+" on";
+                    else if(f=="▣") sCmd=llGetSubString(sMsg,1,-1)+" off";
                     if(sCmd=="") sCmd=sMsg;
                     UserCommand(iAuth,g_sSubMenu+" "+sCmd+" remenu",kAv);
                     
@@ -575,4 +576,3 @@ default
     }
    
 }
-
