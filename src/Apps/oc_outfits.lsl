@@ -33,7 +33,7 @@ https://github.com/OpenCollarTeam/OpenCollar
 string g_sParentMenu = "Apps";
 string g_sSubMenu = "Outfits";
 string g_sAppVersion = "1.7";
-//string g_sScriptVersion = "8.0";
+//string g_sScriptVersion = "8.3";
 
 
 //MESSAGE MAP
@@ -86,7 +86,7 @@ integer bool(integer a){
     if(a)return TRUE;
     else return FALSE;
 }
-list g_lCheckboxes=["▢", "▣"];
+list g_lCheckboxes=["□","▣"];
 string TickBox(integer iValue, string sLabel) {
     return llList2String(g_lCheckboxes, bool(iValue))+" "+sLabel;
 }

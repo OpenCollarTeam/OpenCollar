@@ -21,6 +21,13 @@ K9K8E
 Tayaphidoux
     Jun 2022    - Restore AO pause functionality
 
+Medea (Medea Destiny)
+    Nov 2023    - Added StandOffset checkbox button to Anim menu. This toggles use of hover hieght
+                offset when no pose is selected (i.e. for stand animation). This has been a frequent
+                problem in support, with people accidentally setting a stand offset. However as some
+                people may use this it seemed better to keep the capability but have it switchable and
+                default to off. Issue #1012
+
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
 */
@@ -110,12 +117,12 @@ integer bool(integer a){
     else return FALSE;
 }
 integer g_iAnimLock=FALSE;
-list g_lCheckboxes=["▢", "▣"];
+list g_lCheckboxes= ["□","▣"];
 string Checkbox(integer iValue, string sLabel) {
     return llList2String(g_lCheckboxes, bool(iValue))+" "+sLabel;
 }
 integer g_iPosture = FALSE;
-
+integer g_iStandOffset = FALSE;
 Menu(key kID, integer iAuth) {
     string sPrompt = "\n[Animations]\n\nCurrent Animation: "+setor((g_lCurrentAnimations==[]), "None", llList2String(g_lCurrentAnimations, 0)+"\nCurrent Pose: "+setor((g_sPose==""), "None", g_sPose));
     list lButtons = [Checkbox(g_iAnimLock,"AnimLock"), "Pose"];
@@ -125,6 +132,8 @@ Menu(key kID, integer iAuth) {
     }else {
         sPrompt += "\n\n* Posture is only available if you have the ~stiff animation in inventory of the collar";
     }
+    lButtons +=[Checkbox(g_iStandOffset, "StandOffset")];
+    sPrompt+="\nHeight offsets while no pose is active can be toggled on or off with 'StandOffset;";
     Dialog(kID, sPrompt, lButtons+g_lAdditionalButtons, [UPMENU], 0, iAuth, "Menu~Animations");
 }
 
@@ -216,21 +225,23 @@ UserCommand(integer iNum, string sStr, key kID) {
             iRespringPoses=TRUE;
         } else if(sChangetype == UP_ARROW || sChangetype == "up" || sChangetype == DOWN_ARROW || sChangetype == "down"){
             // only owner or wearer
-            if(iNum == CMD_OWNER || iNum == CMD_WEARER){
+            if(iNum == CMD_OWNER || kID == g_kWearer){
                 // adjust current pose
                 //llOwnerSay(" up or down");
                 //sChangevalue="remenu";
                 integer iUp= FALSE;
                 iRespringPoses=TRUE;
                 if(sChangetype == UP_ARROW || sChangetype == "up")iUp=TRUE;
-                if(g_lCurrentAnimations == []){
+                if(g_lCurrentAnimations == [] ){
                     // adjust standing
                     //llOwnerSay("up: "+(string)iUp+"; anims list blank");
-                    if(iUp)g_fStandHover += g_fAdjustment;
-                    else g_fStandHover-=g_fAdjustment;
-                    if(g_fStandHover==0)llMessageLinked(LINK_SET,LM_SETTING_DELETE,"offset_standhover","");
-                    else llMessageLinked(LINK_SET, LM_SETTING_SAVE, "offset_standhover="+(string)g_fStandHover,"");
-                    llMessageLinked(LINK_SET, NOTIFY, "0The hover height for 'Standing' is now "+(string)g_fStandHover, g_kWearer);
+                    if(g_iStandOffset == TRUE) {
+                        if(iUp)g_fStandHover += g_fAdjustment;
+                        else g_fStandHover-=g_fAdjustment;
+                        if(g_fStandHover==0)llMessageLinked(LINK_SET,LM_SETTING_DELETE,"offset_standhover","");
+                        else llMessageLinked(LINK_SET, LM_SETTING_SAVE, "offset_standhover="+(string)g_fStandHover,"");
+                        llMessageLinked(LINK_SET, NOTIFY, "0The hover height for 'Standing' is now "+(string)g_fStandHover, g_kWearer);
+                    } else llMessageLinked(LINK_SET,NOTIFY,"0Hover height for 'Standing' cannot be set while StandOffset is off.",kID);
                 } else {
                     integer iPos=llListFindList(g_lAdjustments,llList2List(g_lCurrentAnimations, 0, 0));
                     if(iPos==-1){
@@ -268,7 +279,20 @@ UserCommand(integer iNum, string sStr, key kID) {
                     
                     
                 }
-            }else llMessageLinked(LINK_SET, NOTIFY, "%NOACCESS% to changing height", kID);
+            }else llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to changing pose offset", kID);
+        } else if(sChangetype=="standoffset"){
+            if(iNum==CMD_OWNER || kID==g_kWearer) {
+                if(sChangevalue=="on") {
+                     g_iStandOffset=TRUE;
+                     llMessageLinked(LINK_SET,LM_SETTING_SAVE, "offset_standoffset=1","");
+                } else {
+                    g_iStandOffset=FALSE;
+                    llMessageLinked(LINK_SET, LM_SETTING_DELETE, "offset_standoffset","");
+                }
+                
+                    
+                llMessageLinked(LINK_SET,NOTIFY,"1Stand Offset is now "+llList2String(["off","on"],g_iStandOffset),kID);
+            }else llMessageLinked(LINK_SET,NOTIFY,"0%NOACCESS%% to changing stand offset",kID);
         } else if(sChangetype == "animlock"){
             string text;
             if(iNum == CMD_OWNER){
@@ -344,7 +368,7 @@ MoveEnd(){
     if(g_iLeashMove)return;
     if(g_iPermissionGranted){
         if(g_lCurrentAnimations==[]){
-            if (g_fStandHover != 0.0)
+            if (g_fStandHover != 0.0 && g_iStandOffset == TRUE)
                 llMessageLinked(LINK_SET, RLV_CMD, "adjustheight:1;0;"+(string)g_fStandHover+"=force",g_kWearer);
         }else{
             g_iTimerMode = TIMER_START_ANIMATION;
@@ -386,7 +410,7 @@ StopAnimation(string anim){
     g_lCurrentAnimations = llDeleteSubList(g_lCurrentAnimations, aPos, aPos);
     if (aPos == 0){
         if (g_lCurrentAnimations == []){
-            if(g_fStandHover!=0)llMessageLinked(LINK_SET,RLV_CMD, "adjustheight:1;0;"+(string)g_fStandHover+"=force", g_kWearer);
+            if(g_fStandHover!=0 && g_iStandOffset == TRUE )llMessageLinked(LINK_SET,RLV_CMD, "adjustheight:1;0;"+(string)g_fStandHover+"=force", g_kWearer);
             else llMessageLinked(LINK_SET, RLV_CMD, "adjustheight:1;0;0=force",g_kWearer);
         }else PlayAnimation();
     }
@@ -397,7 +421,7 @@ StopAllAnimations(){
     llStopAnimation(llList2String(g_lCurrentAnimations, 0));
     g_lCurrentAnimations = [];
     g_sPose = "";
-    if(g_fStandHover!=0)llMessageLinked(LINK_SET,RLV_CMD, "adjustheight:1;0;"+(string)g_fStandHover+"=force", g_kWearer);
+    if(g_fStandHover!=0 && g_iStandOffset == TRUE )llMessageLinked(LINK_SET,RLV_CMD, "adjustheight:1;0;"+(string)g_fStandHover+"=force", g_kWearer);
     else llMessageLinked(LINK_SET, RLV_CMD, "adjustheight:1;0;0=force",g_kWearer);
 }
 
@@ -505,7 +529,7 @@ state active
         
         if(g_iTimerMode == TIMER_START_ANIMATION && llGetTime()>2.5){
             if(g_lCurrentAnimations==[]){
-                if(g_fStandHover != 0) llMessageLinked(LINK_SET, RLV_CMD, "adjustheight:1;0;"+(string)g_fStandHover,g_kWearer);
+                if(g_fStandHover != 0 && g_iStandOffset==TRUE) llMessageLinked(LINK_SET, RLV_CMD, "adjustheight:1;0;"+(string)g_fStandHover,g_kWearer);
             }else PlayAnimation();
             llSetTimerEvent(FALSE);
         }
@@ -570,15 +594,22 @@ state active
                     else if(sMsg == "Pose"){
                         PoseMenu(kAv,iAuth, 0);
                         iRespring=FALSE;
+                    } else if(sMsg == Checkbox(g_iStandOffset,"StandOffset")){ 
+                        if(iAuth==CMD_OWNER || kAv==g_kWearer) {
+                            g_iStandOffset=!g_iStandOffset;
+                            if(g_iStandOffset) UserCommand(iAuth,"standoffset on",kAv);
+                            else UserCommand(iAuth,"standoffset off",kAv);
+                        }
+                        else llMessageLinked(LINK_SET,NOTIFY,"0%NOACCESS% to changing stand offset",kAv);
                     } else if(sMsg == Checkbox(g_iPosture,"Posture")){
                         if(iAuth == CMD_OWNER){
                             if(g_iPosture){
                                 g_iPosture=0;
-                                llMessageLinked(LINK_SET, 0, "posture off",kAv);
+                                llMessageLinked(LINK_SET, iAuth, "posture off",kAv);
                             }
                             else {
                                 g_iPosture=1;
-                                llMessageLinked(LINK_SET, 0, "posture on",kAv);
+                                llMessageLinked(LINK_SET, iAuth, "posture on",kAv);
                             }
                         }
                         
@@ -635,12 +666,18 @@ state active
                     RunPosture();
                 }
             } else if(sTok == "offset"){
-                if(sVar == "hovers"){
+                if(sVar=="standoffset") {
+                    g_iStandOffset=(integer)sVal;
+                    if(g_lCurrentAnimations == [] && g_fStandHover!=0)llMessageLinked(LINK_SET,RLV_CMD, "adjustheight:1;0;"+(string)g_fStandHover+"=force", g_kWearer);
+                } else if(sVar == "hovers"){
                     g_lAdjustments = llParseString2List(sVal,[","],[]);
                 } else if(sVar == "standhover"){
-                    g_fStandHover = (float)sVal;
-                    if(g_fStandHover!=0)llMessageLinked(LINK_SET,RLV_CMD, "adjustheight:1;0;"+(string)g_fStandHover+"=force", g_kWearer);
-                    else llMessageLinked(LINK_SET, RLV_CMD, "adjustheight:1;0;0=force",g_kWearer);
+                    float fNew = (float)sVal;
+                    if(g_lCurrentAnimations == []){
+                        if(fNew!=0 && g_iStandOffset)llMessageLinked(LINK_SET,RLV_CMD, "adjustheight:1;0;"+(string)fNew+"=force", g_kWearer);
+                        else if(g_fStandHover!=0) llMessageLinked(LINK_SET, RLV_CMD, "adjustheight:1;0;0=force",g_kWearer);
+                    }
+                    g_fStandHover=fNew;
                 }
             }
         } else if(iNum == LM_SETTING_DELETE){
@@ -667,7 +704,10 @@ state active
                     RunPosture();
                 }
             } else if(sTok == "offset"){
-                if(sVar == "hovers"){
+                if(sVar =="standoffset") {
+                    g_iStandOffset=FALSE;
+                    if(g_lCurrentAnimations == []) llMessageLinked(LINK_SET, RLV_CMD, "adjustheight:1;0;0=force",g_kWearer); 
+                } else if(sVar == "hovers"){
                     g_lAdjustments=[];
                 } else if(sVar == "standhover"){
                     g_fStandHover = 0;

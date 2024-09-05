@@ -12,6 +12,8 @@ Medea (Medea Destiny)
                         term, added sanity checking for chat commands to ensure we don't try to search for nothing,
                         and no longer operate on empty search results. Issuer of chat command now stored as 
                         g_kChatUser so they can be notified if findfolder fails.
+
+Neil2Ball & Sue Cripter - Fix for OpenSim, replacing invalid return r(); with {r(); return}
                          
 et al.
 Licensed under the GPLv2. See LICENSE for full details.

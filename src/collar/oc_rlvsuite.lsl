@@ -1,13 +1,16 @@
 /*// This file is part of OpenCollar.
 //  Copyright (c) 2018 - 2019 Tashia Redrose, Silkie Sabra, lillith xue                            
 // Licensed under the GPLv2.  See LICENSE for full details. 
+
 medea (medea destiny)
-    June 2021   -   Fix for issue #492 / issue #432, command to update camera settings (blur amount, maxcamera and mincamera)
-                    when numeric value changed via RLV/RLV settings/Camera used insufficent auth level and incorrect 
-                    bitmask values to alter restriction while active even though the setting was altered.
-                -   Fix for issue #586, Dazzle set wrong restriction (was setting camunlock instead of renderresolutiondivisor)
-                    Added comments explaining the restrictions settings to make life easier for future
-                -   contributors and people learning from reading OC scripts.
+    June 2021   -   Fix for issue #492 / issue #432, command to update camera settings (blur amount, 
+                    maxcamera and mincamera) when numeric value changed via RLV/RLV settings/Camera 
+                    used insufficent auth level and incorrect bitmask values to alter restriction while
+                    active even though the setting was altered.
+                -   Fix for issue #586, Dazzle set wrong restriction (was setting camunlock instead of
+                    renderresolutiondivisor)
+                -   Added comments explaining the restrictions settings to make life easier for future
+                    contributors and people learning from reading OC scripts.
     Sept 2021   -   Fixes to comments above
                 -   Corrected values for Rummage and Dress restrictions, added @emote=n to Talk restrictions #649
                 -   Restored SetDebug, SetEnv and Mouselook restrictions which had gone missing.
@@ -21,8 +24,8 @@ medea (medea destiny)
                     have been changed to try to make the whole thing more user-friendly. Also "macro" terminology
                     has been removed, and preset used only where necessary to differentiate. issues #649 & # 654
                 -   Added ListRestrictions() function which converts restriction integer pairs into human-readable
-                    lists of restrictions and given chat command "(prefix)restriction list". Also used by List Presets
-                    button, which lists what the preset restriction buttons actually do. #649
+                    lists of restrictions and given chat command "(prefix)restriction list". Also used by List 
+                    Presets button, which lists what the preset restriction buttons actually do. #649
                 -   Given extensive explanatory text in menus. ListRestrictions() function is used to print out all
                     restrictions the wearer is currently under, rather than requiring menu user to visit every 
                     category menu to find out.  #649
@@ -33,15 +36,27 @@ medea (medea destiny)
                     requirements of setting individual restrictions as short-term solution to issue #656. 
                 -   Added Restore function to Customize menu to restore presets to defaults, per issue #663
                 -   Rewritten dialog code to set individual restrictions, 'cos it was badly broken. Issue #664
-    Feb 2022    -   Fix for #732: Empty g_lMacros list returned via LM_SETTING_RESPONSE parses as a list with a single 
-                    empty element, thus messing up the list stride. Not sure why we're keeping nulls here, but setting
-                    to empty list if list length is too short works.                   
-                
-                             
-                             
+    Feb 2022    -   Fix for #732: Empty g_lMacros list returned via LM_SETTING_RESPONSE parses as a list with a 
+                    single empty element, thus messing up the list stride. Not sure why we're keeping nulls here,
+                    but setting to empty list if list length is too short works.                                   
+    April 2023  -   #947 Fix stray restriction to apply sittp rather than sit restriction                    
+    Nov 2023    -   Chat command for applying restrictions had problems -- if the restriction itself is given
+                    rather than the button name, it would break. Added sanity check to ApplyCommand function,
+                    index of g_lRLVList is now checked to see if it gets an RLVCMD and if so converts to index
+                    of ButtonText, and returns if hit is CategoryIndex. Ensure the full command is fed
+                    to ApplyCommand, not just the first word -- ie (prefix) restriction add "TP Location"
+                    shouldn't attempt to add just "TP". NOTE: This fix will also allow presets with a space
+                    in the name to be accessed properly. 
+                -   Changed filtering in UserCommand so that capitalization does not have to match (i.e it
+                    will accept "Preset" as well as "preset". Now also passes rlv as a synonym for setting
+                    restrictions which was coded but rejected before hit, but filters to only pass to 
+                    ApplyCommand if there is a command following that is not "on" or "off" to avoid collision
+                    with RLV menu
+                -   Removed double menu for (prefix) restrictions
+      Jun 2024  -   Extended chat command function above to allow for capitalization of individual restriction names.                     
                              
 */        
-string g_sScriptVersion = "8.2";
+string g_sScriptVersion = "8.3";
 
 string g_sParentMenu = "RLV";
 string g_sSubMenu = "Restrictions";
@@ -103,7 +118,7 @@ integer bool(integer a){
     if(a)return TRUE;
     else return FALSE;
 }
-list g_lCheckboxes=["⬜","⬛"];
+list g_lCheckboxes= ["□","▣"];
 string Checkbox(integer iValue, string sLabel) {
     return llList2String(g_lCheckboxes, bool(iValue))+" "+sLabel;
 }
@@ -423,6 +438,20 @@ ApplyCommand(string sCommand, integer iAdd,key kID, integer iAuth)
 {
    // llSay(0, "Apply CMD "+sCommand+"|"+(string)iAdd);
     integer iMenuIndex = llListFindList(g_lRLVList,[sCommand]);
+    if(iMenuIndex==-1)
+    {
+        //command not found, let's do a capitalization check
+        integer max=llGetListLength(g_lRLVList);
+        integer iter;
+        while (iter<max && iMenuIndex==-1)
+        {
+            if(llToLower(llList2String(g_lRLVList,iter))==llToLower(sCommand)) iMenuIndex=iter;
+            ++iter;
+        }
+        if(iMenuIndex==-1) return;
+    }         
+    if(!(iMenuIndex-1)%3) return; //Hit on CategorIndex, i.e someone tried (prefix) restriction add 1
+    if(iMenuIndex%3) iMenuIndex-=2; //convert RLVCMD to ButtonText (i.e. tploc becomes TP Location)
     integer iActualIndex=iMenuIndex;
     integer iMenuIndex2;
     if(iMenuIndex/3>=31){
@@ -490,7 +519,7 @@ UserCommand(integer iNum, string sStr, key kID) {
     if (llToLower(sStr)=="restrictions" || llToLower(sStr) == "menu restrictions") Menu(kID, iNum);
     else if(llToLower(sStr)=="advanced" || llToLower(sStr) == "menu [advanced]")MenuDetailed(kID, iNum);
     else if(llToLower(sStr)=="customize" || llToLower(sStr) == "menu customize") MenuManage(kID,iNum);
-   else if(llToLower(sStr)=="list presets") {
+    else if(llToLower(sStr)=="list presets") {
         integer x=llGetListLength(g_lMacros);
         integer i;
         string out="0List of preset buttons, and what individual restrictions they apply:";
@@ -503,11 +532,14 @@ UserCommand(integer iNum, string sStr, key kID) {
         sStr=llGetSubString(sStr,14,-1);
         if(~llListFindList(g_lCategory,[sStr])) MenuCategory(kID,iNum,sStr);
     }
-    if (llSubStringIndex(sStr,"preset") && llSubStringIndex(sStr,"restriction") && llSubStringIndex(sStr,"restrictions") && llSubStringIndex(sStr,"sit")) return;
+    //if (llSubStringIndex(sStr,"preset") && llSubStringIndex(sStr,"restriction") && llSubStringIndex(sStr,"restrictions") && llSubStringIndex(sStr,"sit") && llSubStringIndex(sStr,"rlv") return;
     else { 
-        string sChangetype = llList2String(llParseString2List(sStr, [" "], []),0);
-        string sChangekey = llList2String(llParseString2List(sStr, [" "], []),1);
-        string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),2);
+        list lCommands=llParseString2List(sStr,[" "],[]);
+        string sChangetype = llToLower(llList2String(lCommands,0));
+        if(llListFindList(["preset","restriction","restrictions","sit","rlv"],[sChangetype])==-1) return;
+        string sChangekey = llList2String(lCommands,1);
+        string sChangevalue = llDumpList2String(llList2List(lCommands,2,-1)," ");
+        lCommands=[];
         //llOwnerSay(sChangetype+" | "+sChangekey);
         if (sChangetype == "preset") {
             integer iIndex = llListFindList(g_lMacros,[sChangevalue]);
@@ -528,12 +560,13 @@ UserCommand(integer iNum, string sStr, key kID) {
                     } 
                 } else llMessageLinked(LINK_SET, NOTIFY, "0"+"Insufficient authority to set restrictions!", kID);
             } else llInstantMessage(kID,"Restriction preset '"+sChangevalue+"' does not exist!");
-        } else if (sChangetype == "restriction" || sChangetype == "rlv") {
+        } else if (sChangetype == "restriction" || sChangetype == "rlv" || sChangetype=="restrictions") {
+            if(sChangekey=="on" || sChangekey =="off" || sChangekey=="") return;
             if (sChangekey == "add") ApplyCommand(sChangevalue,TRUE, kID, iNum);
             else if (sChangekey == "rem" && iNum != CMD_WEARER) ApplyCommand(sChangevalue,FALSE, kID, iNum);
             else if (sChangekey == "list")
                  llMessageLinked(LINK_SET,NOTIFY,"0Current Restrictions:\n"+llDumpList2String(ListRestrictions(g_iRestrictions1,g_iRestrictions2),"\n"),kID);
-        } else if (sChangetype == "restrictions") Menu(kID,iNum);
+        } //else if (sChangetype == "restrictions") Menu(kID,iNum);
     }
 }
 

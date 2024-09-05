@@ -15,6 +15,7 @@ Medea (Medea Destiny)
                     provide colour menu rather than setting colour to black, and means that "[prefix]
                     title color red" will now pop up the color menu rather than setting the title text
                     to black. Text changes now set instantly rather than after 2.5 second delay.
+   Sept 2023    -   Zero length titles via chat commands (i.e [prefix]title) were returning "title" as a title rather than opening the textbox as intended.  
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
@@ -22,7 +23,7 @@ https://github.com/OpenCollarTeam/OpenCollar
 
 string g_sParentMenu = "Apps";
 string g_sSubMenu = "Titler";
-string g_sVersion = "8.2"; // leave unmodified if not changed at all after release, otherwise change to next version number
+string g_sVersion = "8.3"; // leave unmodified if not changed at all after release, otherwise change to next version number
 
 DebugOutput(key kID, list ITEMS){
     integer i=0;
@@ -83,7 +84,7 @@ integer bool(integer a){
     if(a)return TRUE;
     else return FALSE;
 }
-list g_lCheckboxes=["⬜","⬛"];
+list g_lCheckboxes=["□","▣"];
 string Checkbox(integer iValue, string sLabel) {
     return llList2String(g_lCheckboxes, bool(iValue))+" "+sLabel;
 }

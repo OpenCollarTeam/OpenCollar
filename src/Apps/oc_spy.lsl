@@ -53,7 +53,7 @@ https://github.com/OpenCollarTeam/OpenCollar
  *     1.0 - Sharie Criss: Initial Alpha Release
 */
 
-string g_sScriptVersion = "8.0";
+string g_sScriptVersion = "8.3";
 string g_sAppVersion = "1.1";
 
 string g_sParentMenu = "Apps";
@@ -139,7 +139,7 @@ integer bool(integer a) {
     else return FALSE;
 }
 
-list g_lCheckboxes=["⬜","⬛"];
+list g_lCheckboxes=["□","▣"];
 
 string Checkbox(integer iValue, string sLabel) {
     return llList2String(g_lCheckboxes, bool(iValue))+" "+sLabel;
