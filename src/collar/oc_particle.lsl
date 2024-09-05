@@ -806,7 +806,7 @@ state active
                     }  else if (sLGCMD == "ping") {
                         llWhisper( g_iChan_LOCKGUARD, "lockguard " + (string)llGetOwner() + " " +  sLGPoint + " okay" );
                     }  else {
-                        llWhisper(0, "Unknown LockGuard command: "+sLGCMD);
+                        //llWhisper(0, "Unknown LockGuard command: "+sLGCMD);
                     }   
                 }
                 if (iIsLinking) {
