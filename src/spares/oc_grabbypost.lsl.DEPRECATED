@@ -5,6 +5,9 @@
 
 // Needs OpenCollar 6.x or higher to work
 
+//NO LONGER WORKS! THIS FILE IS DEPRECATED, PLEASE SEE OC_SMART_POST INSTEAD
+//THIS FILE IS RETAINED IN CASE SOMEONE WOULD LIKE TO UPDATE IT AT SOME POINT
+
 // Sends a "<wearer_uuid>:ping" message on the collar command channel:
 // Collar answers with "<wearer_uuid>:pong"
 // Sends a anchor command on the collar command channel to grab them

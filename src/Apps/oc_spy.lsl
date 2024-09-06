@@ -4,6 +4,8 @@ This file is a part of OpenCollar.
 Copyright 2020
 
 : Contributors :
+Nikki Lacrima (Nov 2023)
+     - Check for empty owner list, replaces faulty "runaway" check.
 Aria (tiff589/Tashia Redrose) - (Feb 2020)
      - Misc fixes
      - Updated checkboxes to use the checkbox function, which made checking in the dialog_response section easier as well.
@@ -51,7 +53,7 @@ https://github.com/OpenCollarTeam/OpenCollar
  *     1.0 - Sharie Criss: Initial Alpha Release
 */
 
-string g_sScriptVersion = "8.0";
+string g_sScriptVersion = "8.3";
 string g_sAppVersion = "1.1";
 
 string g_sParentMenu = "Apps";
@@ -137,7 +139,7 @@ integer bool(integer a) {
     else return FALSE;
 }
 
-list g_lCheckboxes=["⬜","⬛"];
+list g_lCheckboxes=["□","▣"];
 
 string Checkbox(integer iValue, string sLabel) {
     return llList2String(g_lCheckboxes, bool(iValue))+" "+sLabel;
@@ -229,15 +231,6 @@ SaveSettings() {
 UserCommand(integer iNum, string sStr, key kID) {
     if (iNum<CMD_OWNER || iNum>CMD_WEARER) return;
     if (llSubStringIndex(sStr,llToLower(g_sSubMenu)) && sStr != "menu "+g_sSubMenu) return;
-    if ((iNum == CMD_OWNER || iNum == CMD_WEARER )&& sStr == "runaway") {
-        g_lOwner = [];
-        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "spy_subchat","");
-        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "spy_attchat","");
-        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "spy_radar","");
-        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "spy_trace","");
-        g_itrace = g_iradar = g_isubchat = g_iattchat = FALSE;
-        return;
-    }
     if (sStr==g_sSubMenu || sStr == "menu "+g_sSubMenu) {
         Menu(kID, iNum);
     } else if (iNum!=CMD_OWNER || kID==g_kWearer) { // If it's the wearer or not an owner....
@@ -534,6 +527,13 @@ default
             } else if(llList2String(lSettings,0)=="auth"){
                 if(llList2String(lSettings,1)=="owner") {
                     g_lOwner = llParseString2List(llList2String(lSettings,2), [","], []);
+                    if (g_lOwner == []) {
+                        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "spy_subchat","");
+                        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "spy_attchat","");
+                        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "spy_radar","");
+                        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "spy_trace","");
+                        g_itrace = g_iradar = g_isubchat = g_iattchat = FALSE;
+                    }
                 }
             }
         } else if(iNum == LM_SETTING_DELETE) {
@@ -546,6 +546,14 @@ default
                 else if(llList2String(lSettings,1)=="attchat") g_iattchat=FALSE;
                 else if(llList2String(lSettings,1)=="radar") g_iradar=FALSE;
                 else if(llList2String(lSettings,1)=="trace") g_itrace=FALSE;
+            } else if (sStr == "auth_owner") {
+                g_lOwner = [];
+                llMessageLinked(LINK_SET, LM_SETTING_DELETE, "spy_subchat","");
+                llMessageLinked(LINK_SET, LM_SETTING_DELETE, "spy_attchat","");
+                llMessageLinked(LINK_SET, LM_SETTING_DELETE, "spy_radar","");
+                llMessageLinked(LINK_SET, LM_SETTING_DELETE, "spy_trace","");
+                g_itrace = g_iradar = g_isubchat = g_iattchat = FALSE;
+                return;
             }
         } else if(iNum == LINK_CMD_DEBUG) {
             integer onlyver =0;

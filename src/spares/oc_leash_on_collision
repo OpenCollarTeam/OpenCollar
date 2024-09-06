@@ -1,0 +1,20 @@
+/*
+Update to Lulu Pink's grabby script for OC8.3+ interface channel
+
+
+*/
+integer getChannel(key kAv)
+{
+    integer chan= -llAbs((integer)("0x" + llGetSubString(kAv,30,-1)));
+    if(chan==0) chan= -9876; //I mean it COULD happen. 
+    return chan;
+}
+
+default
+{
+    collision_start(integer num)
+    {
+        integer iChannel = getChannel(llDetectedKey(0));
+        llSay(iChannel, (string)llDetectedKey(0) + ":anchor " + (string)llGetKey());
+    }
+}

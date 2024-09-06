@@ -5,7 +5,9 @@
 // Joy Stipe, Wendy Starfall, Romka Swallowtail, littlemousy,       
 // Garvin Twine et al.   
 // Licensed under the GPLv2.  See LICENSE for full details. 
-
+//
+// Ping (Pingout Duffield) 
+//         *Aug 2023 - Revise visibility when collar is hidden Ref Issue #932
 // How to use:
 // 
 // - You need a Mesh-Strip with 6 Faces next to each other. Each Face should have 1 Material.
@@ -24,7 +26,7 @@
 //          ***************** ***************** *****************
 
 string g_sAppVersion = "1.1";
-string g_sScriptVersion = "8.1";
+string g_sScriptVersion = "8.3";
 
 string g_sParentMenu = "Apps";
 string g_sSubMenu = "Label";
@@ -189,7 +191,7 @@ integer LabelsCount() {
             lLineLinks += [0]; // Fill with Zero
             g_lLabelLinks = llListReplaceList(g_lLabelLinks,[llDumpList2String(lLineLinks,"|")],iLine,iLine);
             //change prim description
-            llSetLinkPrimitiveParamsFast(iLink,[PRIM_DESC,"Label~notexture~nocolor~nohide~noshiny"]);
+            llSetLinkPrimitiveParamsFast(iLink,[PRIM_DESC,"Label~notexture"]);
         } else if (sLabel == "LabelBase") g_lLabelBaseElements += iLink;
     }
     
@@ -327,7 +329,7 @@ integer bool(integer a){
     if(a)return TRUE;
     else return FALSE;
 }
-list g_lCheckboxes=["⬜","⬛"];
+list g_lCheckboxes=["□","▣"];
 string Checkbox(integer iValue, string sLabel) {
     return llList2String(g_lCheckboxes, bool(iValue))+" "+sLabel;
 }

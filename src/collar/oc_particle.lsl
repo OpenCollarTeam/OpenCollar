@@ -3,7 +3,12 @@
 // Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, Romka Swallowtail,
 // lillith xue, littlemousy, Nikki Lacrima et al.
 // Licensed under the GPLv2.  See LICENSE for full details.
+/*
 
+ Nikki Lacrima
+    Aug 2023: Updated for lockguard chain texture
+    
+*/
 string g_sScriptVersion = "8.3";
 integer LINK_CMD_DEBUG=1999;
 //MESSAGE MAP
@@ -744,6 +749,9 @@ state active
             list lLGCmd = llParseString2List(llToLower(sMessage), [" "],[]);
             if (llList2String(lLGCmd,0) == "lockguard") {
                 key kLGAv = llList2Key(lLGCmd,1);           // Request Avatar-UUID
+                if (kLGAv != g_kWearer) {                   // Check that wearer is target
+                    return; 
+                }
                 string sLGPoint = llList2String(lLGCmd,2);  // Request ChainPoint
                 integer iLeashPrimIndex = llListFindList(g_lLeashPrims, [sLGPoint]);
                 if ((iLeashPrimIndex<0) && (sLGPoint != "all")) return; // Invalid chain point
@@ -801,7 +809,7 @@ state active
                     }  else if (sLGCMD == "ping") {
                         llWhisper( g_iChan_LOCKGUARD, "lockguard " + (string)llGetOwner() + " " +  sLGPoint + " okay" );
                     }  else {
-                        llWhisper(0, "Unknown LockGuard command: "+sLGCMD);
+//                        llWhisper(0, "Unknown LockGuard command: "+sLGCMD);
                     }   
                 }
                 if (iIsLinking) {

@@ -12,6 +12,8 @@ Medea (Medea Destiny)
                         term, added sanity checking for chat commands to ensure we don't try to search for nothing,
                         and no longer operate on empty search results. Issuer of chat command now stored as 
                         g_kChatUser so they can be notified if findfolder fails.
+
+Neil2Ball & Sue Cripter - Fix for OpenSim, replacing invalid return r(); with {r(); return}
                          
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
@@ -155,11 +157,11 @@ Browser(key kID, integer iAuth, string sPath){
     g_iMenuUser=iAuth;
     g_sPath = sPath;
 
-    if(iAuth == CMD_TRUSTED && !Bool((g_iAccessBitSet&1)))return R();
-    if(iAuth == CMD_EVERYONE && !Bool((g_iAccessBitSet&2)))return R();
-    if(iAuth == CMD_GROUP && !Bool((g_iAccessBitSet&4)))return R();
-    if(iAuth == CMD_WEARER && !Bool((g_iAccessBitSet&8)))return R();
-    if (iAuth<CMD_OWNER || iAuth>CMD_EVERYONE) return R();
+    if(iAuth == CMD_TRUSTED && !Bool((g_iAccessBitSet&1))){ R(); return; }
+    if(iAuth == CMD_EVERYONE && !Bool((g_iAccessBitSet&2))){ R(); return; }
+    if(iAuth == CMD_GROUP && !Bool((g_iAccessBitSet&4))){ R(); return; }
+    if(iAuth == CMD_WEARER && !Bool((g_iAccessBitSet&8))){ R(); return; }
+    if (iAuth<CMD_OWNER || iAuth>CMD_EVERYONE) { R(); return; }
 
 
 
@@ -207,10 +209,10 @@ UserCommand(integer iNum, string sStr, key kID) {
              return; 
         } 
         g_kChatUser=kID;
-        if(iNum == CMD_TRUSTED && !Bool((g_iAccessBitSet&1)))return R();
-        if(iNum == CMD_EVERYONE && !Bool((g_iAccessBitSet&2)))return R();
-        if(iNum == CMD_GROUP && !Bool((g_iAccessBitSet&4)))return R();
-        if(iNum == CMD_WEARER && !Bool((g_iAccessBitSet&8)))return R();
+        if(iNum == CMD_TRUSTED && !Bool((g_iAccessBitSet&1))){ R(); return; }
+        if(iNum == CMD_EVERYONE && !Bool((g_iAccessBitSet&2))){ R(); return; }
+        if(iNum == CMD_GROUP && !Bool((g_iAccessBitSet&4))){ R(); return; }
+        if(iNum == CMD_WEARER && !Bool((g_iAccessBitSet&8))){ R(); return; }
         if(g_iFindLstn != -1)llListenRemove(g_iFindLstn);
 
         g_iFindChn = llRound(llFrand(99999999));
