@@ -681,7 +681,7 @@ state active
                     g_iStrictRank = (integer)llGetSubString(sValue,2,-1);
                 } else if (sToken == "turn") {
                     g_iTurnMode = (integer)sValue;
-                } else if(sToken == "length"){
+                } else if(sToken == "leashlength"){
                     g_iLeashLength = (integer)sValue;
                 }
             } else if(llGetSubString(sToken,0,i) == "global_"){
