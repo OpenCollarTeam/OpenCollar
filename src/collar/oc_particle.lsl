@@ -7,6 +7,7 @@
 
  Nikki Lacrima
     Aug 2023: Updated for lockguard chain texture
+    Sept 2024: Fix setting name for leash length
     
 */
 string g_sScriptVersion = "8.3";
