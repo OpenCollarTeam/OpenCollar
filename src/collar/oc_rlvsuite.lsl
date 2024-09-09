@@ -546,17 +546,14 @@ UserCommand(integer iNum, string sStr, key kID) {
             if (iIndex > -1) {
                 if (iNum == CMD_OWNER || iNum==CMD_TRUSTED){
                     if (sChangekey == "add") {
-                        llMessageLinked(LINK_SET, NOTIFY, "0"+"Restriction preset added: '"+sChangevalue+"'", kID);
+                        llMessageLinked(LINK_SET, NOTIFY, "1"+"Restriction preset added: '"+sChangevalue+"'", kID);
                         ApplyAll(g_iRestrictions1 | llList2Integer(g_lMacros,iIndex+1),g_iRestrictions2 | llList2Integer(g_lMacros,iIndex+2),FALSE);
-                        llOwnerSay("Button '"+llList2String(g_lMacros,iIndex)+"' has been added!");
                     } else if (sChangekey == "replace") {
-                        llMessageLinked(LINK_SET, NOTIFY, "0"+"Replaced current restrictions with preset '"+sChangevalue+"'", kID);
+                        llMessageLinked(LINK_SET, NOTIFY, "1"+"Replaced current restrictions with preset '"+sChangevalue+"'", kID);
                         ApplyAll(llList2Integer(g_lMacros,iIndex+1),llList2Integer(g_lMacros,iIndex+2),FALSE);
-                        llOwnerSay("Preset '"+llList2String(g_lMacros,iIndex)+"' replaced your Restrictions!");
                     } else if (sChangekey == "clear") {
-                        llMessageLinked(LINK_SET, NOTIFY, "0"+"Restriction presets cleared '"+sChangevalue+"'", kID);
+                        llMessageLinked(LINK_SET, NOTIFY, "1"+"Restriction presets cleared '"+sChangevalue+"'", kID);
                         ApplyAll(g_iRestrictions1 ^ (g_iRestrictions1 & llList2Integer(g_lMacros,iIndex+1)),g_iRestrictions2 ^ (g_iRestrictions2 & llList2Integer(g_lMacros,iIndex+2)),FALSE);
-                        llOwnerSay("Restriction preset '"+llList2String(g_lMacros,iIndex)+"' has been cleared!");
                     } 
                 } else llMessageLinked(LINK_SET, NOTIFY, "0"+"Insufficient authority to set restrictions!", kID);
             } else llInstantMessage(kID,"Restriction preset '"+sChangevalue+"' does not exist!");
