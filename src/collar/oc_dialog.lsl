@@ -736,10 +736,12 @@ state active
                 }
                 g_lOwners = [];
             } else if (sStr == "auth_public") { // public mode cancelled
-                // Invalidate all menus except wearers
+                // Invalidate all menus except wearers and owners
                 integer i = llGetListLength(g_lMenus) - g_iStrideLength;
                 while ( i>= 0) {
-                    if (llList2Key(g_lMenus,i+4) != g_kWearer) RemoveMenuStride(i);
+                    key kID = llList2Key(g_lMenus,i+4);
+//                    if ((kID != g_kWearer) && llListFindList(g_lOwners, [(string)kID]) == -1) llOwnerSay("clear menus for "+llGetDisplayName(kID));
+                    if ((kID != g_kWearer) && llListFindList(g_lOwners, [(string)kID]) == -1) RemoveMenuStride(i);
                     i -= g_iStrideLength;
                 }
             }
@@ -790,3 +792,4 @@ state inUpdate{
         }
     }
 }
+
