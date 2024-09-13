@@ -15,7 +15,8 @@ Medea Destiny -
     Mar 2024  - Emergency fix for extended sensor function flooding memory and crashing script
 
 Nikki Lacrima
-    Aug 2023 - Changed functions for clearing auth so  auth doesn't persist for open menus
+    Aug 2023  - Changed functions for clearing auth so  auth doesn't persist for open menus
+    Sep 2024  - Invalidate all menus except wearer when public mode is turned off
 
 */
 integer CMD_ZERO = 0;
@@ -734,6 +735,13 @@ state active
                     ClearUser((key)llList2String(g_lOwners, iPos));
                 }
                 g_lOwners = [];
+            } else if (sStr == "auth_public") { // public mode cancelled
+                // Invalidate all menus except wearers
+                integer i = llGetListLength(g_lMenus) - g_iStrideLength;
+                while ( i>= 0) {
+                    if (llList2Key(g_lMenus,i+4) != g_kWearer) RemoveMenuStride(i);
+                    i -= g_iStrideLength;
+                }
             }
         } else if (iNum == NOTIFY )    Notify(kID,llGetSubString(sStr,1,-1),(integer)llGetSubString(sStr,0,0));
         else if (iNum == SAY )         Say(llGetSubString(sStr,1,-1),(integer)llGetSubString(sStr,0,0));
