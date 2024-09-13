@@ -529,6 +529,7 @@ state active
                 return;
             }
             else {
+                if(llList2Integer(llGetObjectDetails(i,[OBJECT_TEMP_ATTACHED])==1) return;
                 key kAuthKey=llGetOwnerKey(i);
                 integer iAuth=CalcAuth(kAuthKey);
                 if(llGetSubString(m,0,6)=="authas:"){ //messages prefixed authas:(key)=(cmd) will use the auth level of key if LOWER than object owner auth.
