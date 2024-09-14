@@ -16,7 +16,7 @@ Medea Destiny -
 
 Nikki Lacrima
     Aug 2023  - Changed functions for clearing auth so  auth doesn't persist for open menus
-    Sep 2024  - Invalidate all menus except wearer when public mode is turned off
+    Sep 2024  - Invalidate all menus except wearer when public or group mode is turned off
 
 */
 integer CMD_ZERO = 0;
@@ -735,7 +735,7 @@ state active
                     ClearUser((key)llList2String(g_lOwners, iPos));
                 }
                 g_lOwners = [];
-            } else if (sStr == "auth_public") { // public mode cancelled
+            } else if (sStr == "auth_public" || sStr == "auth_group") { // public or group mode cancelled
                 // Invalidate all menus except wearers and owners
                 integer i = llGetListLength(g_lMenus) - g_iStrideLength;
                 while ( i>= 0) {
