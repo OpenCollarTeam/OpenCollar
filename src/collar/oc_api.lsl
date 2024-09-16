@@ -46,7 +46,8 @@ Medea (Medea Destiny)
                     the only thing the wearer can do is safeword, which will deactivate it.
                     Any attempt to trigger a menu/command will send the AUTH_WEARERLOCKOUT
                     Link message. Any script setting a wearer lockout should respond to this with a status
-                    update.                
+                    update.  
+     *Spet 2024  -  Added rejection of interface channel commands from temp-attached objects
                            
 Yosty7b3        
     *Oct 2021   -   Remove unused StrideOfList() function.
