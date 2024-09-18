@@ -46,7 +46,8 @@ Medea (Medea Destiny)
                     the only thing the wearer can do is safeword, which will deactivate it.
                     Any attempt to trigger a menu/command will send the AUTH_WEARERLOCKOUT
                     Link message. Any script setting a wearer lockout should respond to this with a status
-                    update.                
+                    update.  
+     *Sept 2024  -  Added rejection of interface channel commands from temp-attached objects
                            
 Yosty7b3        
     *Oct 2021   -   Remove unused StrideOfList() function.
@@ -529,6 +530,7 @@ state active
                 return;
             }
             else {
+                if(llList2Integer(llGetObjectDetails(i,[OBJECT_TEMP_ATTACHED]),0)==1) return;
                 key kAuthKey=llGetOwnerKey(i);
                 integer iAuth=CalcAuth(kAuthKey);
                 if(llGetSubString(m,0,6)=="authas:"){ //messages prefixed authas:(key)=(cmd) will use the auth level of key if LOWER than object owner auth.
