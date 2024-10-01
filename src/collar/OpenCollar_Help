@@ -2,15 +2,50 @@
 OpenCollar Help Card
 =========================
 
+For complete instructions on how to use OpenCollar, see https://opencollar.cc/docs/Complete-User-Guide
+
+For in-world help, you can join our support group. Paste the following text into local chat, then click the link to join: secondlife:///app/group/45d71cc1-17fc-8ee4-8799-7164ee264811/about
+
+For the OpenCollar in-world headquarters: 􀀇
+
+========
+CONTENTS
+========
+1. The Very Basics
+2. Owners & Access
+3. Using Chat Commands
+4. Safewords
+5. Menus
+6. Updating Your Collar
+Appendix: List of Chat Commands
+
+
 ==========
-The Very Basics
+1. The Very Basics
 ==========
 
-Making use of the many, many features in your collar can be done by touching your neck, by touching your collar directly, by using a remote or with individual chat commands.
+Making use of the many, many features in your collar can be done by touching your neck, by touching your collar directly, by using a remote or with individual chat commands. Touching the collar will bring up a menu, through which you can control the collar wearer's actions in a wide variety of ways. You can issue a great many commands using chat shortcuts, or if you are having trouble clicking a collar, you can summon a wearer's collar menu up with the chat command '/1 [prefix] menu' (see below)
 
--------------
-The Prefix:
--------------
+===========
+2. Owners & Access
+============
+
+One of the key concepts of Opencollar is *permissions*. Not everyone can access your collar by default, as access is controlled by permission levels. When you first wear a collar, the only person able to do anything with it is you. By changing access, either by granting permissions to single avatars or by using the GROUP or PUBLIC access modes, you can give permissions to other people. The maximum lever is OWNER. If someone has OWNER permission on your collar, they can access every feature and setting of the collar, and can do things that cannot be overridden by people with a lower level of permission (including the wearer!).
+
+The levels of permission are as follows:
+OWNER - Someone with Owner access has access to every function of your collar.
+TRUSTED - Someone with Trusted access can access most things in your collar, but generally can't change settings. They cannot override certain things that have been set by an owner. For example, a Trusted access user cannot unleash the collar wearer if they have been leashed by an owner.
+GROUP - When you have group mode active, people who have the same group active may access the general functions (not settings) of your collar. 
+PUBLIC - when your collar is set to public mode, anyone can access your collar
+
+BLACKLIST - your collar can maintain a blacklist of users who are never allowed to use your collar. Even if you have public access switched on, a person on your blacklist will not be able to use any feature of your collar.
+
+
+===============
+3. Using Chat Commands
+===============
+
+So that the collar knows who you intend on a chat command, commands are always issued with a prefix based on the collar wearer's name. They can be spoken in local chat, or on channel 1 (/1 [prefix] [command]) to keep them private and to avoid  the additional lag caused by using the public channel. 
 
 Your [prefix] are the first two letters of your username
 
@@ -18,11 +53,11 @@ Your [prefix] are the first two letters of your username
     nirea's prefix is: ni
     Iala (jwenting)'s prefix is: jw
 
-Your prefix is used to issue commands in the Nearby Chat.
+Your prefix is used to issue commands in the Nearby Chat or channel 1.
 
-    [prefix] menu
-    [prefix] kneel
-    [prefix] stop
+    [prefix] menu or /1 [prefix] menu
+    [prefix] kneel or /1 [prefix] kneel
+    [prefix] stop or /1 [prefix] stop
 
 If you don’t like your prefix, you can change it. Only an owner can change the prefix, and the wearer if there is no owner set.
 
@@ -35,26 +70,18 @@ There are two special prefixes. * issues commands to everyone nearby and # issue
     * grab
     # grab
 
-------------
-Channels:
-------------
-
-You can also issue commands on channel 1.
-
-    /1 [prefix] menu
-
-Or if you don’t like channel 1 set a different channel.
+If you don’t like channel 1 set a different channel.
 
     [prefix] channel 2
     [prefix] channel 3
     [prefix] channel 69
     [prefix] channel 9001
 
-If you are considerate about lag, you can also turn off the Nearby Chat listener. Toggle Listen 0 in the Settings menu.  
+If you are considerate about lag, you can also turn off the Nearby Chat listener. Toggle 'Listen 0' in the Settings menu.  WE STRONGLY RECOMMEND DOING THIS, it will make a collar significantly less laggy!
 
-------------
-Safeword:
-------------
+=========
+4. Safewords:
+=========
 
 Your collar also has a safeword which you simply type in the nearby chat. This will lift all RLV restrictions, unpose and unleash you. 
 It will also send your Owner a message to check for your well being. RED in capital letters is the default safeword.
@@ -66,356 +93,500 @@ It will also send your Owner a message to check for your well being. RED in capi
 If that’s too hard to remember you can easily change it.   
 
     [prefix] safeword Purple
-    
+
+==========
+5. MENUS
+==========
+
+The Collar's main menu looks like this:
+
+[    □ Lock    ]   [   Leash   ]   [   Addons    ]
+[ Animations ]   [    RLV     ]   [     Apps      ]
+[    Access    ]   [ Settings ]   [Help/About]
+
+LOCK: This button locks or unlocks the collar. "□ Lock" means the collar us unlocked, while "▣ Lock" means it's locked. We use these check boxes in a number of places to show when an option has been selected. Only owners and wearer can lock a collar; only an owner can unlock it.
+
+Each of the other buttons will open a submenu, and many of those will have other submenus beneath them, exposing more options below.
+
+LEASH: Allows for the wearer to be leashed. A leash can be held by another user and the leashed collar wearer will be forced to follow them around when they walk. Alternatively a leash can be tied to an object, and the collar wearer will not be able to roam further than the length of the leash. 
+
+ADDONS: This menu allows access to separate attachments that are interfacing with the collar to share data with it. For example, OpenCollar makes a set of OpenCollar cuffs which communicate with the collar, using the collar's lists of owners etc. for access. If you are wearing those add-on cuffs, you'll find a menu for them in here.
+
+ANIMATIONS: The collar can be used to pose the collar wearer in a range of animations
+
+RLV: This contains submenus that deal with many viewer controlled RLV features. For example in here you'll find options for changing outfits and accessing the #RLV folders to attach or remove their contents, for setting restrictions on the wearer, and controlling exceptions for the people on the collar's access list (such as force teleport), and for forcing the wearer to sit on nearby furniture, or stand up
+
+APPS: This menu contains submenus for all installed apps, optional functions that allow more things to be done with a collar. Common apps include bookmarks (teleporting the wearer to predetermined locations), timer (setting a timer to lock or unlock the collar wearer after a fixed time), Titler (setting a text title over the wearer's head), Themes (some collars have a themes menu for changing different looks and Capture (short-term capture play).
+
+ACCESS: For controlling who has access to a collar, adding or removing people from Owner, Blacklist or Trusted, for switching group or public mode etc.
+
+SETTINGS: Access to some of the core global settings of the collar functioning, and for advanced users access to an EDITOR to allow editing internal settings directly.
+
+HELP/ABOUT: Information about the collar such as where to find help, what the chat command prefix and channels are, and what the safeword is. This menu will also tell you if there's an update available. See below for more!
+
+
+=================
+6. UPDATING YOUR COLLAR
+=================
+
+Looking inside the Help/About menu will show you the current version of your collar, and inform you if there is an update available. WE ALWAYS RECOMMEND YOU UPDATE TO THE LATEST VERSION OF OPENCOLLAR AS SOON AS POSSIBLE.
+
+If there is an updater, get yourself a copy either by looking in OpenCollar group notices and grabbing the update/built notecard, or visit the OpenCollar Headquarters at K-Bar West (landmark at the top of the page). So long as your collar is reasonably recent, you can simply rez the updater and click the update button in your collar's Help/About menu. The update process will take a couple of minutes. Please keep an eye on your local chat and wait for messages that tell you that the update process has completed AND that your collar has finished rebooting and is ready for use.
+
+If you want to update a collar that's very old, or has used a different brand of collar scripts, or indeed you want to turn an unscripted necklace or similar into a collar, the notecard in your group notices provides everything you need to do that, with complete instructions.
+
+
+ 
 ===============
-List of Chat Commands
+Appendix: List of Chat Commands
 ===============
 
-Alright, many asked for this and here it is, the ultimate list of nerdy chat commands for those of you who prefer them over menus, touch or HUDs! 
-Assumed here is that you know what a prefix is. We will indicate each prefix with a hash key. 
+Here is an ALMOST complete list of chat commands that can be used either because you prefer to do things with chat commands than clicking menus, or because you need a chat command to set a custom command in the titler or similar, or because you want to create a gesture as a shortcut, or simply because it can be quicker and easier than clicking a collar and going through the menus.
 
-To use any of these commands, say your prefix and then the command on the same
-line.  For example if your prefix is 'az' and you want to give the menu command,
-you would say "az menu".
+To use any of these commands in chat or in a gesture, determine the collar wearer's prefix (see above) and say the command below in local chat, with channel and prefix in front of it.
+
+----------
+Example
+----------
+The main menu command is "menu".
+If the collar wearer's user name is "Nirea Resident" then her default prefix is "ni".
+The normal private channel is 1.
+Therefore the command to get Nirea's menu would be:
+
+"/1 ni menu"
+
+If you don't want to use the channel you can say it in local chat too, as long as the wearer has not disabled channel 0.
+
+"ni menu"
 
 -----------------------
-General Commands:
+General commands:
 -----------------------
+    channel [positive number] -- set channel
 
-    menu
-
-    lock
-    unlock
-
-    apps
-
-    channel [positive number]
-
-    prefix [newprefix]
-
+    prefix [newprefix]  --change prefix
+    prefix reset -- resets the prefix to default
+     
     RED
     /1RED
-    ((RED))
-
-    prefix safeword [newsafeword]
+    ((RED)) -- default safeword commands
+    safeword [newsafeword] -- change safeword
+    safeword off/on : disables or re-enables the collar safeword
+    runaway - start runaway process to remove all owners/trusted/block  
     
+    lock - lock collar
+    unlock - unlock collar
+    
+    weld - start weld process
+
+    name (string) - set name of collar wearer to (string)
+    name  - print name of collar wearer
+    device  name (string) - set name of collar to (string)
+    device name - print current name
+    
+    print settings  - prints out all stored settings
+    load - loads settings from .settings notecard
+    load url (url)  - loads settings from a web page
+    
+    fix - fix menus (will cause collar to reboot)
+    update - search for updater and start update process
+    help  - receive help notecard & link to website
+    touchnotify - toggle notification of collar touches on/off
+    allowhide - toggle allowing collar wearer to hide collar on/off
+    channel (number) - changes the listen channel to (number) (default is 1).
+    getauth - find out your access level
+    print auth - lists all users auth levels (owners, trusted, block) etc.
+    info - prints channel, safeword, prefix and collar version.
+    reboot - reboots collar
+    
+
+-----------------------
+Primary menus:
+-----------------------
+
+    menu  -  open collar main menu
+    menu animations - open anim menu
+    leashmenu - open leash menu
+    access  - open access menu
+    settings - open settings menu ( at the moment some apps will     print there settings when this command is issued, but this will change).
+    apps  - open apps menu
+    help/about  -  open help/about menu
+    rlv  - opens main RLV menu
+    relay  - open relay menu
+    exceptions - open exceptions menu
+    restrictions  - open restrictions menu
+    
+    
+-------------
+Submenus:
+--------------
+
+    pose -  open pose menu
+    couples  - open couple animations menu
+    leash configure  - open leash configure menu
+    menu managecamera / menu managecamera2 - open camera     control menus
+    menu managechat - open muffle settings menu
+    sit - open menu to pick a target for force sit
+    advanced  - open advanced restrictions menu
+    customize  - open restrictions management menu
+    
+---------------------------------
+Clothing/attachments menus
+---------------------------------
+    undress  -  opens undress menu
+    detach / menu detach - open detach menu
+    outfits / menu outfits - open outfits menu
+    folders  - open folders menu
+
+----------------
+Apps menus:
+----------------
+
+    appearance - open main resizer menu
+    badwords -  opens badwords menu
+    themes  - opens themes menu
+    menu Capture - open capture menu
+    menu bell  - open bell menu
+    tp  - open bookmarks menu
+    titler / menu titler - shows menu
+    label / menu label  - open label menu
+    timer / menu timer  - open timer menu
+
+
+
 --------- 
 Access:
 ---------
 
-    access
+    add owner / add trust / add block - Open picker to add to owner / trust /block lists
+    rem owner / rem trust / rem block - Open picker to remove from owner / trust / block list
+add owner (uuid) / add trust (uuid) / add block (uuid) - add person to list by key
+    rem owner (uuid) / rem trust (uuid) /rem block (uuid)  - remove person from list by key
 
-    add owner [UUID or name]
-    rm owner [name]
-
-    add trust [UUID or name]
-    rm trust [name]
-
-    add block [UUID or name]
-    rm block [name]
-
-    public on
-    public off
-
-    ownself on (to add wearer)
-    ownself off
-
-    runaway
     
 --------------
 Animations:
 --------------
 
-    animations
+    (anim name) - play animation
+    stop  / release -  stop animation
+    up / down - move pose offset up or down
+    standoffset on / standoffset off - switch offsets for standing (no pose playing) on or off
+    animlock  - toggle animlock on or off
+    posture on / posture off - switch posture collar anim (stiff neck) on or off
+    (couple anim name) - command wearer to do couple animation with command issuer
+    (couple anim name) (name) - command wearer to do couple animation with person nearby who's name matches (name)
+    stop couples  - stop playing couple animation
+    couples verbose on / couples verbose off - toggle verbose chat for couple animations on or off
 
-    posture on
-    posture off
-
-    ao menu
-
-    ao on
-    ao off
-
-    rm pose [name of pose]
-
-----------------------------
-Poses (stock selection):
-----------------------------
-
-    pose
+animation names (stock selection):
 
     back
     beautystand
     belly
     booty
-
     bop
     bracelets
     cutie
     display
-
     doggie
     kneel
     nadu
     rise
-
     shy
     submit
     table
     tower
-
-    stop
-
--------------------------------------------
+    ---
 Couple Animations (stock selection):
--------------------------------------------
-
-    couples
 
     hug
     kiss
     pet
-
     cling
     foot
     catch
+    ---
+--------------
+LEASHING
+--------------
 
-    stop couples
+    yank / beckon - Pull wearer closer, unseating them if seated if they are leashed.
+    grab / leash - take leash
+    post / anchor - open menu to select object to leash wearer to 
+    anchor (uuid) - leash wearer to object with key uuid
+    follow me - make collar wearer follow command issuer
+    follow (uuid) - make collar wearer follow (uuid)
+    follow - open picker for who to follow
+    unleash / unfollow  - stop leashing / following
+    stay - disallow movement without being pulled by leash
+    unstay / move - allow movement again after stay has been issued
+    strict on / strict off - turn leash strict mode on or off
+    turn on / turn off - turn turn mode (leashee faces direction of movement) on or off
+    pass - open menu to pick person to pass leash to
+    pass (uuid) pass leash to (uuid) where UUID can be a person or object
+    length - open leash length menu
+    length (val) - set length of leash to val where val is a whole number from 1-60
+    give holder - gives a leash holder to command issuer
+    particle reset - reset leash settings
+
+----------------------------
+CLOTHES/ATTACHMENTS
+----------------------------
+
+    -(string) - remove first #RLV folder found  with name that matches (string)
+    -- (string) - remove first #RLV folder found  with name that matches (string) and all subfolders
+    +(string) - Wear first #RLV folder found with name that matches (string)
+    &(string) - Add first #RLV folder found with name that matches (string)
+    ++(string) - Add first #RLV folder found with name that matches (string)
+    &&(string) - Add first #RLV folder found with name that matches (string) and subfolders
+    (NOTE! We seem to have an inconsistency here where ++ does a non-recursive (no subfolder) add rather than a recursive wear.)
+    
+    wear - Open list of outfits to wear
+    wear (outfit) - wear outfit called (outfit)
+    naked - remove all outfits (and everything outside .core if strip all mode is on
+    
+    undress lock (layer) - locks a clothing layer (layer)
+    undress unlock (layer) - unlocks a clothing layer (layer)
+    
+    detach - Open list of attachments to remove
+
+----------------------------
+RLV restrictions & functions
+----------------------------
+
+    rlv on / rlv off - switches RLV functions in the collar on or off. 
+    clear - clears all RLV.
+    
+    relay off / relay ask / relay auto - set relay mode
+    relay helpless - toggle helpless mode on / off
+    relay wearer - toggle wearer lockout for relay options
+
+    garble on - activates garbling when talk restriction is set
+    garble off - deactivates garbling
+    
+    sit (uuid) - force sit on object with key (uuid)
+    unsit - force wearer to stand
+
+    show restrictions  -  list all restrictions from all sources that are handled by the collar (for example, including relay restrictions
+    list presets - shows current restriction presets and what they do. Default presets are Hear, Talk, Touch, Stray, Inventory, Dress, IM, Names/Map and Blur, but these can be changed  via the [Customize] submenu in Restrictions. These can be set or cleared using the commands below, replacing (preset) with the name of the preset you wish to add or remove. Note that these are case sensitive (i.e you have to use "Blur" rather than "blur").
+    preset add (preset) - activates preset (preset).
+    preset replace (preset) - removes current presets and adds (preset) as new restriction set
+    preset clear (preset) - removes preset (preset)
+
+Standard presets:
+    Hear - blocks seeing chat
+    Talk - blocks chatting
+    Touch - cannot touch in-world items
+    Stray - no use of landmarks, tp location, tp local or sitting
+    Inventory - cannot open inventory, rez, edit, read notecard or script
+    Dress - cannot add or remove attachments or layers
+    IM - cannot send or see IMs
+    Names/Map - Map, minimap, location names, and avatar names hidden
+    Blur -  view is blurred
+    ---
+    
+    rlv list - lists all current restrictions
+    rlv add (restriction) - adds individual restriction (see below)
+    rlv rem (restriction) - removes individual restriction (see below)
+
+
+INDIVIDUAL RESTRICTIONS:
+The following individual restrictions can be added or cleared with the above commands, using either the prettified button name for the restriction or its actual internal RLV command. Note that where a command requires a value (such as the camera max distance) it will apply the value that has been set in the relevant configuration menus. For more information on what each command does, consult the RLV API document at https://wiki.secondlife.com/wiki/LSL_Protocol/RestrainedLoveAPI and look up the individual internal command.
+
+Button command   =  internal RLV command
+------------------------------------------------------
+    EmoteTrunc    =    emote
+    Send Chat    =    sendchat
+    See Chat    =    recvchat
+    See Emote    =    recvemote
+    Whisper    =    chatwhisper
+    Normal Chat    =    chatnormal
+    Shout    =    chatshout
+    Send IM    =    sendim
+    See IM    =    recvim
+    Start IM    =    startim
+    Gesture    =    sendgesture
+    Inventory    =    showinv
+    Minimap    =    showminimap
+    Worldmap    =    showworldmap
+    Location    =    showloc
+    Names    =    shownames
+    Nametags    =    shownametags
+    Nearby    =    shownearby
+    Text    =    showhovertext
+    Text HUD    =    showhovertexthud
+    Text World    =    showhovertextworld
+    Text All    =    showhovertextall
+    Landmark    =    tplm
+    TP Location    =    tploc
+    TP Local    =    tplocal
+    Accept TP    =    tplure
+    Offer TP    =    prequest
+    Permissions    =    acceptpermission
+    Edit    =    edit
+    Edit Object    =    editobj
+    Rez    =    rez
+    Add Attach    =    "addattach
+    Rem Attach    =    remattach
+    Add Cloth    =    addoutfit
+    Rem Cloth    =    remoutfit
+    Notecard    =    viewnote
+    Script    =    viewscript
+    Texture    =    viewtexture
+    Touch Far    =    fartouch
+    Interact    =    interact
+    Attachment    =    touchattach
+    Own Attach    =    touchattachself
+    Other Attach    =    touchattachother
+    Touch HUD    =    touchhud
+    Touch World    =    touchworld
+    Touch All    =    touchall
+    Fly    =    fly
+    Jump    =    jump
+    Stand Up    =    unsit
+    Sit Down    =    sit
+    Sit TP    =    sittp
+    Stand TP    =    standtp
+    Always Run    =    alwaysrun
+    Temp Run    =    temprun
+    Unlock Cam    =    camunlock
+    Blur View    =    setdebug_renderresolutiondivisor
+    MaxDistance    =    setcam_avdistmax
+    MinDistance    =    setcam_avdistmin
+    Send Emote    =    rediremote
+    Set Debug    =    setdebug
+    Environment    =    setenv
+    Mouselook    =    camdistmax:0
+    ---    
+EXAMPLE: "/1 (prefix) rlv add fly"
+
+===============
+     APP COMMANDS 
+===============
+
+Apps are optional components. These commands will only work if the app is installed in the collar!
+
+--------------
+Badwords:
+--------------
+    badwords add - opens text box to enter new phrase to add to bad words list
+    badwords add (phrase) - adds (phrase) to bad words list
+    badwords animation (anim) - sets the animation to trigger when a bad word is spoken
+    badwords animation default - restores animation to the default shock animation
+    badwords sound (name) - changes the sound triggered when a bad word is spoken to (name)
+    badwords sound silent - disables badword sounds
+    badwords penance - open textbox to add new penance phrase
+    badwords penance (phrase) - change the penance phrase to (phrase)
+    badwords remove - open list of badwords to remove
+    badwords remove (phrase) - removes (phrase) from badwords list
+    badwords on / badwords off - switch on or off
+    badwords clear - clear all bad words from list
     
 ------
 Bell:
 ------
-
-    menu bell
-
-    bell on
-    bell off
-
-    bell show
-    bell hide
+    bell volume (number from 1-10) set bell volume
+    bell on / bell off - turn bell on or off
+    bell nextsound - changes to next available sound for bell noise
+    bell ring - rings the bell once
+    rm bell - Uninstall bell script.
     
 
 --------------
 Bookmarks:
 --------------
-
-    bookmarks
-    tp
-
-    tp [name of bookmark]
-
-    tp save
-    tp print
-    tp remove
-    
+    tp save - open dialog to save current location
+    tp save (name) - create bookmark called (name) to current location
+    tp remove - open list of bookmarks to remove
+    tp remove (name) - remove bookmark called (name)
+    tp (name) - tp wearer to location of bookmark called (name)
+    rm bookmarks - uninstall bookmark app
+ 
+--------------
+Cagehome:
+--------------
+    ch here  -sets current location as cagehome "cage"
+    ch arm  - activates cage home, with setter marked as primary
+    ch disarm - deactivates cagehome if armed but sub not caged
+    ch release - release sub
+    ch settings - list cagehome settings
+    ch commands - list cagehome chat commands
+    ch warntime <seconds> - amount of time before caging where sub is given warning it's about to happen
+    ch radius <meters> - distance sub can move from "cage" location
+    ch cagetime <minutes> - timer for caging. At 0, there's no timer.
+    ch notifychannel <channel number> - sends notification on specified channel on capture and release (will not use channel 0).
+    ch notifyarrive <arrive string> - phrase said on capture
+    ch notifyrelease <release string> - phrase said on release
+    ch warnmessage <warning message> - phrase in local chat said when sub is being summoned. "@" will be replaced by sub's name. # will be replaced by number of seconds of cagetime set.   
+ 
 ----------
 Capture:
 ----------
 
-    capture
-
-    capture on
-    capture off
-
-    capture risky on
-    capture risky off
-
-    capture info on
-    capture info off
-
-    capture release
+    capture dump - print capture status
+    capture on - activate capture mode
+    capture off - deactivate capture mode
+    capture - attempt to capture
     
---------------
-Help/About:
---------------
-
-    about
-
-    help
-    
-    info
-
-    update
-
-    reboot
-
-----------------------------------
-Label (selected models only):
-----------------------------------
-
-    menu label
-
-    label box
-
-    label [a fancy label]
-
-    label on
-    label off
-
-    label scroll on
-    label scroll off
-
-    label font
-
--------
-Leash:
--------
-
-    menu leash
-
-    leash
-    grab
-    yank
-    unleash
-
-    follow
-    beckon
-    unfollow
-
-    stay
-    move
-
-    anchor
-    park
-
-    pass
-
-    length
-
-    leash configure
-    
----------
-Outfits:
----------
-
-    outfits
-
-    wear [name of the outfit]
-
-
------
-RLV:
------
-
-    rlv
-
-    rlv on
-    rlv off
-
-    rlv handshakes
-
-    clear
-
------------
-Force Sit:
------------
-
-    sit
-    unsit
-
-    forbid stand
-    allow stand
-
-
----------------
-Restrictions:
----------------
-
-    restrictions
-
-    allow sendim
-    forbid sendim
-
-    allow readim
-    forbid readim
-
-    allow hear
-    forbid hear
-
-    allow touch
-    forbid touch
-
-    allow stray
-    forbid stray
-
-    allow talk
-    forbid talk
-
-    allow rummage
-    forbid rummage
-
-    allow dress
-    forbid dress
-
-    dazzle
-    undazzle
-
-    daze
-    undaze
-
---------------
-RLV Folders:
---------------
-
-    folders
-
-    & foldername (adds it)
-    && foldername (adds it and its subfolders)
-
-    - foldername (removes it)
-    -- foldername (removes it and its subfolders)
-
-    history
 
 --------
-Relay:
+Label 
 --------
+    label font - open font picker menu
+    label font (name) - set font to (name). Default values are "Andale 1", "Andale 2", "Serif 1", "Serif 2", "LCD".
+    label color (vector) - sets label color to (vector) - i.e <1,1,1> for white
+    label on - show label
+    label off - hide label
+    label scroll on - scroll label text
+    label scroll off - stop scrolling
+    label (text) - set label to (text)
+    rm label - uninstall label app
+--------
+Resizer
+--------
+    rotation - open rotation menu
+    position - open position menu
+    size - open size menu
+    rm resizer  - uninstall resizer app
 
-    relay trusted
-    relay ask
-    relay auto
-
-    relay off
- 
-    relay pending
-
-    relay access
-
-    relay helpless on
-    relay helpless off
-
-    relay safeword
-
-
-
-----------
-Settings:
-----------
-
-    settings
-
-    print settings
-    load url [url]
-
-    fix
-    verify
-
-    hide / show 
-
-    themes
+--------
+Themes
+--------
+    newtheme - lists current properties to save into a new theme notecard
+    hide - sets collar invisible
+    show - unhides collar
     
 -------
 Titler:
 -------
+    title  - opens textbox to type in new title
+    title (text) / titler title (text) - sets title to (text)
+    titler color - opens color menu
+    titler color (vector) - sets title color to (vector)
+    titler show - shows title
+    titler hide - hides title
+    titler up - moves title higher
+    titler down - moves title lower
+    titler plain  - toggles plaintext mode that saves title as either plaintext or base64 encoded
 
-    menu titler
-
-    title [a fancy title]
-
-    title on
-    title off
-
-    title color <x, y, z>
+-------
+Timer
+--------
+    timer permissive on / timer permissive off - set timer permissive mode on or off
+    timer endnow - end active timer instantly
+    timer cancel  - cancels active timer, does not issue end of timer commands
+    timer start - starts timer
+    timer time -  opens time menu
+    timer time (time) - sets timer to (time), where (time) is in hours, minutes and seconds (e.g 2hrs 10m). Function will read most sensible ways of writing time, don't worry.
+    timer customs - opens text box to add custom commands (a list of chat commands separated by commas) that will be issued when timer expires
+    timer customs (commands) - sets (commands) as a comma separated list of chat commands that will be issued when timer expires
+    timer lockout on / timer lockout off - switches wearer lockout while timer active on or off
+    timer unleash on / timer unleash off - switches unleash when timer expires on or off
+    timer unpose on / timer unpose off - switches ending poses when timer expires on or off
+    timer clearrlv on / timer clearrlv off - switches clearing rlv restrictions when timer expires on or off
+    timer unsit on / timer unsit off - switches unsitting collar wearer when timer expires on or off
+    timer titler on / timer titler off  - switches time left titler on or off
 
 
 ==================================
