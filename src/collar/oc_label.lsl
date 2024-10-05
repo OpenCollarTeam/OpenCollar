@@ -5,7 +5,7 @@
 // Joy Stipe, Wendy Starfall, Romka Swallowtail, littlemousy,
 // Garvin Twine et al.
 // Licensed under the GPLv2.  See LICENSE for full details.
-string g_sScriptVersion = "8.1";
+string g_sScriptVersion = "8.3";
 integer LINK_CMD_DEBUG=1999;
 DebugOutput(key kID, list ITEMS){
     integer i=0;
@@ -333,7 +333,7 @@ integer bool(integer a){
     if(a)return TRUE;
     else return FALSE;
 }
-list g_lCheckboxes=["⬜","⬛"];
+list g_lCheckboxes= ["□","▣"];
 string Checkbox(integer iValue, string sLabel) {
     return llList2String(g_lCheckboxes, bool(iValue))+" "+sLabel;
 }

@@ -1,10 +1,33 @@
-// This file is part of OpenCollar.
-// Copyright (c) 2008 - 2016 Nandana Singh, Lulu Pink, Garvin Twine,    
-// Joy Stipe, Cleo Collins, Satomi Ahn, Master Starship, Toy Wylie,    
-// Kaori Gray, Sei Lisa, Wendy Starfall, littlemousy, Romka Swallowtail,  
-// Sumi Perl, Karo Weirsider, Kurt Burleigh, Marissa Mistwallow et al.   
-// Licensed under the GPLv2.  See LICENSE for full details. 
-string g_sScriptVersion = "8.1";
+
+/* This file is part of OpenCollar.
+ Copyright (c) 2008 - 2024 Nandana Singh, Lulu Pink, Garvin Twine,    
+ Joy Stipe, Cleo Collins, Satomi Ahn, Master Starship, Toy Wylie,    
+ Kaori Gray, Sei Lisa, Wendy Starfall, littlemousy, Romka Swallowtail,  
+ Sumi Perl, Karo Weirsider, Kurt Burleigh, Marissa Mistwallow et al.   
+ Licensed under the GPLv2.  See LICENSE for full details. 
+
+Medea (medea.destiny)
+    Nov 2023    -   Added EXC_REFRESH call after releasing strict leash
+                to ensure that exceptions that should be in place get 
+                restored. issue #1008
+    Aug 2024    -   Uses the above feature to add an accepttp function to
+                strict leash, so that the leash wearer. Notification now
+                sent to both leashee and leasher when leash is grabbed while
+                strict mode is active, informing them of restrictions/exceptions.
+                -   Refactored timer event to fix bypassed awaycounter functionality
+                so that the strict leash restrictions do not instantly get removed
+                when leash holder is absent. Time buffer now functions as intended and 
+                is extended from 15 to 60 seconds to give leash holder time after a 
+                teleport to send leashee a tp lure.         
+Nikki Larima 
+    Nov 2023    - Remove processing of "runaway" command string, handled by CMD_SATEWORD
+                  implemented Yosty7b3's menu streamlining, see pr#963    
+
+Licensed under the GPLv2.  See LICENSE for full details. 
+https://github.com/OpenCollarTeam/OpenCollar               
+*/
+
+string g_sScriptVersion = "8.3";
 integer LINK_CMD_DEBUG=1999;
 
 // ------ TOKEN DEFINITIONS ------
@@ -41,7 +64,7 @@ integer LM_SETTING_SAVE       = 2000;
 integer LM_SETTING_REQUEST    = 2001;
 integer LM_SETTING_RESPONSE   = 2002;
 integer LM_SETTING_DELETE     = 2003;
-integer LM_SETTING_EMPTY            = 2004;
+integer LM_SETTING_EMPTY      = 2004;
 
 // -- MENU/DIALOG
 integer MENUNAME_REQUEST    = 3000;
@@ -52,13 +75,14 @@ integer RLV_CMD = 6000;
 
 integer RLV_OFF = 6100;
 integer RLV_ON = 6101;
+integer EXC_REFRESH=6109; // send to request exceptions are refreshed.
 
 integer LEASH_START_MOVEMENT = 6200;
 integer LEASH_END_MOVEMENT = 6201;
 
 integer DIALOG              = -9000;
 integer DIALOG_RESPONSE     = -9001;
-integer DIALOG_TIMEOUT      = -9002;
+//integer DIALOG_TIMEOUT      = -9002;
 integer SENSORDIALOG = -9003;
 
 integer CMD_PARTICLE     = 20000;
@@ -72,8 +96,6 @@ string BUTTON_SUBMENU      = "Leash";
 // ---------------------------------------------
 // ------ VARIABLE DEFINITIONS ------
 // ----- menu -----
-list     g_lMenuIDs;
-integer g_iMenuStride = 3;
 integer g_iPreviousAuth;
 key g_kLeashCmderID;
 
@@ -108,7 +130,7 @@ integer g_iStrictModeOn=FALSE; //default is Real-Leash OFF
 integer g_iTurnModeOn = FALSE;
 integer g_iLeasherInRange=FALSE; //
 integer g_iRLVOn=FALSE;     // To store if RLV was enabled in the collar
-integer g_iAwayCounter=0;
+integer g_iAwayCounter=-1;
 
 
 
@@ -138,20 +160,12 @@ string NameURI(key kID){
 }
 
 Dialog(key kRCPT, string sPrompt, list lButtons, list lUtilityButtons, integer iPage, integer iAuth, string sMenuID) {
-    key kMenuID = llGenerateKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lButtons, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
-    integer iIndex = llListFindList(g_lMenuIDs, [kRCPT]);
-    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kRCPT, kMenuID, sMenuID], iIndex, iIndex + g_iMenuStride - 1);
-    else g_lMenuIDs += [kRCPT, kMenuID, sMenuID];
+    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lButtons, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, sMenuID+"~"+llGetScriptName());
 }
 
 SensorDialog(key kRCPT, string sPrompt, string sSearchName, integer iAuth, string sMenuID, integer iSensorType) {
-    key kMenuID = llGenerateKey();
     if (sSearchName != "") sSearchName = "`"+sSearchName+"`1";
-    llMessageLinked(LINK_SET, SENSORDIALOG, (string)kRCPT +"|"+sPrompt+"|0|``"+(string)iSensorType+"`10`"+(string)PI+sSearchName+"|"+BUTTON_UPMENU+"|" + (string)iAuth, kMenuID);
-    integer iIndex = llListFindList(g_lMenuIDs, [kRCPT]);
-    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kRCPT, kMenuID, sMenuID], iIndex, iIndex + g_iMenuStride - 1);
-    else g_lMenuIDs += [kRCPT, kMenuID, sMenuID];
+    llMessageLinked(LINK_SET, SENSORDIALOG, (string)kRCPT +"|"+sPrompt+"|0|``"+(string)iSensorType+"`10`"+(string)PI+sSearchName+"|"+BUTTON_UPMENU+"|" + (string)iAuth, sMenuID+"~"+llGetScriptName());
 }
 
 ConfirmDialog(key kAv, key kCmdGiver, string sType, integer iAuth) {
@@ -208,7 +222,9 @@ ApplyRestrictions() {
             if (g_kLeashedTo) {
                 //Debug("Setting restrictions");
                 //llSay(0, "RLV_CMD issue: no fly, notp");
-                llMessageLinked(LINK_SET, RLV_CMD, "fly=n,tplm=n,tplure=n,tploc=n,tplure:" + (string) g_kLeashedTo + "=add,fartouch=n,sittp=n", "realleash");     //set all restrictions
+                llMessageLinked(LINK_SET, RLV_CMD, "fly=n,tplm=n,tplure=n,tploc=n,tplure:" + (string) g_kLeashedTo + "=add,fartouch=n,sittp=n,accepttp:"+(string)g_kLeashedTo+"=add", "realleash"); 
+    //set all restrictions
+                llMessageLinked(LINK_SET,NOTIFY,"1Strict leash mode active. If leash holder leaves range, restrictions will persist for 1 minute. Leash holder may force TP leashee after leaving range during that 1 minute period.",g_kLeashedTo);
                 return;
                 
             }
@@ -220,6 +236,8 @@ ApplyRestrictions() {
     }
     //Debug("Releasing restrictions");
     llMessageLinked(LINK_SET, RLV_CMD, "clear", "realleash");     //release all restrictions
+    llSleep(1);
+    if(g_iStrictModeOn) llMessageLinked(LINK_SET,EXC_REFRESH,"","");
 }
 key g_kPassLeashFrom;
 list g_lPasslPoints;
@@ -488,8 +506,6 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
                 //LeashTo((key)sVal, kMessageID, iAuth, [], TRUE,0);
             } else
                 SensorDialog(g_kCmdGiver, "\nWho shall be followed?\n", sVal,iAuth,"FollowTarget", AGENT);
-        } else if (sMessage == "runaway" && iAuth == CMD_OWNER) {
-            Unleash(kMessageID);
         } else if (sMessage == "unleash" || sMessage == "unfollow" || (sMessage == "toggleleash" && NULL_KEY != g_kLeashedTo)) {
             if (CheckCommandAuth(kMessageID, iAuth)) Unleash(kMessageID);
             if (bFromMenu) UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
@@ -685,7 +701,8 @@ state active
     timer() {
         dtext("timer : ping");
         //inlined old isInSimOrJustOutside function
-        if(g_bFollowMode){
+        if(g_bFollowMode)
+        {
             dtext("Mode is follow");
         }
         vector vLeashedToPos=llList2Vector(llGetObjectDetails(g_kLeashedTo,[OBJECT_POS]),0);
@@ -693,9 +710,12 @@ state active
         if(vLeashedToPos == ZERO_VECTOR || llVecDist(llGetPos(), vLeashedToPos)> 255) iIsInSimOrJustOutside=FALSE;
         
         if (iIsInSimOrJustOutside && llVecDist(llGetPos(),vLeashedToPos)<(60+g_iLength)) {   //if the leasher is now in range
+            
             dtext("timer : iIsInSimOrJustOutside && VecDist < (60+(iLength=3))");
-            if(!g_iLeasherInRange) { //and the leasher was previously not in range
-                if (g_iAwayCounter) {
+            if(!g_iLeasherInRange) 
+            { //and the leasher was previously not in range
+                if (g_iAwayCounter) 
+                {
                     g_iAwayCounter = -1;
                     llSetTimerEvent(3.0);
                 }
@@ -713,27 +733,50 @@ state active
                 ApplyRestrictions();
                 
                 if(!g_iAlreadyMoving) llMessageLinked(LINK_SET, LEASH_START_MOVEMENT,"","");
-            } else {
+            } 
+            else 
+            {
                 dtext("timer : LeasherInRange = TRUE");
             }
-        } else {   //the leasher is not now in range
+        } 
+        else 
+        {   //the leasher is not now in range
             dtext("timer : NotInSimOrOutside OR VecDist > (60+(iLength=3))");
-            if(g_iLeasherInRange) {  //but was a short while ago
-                if (g_iAwayCounter <= llGetUnixTime()) {
+            
+            if(g_iLeasherInRange) 
+            {  //but was a short while ago
+                
+                if(g_iAwayCounter==-1)
+                {
+                    
+                    //step 1, set AwayCounterto 0, 3 second timer.
+                    llSetTimerEvent(3);
+                    g_iAwayCounter=0;
+                    dtext("Leash holder was previously in range");
+                }
+                else if(g_iAwayCounter==0)
+                {
+                    //3 seconds after first fail to locate, disable leash motion
                     llTargetRemove(g_iTargetHandle);
                     llStopMoveToTarget();
                     if(!g_bFollowMode)
                         llMessageLinked(LINK_SET, CMD_PARTICLE, "unleash", g_kLeashedTo);
-                    g_iLeasherInRange=FALSE;
-                    ApplyRestrictions();
-                    g_iAwayCounter=-1;
                     dtext("No leash holder in range\n* Stopping leash particles");
                     if(g_iAlreadyMoving)llMessageLinked(LINK_SET, LEASH_END_MOVEMENT,"","");
-                } else if(g_iAwayCounter==-1){
-                    g_iAwayCounter = llGetUnixTime()+15;
-                    dtext("Leash holder was previously in range");
+                    g_iAwayCounter=llGetUnixTime()+60;
+                    g_iLeasherInRange=FALSE;
+                    //set awaycounter to +60 seconds.
                 }
-            } else {
+            } 
+            else 
+            {
+                if (g_iAwayCounter <= llGetUnixTime()) 
+                {
+                    //indicate out of range, clear realleash restrictions, reset awaycounter
+                    
+                    ApplyRestrictions();
+                    g_iAwayCounter=-1;
+                } 
                 // nothing else to do with the away counter
                 // slow down the timer
                 llSetTimerEvent(11);
@@ -814,15 +857,14 @@ state active
             g_iRLVOn = FALSE;
             ApplyRestrictions();
         } else if (iNum == DIALOG_RESPONSE) {
-            integer iMenuIndex = llListFindList(g_lMenuIDs, [kMessageID]);
-            if (~iMenuIndex) {
+            integer iPos = llSubStringIndex(kMessageID, "~"+llGetScriptName());
+            if (iPos>0) {
                 list lMenuParams = llParseString2List(sMessage, ["|"], []);
                 key kAV = (key)llList2String(lMenuParams, 0);
                 string sButton = llList2String(lMenuParams, 1);
                 //integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
-                string sMenu=llList2String(g_lMenuIDs, iMenuIndex + 1);
-                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
+                string sMenu = llGetSubString(kMessageID, 0, iPos-1);
                 if (sMenu == "MainDialog"){
                     if (sButton == BUTTON_UPMENU)
                         llMessageLinked(LINK_SET, iAuth, "menu "+BUTTON_PARENTMENU, kAV);
@@ -870,9 +912,6 @@ state active
                     g_kLeashCmderID = "";
                 }
             }
-        } else if (iNum == DIALOG_TIMEOUT) {
-            integer iMenuIndex = llListFindList(g_lMenuIDs, [kMessageID]);
-            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
         } else if (iNum == REBOOT && sMessage == "reboot") llResetScript();
         else if(iNum == AUTH_REPLY){
             list lParams = llParseString2List(sMessage, ["|"],[]);
