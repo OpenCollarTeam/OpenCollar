@@ -53,7 +53,9 @@ medea (medea destiny)
                     ApplyCommand if there is a command following that is not "on" or "off" to avoid collision
                     with RLV menu
                 -   Removed double menu for (prefix) restrictions
-      Jun 2024  -   Extended chat command function above to allow for capitalization of individual restriction names.                     
+      Jun 2024  -   Extended chat command function above to allow for capitalization of individual restriction names.
+Nikki Lacrima
+      Sept 2024 -   Remove superflous llOwnerSay commands and replace g_lMenuIDs (Yosty patch PR #963)                 
                              
 */        
 string g_sScriptVersion = "8.3";
@@ -250,16 +252,8 @@ integer g_bForceMouselook = FALSE;
 
 integer g_iRLV = FALSE;
 
-list g_lMenuIDs;
-integer g_iMenuStride;
-
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
-    key kMenuID = llGenerateKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
-
-    integer iIndex = llListFindList(g_lMenuIDs, [kID]);
-    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
-    else g_lMenuIDs += [kID, kMenuID, sName];
+    llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, sName+"~"+llGetScriptName());
 }
 
 list ListRestrictions(integer r1, integer r2)
@@ -546,17 +540,14 @@ UserCommand(integer iNum, string sStr, key kID) {
             if (iIndex > -1) {
                 if (iNum == CMD_OWNER || iNum==CMD_TRUSTED){
                     if (sChangekey == "add") {
-                        llMessageLinked(LINK_SET, NOTIFY, "0"+"Restriction preset added: '"+sChangevalue+"'", kID);
+                        llMessageLinked(LINK_SET, NOTIFY, "1"+"Restriction preset added: '"+sChangevalue+"'", kID);
                         ApplyAll(g_iRestrictions1 | llList2Integer(g_lMacros,iIndex+1),g_iRestrictions2 | llList2Integer(g_lMacros,iIndex+2),FALSE);
-                        llOwnerSay("Button '"+llList2String(g_lMacros,iIndex)+"' has been added!");
                     } else if (sChangekey == "replace") {
-                        llMessageLinked(LINK_SET, NOTIFY, "0"+"Replaced current restrictions with preset '"+sChangevalue+"'", kID);
+                        llMessageLinked(LINK_SET, NOTIFY, "1"+"Replaced current restrictions with preset '"+sChangevalue+"'", kID);
                         ApplyAll(llList2Integer(g_lMacros,iIndex+1),llList2Integer(g_lMacros,iIndex+2),FALSE);
-                        llOwnerSay("Preset '"+llList2String(g_lMacros,iIndex)+"' replaced your Restrictions!");
                     } else if (sChangekey == "clear") {
-                        llMessageLinked(LINK_SET, NOTIFY, "0"+"Restriction presets cleared '"+sChangevalue+"'", kID);
+                        llMessageLinked(LINK_SET, NOTIFY, "1"+"Restriction presets cleared '"+sChangevalue+"'", kID);
                         ApplyAll(g_iRestrictions1 ^ (g_iRestrictions1 & llList2Integer(g_lMacros,iIndex+1)),g_iRestrictions2 ^ (g_iRestrictions2 & llList2Integer(g_lMacros,iIndex+2)),FALSE);
-                        llOwnerSay("Restriction preset '"+llList2String(g_lMacros,iIndex)+"' has been cleared!");
                     } 
                 } else llMessageLinked(LINK_SET, NOTIFY, "0"+"Insufficient authority to set restrictions!", kID);
             } else llInstantMessage(kID,"Restriction preset '"+sChangevalue+"' does not exist!");
@@ -648,10 +639,9 @@ state active
                 llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu+"|"+ g_sSubMenu,"");  // Register menu "Restrictions"
             }
         } else if(iNum == DIALOG_RESPONSE){
-            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            if(iMenuIndex!=-1){
-                string sMenu = llList2String(g_lMenuIDs, iMenuIndex+1);
-                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
+            integer iPos = llSubStringIndex(kID, "~"+llGetScriptName());
+            if(iPos>0){
+                string sMenu = llGetSubString(kID, 0, iPos-1);
                 list lMenuParams = llParseString2List(sStr, ["|"],[]);
                 key kAv = llList2Key(lMenuParams,0);
                 string sMsg = llList2String(lMenuParams,1);

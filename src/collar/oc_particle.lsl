@@ -7,6 +7,7 @@
 
  Nikki Lacrima
     Aug 2023: Updated for lockguard chain texture
+    Sept 2024: Fix setting name for leash length
     
 */
 string g_sScriptVersion = "8.3";
@@ -681,7 +682,7 @@ state active
                     g_iStrictRank = (integer)llGetSubString(sValue,2,-1);
                 } else if (sToken == "turn") {
                     g_iTurnMode = (integer)sValue;
-                } else if(sToken == "length"){
+                } else if(sToken == "leashlength"){
                     g_iLeashLength = (integer)sValue;
                 }
             } else if(llGetSubString(sToken,0,i) == "global_"){
