@@ -20,15 +20,14 @@ Medea (medea.destiny)
                 is extended from 15 to 60 seconds to give leash holder time after a 
                 teleport to send leashee a tp lure.         
 Nikki Larima 
-    Nov 2023    - Remove processing of "runaway" command string, handled by CMD_SAFEWORD
+    Nov 2023    - Remove processing of "runaway" command string, handled by CMD_SATEWORD
                   implemented Yosty7b3's menu streamlining, see pr#963    
-    Oct 2024    - Stop g_iAwayCounter from clearing restrictions when nothing has changed    
 
 Licensed under the GPLv2.  See LICENSE for full details. 
 https://github.com/OpenCollarTeam/OpenCollar               
 */
 
-string g_sScriptVersion = "8.4";
+string g_sScriptVersion = "8.3";
 integer LINK_CMD_DEBUG=1999;
 
 // ------ TOKEN DEFINITIONS ------
@@ -771,7 +770,7 @@ state active
             } 
             else 
             {
-                if (g_iAwayCounter>0 && g_iAwayCounter <= llGetUnixTime()) 
+                if (g_iAwayCounter <= llGetUnixTime()) 
                 {
                     //indicate out of range, clear realleash restrictions, reset awaycounter
                     
