@@ -7,8 +7,6 @@ Copyright 2021
 Aria (Tashia Redrose)
     * Feb 2021      -           Create oc_folders_locks
 
-Nikki Lacrima
-    Oct 2024    - consistently use RLV_CMD with source g_sRLVSource
 
 et al.
 
@@ -16,9 +14,6 @@ et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
 */
-
-string g_sScriptVersion = "8.4";
-string g_sRLVSource ="folders_locks";
 list g_lFolderLocks;
 
 integer RLV_OFF = 6100;
@@ -32,7 +27,7 @@ IssueLocks()
     integer i=0;
     integer end=llGetListLength(g_lFolderLocks);
     for(i=0;i<end;i+=2){
-        llMessageLinked(LINK_SET, RLV_CMD, llList2String(g_lFolderLocks,i)+":"+llList2String(g_lFolderLocks,i+1)+"=n", g_sRLVSource);
+        llMessageLinked(LINK_SET, RLV_CMD, llList2String(g_lFolderLocks,i)+":"+llList2String(g_lFolderLocks,i+1)+"=n", "");
     }
 
     //llSay(0, "FOLDER LOCKS DEBUG RESTRICT\n\n"+llDumpList2String(g_lFolderLocks, " ~ "));
@@ -92,12 +87,12 @@ default
             integer index=llListFindList(g_lFolderLocks, [sMsg,(string)kID]);
             if(index==-1){
                 g_lFolderLocks += [sMsg, (string)kID];
-                IssueLocks();
             }else{
-                llMessageLinked(LINK_SET, RLV_CMD, llList2String(g_lFolderLocks,index)+":"+llList2String(g_lFolderLocks,index+1)+"=y", g_sRLVSource);
+                llOwnerSay("@"+llList2String(g_lFolderLocks, index)+":"+llList2String(g_lFolderLocks,index+1)+"=y");
                 g_lFolderLocks = llDeleteSubList(g_lFolderLocks, index,index+1);
             }
             //llSay(0, "FOLDER LOCKS DEBUG (SET LOCK)\n\nFMEM = "+(string)llGetFreeMemory()+"b\n\n"+llDumpList2String(g_lFolderLocks, " ~ "));
+            IssueLocks();
         } else if(iNum == CLEAR_FOLDER_LOCKS)
         {
             //llSay(0, "FOLDER LOCKS DEBUG CLEAR");
@@ -105,7 +100,7 @@ default
             integer end = llGetListLength(g_lFolderLocks);
             for(i=0;i<end;i+=2)
             {
-                llMessageLinked(LINK_SET, RLV_CMD, llList2String(g_lFolderLocks, i)+":"+llList2String(g_lFolderLocks,i+1)+"=y",g_sRLVSource);
+                llMessageLinked(LINK_SET, RLV_CMD, llList2String(g_lFolderLocks, i)+":"+llList2String(g_lFolderLocks,i+1)+"=y", "");
             }
             llResetScript();
         } else if(iNum == UPDATER)
