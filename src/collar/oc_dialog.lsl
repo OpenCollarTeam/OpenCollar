@@ -17,7 +17,7 @@ Medea Destiny -
 Nikki Lacrima
     Aug 2023  - Changed functions for clearing auth so  auth doesn't persist for open menus
     Sep 2024  - Invalidate all menus except wearer when public or group mode is turned off
-    Jan 2025  - Improved memory handling in SortUUIDList, clear resources as early as possible
+    Jan 2025  - Improved memory handling in SortUUIDList, clear resources as early as possible, remove the emergency fix for sensor function
 
 */
 integer CMD_ZERO = 0;
@@ -564,9 +564,11 @@ state active
 
 
     sensor(integer num_detected){
-        if(num_detected>16) num_detected=16;
+        //if(num_detected>16) num_detected=16;
         //LL just expanded sensor to up to 32 hits. Thanks LL, but there's a ton of content 
         //out there not designed to cope with that which are gonna stack-heap now. For now at least we'll trim back to 16.
+        //emergency fix removed with updated memory handling in sortuuid function
+
         //get sensot request info from list
         list lParams=llParseStringKeepNulls(llList2String(g_lSensorDetails,0), ["|"], []);
         key kID = (key)llList2String(g_lSensorDetails,1);
