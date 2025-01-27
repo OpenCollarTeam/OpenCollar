@@ -17,6 +17,7 @@ Medea Destiny -
 Nikki Lacrima
     Aug 2023  - Changed functions for clearing auth so  auth doesn't persist for open menus
     Sep 2024  - Invalidate all menus except wearer when public or group mode is turned off
+    Jan 2025  - Improved memory handling in SortUUIDList, clear resources as early as possible, remove the emergency fix for sensor function
 
 */
 integer CMD_ZERO = 0;
@@ -260,7 +261,6 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
             sButton = TruncateString(sButton, 24);
             if(llSubStringIndex(sButton, "secondlife://")!=-1) sButton = sButtonNumber;
 
-
             lButtons = llListReplaceList(lButtons, [sButton], iCur,iCur);
         }
         iNBPromptlen=GetStringBytes(sNumberedButtons);
@@ -312,7 +312,7 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
     integer iListener = llListen(iChan, "", kRecipient, "");
 
     //send dialog to viewer
-    if (llGetListLength(lMenuItems+lUtilityButtons)){
+    if (llGetListLength(lMenuItems)+llGetListLength(lUtilityButtons)){
         list lNavButtons;
         if (iNumitems > iMyPageSize) lNavButtons=[PREV,MORE];
         if(g_iShowLevel)sThisPrompt += "\nAuth Level: "+(string)iAuth;
@@ -348,8 +348,7 @@ integer IsUUIDList(list lTmp)
 
 list SortUUIDList(list lToSort){
     integer i = 0;
-    list lNameList = [];
-    list lSorted;
+    list lIndexNameList = [];
     integer end = llGetListLength(lToSort);
     for(i=0;i<end;i++){
         string sButton = llList2String(lToSort,i);
@@ -360,23 +359,18 @@ list SortUUIDList(list lToSort){
                 sButton = llGetDisplayName(sButton)+" ("+llKey2Name(sButton)+")";
         }
         else sButton=llKey2Name((key)sButton);
-        lNameList += [llList2String(lToSort,i), sButton];
-        lSorted+=sButton;
+        lIndexNameList += [i, sButton];
     }
-    //llSay(0, "lNameList : "+ llDumpList2String(lNameList, " - "));
-    lToSort= [];
-    lSorted = llListSort(lSorted, 1, TRUE);
-    i=0;
-    //llSay(0, "lSorted : "+ llDumpList2String(lSorted, " - "));
+//    llSay(0, "lIndexNameList : "+ llDumpList2String(lIndexNameList, " - "));
+    lIndexNameList = llListSortStrided(lIndexNameList, 2, 1, TRUE);
+//    llSay(0, "lIndexNameList : "+ llDumpList2String(lIndexNameList, " - "));
     list lFinal;
-    end=llGetListLength(lSorted);
     for(i=0;i<end;i++){
-        integer index = llListFindList(lNameList, [llList2String(lSorted,i)]);
-        lFinal += [llList2String(lNameList, index-1)];
+        lFinal += [llList2String(lToSort,llList2Integer(lIndexNameList, 2*i))];
     }
-    //llSay(0, "lFinal : "+ llDumpList2String(lFinal, " - "));
-    lNameList=[];
-    lSorted=[];
+//    llSay(0, "lFinal : "+ llDumpList2String(lFinal, " - "));
+    lToSort = [];
+    lIndexNameList=[];
     return lFinal;
 }
 
@@ -436,7 +430,6 @@ CleanList() {
         if (llGetListLength(g_lSensorDetails)>0) dequeueSensor();
     }
 }
-
 
 ClearUser(key kRCPT) {
     //find any strides belonging to user and remove them
@@ -529,7 +522,6 @@ state active
             llOwnerSay("Dialog Response\n\n[iChan = "+(string)iChan+", sName = "+sName+", kID = "+(string)kID+", sMessage = "+sMessage+"]");
         }
 
-
         integer iMenuIndex = llListFindList(g_lMenus, [iChan]);
         if (~iMenuIndex) {
             key kMenuID = llList2Key(g_lMenus, iMenuIndex + 1);
@@ -572,9 +564,11 @@ state active
 
 
     sensor(integer num_detected){
-        if(num_detected>16) num_detected=16;
+        //if(num_detected>16) num_detected=16;
         //LL just expanded sensor to up to 32 hits. Thanks LL, but there's a ton of content 
         //out there not designed to cope with that which are gonna stack-heap now. For now at least we'll trim back to 16.
+        //emergency fix removed with updated memory handling in sortuuid function
+
         //get sensot request info from list
         list lParams=llParseStringKeepNulls(llList2String(g_lSensorDetails,0), ["|"], []);
         key kID = (key)llList2String(g_lSensorDetails,1);
@@ -635,8 +629,6 @@ state active
         else g_bSensorLock=FALSE;
     }
 
-
-
     link_message(integer iSender, integer iNum, string sStr, key kID) {
         if (iNum == SENSORDIALOG){
             //first, store all incoming parameters in a global sensor details list
@@ -655,7 +647,10 @@ state active
             //Debug("DIALOG:"+sStr);
             string extraInfo = "";
             list lParams = llParseStringKeepNulls(sStr, ["|"], []);
+            sStr = "";
+            //first clean out any strides already in place for that user. prevents having lots of listens open if someone uses the menu several times while sat
             key kRCPT = llGetOwnerKey((key)llList2String(lParams, 0));
+            ClearUser(kRCPT);
             string sPrompt = llList2String(lParams, 1);
             integer iPage = (integer)llList2String(lParams, 2);
             if (iPage < 0 ) {
@@ -673,12 +668,13 @@ state active
             integer iSorted=FALSE;
             if (llGetListLength(lParams)>=6) iAuth = llList2Integer(lParams, 5);
             if (llGetListLength(lParams)>=7) iSorted = llList2Integer(lParams, 6);
-            //first clean out any strides already in place for that user. prevents having lots of listens open if someone uses the menu several times while sat
+            if (llGetListLength(lParams)>=8) extraInfo = llList2String(lParams, 7);
+            lParams = [];
+
             if(iSorted && IsUUIDList(lButtons))lButtons = SortUUIDList(lButtons);
             else if(iSorted && !IsUUIDList(lButtons))lButtons = llListSort(lButtons, 1, TRUE);
 
-            if (llGetListLength(lParams)>=8) extraInfo = llList2String(lParams, 7);
-            ClearUser(kRCPT);
+            llSleep(0.01); /* make sure that we are on the next server frame */
             Dialog(kRCPT, sPrompt, lButtons, ubuttons, iPage, kID, iDigits, iAuth,extraInfo, iSorted);
         }
 
@@ -753,7 +749,6 @@ state active
     }
 
     state_entry(){
-
         g_kWearer=llGetOwner();
         g_sPrefix = llToLower(llGetSubString(llKey2Name(llGetOwner()), 0,1));
         g_sWearerName = NameURI(g_kWearer);
@@ -792,4 +787,3 @@ state inUpdate{
         }
     }
 }
-
