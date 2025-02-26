@@ -8,6 +8,7 @@
  Nikki Lacrima
     Aug 2023: Updated for lockguard chain texture
     Sept 2024: Fix setting name for leash length
+    Feb 2025: Support for two leashpoints, "leashpoint" and "fcollar", for ponybits
     
 */
 string g_sScriptVersion = "8.3";
@@ -177,6 +178,7 @@ FindLinkedPrims() {
     if (llListFindList(g_lLeashPrims,["fcollar"]) < 0){
         g_lLeashPrims += ["fcollar",LINK_ROOT, "collar", LINK_ROOT, "collarfrontloop", LINK_ROOT];
     }
+    //llOwnerSay(llDumpList2String(g_lLeashPrims," "));
 }
 
 Particles(integer iLink, key kParticleTarget, vector vScale) {
@@ -219,16 +221,20 @@ StartParticles(key kParticleTarget) {
     g_sParticleTextureID = g_sLeashParticleTexture;
     g_sParticleMode = g_sLeashParticleMode;
 
-    integer iIndex = llListFindList(g_lLeashPrims,["collar"]);
-    if (iIndex > -1) {
+    integer iInstance = 0;
+    integer iIndex;
+    // For pony bit, double leashpoints
+    while ((iIndex = llListFindListNext(g_lLeashPrims,["collar"],iInstance++)) > -1) {
         Particles(llList2Integer(g_lLeashPrims,iIndex+1),kParticleTarget,g_vLeashSize);
         g_iLeashActive = TRUE;
     }
 }
 
 StopParticles(integer iEnd) {
+    integer iInstance = 0;
     integer iIndex = llListFindList(g_lLeashPrims,["collar"]);
-    if (iIndex > -1) {
+    // For pony bit, double leashpoints
+    while ((iIndex = llListFindListNext(g_lLeashPrims,["collar"],iInstance++)) > -1) {
         llLinkParticleSystem(llList2Integer(g_lLeashPrims,iIndex+1), []);
     }
 
