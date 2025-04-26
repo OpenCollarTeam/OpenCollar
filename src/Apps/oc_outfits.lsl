@@ -24,6 +24,7 @@ et al.
 Medea (Medea Destiny)
    *Nov 2023        - Fix for #902 (kAV instead of kID on button check) was not complete, 
                       No Access notify also changed to kAV
+   *Jan 2025        - commented out stray debug messages
 
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
@@ -244,7 +245,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                 g_sPath=GetFolderName(FALSE)+"/"+sChangevalue;
                 g_iListenTimeout=0;
             }
-            llOwnerSay("[command "+sChangetype+"]"+g_sPath);
+           // llOwnerSay("[command "+sChangetype+"]"+g_sPath);
 
             if(!g_iLocked){
                 llOwnerSay("@detach=n");
@@ -253,7 +254,7 @@ UserCommand(integer iNum, string sStr, key kID) {
             ForceLockCore();
             TickBrowser();
             llSetTimerEvent(1);
-            llOwnerSay("[command "+sChangetype+"] Attempt detach");
+            // llOwnerSay("[command "+sChangetype+"] Attempt detach");
             if(!Bool((g_iAccessBitSet&32))){
                 if(llSubStringIndex(g_sPath, GetFolderName(TRUE))==-1)
                     llOwnerSay("@detachall:"+GetFolderName(FALSE)+"=force");
