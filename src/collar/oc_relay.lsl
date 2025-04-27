@@ -25,6 +25,10 @@ Nikki Lacrima
                - implemented Yosty7b3's menu streamlining, see pr#963 
 et al.
 
+Medea Destiny
+   *Apr 2025   - Fixed a wearer no access when has trusted permission issue, bug
+               found by Annie Zehetbauer in world.
+
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
 
@@ -437,7 +441,7 @@ state active
                         llMessageLinked(LINK_SET,NOTIFY, "0%NOACCESS% to relay options", kAv);
                         jump noaccess;
                     }
-                    if(!(iAuth == CMD_OWNER || iAuth == CMD_WEARER)) {
+                    if(!(iAuth == CMD_OWNER || kAv == g_kWearer)) {
                         llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to relay options", kAv);
                         jump noaccess;
                     }
