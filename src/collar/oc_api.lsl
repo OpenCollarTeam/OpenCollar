@@ -60,6 +60,7 @@ Nikki Lacrima
                     remove the g_iRunawayMode. 
                 -   Add "#" prefix wildcard, issue #897
                 -   implemented Yosty7b3's menu streamlining, see pr#963 
+    *May 2025   -   Update prefix on every rez to handle name changes, issue #1140 
 
 
 et al.
@@ -469,6 +470,7 @@ default
 state active
 {
     on_rez(integer iNum){
+        g_sPrefix = llToLower(llGetSubString(llKey2Name(llGetOwner()),0,1));
         llMessageLinked(LINK_SET, ALIVE, llGetScriptName(),"");
         g_iStartup=TRUE;
     }
