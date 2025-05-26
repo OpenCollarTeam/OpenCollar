@@ -1,4 +1,3 @@
-
 /*
 This file is a part of OpenCollar.
 Copyright ©2021
@@ -61,6 +60,7 @@ Nikki Lacrima
                 -   Add "#" prefix wildcard, issue #897
                 -   implemented Yosty7b3's menu streamlining, see pr#963 
     *May 2025   -   Update prefix on every rez to handle name changes, issue #1140 
+                -   Cap chat commands to 250 charaters, issue #1138 
 
 
 et al.
@@ -514,6 +514,7 @@ state active
     }
     
     listen(integer c,string n,key i,string m){
+         if (llStringLength(m)>249) m = llGetSubString(m, 0, 249);
          if(c == g_iInterfaceChannel) {
              if (llGetOwnerKey(i)==g_kWearer){
                 //play ping pong with the Sub AO only if object is owned by wearer
