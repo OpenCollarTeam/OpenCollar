@@ -266,7 +266,7 @@ MenuSetExceptions(key kID, integer iAuth, string sTarget){
 
 MenuForceSit(key kID, integer iAuth) {
     
-    Dialog(kID, "\nSelect a place to force sit the wearer on it, or [UNSIT] to force them to stand up. \nWearer may stand after being force sat unless STRICT SIT is active. When it's active, they are forbidden from standing ONLY when force sat from this menu, and if force sat will need to be released with [UNSIT].\n", [Checkbox(g_iStrictSit, "Strict Sit"), UPMENU, "[UNSIT]"], [], 0, iAuth, "Restrictions~sensor");
+    Dialog(kID, "\nSelect a place to force sit the wearer on it, or [UNSIT] to force them to stand up. \nWearer may stand after being force sat unless STRICT SIT is active. When it's active, they are forbidden from standing ONLY when force sat from this menu, and if force sat will need to be released with [UNSIT].\n", [Checkbox(g_iStrictSit, "Strict Sit"), UPMENU, "[GROUND]", "[UNSIT]"], [], 0, iAuth, "Restrictions~sensor");
 }
 
 MenuCamera(key kID, integer iAuth){
@@ -461,7 +461,11 @@ UserCommand(integer iNum, string sStr, key kID) {
                 if(g_iStrictSit){
                     llMessageLinked(LINK_SET,RLV_CMD,"unsit=n","strictsit");
                 }
-                llMessageLinked(LINK_SET,RLV_CMD,"sit:"+sChangekey+"=force","Macros");
+                if (sChangekey == "[ground]" || sChangekey == "ground") {
+                    llMessageLinked(LINK_SET,RLV_CMD,"sitground=force","Macros");
+                } else {
+                    llMessageLinked(LINK_SET,RLV_CMD,"sit:"+sChangekey+"=force","Macros");
+                }
             }
         } else if(sChangetype == "rlvex" && iNum == CMD_OWNER){
             if(sChangekey == "modify"){
