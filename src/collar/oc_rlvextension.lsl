@@ -56,6 +56,9 @@ Medea Destiny -
                     MuffleText() to save memory
 Krysten Minx -
    May2022      - Added check for valid UUID when setting custom exception
+
+   Medea (Medea Destiny) and McGroarty (Chew)                
+    Jun 2025    -   Sync forced sit state and permission between oc_rlvextension.lsl and oc_anim.lsl
 */
 string g_sParentMenu = "RLV";
 string g_sSubMenu1 = "Force Sit";
@@ -98,6 +101,7 @@ integer RLV_CMD_OVERRIDE=6010; // one-shot (=force) command that will override r
 integer RLV_OFF = 6100; // send to inform plugins that RLV is disabled now, no message or key needed
 integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no message or key needed
 integer EXC_REFRESH=6109; // send to request exceptions are refreshed.
+integer SIT_LINK = 6300;
 
 
 integer DIALOG = -9000;
@@ -114,11 +118,14 @@ integer g_iBlurAmount = 5;
 float g_fMaxCamDist = 2.0;
 float g_fMinCamDist = 1.0;
 
+integer g_iLastSitAuth = 599; // CMD_NOACCESS
+
 integer g_iRLV = FALSE;
 
 key g_kWearer;
 
 string g_sCameraBackMenu="menu manage"; //for allowing the camera settings menu to be in 2 places.
+
 
 
 list g_lCheckboxes= ["□","▣"];
@@ -266,7 +273,7 @@ MenuSetExceptions(key kID, integer iAuth, string sTarget){
 
 MenuForceSit(key kID, integer iAuth) {
     
-    Dialog(kID, "\nSelect a place to force sit the wearer on it, or [UNSIT] to force them to stand up. \nWearer may stand after being force sat unless STRICT SIT is active. When it's active, they are forbidden from standing ONLY when force sat from this menu, and if force sat will need to be released with [UNSIT].\n", [Checkbox(g_iStrictSit, "Strict Sit"), UPMENU, "[GROUND]", "[UNSIT]"], [], 0, iAuth, "Restrictions~sensor");
+    Dialog(kID, "\nSelect a place to force sit the wearer on it, or [UNSIT] to force them to stand up. \nWearer may stand after being force sat unless STRICT SIT is active. When it's active, they are forbidden from standing ONLY when force sat from this menu, and if force sat will need to be released with [UNSIT].\n", [Checkbox(g_iStrictSit, "Strict Sit"), UPMENU, "[UNSIT]"], [], 0, iAuth, "Restrictions~sensor");
 }
 
 MenuCamera(key kID, integer iAuth){
@@ -412,7 +419,6 @@ Save(integer iVal){ //iVal is bitmask of settings to save. 127 to save all.
 
 }
 
-integer g_iLastSitAuth = 599;
 UserCommand(integer iNum, string sStr, key kID) {
     if (iNum<CMD_OWNER || iNum>CMD_EVERYONE) return;
     sStr=llToLower(sStr);
@@ -452,6 +458,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                 if(iNum==CMD_OWNER) llMessageLinked(LINK_SET,RLV_CMD_OVERRIDE,"unsit~unsit",kID);
                 else llMessageLinked(LINK_SET,RLV_CMD,"unsit=force","Macros");
                 g_iLastSitAuth = 599;
+                llMessageLinked(LINK_SET, SIT_LINK, "unsit|"+(string)iNum, "");
             } else {
                 if(iNum > g_iLastSitAuth){
                     llMessageLinked(LINK_SET, NOTIFY, "0Cannot override sit forced by someone with higher auth level.", kID);
@@ -461,11 +468,8 @@ UserCommand(integer iNum, string sStr, key kID) {
                 if(g_iStrictSit){
                     llMessageLinked(LINK_SET,RLV_CMD,"unsit=n","strictsit");
                 }
-                if (sChangekey == "[ground]" || sChangekey == "ground") {
-                    llMessageLinked(LINK_SET,RLV_CMD,"sitground=force","Macros");
-                } else {
-                    llMessageLinked(LINK_SET,RLV_CMD,"sit:"+sChangekey+"=force","Macros");
-                }
+                llMessageLinked(LINK_SET,RLV_CMD,"sit:"+sChangekey+"=force","Macros");
+                llMessageLinked(LINK_SET, SIT_LINK, "sit|"+(string)iNum, "");
             }
         } else if(sChangetype == "rlvex" && iNum == CMD_OWNER){
             if(sChangekey == "modify"){
@@ -864,6 +868,12 @@ state active
             llMessageLinked(LINK_SET,LINK_CMD_RESTDATA,"MinCamDist="+(string)g_fMinCamDist,kID);
             llMessageLinked(LINK_SET,LINK_CMD_RESTDATA,"MaxCamDist="+(string)g_fMaxCamDist,kID);
             llMessageLinked(LINK_SET,LINK_CMD_RESTDATA,"BlurAmount="+(string)g_iBlurAmount,kID);
+        } else if(iNum == SIT_LINK){
+            list l=llParseString2List(sStr,["|"] ,[]);
+            string action=llList2String(l,0);
+            integer level=(integer)llList2String(l,1);
+            if(action=="sit") g_iLastSitAuth=level;
+            else if(action=="unsit") g_iLastSitAuth=599;
         } else if (iNum == REBOOT && sStr == "reboot") {
             llResetScript();
         } else if(iNum == LINK_CMD_DEBUG){

@@ -28,6 +28,11 @@ Medea (Medea Destiny)
                 people may use this it seemed better to keep the capability but have it switchable and
                 default to off. Issue #1012
 
+Medea (Medea Destiny) and McGroarty (Chew)                
+    Jun 2025    - Added groundsit button, sync forced sit state and permission between
+                oc_rlvextension.lsl and oc_anim.lsl
+
+
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
 */
@@ -74,6 +79,7 @@ integer RLV_CMD = 6000;
 
 integer LEASH_START_MOVEMENT = 6200;
 integer LEASH_END_MOVEMENT = 6201;
+integer SIT_LINK = 6300;
 
 integer ANIM_START = 7000;
 integer ANIM_STOP = 7001;
@@ -88,7 +94,8 @@ integer DIALOG_TIMEOUT = -9002;
 string UPMENU = "BACK";
 //string ALL = "ALL";
 
-
+integer g_iGroundSit;
+integer g_iLastSitAuth=599; // CMD_NOACCESS
 
 //integer TIMEOUT_READY = 30497;
 //integer TIMEOUT_REGISTER = 30498;
@@ -125,7 +132,7 @@ integer g_iPosture = FALSE;
 integer g_iStandOffset = FALSE;
 Menu(key kID, integer iAuth) {
     string sPrompt = "\n[Animations]\n\nCurrent Animation: "+setor((g_lCurrentAnimations==[]), "None", llList2String(g_lCurrentAnimations, 0)+"\nCurrent Pose: "+setor((g_sPose==""), "None", g_sPose));
-    list lButtons = [Checkbox(g_iAnimLock,"AnimLock"), "Pose"];
+    list lButtons = [Checkbox(g_iGroundSit, "Ground Sit"),Checkbox(g_iAnimLock,"AnimLock"), "Pose"];
     
     if(llGetInventoryType("~stiff")==INVENTORY_ANIMATION){
         lButtons += [Checkbox(g_iPosture, "Posture")];
@@ -280,6 +287,33 @@ UserCommand(integer iNum, string sStr, key kID) {
                     
                 }
             }else llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to changing pose offset", kID);
+        } else if( sChangetype=="groundsit") {
+                if(sChangevalue=="on" && g_iGroundSit==FALSE)
+                {
+                    llOwnerSay("@sitground=force");
+                    llMessageLinked(LINK_SET,RLV_CMD,"unsit=n","groundsit");
+                    llMessageLinked(LINK_SET,LM_SETTING_SAVE, "anim_groundsit=1","");
+                    g_iGroundSit=TRUE;
+                    g_iLastSitAuth=iNum;
+                    llMessageLinked(LINK_SET,LM_SETTING_SAVE, "anim_groundsitauth="+(string)iNum,"");
+                    llMessageLinked(LINK_SET, SIT_LINK, "sit|"+(string)iNum, "");
+                }
+                else if(sChangevalue=="off" && g_iGroundSit==TRUE)
+                {
+                    if(iNum>0 && iNum<=g_iLastSitAuth)
+                    {
+                        llMessageLinked(LINK_SET,RLV_CMD,"unsit=y","groundsit");
+                        llSleep(1);
+                        llOwnerSay("@unsit=force");
+                        llMessageLinked(LINK_SET,LM_SETTING_DELETE, "anim_groundsit","");
+                        g_iGroundSit=FALSE;
+                        g_iLastSitAuth=599;
+                        llMessageLinked(LINK_SET, SIT_LINK, "unsit|"+(string)iNum, "");
+                        llMessageLinked(LINK_SET,LM_SETTING_DELETE, "anim_groundsitauth","");
+                    }
+                    else llMessageLinked(LINK_SET,NOTIFY,"0Insufficient auth to undo groundsit",kID);
+                }
+                        
         } else if(sChangetype=="standoffset"){
             if(iNum==CMD_OWNER || kID==g_kWearer) {
                 if(sChangevalue=="on") {
@@ -612,8 +646,14 @@ state active
                                 llMessageLinked(LINK_SET, iAuth, "posture on",kAv);
                             }
                         }
-                        
-                    }else {
+                    } 
+                    else if(sMsg == Checkbox(g_iGroundSit,"Ground Sit"))
+                    { 
+                        if(g_iGroundSit) UserCommand(iAuth,"groundsit off",kAv);
+                        else UserCommand(iAuth,"groundsit on",kAv);
+                    }
+                       
+                    else {
                         iRespring=FALSE;
                         llMessageLinked(LINK_SET, iAuth, "menu "+sMsg,kAv);
                     }
@@ -655,6 +695,17 @@ state active
                     g_lCheckboxes = llParseString2List(sVal,[","],[]);
                 }
             } else if(sTok == "anim"){
+                if(sVar== "groundsit")
+                {
+                    g_iGroundSit=TRUE;
+                    llOwnerSay("@sitground=force");
+                    llMessageLinked(LINK_SET,RLV_CMD,"unsit=n","groundsit");
+                }
+                else if(sVar=="groundsitauth")
+                {
+                     g_iLastSitAuth=(integer)sVal;
+                     llMessageLinked(LINK_SET, SIT_LINK, "sit|"+(string)g_iLastSitAuth, "");
+                }
                 if(sVar == "pose"){
                     if (g_sPose != "")StopAnimation(g_sPose);
                     g_sPose = sVal;
@@ -693,7 +744,17 @@ state active
             if(sTok=="global"){
                 if(sVar == "locked") g_iLocked=FALSE;
             }else if(sTok == "anim"){
-                if(sVar == "pose"){
+                if(sVar== "groundsit")
+                {
+                    g_iGroundSit=FALSE;
+                    llMessageLinked(LINK_SET,RLV_CMD,"unsit=y","groundsit");
+                }
+                else if(sVar=="groundsitauth")
+                {
+                     g_iLastSitAuth=599;
+                     llMessageLinked(LINK_SET, SIT_LINK, "unsit|599", "");
+                }
+                else if(sVar == "pose"){
                     if (g_sPose != ""){
                         StopAnimation(g_sPose);
                         g_sPose = "";
@@ -714,6 +775,17 @@ state active
                     llMessageLinked(LINK_SET, RLV_CMD, "adjustheight:1;0;0=force",g_kWearer);
                 }
             }
+        } else if(iNum == SIT_LINK){
+            list l=llParseString2List(sStr,["|"] ,[]);
+            string action=llList2String(l,0);
+            integer level=(integer)llList2String(l,1);
+            if(action=="sit"){
+                g_iGroundSit=TRUE;
+                g_iLastSitAuth=level;
+            }else if(action=="unsit"){
+                g_iGroundSit=FALSE;
+                g_iLastSitAuth=599;
+            }
         } else if(iNum == LEASH_START_MOVEMENT){
             g_iStoppedAdjust=FALSE;
             g_iLeashMove=TRUE;
@@ -730,6 +802,13 @@ state active
         } else if(iNum == REBOOT){
             StopAllAnimations();
             llResetScript();
+        }
+        else if(g_iGroundSit==TRUE && iNum==6002) //RLV clear
+        {
+            g_iGroundSit=FALSE;
+            g_iLastSitAuth=599;
+            llOwnerSay("@unsit=force");
+            llMessageLinked(LINK_SET, SIT_LINK, "unsit|599", "");
         }
         //llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
     }
@@ -772,4 +851,3 @@ state inUpdate{
         }
     }
 }
-
