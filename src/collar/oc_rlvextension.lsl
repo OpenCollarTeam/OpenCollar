@@ -204,24 +204,24 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 }
 
 MenuExceptions(key kID, integer iAuth) {
-    string sPrompt = "\n[Exceptions]\n \nSet which RLV restrictions to bypass. OWNER and TRUSTED apply to all with that role. CUSTOM lets you set them per person.";
+    string sPrompt = "\n[Exceptions]\n \nSet RLV restrictions for bypass. OWNER and TRUSTED apply to all with that role. CUSTOM are set per person.";
     Dialog(kID, sPrompt, ["Owner","Trusted","Custom"], [UPMENU], 0, iAuth, "Exceptions~Main");
 }
 list g_lCustomExceptions = []; // Exception name, Exception UUID, integer bitmask
 
 MenuCustomExceptionsSelect(key kID,integer iAuth){
-    string sPrompt = "\n[Exceptions]\n\nSet custom exceptions\n\nNOTE: Some group exceptions may not affect some groups.";
+    string sPrompt = "\n[Exceptions]\n\nSet custom exceptions\n\nNOTE: Some group exceptions don't affect some groups.";
     Dialog(kID, sPrompt, llList2ListStrided(g_lCustomExceptions, 0,-1,3),["+ ADD", "- REM", UPMENU], 0, iAuth, "Exceptions~Custom");
 }
 
 MenuCustomExceptionsRem(key kID, integer iAuth){
-    string sPrompt = "\n[Exceptions]\n\nWhich custom exception shoudl be removed?";
+    string sPrompt = "\n[Exceptions]\n\nWhich custom exception should be removed?";
     Dialog(kID, sPrompt, llList2ListStrided(g_lCustomExceptions, 0, -1, 3), [UPMENU], 0, iAuth, "Exceptions~CustomRem");
 }
 
 string g_sTmpExceptionName;
 MenuAddCustomExceptionName(key kID, integer iAuth){
-    Dialog(kID,"Name the custom exception", [],[],0,iAuth,"Exceptions~AddCustomName");
+    Dialog(kID,"Custom exception name?", [],[],0,iAuth,"Exceptions~AddCustomName");
 }
 
 key g_kTmpExceptionID;
@@ -488,7 +488,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                     sExceptionMasks += llList2String(lRLVEx,ix)+" = "+llList2String(lRLVEx,ix+2)+", ";
                 }
                 // list all possible bitmasks
-                llMessageLinked(LINK_SET, NOTIFY, "0Exceptions use a bitmask. Allowed values: "+sExceptionMasks+". Add selected values for the bitmask. Max is 127.", kID);
+                llMessageLinked(LINK_SET, NOTIFY, "0Exceptions use a bitmask. Allowed values: "+sExceptionMasks+". Add selected values for the bitmask. Max bitmask is 127.", kID);
             } else if(sChangekey == "help"){
                 llMessageLinked(LINK_SET, NOTIFY, "0Commands: listmasks, modify, listcustom\n\nmodify takes 2-3 arguments.\nmodify owner [newBitmask]\nmodify trust [newMask]\nmodify [customExceptionName(no spaces)] [customExceptionUUID] [bitmask]", kID);
             } else if(sChangekey == "listcustom"){
