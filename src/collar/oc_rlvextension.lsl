@@ -204,29 +204,29 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 }
 
 MenuExceptions(key kID, integer iAuth) {
-    string sPrompt = "\n[Exceptions]\n \nSet exceptions to the restrictions for RLV commands.\nOWNER and TRUSTED menus set the exceptions for all people with that authorization level, CUSTOM allows you to set different exceptions for specific people.";
+    string sPrompt = "\n[Exceptions]\n \nSet which RLV restrictions to bypass. OWNER and TRUSTED apply to all with that role. CUSTOM lets you set them per person.";
     Dialog(kID, sPrompt, ["Owner","Trusted","Custom"], [UPMENU], 0, iAuth, "Exceptions~Main");
 }
 list g_lCustomExceptions = []; // Exception name, Exception UUID, integer bitmask
 
 MenuCustomExceptionsSelect(key kID,integer iAuth){
-    string sPrompt = "\n[Exceptions]\n\nSet custom exceptions here\n\nNOTE: Group exceptions can be set, but not all are meaningful applied to a group.";
+    string sPrompt = "\n[Exceptions]\n\nSet custom exceptions\n\nNOTE: Some group exceptions may not affect some groups.";
     Dialog(kID, sPrompt, llList2ListStrided(g_lCustomExceptions, 0,-1,3),["+ ADD", "- REM", UPMENU], 0, iAuth, "Exceptions~Custom");
 }
 
 MenuCustomExceptionsRem(key kID, integer iAuth){
-    string sPrompt = "\n[Exceptions]\n\nWhich custom exception do you want to remove?";
+    string sPrompt = "\n[Exceptions]\n\nWhich custom exception shoudl be removed?";
     Dialog(kID, sPrompt, llList2ListStrided(g_lCustomExceptions, 0, -1, 3), [UPMENU], 0, iAuth, "Exceptions~CustomRem");
 }
 
 string g_sTmpExceptionName;
 MenuAddCustomExceptionName(key kID, integer iAuth){
-    Dialog(kID,"What should we call this custom exception?", [],[],0,iAuth,"Exceptions~AddCustomName");
+    Dialog(kID,"Name the custom exception", [],[],0,iAuth,"Exceptions~AddCustomName");
 }
 
 key g_kTmpExceptionID;
 MenuAddCustomExceptionID(key kID, integer iAuth){
-    Dialog(kID, "What UUID does this exception affect?", [],[],0,iAuth,"Exceptions~AddCustomID");
+    Dialog(kID, "Which UUID should this affect?", [],[],0,iAuth,"Exceptions~AddCustomID");
 }
 
 MenuSetExceptions(key kID, integer iAuth, string sTarget){
@@ -243,18 +243,18 @@ MenuSetExceptions(key kID, integer iAuth, string sTarget){
     for (i=0; i<llGetListLength(lRLVEx);i=i+3) {
         lButtons += Checkbox((iExMask&llList2Integer(lRLVEx,i+2)), llList2String(lRLVEx,i));
     }
-    string menutext="  --EXCEPTIONS Menu--\nThese options exclude ";
+    string menutext="  --EXCEPTIONS--\nThese exclude ";
     if(sTarget=="Owner") menutext+="OWNERS";
     else if(sTarget=="Trusted") menutext+="TRUSTED PEOPLE";
     else menutext+="'"+g_sTmpExceptionName+"'";
-    menutext+=" from being impacted by wearer's restrictions. Even if restricted, wearer can:\n *IM - talk in IMs with them.\n *RcvIM - Receive IMs from them.\n *RcvChat - Hear their public chat.\n *RcvEmote - See their public emotes\n *Lure - Receive TP offers from them.\n *StartIM - Start a new IM conversation with them.\n *Force TP - When on, wearer is automatically teleported on receiving a TP offer from them.";
+    menutext+=" from being impacted by restrictions. Wearer can always:\n *IM - send them IMs\n *RcvIM - Receive their IMs\n *RcvChat - Hear their chat\n *RcvEmote - See their emotes\n *Lure - Receive their TP offers\n *StartIM - Start IM conversations with them\n *Force TP - When on, automatically accept thier teleports";
     
     Dialog(kID, menutext, lButtons, [UPMENU], 0, iAuth, "Exceptions~Set");
 }
 
 MenuForceSit(key kID, integer iAuth) {
     
-    Dialog(kID, "\nSelect a place to force sit the wearer on it, or [UNSIT] to force them to stand up. \nWearer may stand after being force sat unless STRICT SIT is active. When it's active, they are forbidden from standing ONLY when force sat from this menu, and if force sat will need to be released with [UNSIT].\n", [Checkbox(g_iStrictSit, "Strict Sit"), UPMENU, "[UNSIT]"], [], 0, iAuth, "Restrictions~sensor");
+    Dialog(kID, "\nSelect a place to force sit. Use [UNSIT] to stand up. \nSTRICT SIT prevents wearer from standing during a forced sit.\n", [Checkbox(g_iStrictSit, "Strict Sit"), UPMENU, "[UNSIT]"], [], 0, iAuth, "Restrictions~sensor");
 }
 
 MenuCamera(key kID, integer iAuth){
@@ -265,7 +265,7 @@ MenuChat(key kID, integer iAuth){
     string sBtn;
     sBtn = Checkbox(g_bMuffle, "Muffle");
     
-    Dialog(kID, "Selecting MUFFLE will cause speech to be garbled rather than completely blocked with the TALK restrictions preset is activated.", [sBtn], [UPMENU], 0, iAuth, "Settings~Chat");
+    Dialog(kID, "MUFFLE garbles speech instead of blocking it when TALK restrictions are on.", [sBtn], [UPMENU], 0, iAuth, "Settings~Chat");
 }
 
 MenuSetValue(key kID, integer iAuth, string sValueName) {
@@ -413,13 +413,13 @@ UserCommand(integer iNum, string sStr, key kID) {
         if(sStr=="menu managecamera2") g_sCameraBackMenu="menu category Camera";
         if (iNum < CMD_EVERYONE) MenuCamera(kID,iNum);
         else {
-            llMessageLinked(LINK_SET, NOTIFY, "0"+"%NOACCESS% to changing camera settings", kID);
+            llMessageLinked(LINK_SET, NOTIFY, "0"+"%NOACCESS% to change camera settings", kID);
             llMessageLinked(LINK_SET, iNum,g_sCameraBackMenu, kID);
         }
     }else if( sStr=="menu managechat") {
         if (iNum < CMD_EVERYONE) MenuChat(kID,iNum);
         else {
-            llMessageLinked(LINK_SET, NOTIFY, "0"+"%NOACCESS% to changing muffle settings", kID);
+            llMessageLinked(LINK_SET, NOTIFY, "0"+"%NOACCESS% to change muffle settings", kID);
             llMessageLinked(LINK_SET, iNum, "menu [Manage]", kID);
         }    
     } 
@@ -431,7 +431,7 @@ UserCommand(integer iNum, string sStr, key kID) {
         if (sChangetype == "sit") {
             if ((sChangekey == "[unsit]" || sChangekey == "unsit")) {
                 if(iNum> g_iLastSitAuth ) {
-                    llMessageLinked(LINK_SET,NOTIFY,"0Cannot unsit from a force sit set by someone with higher auth level.",kID);
+                    llMessageLinked(LINK_SET,NOTIFY,"0Cannot unsit from a sit forced by a higher auth level.",kID);
                     return;
                 }
                 if(g_iStrictSit){
@@ -443,7 +443,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                 g_iLastSitAuth = 599;
             } else {
                 if(iNum > g_iLastSitAuth){
-                    llMessageLinked(LINK_SET, NOTIFY, "0Cannot override sit forced by someone with higher auth level.", kID);
+                    llMessageLinked(LINK_SET, NOTIFY, "0Cannot override sit forced by a higher auth level.", kID);
                     return;
                 }
                 g_iLastSitAuth = iNum;
@@ -458,17 +458,17 @@ UserCommand(integer iNum, string sStr, key kID) {
                 string sChangeArg2 = llToLower(llList2String(lCmd, 3));
                 if(sChangeArg1 == "owner"){
                     g_iOwnerEx = (integer)sChangeArg2;
-                    llMessageLinked(LINK_SET, NOTIFY, "0Owner exceptions modified", kID);
+                    llMessageLinked(LINK_SET, NOTIFY, "0Owner exceptions updated", kID);
                     SetAllExes(FALSE,EX_TYPE_OWNER,TRUE);
                 } else if(llGetSubString(sChangeArg1,0,4) == "trust"){
                     g_iTrustedEx = (integer)sChangeArg2;
-                    llMessageLinked(LINK_SET, NOTIFY, "0Trusted exceptions modified", kID);
+                    llMessageLinked(LINK_SET, NOTIFY, "0Trusted exceptions updated", kID);
                     SetAllExes(FALSE,EX_TYPE_TRUSTED,TRUE);
                 } else {
                     // modify custom exception. arg1 = name, arg2 = uuid, arg3 = bitmask. remove old if exists, replace with new. including updating the exception uuid
                     string sChangeArg3 = llToLower(llList2String(lCmd,4));
                     if(sChangeArg1==""||sChangeArg2==""||sChangeArg3==""){
-                        llMessageLinked(LINK_SET, NOTIFY, "0Invalid amount of arguments for modifying a custom exception", kID);
+                        llMessageLinked(LINK_SET, NOTIFY, "0Invalid argument count for custom exception", kID);
                         return;
                     }
                     integer iPosx=llListFindList(g_lCustomExceptions, [sChangeArg1]);
@@ -476,7 +476,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                         // process
                         g_lCustomExceptions = llDeleteSubList(g_lCustomExceptions, iPosx, iPosx+2);
                     }
-                    llMessageLinked(LINK_SET, NOTIFY, "0Custom exceptions modified  ("+sChangeArg1+"): "+sChangeArg2+" = "+sChangeArg3, kID);
+                    llMessageLinked(LINK_SET, NOTIFY, "0Custom exceptions updated  ("+sChangeArg1+"): "+sChangeArg2+" = "+sChangeArg3, kID);
                     g_lCustomExceptions += [sChangeArg1, sChangeArg2, (integer)sChangeArg3];
                     SetAllExes(FALSE,EX_TYPE_CUSTOM,TRUE);
                 }
@@ -488,9 +488,9 @@ UserCommand(integer iNum, string sStr, key kID) {
                     sExceptionMasks += llList2String(lRLVEx,ix)+" = "+llList2String(lRLVEx,ix+2)+", ";
                 }
                 // list all possible bitmasks
-                llMessageLinked(LINK_SET, NOTIFY, "0The exceptions all use a bitmask. The following are acceptable bitmask values: "+sExceptionMasks+". To calculate a bitmask, add the values into one larger integer for only the options you want. 127 is the max possible bitmask for exceptions", kID);
+                llMessageLinked(LINK_SET, NOTIFY, "0Exceptions use a bitmask. Allowed values: "+sExceptionMasks+". Add selected values for the bitmask. Max is 127.", kID);
             } else if(sChangekey == "help"){
-                llMessageLinked(LINK_SET, NOTIFY, "0Valid commands: listmasks, modify, listcustom\n\nmodify takes a range of 2-3 arguments.\nmodify owner [newBitmask]\nmodify trust [newMask]\nmodify [customExceptionName(no spaces)] [customExceptionUUID] [bitmask]", kID);
+                llMessageLinked(LINK_SET, NOTIFY, "0Commands: listmasks, modify, listcustom\n\nmodify takes 2-3 arguments.\nmodify owner [newBitmask]\nmodify trust [newMask]\nmodify [customExceptionName(no spaces)] [customExceptionUUID] [bitmask]", kID);
             } else if(sChangekey == "listcustom"){
                 integer ix=0;
                 string sCustom;
@@ -561,7 +561,7 @@ state active
                     if(sMsg == UPMENU)  llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
                     else if (iAuth!=CMD_OWNER)
                     {
-                        llMessageLinked(LINK_SET,NOTIFY,"0No access to changing exceptions!", kAv);
+                        llMessageLinked(LINK_SET,NOTIFY,"0No access to change exceptions", kAv);
                         llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
                         return;
                     }
@@ -636,7 +636,7 @@ state active
                 else if (sMenu == "Restrictions~sensor") {
                     if(sMsg == Checkbox(g_iStrictSit,"Strict Sit")){
                         if(iAuth != CMD_OWNER) {
-                            llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to setting Strict Sit", kAv);
+                            llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to change Strict Sit", kAv);
                             MenuForceSit(kAv,iAuth);
                         } else{
                             g_iStrictSit=1-g_iStrictSit;
