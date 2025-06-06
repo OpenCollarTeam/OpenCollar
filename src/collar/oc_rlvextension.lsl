@@ -525,7 +525,7 @@ default
         llResetScript();
     }
     state_entry(){
-      //  llOwnerSay((string)llGetFreeMemory()+"/"+(string)llGetUsedMemory());
+        llOwnerSay((string)llGetFreeMemory()+"/"+(string)llGetUsedMemory());
         llMessageLinked(LINK_SET, ALIVE, llGetScriptName(),"");
     }
     link_message(integer iSender, integer iNum, string sStr, key kID){
