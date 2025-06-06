@@ -60,7 +60,6 @@ Please maintain numerical sort order.
 | RLV_ON | 6101 | Notify plugins that RLV is enabled | none | rlvsys | *common* |
 | RLV_QUERY | 6102 | Request list of active RLV restrictions | none | - | rlvsys |
 | RLV_RESPONSE | 6103 | Response to RLV_QUERY | restrictions in `sStr` | rlvsys | - |
-| SIT_LINK | 6300 | Communication about avatar sitting status | "sit\|auth" or "unsit\|auth" in `sStr` | anim, rlvextension | anim, rlvextension |
 | ANIM_START | 7000 | Start an animation | animation name in `sStr` | badwords, couples, shocker | anim |
 | ANIM_STOP | 7001 | Stop an animation | animation name in `sStr` | badwords, couples, shocker | anim |
 | ANIM_LIST_REQUEST | 7002 | Request animation list | none | badwords, shocker | - |
