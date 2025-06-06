@@ -296,7 +296,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                     g_iGroundSit=TRUE;
                     g_iLastSitAuth=iNum;
                     llMessageLinked(LINK_SET,LM_SETTING_SAVE, "anim_groundsitauth="+(string)iNum,"");
-                    llMessageLinked(LINK_SET, SIT_LINK, "sit|"+(string)iNum, "");
+                    llMessageLinked(LINK_SET, SIT_LINK, "sit|"+(string)iNum+"|anim", "");
                 }
                 else if(sChangevalue=="off" && g_iGroundSit==TRUE)
                 {
@@ -308,7 +308,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                         llMessageLinked(LINK_SET,LM_SETTING_DELETE, "anim_groundsit","");
                         g_iGroundSit=FALSE;
                         g_iLastSitAuth=599;
-                        llMessageLinked(LINK_SET, SIT_LINK, "unsit|"+(string)iNum, "");
+                        llMessageLinked(LINK_SET, SIT_LINK, "unsit|"+(string)iNum+"|anim", "");
                         llMessageLinked(LINK_SET,LM_SETTING_DELETE, "anim_groundsitauth","");
                     }
                     else llMessageLinked(LINK_SET,NOTIFY,"0Insufficient auth to undo groundsit",kID);
@@ -704,7 +704,7 @@ state active
                 else if(sVar=="groundsitauth")
                 {
                      g_iLastSitAuth=(integer)sVal;
-                     llMessageLinked(LINK_SET, SIT_LINK, "sit|"+(string)g_iLastSitAuth, "");
+                     llMessageLinked(LINK_SET, SIT_LINK, "sit|"+(string)g_iLastSitAuth+"|anim", "");
                 }
                 if(sVar == "pose"){
                     if (g_sPose != "")StopAnimation(g_sPose);
@@ -752,7 +752,7 @@ state active
                 else if(sVar=="groundsitauth")
                 {
                      g_iLastSitAuth=599;
-                     llMessageLinked(LINK_SET, SIT_LINK, "unsit|599", "");
+                     llMessageLinked(LINK_SET, SIT_LINK, "unsit|599|anim", "");
                 }
                 else if(sVar == "pose"){
                     if (g_sPose != ""){
@@ -779,6 +779,7 @@ state active
             list l=llParseString2List(sStr,["|"] ,[]);
             string action=llList2String(l,0);
             integer level=(integer)llList2String(l,1);
+            // optional third parameter indicates which script sent the message
             if(action=="sit"){
                 g_iGroundSit=TRUE;
                 g_iLastSitAuth=level;
@@ -808,7 +809,7 @@ state active
             g_iGroundSit=FALSE;
             g_iLastSitAuth=599;
             llOwnerSay("@unsit=force");
-            llMessageLinked(LINK_SET, SIT_LINK, "unsit|599", "");
+            llMessageLinked(LINK_SET, SIT_LINK, "unsit|599|anim", "");
         }
         //llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
     }

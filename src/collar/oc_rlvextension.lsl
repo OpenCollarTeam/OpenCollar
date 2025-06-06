@@ -119,6 +119,10 @@ float g_fMaxCamDist = 2.0;
 float g_fMinCamDist = 1.0;
 
 integer g_iLastSitAuth = 599; // CMD_NOACCESS
+integer SIT_SRC_NONE = 0;
+integer SIT_SRC_RLVEX = 1;
+integer SIT_SRC_ANIM = 2;
+integer g_iSitSource = 0; // keeps track if sit came from this script or oc_anim
 
 integer g_iRLV = FALSE;
 
@@ -458,18 +462,20 @@ UserCommand(integer iNum, string sStr, key kID) {
                 if(iNum==CMD_OWNER) llMessageLinked(LINK_SET,RLV_CMD_OVERRIDE,"unsit~unsit",kID);
                 else llMessageLinked(LINK_SET,RLV_CMD,"unsit=force","Macros");
                 g_iLastSitAuth = 599;
-                llMessageLinked(LINK_SET, SIT_LINK, "unsit|"+(string)iNum, "");
+                g_iSitSource = SIT_SRC_NONE;
+                llMessageLinked(LINK_SET, SIT_LINK, "unsit|"+(string)iNum+"|rlvex", "");
             } else {
                 if(iNum > g_iLastSitAuth){
                     llMessageLinked(LINK_SET, NOTIFY, "0Cannot override sit forced by someone with higher auth level.", kID);
                     return;
                 }
                 g_iLastSitAuth = iNum;
+                g_iSitSource = SIT_SRC_RLVEX;
                 if(g_iStrictSit){
                     llMessageLinked(LINK_SET,RLV_CMD,"unsit=n","strictsit");
                 }
                 llMessageLinked(LINK_SET,RLV_CMD,"sit:"+sChangekey+"=force","Macros");
-                llMessageLinked(LINK_SET, SIT_LINK, "sit|"+(string)iNum, "");
+                llMessageLinked(LINK_SET, SIT_LINK, "sit|"+(string)iNum+"|rlvex", "");
             }
         } else if(sChangetype == "rlvex" && iNum == CMD_OWNER){
             if(sChangekey == "modify"){
@@ -552,6 +558,16 @@ state active
 {
     on_rez(integer iNum){
         llResetScript();
+    }
+
+    attach(key id){
+        if(id){
+            if(g_iLastSitAuth != 599 && g_iSitSource == SIT_SRC_RLVEX){
+                g_iLastSitAuth = 599;
+                g_iSitSource = SIT_SRC_NONE;
+                llMessageLinked(LINK_SET, SIT_LINK, "unsit|599|rlvex", "");
+            }
+        }
     }
     
     state_entry()
@@ -872,8 +888,14 @@ state active
             list l=llParseString2List(sStr,["|"] ,[]);
             string action=llList2String(l,0);
             integer level=(integer)llList2String(l,1);
-            if(action=="sit") g_iLastSitAuth=level;
-            else if(action=="unsit") g_iLastSitAuth=599;
+            string src = llToLower(llList2String(l,2));
+            if(action=="sit"){
+                g_iLastSitAuth=level;
+                if(src=="rlvex") g_iSitSource = SIT_SRC_RLVEX; else g_iSitSource = SIT_SRC_ANIM;
+            }else if(action=="unsit"){
+                g_iLastSitAuth=599;
+                g_iSitSource = SIT_SRC_NONE;
+            }
         } else if (iNum == REBOOT && sStr == "reboot") {
             llResetScript();
         } else if(iNum == LINK_CMD_DEBUG){
