@@ -436,9 +436,10 @@ UserCommand(integer iNum, string sStr, key kID) {
         }    
     } 
     else if(llSubStringIndex(sStr,"sit") && llSubStringIndex(sStr,"rlvex")) return;
-    else { 
-        string sChangetype = llList2String(llParseString2List(sStr, [" "], []),0);
-        string sChangekey = llList2String(llParseString2List(sStr, [" "], []),1);
+    else {
+        list lCmd = llParseString2List(sStr, [" "], []);
+        string sChangetype = llList2String(lCmd,0);
+        string sChangekey = llList2String(lCmd,1);
         if (sChangetype == "sit") {
             if ((sChangekey == "[unsit]" || sChangekey == "unsit")) {
                 if(iNum> g_iLastSitAuth ) {
@@ -465,8 +466,8 @@ UserCommand(integer iNum, string sStr, key kID) {
             }
         } else if(sChangetype == "rlvex" && iNum == CMD_OWNER){
             if(sChangekey == "modify"){
-                string sChangeArg1 = llToLower(llList2String(llParseString2List(sStr, [" "],[]), 2));
-                string sChangeArg2 = llToLower(llList2String(llParseString2List(sStr,[" "],[]), 3));
+                string sChangeArg1 = llToLower(llList2String(lCmd, 2));
+                string sChangeArg2 = llToLower(llList2String(lCmd, 3));
                 if(sChangeArg1 == "owner"){
                     g_iOwnerEx = (integer)sChangeArg2;
                     llMessageLinked(LINK_SET, NOTIFY, "0Owner exceptions modified", kID);
@@ -477,7 +478,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                     SetAllExes(FALSE,EX_TYPE_TRUSTED,TRUE);
                 } else {
                     // modify custom exception. arg1 = name, arg2 = uuid, arg3 = bitmask. remove old if exists, replace with new. including updating the exception uuid
-                    string sChangeArg3 = llToLower(llList2String(llParseString2List(sStr,[" "],[]),4));
+                    string sChangeArg3 = llToLower(llList2String(lCmd,4));
                     if(sChangeArg1==""||sChangeArg2==""||sChangeArg3==""){
                         llMessageLinked(LINK_SET, NOTIFY, "0Invalid amount of arguments for modifying a custom exception", kID);
                         return;
