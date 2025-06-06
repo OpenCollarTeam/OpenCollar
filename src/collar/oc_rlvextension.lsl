@@ -162,31 +162,19 @@ integer samelist(list a, list b) //Returns TRUE if a and b are identical
     return !llListFindList(llListSort(a,1,1),llListSort(b,1,1));
 }
 
-list g_lMuffleReplace = [
-    "p" , "h",
-    "P" , "H",
-    "t" , "k",
-    "T" , "K",
-    "m" , "n",
-    "M" , "N",
-    "o" , "e",
-    "O" , "E",
-    "u" , "o",
-    "U" , "O",
-    "w" , "o",
-    "W" , "O",
-    "b" , "h",
-    "B" , "H"
-];
+string g_sMuffleReplace =
+    "p:h|P:H|t:k|T:K|m:n|M:N|o:e|O:E|u:o|U:O|w:o|W:O|b:h|B:H";
 
 integer g_iMuffleListener;
 
 string MuffleText(string sText)
 {
+    list lPairs = llParseString2List(g_sMuffleReplace, ["|"], []);
     integer i;
-    for (i=0; i<llGetListLength(g_lMuffleReplace);i+=2)
+    for (i = 0; i < llGetListLength(lPairs); ++i)
     {
-        sText = llDumpList2String(llParseStringKeepNulls(sText,llList2List(g_lMuffleReplace,i,i),[]),llList2String(g_lMuffleReplace,i+1));
+        list lPair = llParseString2List(llList2String(lPairs, i), [":"], []);
+        sText = llDumpList2String(llParseStringKeepNulls(sText, [llList2String(lPair, 0)], []), llList2String(lPair, 1));
     }
     return sText;
 }
