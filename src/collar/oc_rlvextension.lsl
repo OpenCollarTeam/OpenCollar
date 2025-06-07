@@ -180,13 +180,7 @@ string MuffleText(string sText)
     {
         string from = llGetSubString(g_sMuffleReplace, i, i);
         string to = llGetSubString(g_sMuffleReplace, i+1, i+1);
-        integer pos = llSubStringIndex(sText, from);
-        while (pos != -1)
-        {
-            sText = llDeleteSubString(sText, pos, pos);
-            sText = llInsertString(sText, pos, to);
-            pos = llSubStringIndex(sText, from);
-        }
+        sText = llReplaceSubString( sText, from, to, 0 );
     }
     return sText;
 }
