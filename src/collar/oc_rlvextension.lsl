@@ -3,8 +3,9 @@
 This file is part of OpenCollar.
 Copyright (c) 2018 - 2019 Tashia Redrose, Silkie Sabra, lillith xue, Medea Destiny, Nirea Mercury et al.                           
 Licensed under the GPLv2.  See LICENSE for full details. 
+
 Medea Destiny -
-    Sept 2021   -   Moved Exceptions menu into RLV as a main directory, and folded Menu Settings into
+    Sep 2021    -   Moved Exceptions menu into RLV as a main directory, and folded Menu Settings into
                     RLVSuite menu customize
                 -   Refactored Exceptions setting with new functions to allow Exceptions to be applied
                     individually (setUserExceptions() function), replaced ApplyAllExceptions() function
@@ -40,13 +41,13 @@ Medea Destiny -
                     automatically for owners. 
                 -   Added explanatory text to exceptions and force sit menus
                 -   Renamed Refuse TP to Force TP to reflect what the button actually does.                  
-    Dec2021     -   Fixed filtering of unsit - > sit unsit for chat command and remote (issue #703 )
+    Dec 2021    -   Fixed filtering of unsit - > sit unsit for chat command and remote (issue #703 )
                 -   Fix to disengaging strict sit when disabled via menu when already sitting.
-    Feb2022     -   SetAllExes triggered on RLV_REFRESH / RLV_ON was saving values, causing exception
+    Feb 2022    -   SetAllExes triggered on RLV_REFRESH / RLV_ON was saving values, causing exception
                     settings to be restored to defaults if trigged before settings are received.
                     (fixes #740, #720, #719)
-    Aug2022     -   Fix auth filtering for changing exceptions. Issue #844 & #848
-    Nov 2023   -   Added EXC_REFRESH link message capability to request all exceptions are refreshed.
+    Aug 2022    -   Fix auth filtering for changing exceptions. Issue #844 & #848
+    Nov 2023    -   Added EXC_REFRESH link message capability to request all exceptions are refreshed.
                     This to fix real leash temporary exception removing permanent exception, but likely to
                     find other uses. This is less optimal than having a way to refresh individual exceptions,
                     or even better having this script handle multiple source exceptions the way rlv_sys handles
@@ -54,8 +55,12 @@ Medea Destiny -
                     memory load, this one's already very tight. Issue #1008
                 -   folded bool() function into checkbox() function with (iValue&1) and strReplace() into
                     MuffleText() to save memory
+
 Krysten Minx -
-   May2022      - Added check for valid UUID when setting custom exception
+    May 2022    -   Added check for valid UUID when setting custom exception
+
+chew -
+    Jun 2025    -   Refactor MuffleText, shorten some language strings - reduced memory footprint
 */
 string g_sParentMenu = "RLV";
 string g_sSubMenu1 = "Force Sit";
