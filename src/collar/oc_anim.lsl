@@ -48,7 +48,7 @@ integer CMD_OWNER = 500;
 integer CMD_WEARER = 503;
 integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
-	integer CMD_SAFEWORD = 510;
+integer CMD_SAFEWORD = 510;
 //integer CMD_RELAY_SAFEWORD = 511;
 
 integer NOTIFY = 1002;
