@@ -28,6 +28,9 @@ Medea (Medea Destiny)
                 people may use this it seemed better to keep the capability but have it switchable and
                 default to off. Issue #1012
 
+Nikki Larima 
+    May 2025    - CMD_SAFEWORD handler to remove animlock and stop all animations
+
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
 */
@@ -45,7 +48,7 @@ integer CMD_OWNER = 500;
 integer CMD_WEARER = 503;
 integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
-//integer CMD_SAFEWORD = 510;
+	integer CMD_SAFEWORD = 510;
 //integer CMD_RELAY_SAFEWORD = 511;
 
 integer NOTIFY = 1002;
@@ -553,7 +556,10 @@ state active
     
     link_message(integer iSender,integer iNum,string sStr,key kID){
         if(iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID);
-        else if(iNum == MENUNAME_REQUEST && sStr == g_sParentMenu){
+        else if (iNum == CMD_SAFEWORD) {
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, "anim_animlock","");
+            StopAllAnimations();
+        } else if(iNum == MENUNAME_REQUEST && sStr == g_sParentMenu){
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu+"|"+ g_sSubMenu,"");
             llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, "");
         }else if(iNum == MENUNAME_RESPONSE){
@@ -772,4 +778,3 @@ state inUpdate{
         }
     }
 }
-
