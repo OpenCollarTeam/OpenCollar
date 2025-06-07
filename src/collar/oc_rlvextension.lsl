@@ -204,13 +204,13 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 }
 
 MenuExceptions(key kID, integer iAuth) {
-    string sPrompt = "\n[Exceptions]\n \nSet RLV restrictions for bypass. OWNER and TRUSTED apply to all with that role. CUSTOM are set per person.";
+    string sPrompt = "\n[Exceptions]\n \nSet exceptions to the restrictions for RLV commands.\nOWNER and TRUSTED menus set the exceptions for all people with that authorization level, CUSTOM allows you to set different exceptions for specific people.";
     Dialog(kID, sPrompt, ["Owner","Trusted","Custom"], [UPMENU], 0, iAuth, "Exceptions~Main");
 }
 list g_lCustomExceptions = []; // Exception name, Exception UUID, integer bitmask
 
 MenuCustomExceptionsSelect(key kID,integer iAuth){
-    string sPrompt = "\n[Exceptions]\n\nSet custom exceptions\n\nNOTE: Some group exceptions don't affect some groups.";
+    string sPrompt = "\n[Exceptions]\n\nSet custom exceptions here\n\nNOTE: Group exceptions can be set, but not all are meaningful applied to a group.";
     Dialog(kID, sPrompt, llList2ListStrided(g_lCustomExceptions, 0,-1,3),["+ ADD", "- REM", UPMENU], 0, iAuth, "Exceptions~Custom");
 }
 
@@ -247,7 +247,7 @@ MenuSetExceptions(key kID, integer iAuth, string sTarget){
     if(sTarget=="Owner") menutext+="OWNERS";
     else if(sTarget=="Trusted") menutext+="TRUSTED PEOPLE";
     else menutext+="'"+g_sTmpExceptionName+"'";
-    menutext+=" from being impacted by restrictions. Wearer can always:\n *IM - send them IMs\n *RcvIM - Receive their IMs\n *RcvChat - Hear their chat\n *RcvEmote - See their emotes\n *Lure - Receive their TP offers\n *StartIM - Start IM conversations with them\n *Force TP - When on, automatically accept thier teleports";
+    menutext+=" from being impacted by restrictions. Wearer can always:\n *IM - send them IMs\n *RcvIM - Receive their IMs\n *RcvChat - Hear their chat\n *RcvEmote - See their emotes\n *Lure - Receive their TP offers\n *StartIM - Start IM conversations with them\n *Force TP - When on, automatically accept their teleports";
     
     Dialog(kID, menutext, lButtons, [UPMENU], 0, iAuth, "Exceptions~Set");
 }
