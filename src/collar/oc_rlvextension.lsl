@@ -60,7 +60,8 @@ Krysten Minx -
     May 2022    -   Added check for valid UUID when setting custom exception
 
 chew -
-    Jun 2025    -   Refactor MuffleText, shorten some language strings - reduced memory footprint
+    Jun 2025    -   Reduced memory footprint: Refactor MuffleText, refactor Dialog, reduce redundant
+                    list calls in MenuSetValue, shorten some language strings
 */
 string g_sParentMenu = "RLV";
 string g_sSubMenu1 = "Force Sit";
