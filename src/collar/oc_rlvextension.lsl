@@ -269,14 +269,14 @@ MenuSetExceptions(key kID, integer iAuth, string sTarget){
     if(sTarget=="Owner") menutext+="OWNERS";
     else if(sTarget=="Trusted") menutext+="TRUSTED PEOPLE";
     else menutext+="'"+g_sTmpExceptionName+"'";
-    menutext+=" from being impacted by restrictions. Wearer can always:\n *IM - send them IMs\n *RcvIM - Receive their IMs\n *RcvChat - Hear their chat\n *RcvEmote - See their emotes\n *Lure - Receive their TP offers\n *StartIM - Start IM conversations with them\n *Force TP - When on, automatically accept their teleports";
+    menutext+=" from being impacted by restrictions. Wearer can always:\n *IM - send them IMs\n *RcvIM - Receive their IMs\n *RcvChat - Hear their chat\n *RcvEmote - See their emotes\n *Lure - Receive their TP offers\n *StartIM - Start IM conversations with them\n *Force TP - When on, auto-accept their TP offers";
     
     Dialog(kID, menutext, lButtons, [UPMENU], 0, iAuth, "Exceptions~Set");
 }
 
 MenuForceSit(key kID, integer iAuth) {
     
-    Dialog(kID, "\nSelect a place to force sit. Use [UNSIT] to stand up. \nSTRICT SIT prevents wearer from standing during a forced sit.\n", [Checkbox(g_iStrictSit, "Strict Sit"), UPMENU, "[UNSIT]"], [], 0, iAuth, "Restrictions~sensor");
+    Dialog(kID, "\nSelect a place to force sit. Use [UNSIT] to stand up. \nSTRICT SIT prevents wearer from standing from a forced sit except via [UNSIT].\n", [Checkbox(g_iStrictSit, "Strict Sit"), UPMENU, "[UNSIT]"], [], 0, iAuth, "Restrictions~sensor");
 }
 
 MenuCamera(key kID, integer iAuth){
@@ -545,7 +545,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                     sExceptionMasks += llList2String(lRLVEx,ix)+" = "+llList2String(lRLVEx,ix+2)+", ";
                 }
                 // list all possible bitmasks
-                llMessageLinked(LINK_SET, NOTIFY, "0Exceptions use a bitmask. Allowed values: "+sExceptionMasks+". Add selected values for the bitmask. Max bitmask is 127.", kID);
+                llMessageLinked(LINK_SET, NOTIFY, "0Exceptions use a bitmask. Allowed values: "+sExceptionMasks+". Add selected values together for the bitmask value. Max bitmask is 127.", kID);
             } else if(sChangekey == "help"){
                 // Provide a short usage summary for the console command
                 llMessageLinked(LINK_SET, NOTIFY, "0Commands: listmasks, modify, listcustom\n\nmodify takes 2-3 arguments.\nmodify owner [newBitmask]\nmodify trust [newMask]\nmodify [customExceptionName(no spaces)] [customExceptionUUID] [bitmask]", kID);
@@ -612,9 +612,9 @@ state active
         } else if(iNum == DIALOG_RESPONSE){
             // Response from a menu dialog. The menu name is stored in the
             // command UUID before the '~' character.
-            integer iPos = llSubStringIndex(kID, "~"+llGetScriptName());
-            if(iPos>0){
-                string sMenu = llGetSubString(kID,0,iPos-1);
+            integer iDelim = llSubStringIndex(kID, "~"+llGetScriptName());
+            if(iDelim>0){
+                string sMenu = llGetSubString(kID,0,iDelim-1);
                 list lMenuParams = llParseString2List(sStr, ["|"],[]);
                 key kAv = llList2Key(lMenuParams,0);
                 string sMsg = llList2String(lMenuParams,1);
