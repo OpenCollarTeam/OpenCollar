@@ -68,7 +68,10 @@ string g_sSubMenu1 = "Force Sit";
 string g_sSubMenu2 = "Exceptions";
 integer g_iStrictSit=FALSE; // Default - do not use strict mode
 
-//MESSAGE MAP
+// MESSAGE MAP
+// Authorization constants: a smaller value means a higher privilege
+// level. Owner is 500, trusted would be 501, and so on. "Everyone" is
+// the lowest built‑in rank at 504.
 //integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
 //integer CMD_TRUSTED = 501;
@@ -81,6 +84,7 @@ integer CMD_EVERYONE = 504;
 
 integer NOTIFY = 1002;
 
+// Link message constants used for communication with other scripts.
 integer REBOOT = -1000;
 integer LINK_CMD_DEBUG=1999;
 integer LINK_CMD_RESTRICTIONS = -2576;
@@ -106,6 +110,7 @@ integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no mes
 integer EXC_REFRESH=6109; // send to request exceptions are refreshed.
 
 
+// Dialog related link message channels
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 //integer DIALOG_TIMEOUT = -9002;
@@ -116,9 +121,9 @@ string UPMENU = "BACK";
 integer g_bCanStand = TRUE;
 integer g_bCanChat = FALSE;
 integer g_bMuffle = FALSE;
-integer g_iBlurAmount = 5;
-float g_fMaxCamDist = 2.0;
-float g_fMinCamDist = 1.0;
+integer g_iBlurAmount = 5; // default blur effect strength
+float g_fMaxCamDist = 2.0; // default maximum camera distance
+float g_fMinCamDist = 1.0; // default minimum camera distance
 
 integer g_iRLV = FALSE;
 
@@ -132,6 +137,9 @@ string Checkbox(integer iValue, string sLabel) {
     return llList2String(g_lCheckboxes, (iValue>0))+" "+sLabel;
 }
 
+// lRLVEx is arranged as [Button Label, RLV command, bitmask]
+// The bitmask values are powers of two so they can be OR'ed together to
+// represent multiple exceptions in a single integer.
 list lRLVEx = [
     "IM"            , "sendim"      , 1     ,
     "RcvIM"         , "recvim"      , 2     ,
@@ -139,7 +147,7 @@ list lRLVEx = [
     "RcvEmote"      , "recvemote"   , 8     ,
     "Lure"          , "tplure"      , 16    ,
     "Force TP"      , "accepttp"    , 32    ,
-    "Start IM"      , "startim"     , 64    
+    "Start IM"      , "startim"     , 64
 ];
 
 string g_sExTarget = "";
@@ -148,10 +156,16 @@ list g_lOwners = [];
 list g_lTrusted = [];
 list g_lTempOwners = [];
 
+// Default exception masks for owners and trusted users. 127 grants all
+// available exceptions (bits 0-6 set), while 95 excludes the "Force TP"
+// bit so trusted users cannot auto-teleport the wearer by default.
 integer g_iOwnerEx = 127;
 integer g_iTrustedEx = 95;
 
 //integer TIMEOUT_READY = 30497;
+// TIMEOUT_REGISTER and TIMEOUT_FIRED are used with the helper timer
+// script. 30498 registers a new timer and 30499 is sent back when the
+// timer fires.
 integer TIMEOUT_REGISTER = 30498;
 integer TIMEOUT_FIRED = 30499;
 //list g_lSettingsReqs = [];
@@ -159,7 +173,8 @@ integer g_iLocked=FALSE;
 
 //list g_lStrangerEx = [];
 
-integer samelist(list a, list b) //Returns TRUE if a and b are identical
+// Returns TRUE if a and b contain the same items regardless of order.
+integer samelist(list a, list b)
 {
     if(a!=b) return FALSE;
     if(a==[]) return TRUE;
@@ -168,6 +183,8 @@ integer samelist(list a, list b) //Returns TRUE if a and b are identical
 
 integer g_iMuffleListener; // Listen ID for muffle chat
 
+// Pairs of characters used by MuffleText() to replace letters and garble
+// speech. Each even index is replaced with the following character.
 string g_sMuffleReplace =
     "phPHtkTKmnMNoeOEuoUOwoWObhBH";
 
@@ -187,6 +204,8 @@ string MuffleText(string sText)
 SetMuffle(integer bEnable)
 {
     if (bEnable && g_bCanChat) {
+        // 3728192 is an arbitrary high chat channel used to redirect the
+        // wearer's chat while muffled. It should not collide with normal chat.
         llMessageLinked(LINK_SET,RLV_CMD,"redirchat:3728192=add","Muffle");
         //llOwnerSay("@redirchat:3728192=add");
         g_iMuffleListener = llListen(3728192, "", llGetOwner(),"");
@@ -200,6 +219,8 @@ SetMuffle(integer bEnable)
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
     string kMenuID = sName + "~" + llGetScriptName();
     if (sName == "Restrictions~sensor" || sName == "find")
+        // The sensor dialog expects range and arc. 20 meters and PI radians
+        // match the typical llSensor parameters used elsewhere in OpenCollar.
         llMessageLinked(LINK_SET, DIALOG_SENSOR, (string)kID +"|"+sPrompt+"|0|``"+(string)(SCRIPTED|PASSIVE)+"`20`"+(string)PI+"`"+llDumpList2String(lUtilityButtons,"`")+"|"+llDumpList2String(lChoices,"`")+"|" + (string)iAuth, (key)kMenuID);
     else llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, (key)kMenuID);
 }
@@ -290,6 +311,9 @@ integer g_iLastTrustedEx;
 integer EX_TYPE_OWNER=1;
 integer EX_TYPE_TRUSTED=2;
 integer EX_TYPE_CUSTOM=4;
+// Synchronize the stored owner or trusted list with a new list of agents.
+// Any IDs removed from the list have their exceptions cleared and any
+// new IDs have the current mask applied.
 UpdateList(list newlist, integer type) // type 1=owner, 2=trusted;
 {
     list oldlist=g_lOwners;
@@ -298,21 +322,28 @@ UpdateList(list newlist, integer type) // type 1=owner, 2=trusted;
         oldlist=g_lTrusted;
         mask=g_iTrustedEx;
     }
+    // Remove exceptions for avatars no longer on the list.
     integer i=llGetListLength(oldlist);
     while(i)    {
         --i;
-        if(llListFindList(newlist,llList2List(oldlist,i,i))==-1) SetUserExes(llList2Key(oldlist,i),0,mask);
+        if(llListFindList(newlist,llList2List(oldlist,i,i))==-1)
+            SetUserExes(llList2Key(oldlist,i),0,mask);
     }
+    // Apply exceptions to any newly added avatars.
     i=llGetListLength(newlist);
     while(i)
     {
         --i;
-        if(llListFindList(oldlist,llList2List(newlist,i,i))==-1) SetUserExes(llList2Key(newlist,i),mask,0);
+        if(llListFindList(oldlist,llList2List(newlist,i,i))==-1)
+            SetUserExes(llList2Key(newlist,i),mask,0);
     }
     if(type==EX_TYPE_OWNER)g_lOwners=newlist;
     else if(type==EX_TYPE_TRUSTED) g_lTrusted=newlist;
 }
         
+// Apply or remove individual exception bits for a specific avatar. The
+// function compares the desired mask with the last applied mask and
+// emits only the necessary @commands to update the viewer.
 SetUserExes(key id, integer mask, integer lastmask)
 {
     if(id==g_kWearer) return;
@@ -320,8 +351,10 @@ SetUserExes(key id, integer mask, integer lastmask)
     integer i;
     integer maskval;
     list out;
+    // Cycle through the seven possible exception bits (0-6)
     while(i<7)
     {
+        // Equivalent of (1 << i) to test each bit individually
         maskval=(integer)llPow(2,i);
         if((mask&maskval)==maskval && (lastmask&maskval)!=maskval) out+=llList2String(lExcepts,i)+":"+(string)id+"=add";
         else if((mask&maskval)!=maskval && (lastmask&maskval)==maskval) out+=llList2String(lExcepts,i)+":"+(string)id+"=rem";
@@ -330,7 +363,12 @@ SetUserExes(key id, integer mask, integer lastmask)
     if(out!=[]) llOwnerSay("@"+llDumpList2String(out,","));
 }
        
-SetAllExes(integer clearall, integer type, integer send) //type 1=owners type 2=trusted type 4=custom 
+// Apply or clear exceptions for every user in the specified lists. The
+// 'type' parameter is a bitmask: 1 = owners, 2 = trusted, 4 = custom.
+// When 'clearall' is TRUE all exceptions are removed, otherwise the
+// current masks are pushed to the viewer. When 'send' is TRUE the new
+// mask values are persisted to settings.
+SetAllExes(integer clearall, integer type, integer send)
 {
     integer i;
     integer end;
@@ -342,6 +380,7 @@ SetAllExes(integer clearall, integer type, integer send) //type 1=owners type 2=
         end=llGetListLength(lTemp);
         if(end==0) return;
         i=0;
+        // Update every owner and temporary owner on record
         while(i<end)
         {
             if(clearall) SetUserExes(llList2Key(lTemp,i),0,g_iLastOwnerEx);
@@ -357,6 +396,7 @@ SetAllExes(integer clearall, integer type, integer send) //type 1=owners type 2=
         end=llGetListLength(g_lTrusted);
         if(end==0) return;
         i=0;
+        // Process each trusted user in the list
         while(i<end)
         {
             if(clearall) SetUserExes(llList2Key(g_lTrusted,i),0,g_iLastTrustedEx);
@@ -371,8 +411,11 @@ SetAllExes(integer clearall, integer type, integer send) //type 1=owners type 2=
         if(send) Save(SAVE_CUSTOM);
         end=llGetListLength(g_lCustomExceptions);
         i=1;
+        // Custom exceptions are stored as triplets [name, id, mask]
         while(i<end)
         {
+            // Clear any previously applied exceptions. 127 represents all
+            // possible bits so the whole mask is removed first.
             SetUserExes(llList2Key(g_lCustomExceptions,i),0,127);
             if(!clearall) SetUserExes(llList2Key(g_lCustomExceptions,i),llList2Integer(g_lCustomExceptions,i+1),0);
             i=i+3;
@@ -380,6 +423,7 @@ SetAllExes(integer clearall, integer type, integer send) //type 1=owners type 2=
     }
 }
 
+// Bitmask values used when persisting settings to the storage script.
 integer SAVE_MINCAM=1;
 integer SAVE_MAXCAM=2;
 integer SAVE_BLURAMOUNT=4;
@@ -401,14 +445,19 @@ Save(integer iVal){ //iVal is bitmask of settings to save. 127 to save all.
 
 }
 
+// Tracks which auth level initiated the current force sit. The default
+// value of 599 is higher than any real auth level so the first sit will
+// always be accepted.
 integer g_iLastSitAuth = 599;
 UserCommand(integer iNum, string sStr, key kID) {
     if (iNum<CMD_OWNER || iNum>CMD_EVERYONE) return;
     sStr=llToLower(sStr);
     if(sStr=="unsit") sStr="sit unsit";
    // if ((llSubStringIndex(sStr,"exceptions") && sStr != "menu "+g_sSubMenu1) || (llSubStringIndex(sStr,"exceptions") && sStr != "menu "+g_sSubMenu2)) return;
-    if (sStr=="sit" || sStr == "menu "+llToLower(g_sSubMenu1)) MenuForceSit(kID, iNum);
-    else if (sStr=="exceptions" || sStr == "menu "+llToLower(g_sSubMenu2)) MenuExceptions(kID,iNum);
+    if (sStr=="sit" || sStr == "menu "+llToLower(g_sSubMenu1))
+        MenuForceSit(kID, iNum);
+    else if (sStr=="exceptions" || sStr == "menu "+llToLower(g_sSubMenu2))
+        MenuExceptions(kID,iNum);
     else if (sStr=="menu managecamera" || sStr=="menu managecamera2") {
         g_sCameraBackMenu="menu customize";
         if(sStr=="menu managecamera2") g_sCameraBackMenu="menu category Camera";
@@ -417,19 +466,22 @@ UserCommand(integer iNum, string sStr, key kID) {
             llMessageLinked(LINK_SET, NOTIFY, "0"+"%NOACCESS% to change camera settings", kID);
             llMessageLinked(LINK_SET, iNum,g_sCameraBackMenu, kID);
         }
-    }else if( sStr=="menu managechat") {
+    } else if( sStr=="menu managechat") {
         if (iNum < CMD_EVERYONE) MenuChat(kID,iNum);
         else {
             llMessageLinked(LINK_SET, NOTIFY, "0"+"%NOACCESS% to change muffle settings", kID);
             llMessageLinked(LINK_SET, iNum, "menu [Manage]", kID);
-        }    
-    } 
+        }
+    }
+    // Ignore stray commands that combine "sit" and "rlvex" keywords.
     else if(llSubStringIndex(sStr,"sit") && llSubStringIndex(sStr,"rlvex")) return;
     else {
+        // Parse commands of the form "<type> <argument>" such as
+        // "sit <uuid>" or "rlvex modify".
         list lCmd = llParseString2List(sStr, [" "], []);
         string sChangetype = llList2String(lCmd,0);
         string sChangekey = llList2String(lCmd,1);
-        if (sChangetype == "sit") {
+        if (sChangetype == "sit") { // manual sit/unsit commands
             if ((sChangekey == "[unsit]" || sChangekey == "unsit")) {
                 if(iNum> g_iLastSitAuth ) {
                     llMessageLinked(LINK_SET,NOTIFY,"0Cannot unsit from a sit forced by a higher auth level.",kID);
@@ -438,6 +490,8 @@ UserCommand(integer iNum, string sStr, key kID) {
                 if(g_iStrictSit){
                    llMessageLinked(LINK_SET,RLV_CMD,"unsit=y","strictsit");
                 }
+                // Pause briefly so the viewer registers the unsit before we
+                // apply further commands.
                 llSleep(1.5);
                 if(iNum==CMD_OWNER) llMessageLinked(LINK_SET,RLV_CMD_OVERRIDE,"unsit~unsit",kID);
                 else llMessageLinked(LINK_SET,RLV_CMD,"unsit=force","Macros");
@@ -454,6 +508,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                 llMessageLinked(LINK_SET,RLV_CMD,"sit:"+sChangekey+"=force","Macros");
             }
         } else if(sChangetype == "rlvex" && iNum == CMD_OWNER){
+            // Owner-only console commands to modify exception masks
             if(sChangekey == "modify"){
                 string sChangeArg1 = llToLower(llList2String(lCmd, 2));
                 string sChangeArg2 = llToLower(llList2String(lCmd, 3));
@@ -482,6 +537,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                     SetAllExes(FALSE,EX_TYPE_CUSTOM,TRUE);
                 }
             } else if(sChangekey == "listmasks"){
+                // Output the numeric values of each exception bit
                 integer ix=0;
                 string sExceptionMasks;
                 integer end = llGetListLength(lRLVEx);
@@ -491,8 +547,10 @@ UserCommand(integer iNum, string sStr, key kID) {
                 // list all possible bitmasks
                 llMessageLinked(LINK_SET, NOTIFY, "0Exceptions use a bitmask. Allowed values: "+sExceptionMasks+". Add selected values for the bitmask. Max bitmask is 127.", kID);
             } else if(sChangekey == "help"){
+                // Provide a short usage summary for the console command
                 llMessageLinked(LINK_SET, NOTIFY, "0Commands: listmasks, modify, listcustom\n\nmodify takes 2-3 arguments.\nmodify owner [newBitmask]\nmodify trust [newMask]\nmodify [customExceptionName(no spaces)] [customExceptionUUID] [bitmask]", kID);
             } else if(sChangekey == "listcustom"){
+                // Dump all currently defined custom exceptions
                 integer ix=0;
                 string sCustom;
                 integer end = llGetListLength(g_lCustomExceptions);
@@ -506,6 +564,7 @@ UserCommand(integer iNum, string sStr, key kID) {
     }
 }
 
+// Script management handshake values used during boot.
 integer ALIVE = -55;
 integer READY = -56;
 integer STARTUP = -57;
@@ -516,6 +575,8 @@ default
     }
     state_entry(){
         //llOwnerSay((string)llGetFreeMemory()+"/"+(string)llGetUsedMemory());
+        // Inform the controller that this script is running
+        // so menus can be registered.
         llMessageLinked(LINK_SET, ALIVE, llGetScriptName(),"");
     }
     link_message(integer iSender, integer iNum, string sStr, key kID){
@@ -542,12 +603,15 @@ state active
         g_kWearer=llGetOwner();
     }
     link_message(integer iSender,integer iNum,string sStr,key kID){
-       // llOwnerSay("inum="+(string)iNum+" | kID="+(string)kID+"| sStr="+sStr);
+        // Primary event router handling commands, menu registrations and
+        // dialog responses.
         if(iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID);
         else if(iNum == MENUNAME_REQUEST && sStr == g_sParentMenu) {
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu+"|"+ g_sSubMenu1,""); // Register menu "Force Sit"
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu+"|"+ g_sSubMenu2,""); // Register Exceptions Menu
         } else if(iNum == DIALOG_RESPONSE){
+            // Response from a menu dialog. The menu name is stored in the
+            // command UUID before the '~' character.
             integer iPos = llSubStringIndex(kID, "~"+llGetScriptName());
             if(iPos>0){
                 string sMenu = llGetSubString(kID,0,iPos-1);
@@ -650,7 +714,9 @@ state active
                     else{
                         UserCommand(iAuth,"sit "+sMsg,kAv);
                         
-                        //MenuForceSit(kAv, iAuth); //Changing this to a time-delayed remenu here as the scan won't pick up an object sat on and will likely miss the object previously sat on if someone is unsat.
+                        // Time-delayed remenu because the sensor misses the object immediately
+                        // after an unsit. Reopen the menu after 3 seconds so the sensor has
+                        // time to detect the newly stood object.
                         llMessageLinked(LINK_SET,TIMEOUT_REGISTER,"3","remenu_forcesit:"+(string)kAv+":"+(string)iAuth);
                     }
                 } else if (sMenu == "Settings~Camera") {
@@ -670,6 +736,7 @@ state active
                         MenuChat(kAv,iAuth);
                     }
                 } else {
+                    // Generic Settings~<option> menus all share the same handler
                     list lMenu = llParseString2List(sMenu, ["~"],[]);
                     if (llList2String(lMenu,0) == "Settings") {
                         if (sMsg == UPMENU) MenuCamera(kAv, iAuth);
@@ -682,6 +749,8 @@ state active
                                 else if (sMsg == "-1.0") g_fMinCamDist -= 1.0;
                                 else if (sMsg == "-0.5") g_fMinCamDist -= 0.5;
                                 else if (sMsg == "-0.1") g_fMinCamDist -= 0.1;*/
+                                // Prevent values that break the camera. The
+                                // viewer refuses anything below 0.1 meters.
                                 if (g_fMinCamDist < 0.1) g_fMinCamDist = 0.1;
                                 else if (g_fMinCamDist > g_fMaxCamDist) g_fMinCamDist = g_fMaxCamDist;
                                 llMessageLinked(LINK_SET,LINK_CMD_RESTDATA,llList2String(lMenu,1)+"="+(string)g_fMinCamDist,kAv);
@@ -695,12 +764,16 @@ state active
                                 else if (sMsg == "-0.5") g_fMaxCamDist -= 0.5;
                                 else if (sMsg == "-0.1") g_fMaxCamDist -= 0.1;*/
                                 if (g_fMaxCamDist < g_fMinCamDist) g_fMaxCamDist = g_fMinCamDist;
+                                // Cap maximum distance to 20m which matches
+                                // the viewer's hard limit.
                                 else if (g_fMaxCamDist > 20.0) g_fMaxCamDist = 20.0;
                                 llMessageLinked(LINK_SET,LINK_CMD_RESTDATA,llList2String(lMenu,1)+"="+(string)g_fMaxCamDist,kAv);
                                 Save(SAVE_MAXCAM);
                             } else if (llList2String(lMenu,1) == "BlurAmount") {
                                 if (sMsg == "+blur") g_iBlurAmount += 1;
                                 else if (sMsg == "-blur") g_iBlurAmount -= 1;
+                                // Blur amount is constrained to a reasonable
+                                // range for hardware performance.
                                 if (g_iBlurAmount < 2) g_iBlurAmount = 2;
                                 else if (g_iBlurAmount > 30) g_iBlurAmount = 30;
                                 llMessageLinked(LINK_SET,LINK_CMD_RESTDATA,llList2String(lMenu,1)+"="+(string)g_iBlurAmount,kAv);
@@ -862,6 +935,8 @@ state active
                 SetMuffle(g_bMuffle);
             }
         } else if (iNum == TIMEOUT_FIRED) {
+            // Timer events from the helper script. Currently used to
+            // re-open the force sit menu after an unsit.
             list to=llParseString2List(sStr,[":"],[]);
             if(llList2String(to,0)=="remenu_forcesit"){
                 MenuForceSit((key)llList2String(to,1), (integer)llList2String(to,2));
@@ -871,6 +946,9 @@ state active
     
     listen(integer iChan, string sName, key kID, string sMsg)
     {
+        // Listen on the redirected chat channel to output muffled speech.
+        // The object temporarily takes the wearer's name so the chat
+        // appears to originate from them.
         if (iChan == 3728192 && kID == llGetOwner()){
             string sObjectName = llGetObjectName();
             llSetObjectName(llKey2Name(llGetOwner()));
