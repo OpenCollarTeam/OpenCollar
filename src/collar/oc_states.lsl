@@ -3,14 +3,17 @@ This file is a part of OpenCollar.
 Copyright ©2020
 : Contributors :
 Aria (Tashia Redrose)
-    *August 2020        -       *Created oc_states
-                                *Due to significant issues with original implementation, States has been turned into a anti-crash
-                                script instead of a script state manager.
-                                *Repurpose oc_states to be anti-crash and a interactive settings editor.
+    August 2020     -   Created oc_states
+                    -   Repurpose oc_states to be anti-crash and a interactive settings editor.
 Medea (Medea Destiny)
-    *July 2021          -       *See issue #587: Added warning when script resets folders script that user should consider cleaning
-                                up their #RLV 
-    Sept 2021           -       Tighten timings and number of passes on reboot process and reduced sleep padding.                               
+    July 2021       -   See issue #587: Added warning when script resets folders script that user
+                        should consider cleaning
+                        up their #RLV 
+    Sept 2021       -   Tighten timings and number of passes on reboot process and reduced sleep padding.             Jun 2025            -   Moved Show/Hide function here so it is no longer dependent on themes, and 
+                        added handling of PBR (semi functional due to pathetic script support by LL,
+                        llSetLinkGLTFOverride does not actually allow overrides for alpha to be removed
+                        so for now this will toggle between full invisible and part invisible rather than
+                        supporting GLTF alpha).                      
                                             
     
     
@@ -53,6 +56,45 @@ integer g_iVerbosityLevel = 1;
     return l;
 }*/
 //integer NOTIFY_OWNERS=1003;
+
+integer g_iLocked;
+integer g_iHide;
+integer g_iAllowHide = 1;
+
+showHide(integer show)
+{
+    integer num=llGetNumberOfPrims();
+    list lElements;
+    while(num)
+    {
+        lElements=llParseStringKeepNulls(llList2String(llGetLinkPrimitiveParams(num,[PRIM_DESC]),0),["~"],[]);
+        if(show==FALSE && llListFindList(lElements,["nohide"])==-1) Invis(num,TRUE);
+        else if(show==TRUE && llListFindList(lElements,["nohide"])==-1)
+        {
+            if(llListFindList(lElements, ["OpenLock"])!=-1 && g_iLocked==TRUE)
+                 Invis(num,TRUE);
+            else if(llListFindList(lElements, ["ClosedLock"])!=-1 || llListFindList(lElements, ["Lock"]) != -1 && g_iLocked==FALSE)
+                 Invis(num,TRUE);
+            else Invis(num,FALSE);
+        }
+        --num;
+    }
+}
+                      
+Invis(integer link, integer hide)
+{
+    if(hide)
+    {
+        llSetLinkAlpha(link,0,ALL_SIDES);
+        llSetLinkGLTFOverrides(link,ALL_SIDES,[OVERRIDE_GLTF_BASE_ALPHA_MODE,PRIM_GLTF_ALPHA_MODE_BLEND,OVERRIDE_GLTF_BASE_ALPHA,0]);
+    }
+    else
+    {
+        llSetLinkGLTFOverrides(link,ALL_SIDES,[OVERRIDE_GLTF_BASE_ALPHA_MODE,"",OVERRIDE_GLTF_BASE_ALPHA,1]);
+        llSetLinkAlpha(link,1,ALL_SIDES);
+    }
+}
+
 
 
 
@@ -274,6 +316,29 @@ default
         if(iNum == REBOOT && sStr == "reboot --f")llResetScript();
         
         if(iNum>=CMD_OWNER && iNum <= CMD_EVERYONE){
+            sStr=llToLower(sStr);
+            if(sStr=="hide" || sStr=="show")
+            {
+                if(iNum!=CMD_OWNER && kID!=llGetOwner()) return;
+                if(iNum!=CMD_OWNER && g_iAllowHide==FALSE)
+                {
+                    llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% due to: Allow show/hide is disallowed", kID);
+                    return;
+                }
+                if(sStr=="hide")
+                {
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_hide=1", "");
+                    //ShowHide(FALSE);
+                }
+                else
+                {
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_hide=0", "");
+                    //ShowHide(TRUE);
+                }
+            }
+                
+                    
+                
             if(sStr == "fix"){
                 g_iExpectAlive=1;
                 llResetTime();
@@ -389,10 +454,26 @@ default
                         
             }
             
-        } else if (iNum == DIALOG_TIMEOUT) {
+        } 
+        else if (iNum == DIALOG_TIMEOUT) 
+        {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
-        }else if(iNum == LM_SETTING_RESPONSE){
+        }
+        else if(iNum == LM_SETTING_DELETE)
+        {
+            list lSettings = llParseString2List(sStr, ["_"],[]);
+            if(llList2String(lSettings,0)=="global")
+            {
+                if(llList2String(lSettings,1) == "locked") 
+                {
+                    g_iLocked=FALSE;
+                    showHide(TRUE);
+                }
+            }
+        }
+        else if(iNum == LM_SETTING_RESPONSE)
+        {
             // Detect here the Settings
             list lSettings = llParseString2List(sStr, ["_","="],[]);
             string sToken = llList2String(lSettings,0);
@@ -402,6 +483,17 @@ default
                 if(sVar == "verbosity"){
                     g_iVerbosityLevel = (integer)sVal;
                 }
+                else if(sVar == "hide")
+                {
+                    g_iHide = (integer)sVal;
+                    showHide(!g_iHide);
+                } 
+                else if(sVar == "locked")
+                {
+                    g_iLocked = (integer)sVal;
+                    showHide(!g_iHide);
+                }
+                else if(sVar=="allowhide") g_iAllowHide=(integer)sVal;
             }
             
             
