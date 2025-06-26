@@ -8,10 +8,28 @@
  Nikki Lacrima
     Aug 2023: Updated for lockguard chain texture
     Sept 2024: Fix setting name for leash length
-    Feb 2025: Support for two leashpoints, "leashpoint" and "fcollar", for ponybits
+    Feb 2025: Support for multiple leashpoints, "leashpoint" and "leashpointX", for ponybits
+    and "fchain" for front chainpoint that does not interfere with leash
+    Jun 2025: Separate chain and leash visual parameters
     
 */
-string g_sScriptVersion = "8.3";
+
+/* 
+Naming of leashpoints and chainpoints:
+
+"leashpoint","ooc","fcollar" are synonyms and used as "leashpoint" and chainpoint "fcollar" if not leashed (only lowest numbered prim recognized)
+"leashpointx" for extra multiple leashpoint(s), never used as chainpoint (up to 3 possible)
+"fchain" is used as front chain point and never interfering with leash (only one)
+
+Only one of fchain and fcollar should be used. fcollar uses same prim as leashpoint, fchain does not share prim with leash
+
+This is a bit overcomplicated, but the reason is to handle old builds with both ooc and leashpoint, and also support special points for chaining. If fchain is not used then the fcollar chain shares prim with leashpoint, and the leash has precedence.
+
+When adding a front chain a check is made if leash is active and if leash shares prim with fcollar chain. 
+In this case no chain is added.
+*/
+
+string g_sScriptVersion = "8.3.1";
 integer LINK_CMD_DEBUG=1999;
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
@@ -82,8 +100,6 @@ string Uncheckbox(string Button){
 
 list g_lSettings=g_lDefaultSettings;
 
-list g_lMenuIDs;
-integer g_iMenuStride = 3;
 key g_kWearer;
 
 key NULLKEY;
@@ -116,9 +132,12 @@ string g_sLeashParticleTexture;
 string g_sLeashParticleMode;
 vector g_vLeashColor = <1.00000, 1.00000, 1.00000>;
 vector g_vLeashSize = <0.04, 0.04, 1.0>;
+vector g_vLeashGravity = <0.0,0.0,-1.0>;
+vector g_vChainColor = <1.00000, 1.00000, 1.00000>;
+vector g_vChainSize = <0.04, 0.04, 1.0>;
+vector g_vChainGravity = <0.0,0.0,-1.0>;
 integer g_iParticleGlow = TRUE;
 float g_fParticleAge = 3.5;
-vector g_vLeashGravity = <0.0,0.0,-1.0>;
 integer g_iParticleCount = 1;
 float g_fBurstRate = 0.0;
 //same g_lSettings but to store locally the default settings recieved from the defaultsettings note card, using direct string here to save some bits
@@ -146,14 +165,8 @@ Debug(string sStr) {
 */
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sMenuName) {
-    key kMenuID = llGenerateKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
+    llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, sMenuName+"~"+llGetScriptName() );
 
-    integer iIndex = llListFindList(g_lMenuIDs, [kID]);
-    if (~iIndex)
-        g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sMenuName], iIndex, iIndex + g_iMenuStride - 1);
-    else
-        g_lMenuIDs += [kID, kMenuID, sMenuName];
 }
 
 FindLinkedPrims() {
@@ -161,27 +174,55 @@ FindLinkedPrims() {
     integer linkcount = llGetNumberOfPrims();
     integer i;
 
+    integer iFcollar = -1;
+    integer iLeash = -1;
+    
     for (i=-1; i<=linkcount;++i) {
         string sPrimName = llToLower(llStringTrim(llList2String(llGetLinkPrimitiveParams(i,[PRIM_NAME]),0),STRING_TRIM));
-        if (sPrimName == "leashpoint" || sPrimName == "ooc") {
-            g_lLeashPrims += ["fcollar", i];
-            sPrimName = "fcollar";
+        if (sPrimName == "leashpoint" || sPrimName == "ooc" || sPrimName == "fcollar") {
+            // add only one of  "leashpoint" "ooc" "fcollar"as "leashpoint"
+            if (iLeash == -1) {
+                g_lLeashPrims += ["leashpoint", i];
+                iLeash = i;
+            }
         }
+        // add any number of  "leashpointx"
+        if (sPrimName == "leashpointx") {
+            g_lLeashPrims += ["leashpointx", i];
+        }
+        // fchain uses chainpoint fcollar, but is not a leashpoint 
+        if (sPrimName == "fchain") sPrimName = "fcollar";
+        // remember prim for fcollar
+        if (sPrimName == "fcollar") iFcollar = i;
         integer iIndex = llListFindList(g_lCollarPoints,[sPrimName]);
-        if (iIndex > -1) {
+        // add chainpoints 
+        // check that iIndex is valid and a multiple of 3
+        if (iIndex > -1 && (iIndex%3)==0) {
             g_lLeashPrims += [llList2String(g_lCollarPoints,iIndex),i];
             g_lLeashPrims += [llList2String(g_lCollarPoints,iIndex+1),i];
             g_lLeashPrims += [llList2String(g_lCollarPoints,iIndex+2),i];
         }
     }
-
+    // add defaults if missing
+    // fcollar not specified, use leashpoint or ooc
+    if ( iFcollar < 0 && iLeash >= 0) {
+        g_lLeashPrims += ["fcollar",iLeash, "collar", iLeash, "collarfrontloop", iLeash];
+        iFcollar = iLeash;
+    }
+    // leashpoint not specified, use fcollar as leashpoint
+    if ( iFcollar >= 0 && iLeash < 0) {
+        g_lLeashPrims += ["leashpoint",iFcollar];
+        iLeash = iFcollar;
+    }
+    // leashpoint not specified, use fcollar as leashpoint
     if (llListFindList(g_lLeashPrims,["fcollar"]) < 0){
-        g_lLeashPrims += ["fcollar",LINK_ROOT, "collar", LINK_ROOT, "collarfrontloop", LINK_ROOT];
+        g_lLeashPrims += ["leashpoint",LINK_ROOT,"fcollar",LINK_ROOT, "collar", LINK_ROOT, "collarfrontloop", LINK_ROOT];
+        iLeash = iFcollar = LINK_ROOT;
     }
     //llOwnerSay(llDumpList2String(g_lLeashPrims," "));
 }
 
-Particles(integer iLink, key kParticleTarget, vector vScale) {
+Particles(integer iLink, key kParticleTarget, vector vScale, vector vColor, vector vGravity) {
     //when we have no target to send particles to, dont create any
     if(g_sLeashParticleMode == "noParticle") {
         StopParticles(FALSE);
@@ -197,13 +238,13 @@ Particles(integer iLink, key kParticleTarget, vector vScale) {
     list lTemp = [
         PSYS_PART_MAX_AGE,g_fParticleAge,
         PSYS_PART_FLAGS,iFlags,
-        PSYS_PART_START_COLOR, g_vLeashColor,
+        PSYS_PART_START_COLOR, vColor,
         //PSYS_PART_END_COLOR, g_vLeashColor,
         PSYS_PART_START_SCALE,vScale,
         //PSYS_PART_END_SCALE,g_vLeashSize,
         PSYS_SRC_PATTERN, PSYS_SRC_PATTERN_DROP,
         PSYS_SRC_BURST_RATE,g_fBurstRate,
-        PSYS_SRC_ACCEL, g_vLeashGravity,
+        PSYS_SRC_ACCEL, vGravity,
         PSYS_SRC_BURST_PART_COUNT,g_iParticleCount,
         //PSYS_SRC_BURST_SPEED_MIN,fMinSpeed,
         //PSYS_SRC_BURST_SPEED_MAX,fMaxSpeed,
@@ -223,19 +264,25 @@ StartParticles(key kParticleTarget) {
 
     integer iInstance = 0;
     integer iIndex;
-    // For pony bit, double leashpoints
-    while ((iIndex = llListFindListNext(g_lLeashPrims,["collar"],iInstance++)) > -1) {
-        Particles(llList2Integer(g_lLeashPrims,iIndex+1),kParticleTarget,g_vLeashSize);
+    // For pony bit, multiple leashpoints
+    if ((iIndex = llListFindList(g_lLeashPrims,["leashpoint"])) > -1) {
+        Particles(llList2Integer(g_lLeashPrims,iIndex+1),kParticleTarget,g_vLeashSize,g_vLeashColor, g_vLeashGravity);
         g_iLeashActive = TRUE;
+        while ((iIndex = llListFindListNext(g_lLeashPrims,["leashpointx"],iInstance++)) > -1) {
+            Particles(llList2Integer(g_lLeashPrims,iIndex+1),kParticleTarget,g_vLeashSize,g_vLeashColor, g_vLeashGravity);
+        }
     }
 }
 
 StopParticles(integer iEnd) {
     integer iInstance = 0;
     integer iIndex = llListFindList(g_lLeashPrims,["collar"]);
-    // For pony bit, double leashpoints
-    while ((iIndex = llListFindListNext(g_lLeashPrims,["collar"],iInstance++)) > -1) {
+    // For pony bit, multiple leashpoints
+    if ((iIndex = llListFindList(g_lLeashPrims,["leashpoint"])) > -1) {
         llLinkParticleSystem(llList2Integer(g_lLeashPrims,iIndex+1), []);
+        while ((iIndex = llListFindListNext(g_lLeashPrims,["leashpointx"],iInstance++)) > -1) {
+            llLinkParticleSystem(llList2Integer(g_lLeashPrims,iIndex+1), []);
+        }
     }
 
     if (iEnd) {
@@ -247,40 +294,6 @@ StopParticles(integer iEnd) {
        // llSensorRemove();
     }
 }
-/*
-key findPrimKey(string sDesc)
-{
-    integer i;
-    for (i=1;i<llGetNumberOfPrims()+1;++i)
-    {
-        if (llList2String(llGetLinkPrimitiveParams(i,[PRIM_NAME]),0) == sDesc) return llGetLinkKey(i);
-    }
-    return NULL_KEY;
-}
-doClearChain(string sChainCMD)
-{
-    if (sChainCMD == "all") {
-        integer i;
-        for (i=1;i<llGetNumberOfPrims()+1;++i)
-        {
-            llLinkParticleSystem(i,[]);
-        }
-        g_lCurrentChains = [];
-    } else {
-        list lRemChains = [];
-        list lChains = llParseString2List(sChainCMD,["~"],[]); // Could be a string like "point=target~point=target..." or "point~point..."
-        integer i;
-        for (i=0;i<llGetListLength(lChains);++i) lRemChains += [llList2String(llParseString2List(llList2String(lChains,i),["="],[]),0)]; // Remove the targets out of the string
-        for (i=1;i<llGetNumberOfPrims()+1;++i)
-        {
-            string sDesc = llList2String(llGetLinkPrimitiveParams(i,[PRIM_NAME]),0);
-            if (llListFindList(lRemChains,[sDesc]) > -1) llLinkParticleSystem(i,[]);
-            integer iIndex = llListFindList(g_lCurrentChains,[sDesc]);
-            if (iIndex > -1) g_lCurrentChains = llDeleteSubList(g_lCurrentChains,iIndex,iIndex+1);
-        }
-    }
-}
-*/
 
 string Vec2String(vector vVec) {
     list lParts = [vVec.x, vVec.y, vVec.z];
@@ -531,15 +544,14 @@ state active
         } else if (iNum == MENUNAME_REQUEST && sMessage == PARENTMENU)
             llMessageLinked(iSender, MENUNAME_RESPONSE, PARENTMENU + "|" + SUBMENU, "");
         else if (iNum == DIALOG_RESPONSE) {
-            integer iMenuIndex = llListFindList(g_lMenuIDs, [kMessageID]);
-            if (~iMenuIndex) {
+            integer iPos = llSubStringIndex(kMessageID, "~"+llGetScriptName());
+            if(iPos>0){
+                string sMenu = llGetSubString(kMessageID, 0, iPos-1);
                 //Debug("Current menu:"+g_sCurrentMenu);
                 list lMenuParams = llParseString2List(sMessage, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sButton = llList2String(lMenuParams, 1);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
-                string sMenu=llList2String(g_lMenuIDs, iMenuIndex + 1);
-                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
                 if (sButton == UPMENU) {
                     if(sMenu == "configure") llMessageLinked(LINK_SET, iAuth, "menu " + PARENTMENU, kAv);
                     else ConfigureMenu(kAv, iAuth);
@@ -658,9 +670,6 @@ state active
             //} else {
                 //Debug("Not our menu");
             }
-        } else if (iNum == DIALOG_TIMEOUT) {
-            integer iMenuIndex = llListFindList(g_lMenuIDs, [kMessageID]);
-            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
         } else if (iNum == LM_SETTING_RESPONSE) {
            // Debug ("LocalSettingsResponse: " + sMessage);
             integer i = llSubStringIndex(sMessage, "=");
@@ -760,10 +769,11 @@ state active
                     return; 
                 }
                 string sLGPoint = llList2String(lLGCmd,2);  // Request ChainPoint
-                integer iLeashPrimIndex = llListFindList(g_lLeashPrims, [sLGPoint]);
-                if ((iLeashPrimIndex<0) && (sLGPoint != "all")) return; // Invalid chain point
-                integer iLeashPrim = llList2Integer(g_lLeashPrims,iLeashPrimIndex+1);
-                integer iFCollarPrim =  llList2Integer(g_lLeashPrims,llListFindList(g_lLeashPrims, ["fcollar"])+1);
+                integer iChainPrimIndex = llListFindList(g_lLeashPrims, [sLGPoint]);
+                if ((iChainPrimIndex<0) && (sLGPoint != "all")) return; // Invalid chain point
+                integer iChainPrim = llList2Integer(g_lLeashPrims,iChainPrimIndex+1);
+                integer iLeashPrim =  llList2Integer(g_lLeashPrims,llListFindList(g_lLeashPrims, ["leaashpoint"])+1);
+                llOwnerSay("chainto "+sLGPoint+" at "+(string)iChainPrim);
                 key kLGTarget = NULL_KEY;
                 integer iLGIndex=3;
                 integer iIsLinking = FALSE;
@@ -771,7 +781,7 @@ state active
                 while (iLGIndex < llGetListLength(lLGCmd)) {
                     string sLGCMD = llList2String(lLGCmd,iLGIndex++);          // Request Command
                     if (sLGCMD == "link") {
-                        if (g_iLeashActive && iLeashPrim == iFCollarPrim) return;   // Dont replace leash
+                        if (g_iLeashActive && iChainPrim == iLeashPrim) return;   // Dont replace leash
                         kLGTarget = llList2Key(lLGCmd,iLGIndex++);             // Request Target
                         // check that we are within leash length
                         integer point = llList2Integer(llGetObjectDetails(kLGTarget, [OBJECT_ATTACHED_POINT]),0);
@@ -779,8 +789,7 @@ state active
                             if(llVecDist(llGetPos(), (vector)llList2String(llGetObjectDetails(kLGTarget, [OBJECT_POS]),0)) > g_iLeashLength){
                                 return;
                             }
-                        }
-                        
+                        }                        
                         iIsLinking = TRUE;
                     } else if (sLGCMD == "unlink") {
                         kLGTarget = NULL_KEY;       // Request Target
@@ -790,27 +799,27 @@ state active
                             while (iCPIndex < llGetListLength(g_lCollarPoints)) {
                                 integer iPrimIndex = llListFindList(g_lLeashPrims, [llList2String(g_lCollarPoints,iCPIndex)]);
                                 integer iPrim = llList2Integer(g_lLeashPrims,iPrimIndex+1);
-                                if (!g_iLeashActive || iPrim != iFCollarPrim) { 
+                                if (!g_iLeashActive || iPrim != iLeashPrim) { 
                                     llLinkParticleSystem(iPrim,[]);
                                 }
                                 iCPIndex += 3;
                             }
                         } else { 
-                            if (!g_iLeashActive || iLeashPrim != iFCollarPrim) { 
-                                llLinkParticleSystem(iLeashPrim,[]);
+                            if (!g_iLeashActive || iChainPrim != iLeashPrim) { 
+                                llLinkParticleSystem(iChainPrim,[]);
                             }
                         }
                     }  else if (sLGCMD == "gravity") {
-                        g_vLeashGravity.z = -llList2Float(lLGCmd,iLGIndex++);
+                        g_vChainGravity.z = -llList2Float(lLGCmd,iLGIndex++);
                     }  else if (sLGCMD == "life") {
                         g_fParticleAge = llList2Float(lLGCmd,iLGIndex++);
                     }  else if (sLGCMD == "color") {
-                        g_vLeashColor.x = llList2Float(lLGCmd,iLGIndex++);
-                        g_vLeashColor.y = llList2Float(lLGCmd,iLGIndex++);
-                        g_vLeashColor.z = llList2Float(lLGCmd,iLGIndex++);
+                        g_vChainColor.x = llList2Float(lLGCmd,iLGIndex++);
+                        g_vChainColor.y = llList2Float(lLGCmd,iLGIndex++);
+                        g_vChainColor.z = llList2Float(lLGCmd,iLGIndex++);
                     }  else if (sLGCMD == "size") {
-                        g_vLeashSize.x = llList2Float(lLGCmd,iLGIndex++);
-                        g_vLeashSize.y = llList2Float(lLGCmd,iLGIndex++);
+                        g_vChainSize.x = llList2Float(lLGCmd,iLGIndex++);
+                        g_vChainSize.y = llList2Float(lLGCmd,iLGIndex++);
                     }  else if (sLGCMD == "texture") {
                         g_sChainParticleTexture = llList2Key(lLGCmd,iLGIndex++);
                     }  else if (sLGCMD == "ping") {
@@ -822,7 +831,7 @@ state active
                 if (iIsLinking) {
                     g_sParticleMode = "Classic";
                     g_sParticleTextureID = g_sChainParticleTexture;
-                    Particles(iLeashPrim, kLGTarget,g_vLeashSize);
+                    Particles(iChainPrim, kLGTarget,g_vChainSize,g_vChainColor,g_vChainGravity);
                 }
 
             }
