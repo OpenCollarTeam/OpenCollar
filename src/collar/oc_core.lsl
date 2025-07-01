@@ -42,7 +42,7 @@ Medea (Medea Destiny)
    Jul 2024     -   Further work on above safeword stuff, see PR #999 
                 -   added delay after name change to ensure report is correct and added clarification text here
                     and in device name. Issue #1053
-                            
+   Jun 2025     -   Restored HELP button to help/about menu to deliver help notecard                         
 Stormed Darkshade (StormedStormy)
     March 2022  -   Added a button for reboot to help/about menu.  
 
@@ -190,7 +190,7 @@ Dialog(key kID, string sPrompt, list lButtons, list lUtilityButtons, integer iPa
             llMessageLinked(LINK_SET, NOTIFY, sPrompt, kID);
             return;
         }
-        lButtons = ["Update", "Support", "License", "Reboot"];
+        lButtons = ["Update", "Support", "License", "Reboot","Help"];
         
         lUtilityButtons = [UPMENU];
     }
@@ -692,6 +692,9 @@ state active
                         llMessageLinked(LINK_SET, NOTIFY, "0You can get support for OpenCollar in the following group: secondlife:///app/group/45d71cc1-17fc-8ee4-8799-7164ee264811/about or for scripting related questions or beta versions: secondlife:///app/group/c5e0525c-29a9-3b66-e302-34fe1bc1bd43/about", kAv);
                     } else if(sMsg == "Update"){
                         UserCommand(iAuth, "update", kAv);
+                    } else if(sMsg =="Help"){
+                        iRespring=FALSE;
+                        llMessageLinked(LINK_SET,iAuth,"help",kAv);
                     }
                 } else if(sMenu == "Menu~Apps"){
                     if(sMsg == UPMENU){
