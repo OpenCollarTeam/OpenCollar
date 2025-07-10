@@ -1,12 +1,12 @@
 // This file is part of OpenCollar.
-// Copyright (c) 2008-2016 Ilse Mannonen, Garvin Twine, Wendy Starfall, Tashia Redrose
+// Copyright (c) 2008-2016 Ilse Mannonen, Garvin Twine, Wendy Starfall, Mailani19 Resident.
 // Licensed under the GPLv2.  See LICENSE for full details. 
+// This optional variant of the lead script prevents the leash going to the leash holder's collar if the leash holder 
+// also wears a collar.
 
 integer g_iMychannel = -8888;
-string g_sListenfor;
 string g_sResponse;
 string g_sWearerID;
-integer g_i;
 
 PermsCheck() {
     string sName = llGetScriptName();
@@ -29,44 +29,26 @@ PermsCheck() {
 }
 
 
-default {
-    state_entry() {
-        llSetMemoryLimit(10240);
+default
+{
+    state_entry()
+    {
         g_sWearerID = (string)llGetOwner();
         PermsCheck();
-        g_sListenfor = g_sWearerID + "handle";
         g_sResponse = g_sWearerID + "handle ok";
-        llListen(g_iMychannel, "", NULL_KEY, g_sListenfor);
-        llSay(g_iMychannel, g_sResponse);
-        llSetTimerEvent(2.0);
-    }
-
-    listen(integer channel, string name, key id, string message) {
-        llSay(g_iMychannel, g_sResponse);
-        llSetTimerEvent(2.0);
-    }
-    attach(key kAttached) {
+        llSetTimerEvent(5.0);
+    }   
+    attach(key kAttached)
+    {
         if (kAttached == NULL_KEY)
-            llSay(g_iMychannel, g_sWearerID+"handle detached");
+        llSay(g_iMychannel, g_sWearerID+"handle detached");
     }
-    changed(integer change) {
-        if (change & CHANGED_INVENTORY) PermsCheck();
-        if (change & CHANGED_TELEPORT || change & CHANGED_REGION) {
-            llSay(g_iMychannel, g_sResponse);
-            llSetTimerEvent(2.0);
+    timer()
+        {
+        llSay(g_iMychannel, g_sResponse);
         }
-    }
-    timer() {
-        if (g_i) {
-            g_i = FALSE;
-            llSetTimerEvent(0.0);
-            llSay(g_iMychannel, g_sResponse);
-        } else {
-            g_i = TRUE;
-            llSay(g_iMychannel, g_sResponse);
+    on_rez(integer param)
+        {
+           llResetScript();
         }
-    }
-    on_rez(integer param) {
-        llResetScript();
-    }
 }
