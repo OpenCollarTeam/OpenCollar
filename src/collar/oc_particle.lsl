@@ -773,7 +773,6 @@ state active
                 if ((iChainPrimIndex<0) && (sLGPoint != "all")) return; // Invalid chain point
                 integer iChainPrim = llList2Integer(g_lLeashPrims,iChainPrimIndex+1);
                 integer iLeashPrim =  llList2Integer(g_lLeashPrims,llListFindList(g_lLeashPrims, ["leaashpoint"])+1);
-                llOwnerSay("chainto "+sLGPoint+" at "+(string)iChainPrim);
                 key kLGTarget = NULL_KEY;
                 integer iLGIndex=3;
                 integer iIsLinking = FALSE;
