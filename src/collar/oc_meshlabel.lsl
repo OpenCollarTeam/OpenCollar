@@ -8,6 +8,8 @@
 //
 // Ping (Pingout Duffield) 
 //         *Aug 2023 - Revise visibility when collar is hidden Ref Issue #932
+// Nikki Lacrima 
+//         *Jul 2025 - Fix problems with LabelsCount, remove g_lMenuIds. Issue #1153
 // How to use:
 // 
 // - You need a Mesh-Strip with 6 Faces next to each other. Each Face should have 1 Material.
@@ -69,9 +71,6 @@ string UPMENU = "BACK";
 string g_sTextMenu = "Set Line ";
 string g_sFontMenu = "Font";
 string g_sColorMenu = "Color";
-
-list g_lMenuIDs;  //three strided list of avkey, dialogid, and menuname
-integer g_iMenuStride = 3;
 
 //integer TIMEOUT_READY = 30497;
 //integer TIMEOUT_REGISTER = 30498;
@@ -181,12 +180,13 @@ integer LabelsCount() {
             integer iLine = 0;
             if (llGetListLength(lTmp)>2) {
                 iLine = llList2Integer(lTmp,2);
+                if (iLine>iLinkCount) iLine=0;  // Invalid line number will trigger an error when assigning links
                 bMultiLine = TRUE;
             } else {
                 iLine = 0;
                 lSingleParamLinks += [iLink];
             }
-            if (iLine > llGetListLength(g_lLabelLinks)-1) g_lLabelLinks += [""]; // Add new Line
+            while (iLine > llGetListLength(g_lLabelLinks)-1) g_lLabelLinks += [""]; // Add new Lines
             list lLineLinks = llParseString2List(llList2String(g_lLabelLinks,iLine),["|"],[]);
             lLineLinks += [0]; // Fill with Zero
             g_lLabelLinks = llListReplaceList(g_lLabelLinks,[llDumpList2String(lLineLinks,"|")],iLine,iLine);
@@ -208,6 +208,12 @@ integer LabelsCount() {
         ok = FALSE;
     }
     
+    if (bMultiLine && llListFindList(g_lLabelLinks,[""]) != -1) llOwnerSay("NonConsecutive lines");
+    {
+        g_sErrorMsg += "Error! Line numbers must be consecutive starting at 0.\n";
+        ok = FALSE;
+    }
+
     if (ok) {
         integer i;
         for (i=0; i<llGetListLength(g_lLabelLinks);++i)
@@ -319,10 +325,7 @@ SetLabel() {
 
 Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string iMenuType) {
     key kMenuID = llGenerateKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
-    integer iIndex = llListFindList(g_lMenuIDs, [kRCPT]);
-    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kRCPT, kMenuID, iMenuType], iIndex, iIndex + g_iMenuStride - 1);
-    else g_lMenuIDs += [kRCPT, kMenuID, iMenuType];
+    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, iMenuType+"~"+llGetScriptName());
 }
 
 integer bool(integer a){
@@ -533,10 +536,9 @@ state active
             if (!g_bHasError) llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
             else llOwnerSay(g_sErrorMsg);
         else if (iNum == DIALOG_RESPONSE) {
-            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            if (~iMenuIndex) {
-                string sMenuType = llList2String(g_lMenuIDs, iMenuIndex + 1);
-                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
+            integer iPos = llSubStringIndex(kID, "~"+llGetScriptName());
+            if(iPos>0){
+                string sMenuType = llGetSubString(kID, 0, iPos-1);
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
@@ -586,9 +588,6 @@ state active
                     } else llMessageLinked(LINK_SET, NOTIFY, "0"+g_sSubMenu+" App remains installed.", kAv);
                 }
             }
-        } else if (iNum == DIALOG_TIMEOUT) {
-            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
         } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
          else if(iNum == LINK_CMD_DEBUG){
             integer onlyver=0;
