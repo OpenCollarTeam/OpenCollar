@@ -17,9 +17,13 @@ Medea Destiny   -
 Kristen Mynx -
         May 2022 - Removed DO_RLV_REFRESH and recheck_lock timer.   Both of these were only used by
         the relay, which is being changed at the same time.  Check the comments in oc_relay.
+Nikki Lacrima -
+        Sept 2024   -   Implemented Yosty7b3's menu streamlining, see pr#963 
+        July 2025   -   Removed ping/pong, handled by relay
+
 */
 
-string g_sScriptVersion = "8.3";
+string g_sScriptVersion = "8.3.1";
 integer g_iRLVOn = TRUE;
 integer g_iRLVOff = FALSE;
 integer g_iViewerCheck = FALSE;
@@ -37,9 +41,6 @@ integer g_iCollarLocked = FALSE;
 string g_sParentMenu = "Main";
 string g_sSubMenu = "RLV";
 list g_lMenu;
-//key kMenuID;
-list    g_lMenuIDs;
-integer g_iMenuStride = 3;
 integer RELAY_CHANNEL = -1812221819;
 
 //MESSAGE MAP
@@ -127,7 +128,6 @@ Debug(string sStr) {
 */
 
 DoMenu(key kID, integer iAuth){
-    key kMenuID = llGenerateKey();
     string sPrompt = "\n[Remote Scripted Viewer Controls]\n";
     if (g_iRlvActive) {
         if (g_iRlvVersion) sPrompt += "\nRestrainedLove API: RLV v"+g_sRlvVersionString;
@@ -144,10 +144,7 @@ DoMenu(key kID, integer iAuth){
         lButtons = [TURNOFF, CLEAR] + lButtons;
     } else if (g_iRLVOff) lButtons = [TURNON];
     else lButtons = [TURNON, TURNOFF];
-    llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|0|" + llDumpList2String(lButtons, "`") + "|" + UPMENU + "|" + (string)iAuth, kMenuID);
-    integer iIndex = llListFindList(g_lMenuIDs, [kID]);
-    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, g_sSubMenu], iIndex, iIndex + g_iMenuStride - 1);
-    else g_lMenuIDs += [kID, kMenuID, g_sSubMenu];
+    llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|0|" + llDumpList2String(lButtons, "`") + "|" + UPMENU + "|" + (string)iAuth, g_sSubMenu+"~"+llGetScriptName());
     //Debug("Made menu.");
 }
 
@@ -252,7 +249,7 @@ RemRestriction(key kID, string sBehav) {
     if (~iSource) { //if this source set any restrictions
         list lSrcRestr = llParseString2List(llList2String(g_lRestrictions,iSource+1),["§"],[]); //get a list of this source's restrictions
         integer iRestr=llListFindList(lSrcRestr,[sBehav]);  //get index of this restriction from that list
-        if (~iRestr || sBehav=="ALL") {   //if the restriction is in the list
+        if (~iRestr) {   //if the restriction is in the list
             if (llGetListLength(lSrcRestr)==1) {  //if it is the only restriction in the list
                 g_lRestrictions=llDeleteSubList(g_lRestrictions,iSource, iSource+1);  //remove the restrictions list
                 if ((key)kID) llMessageLinked(LINK_SET, CMD_REMSRC,"",kID);    //tell the relay the source has no restrictions
@@ -458,16 +455,15 @@ state active
         else if (iNum <= CMD_EVERYONE && iNum >= CMD_OWNER) UserCommand(iNum, sStr, kID);
         else if (iNum == DIALOG_RESPONSE) {
             //Debug(sStr);
-            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            if (~iMenuIndex) {
+            integer iPos = llSubStringIndex(kID, "~"+llGetScriptName());
+            if(iPos>0){
+                string sMenu = llGetSubString(kID, 0, iPos-1);
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMsg = llList2String(lMenuParams, 1);
                 //integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
                 lMenuParams=[];
-                string sMenu=llList2String(g_lMenuIDs, iMenuIndex + 1);
-                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
                 if (sMenu == g_sSubMenu) {
                     if (sMsg == TURNON) {
                         UserCommand(iAuth, "rlv on", kAv);
@@ -485,9 +481,6 @@ state active
                     }
                 }
             }
-        }  else if (iNum == DIALOG_TIMEOUT) {
-            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
         } else if (iNum == LM_SETTING_REQUEST && sStr == "ALL") { //inventory changed in root
             if (g_iRlvActive == TRUE) {
                 llSleep(2);
@@ -621,15 +614,8 @@ state active
                             //Debug("Sittarget:"+(string)(g_kSitTarget));
                         }
                     }
-
                     lCommands=llDeleteSubList(lCommands,0,0);
                     //Debug("Command list now "+llDumpList2String(lCommands,"|"));
-                }
-            } else if (iNum == CMD_RLV_RELAY) {
-                if (llGetSubString(sStr,-43,-1)== ","+(string)g_kWearer+",!pong") { //if it is a pong aimed at wearer
-                    //Debug("Received pong:"+sStr+" from "+(string)kID);
-                    if (kID==g_kSitter) llOwnerSay("@"+"sit:"+(string)g_kSitTarget+"=force");  //if we stored a sitter, sit on it
-                    rebakeSourceRestrictions(kID);
                 }
             } else if(iNum == RLV_CMD_OVERRIDE){
                 //New feature! RLV_CMD_OVERRIDE is designed to allow one-shot (force) commands to override current restrictions. This is done by sending the behavior(s) to send as a comma separated list, followed by a ~ and then the restrictions to temporarily lift as another comma separate list as as sMsg. EXAMPLE: llMessageLinked(LINK_THIS,RLV_CMD_OVERRIDE,"unsit~unsit","") will lift the current unsit restriction if present, issue an @unsit=force, then restore the unsit restriction if it was previously present. These commands should ONLY be sent if the issuer has OWNER auth.
@@ -684,11 +670,6 @@ state active
                 llSetTimerEvent(0.0);
                 g_iWaitRelay = FALSE;
                 integer i;
-                for (i=0;i<llGetListLength(g_lRestrictions)/2;i++) {
-                    key kSource=(key)llList2String(llList2ListStrided(g_lRestrictions,0,-1,2),i);
-                    if ((key)kSource) llShout(RELAY_CHANNEL,"ping,"+(string)kSource+",ping,ping");
-                    else rebakeSourceRestrictions(kSource);  //reapply collar's restrictions here
-                }
                 if (!llGetStartParameter()) llMessageLinked(LINK_SET,NOTIFY,"0"+"RLV active!",g_kWearer);
             }
         } else {
@@ -753,4 +734,3 @@ state inUpdate{
         }
     }
 }
-

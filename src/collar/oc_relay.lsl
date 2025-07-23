@@ -23,28 +23,28 @@ Kristen Mynx,  Phidoux (taya Maruti)
 Nikki Lacrima 
    *Nov 2023   - Remove extra CMD_SAFEWORD to CMD_RELAY_SAFEWORD processing
                - implemented Yosty7b3's menu streamlining, see pr#963 
-et al.
-
 Medea Destiny
    *Apr 2025   - Fixed a wearer no access when has trusted permission issue, bug
                found by Annie Zehetbauer in world.
+Nikki Lacrima 
+   *Jul 2025   - Multirelay functions that uses LSD to store restrictions and sit status
+                 Fix CMD_RELAY_SAFEWORD definition
+
+et al.
+
 
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
 
 */
 
+string g_sScriptVersion = "8.3.1";
+
 string g_sParentMenu = "RLV";
 string g_sSubMenu = "Relay";
 
-key forcesitter;
-key sitid;
 integer RLV_RELAY_CHANNEL = -1812221819;
 integer RELAY_LISTENER;
-key Source;
-list Restrictions;
-integer g_iResit_status;
-
 
 //MESSAGE MAP
 integer RLV_CLEAR=6002;
@@ -55,8 +55,8 @@ integer CMD_TRUSTED = 501;
 integer CMD_WEARER = 503;
 integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
-integer CMD_SAFEWORD = 510;
-integer CMD_RELAY_SAFEWORD = 51200;
+//integer CMD_SAFEWORD = 510;
+integer CMD_RELAY_SAFEWORD = 511;
 
 integer NOTIFY = 1002;
 integer REBOOT = -1000;
@@ -76,17 +76,40 @@ integer AUTH_REQUEST = 600;
 integer AUTH_REPLY=601;
 
 integer RLV_CMD = 6000;
-//integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
+integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
 
 //integer RLV_OFF = 6100; // send to inform plugins that RLV is disabled now, no message or key needed
-//integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no message or key needed
+integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no message or key needed
 
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 string UPMENU = "BACK";
-//string ALL = "ALL";
-integer g_iMode = 0;
+
+string  LSDPrefix="relay"; //All LSD used by this script has this prefix.
+integer LSD_REQUEST=-500; //Sends LSDPrefix when received, for flushing no longer used LSD.
+integer LSD_RESPONSE=-501; //Reply to above
+
+string LSDRead(string token)
+{
+    return llLinksetDataRead(LSDPrefix+"_"+token);
+}
+
+LSDWrite(string token, string val)
+{
+    llLinksetDataWrite(LSDPrefix+"_"+token,val);
+}
+
+// Restriction data are stored in  LSD  relay_source_UUID = " § separated list of restrictions strings "
+list g_lPendingReapply;   // sourceId to wait fot pong reply
+key g_kForceSitter;       //  LSD relay_sitter = UUID
+key g_kSitTarget;         //  LSD relay_sittarget=UUID
+
+integer g_iMode = 0;      //  LSD relay_mode
+integer g_iWearer=TRUE;    // LSD relay_wearer    Lockout wearer option 
+integer g_iTrustOwners = FALSE;  //  LSD relay_trustowner
+integer g_iTrustTrusted = FALSE; //  LSD relay_trusttrust
+integer g_iHelplessMode=FALSE;   //  LSD relay_helpless
 
 integer MODE_ASK=1;
 integer MODE_AUTO = 2;
@@ -104,21 +127,19 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
     llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, sName+"~"+llGetScriptName());
 }
 
-integer g_iWearer=TRUE; // Lockout wearer option
-integer g_iTrustOwners = FALSE;
-integer g_iTrustTrusted = FALSE;
 Menu(key kID, integer iAuth) {
     if(iAuth == CMD_OWNER && kID==g_kWearer && !g_iHasOwners){
-        if(!g_iWearer){
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "relay_wearer=1","");
-        }
         g_iWearer=TRUE;
+        llLinksetDataWrite("relay_wearer",(string)g_iWearer);
         HelplessChecks();
     }
     string sPrompt = "\n[Relay App]\n\nNote: Wearer checkbox will allow or disallow wearer changes to relay\n\n";
     list lButtons = [Checkbox(bool((g_iMode==0)), "OFF"), Checkbox(bool((g_iMode==MODE_ASK)),"Ask"), Checkbox(bool((g_iMode==MODE_AUTO)),"Auto"), Checkbox(g_iWearer, "Wearer")];
-    if(Source){
-        sPrompt += "Source: "+llKey2Name(Source);
+    list sources = llLinksetDataFindKeys(LSDPrefix+"_source_.*", 0, 1);
+    if (llGetListLength(sources)>0) {
+        list data = llParseString2List(llList2String(sources,0),["_"],[""]);
+        key kSourceID = llList2Key(data, 2);
+        sPrompt += "Source: "+llKey2Name(kSourceID);
         lButtons+=["REFUSE"];
         sPrompt+="\n\nREFUSE -> Will safeword the relay only";
     } else {
@@ -140,7 +161,9 @@ UserCommand(integer iNum, string sStr, key kID) {
     if (llSubStringIndex(sStr,llToLower(g_sSubMenu)) && sStr != "menu "+llToLower(g_sSubMenu)) return;
     if (iNum == CMD_OWNER && sStr == "runaway") {
         g_lOwner = g_lTrust = g_lBlock = [];
-        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "relay_wearer=1","");
+        g_iWearer = TRUE;
+        llLinksetDataWrite("relay_wearer",(string)g_iWearer);
+//        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "relay_wearer=1","");
         return;
     }
     if (sStr==llToLower(g_sSubMenu) || sStr == "menu "+llToLower(g_sSubMenu)) Menu(kID, iNum);
@@ -197,9 +220,9 @@ UserCommand(integer iNum, string sStr, key kID) {
             llMessageLinked(LINK_SET, NOTIFY, "0"+sReply, kID);
 
             // Save data
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "relay_helpless="+(string)g_iHelplessMode, "");
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "relay_wearer="+(string)g_iWearer, "");
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "relay_mode="+(string)g_iMode, "");
+            llLinksetDataWrite("relay_helpless",(string)g_iHelplessMode);
+            llLinksetDataWrite("relay_wearer",(string)g_iWearer);
+            llLinksetDataWrite("relay_mode",(string)g_iMode);
         }
     }
 }
@@ -211,45 +234,109 @@ key g_kWearer;
 list g_lOwner;
 list g_lTrust;
 list g_lBlock;
-integer g_iLocked=FALSE;
 
 //integer TIMEOUT_READY = 30497;
 //integer TIMEOUT_REGISTER = 30498;
 //integer TIMEOUT_FIRED = 30499;
 
-RLV(string cmd)
+RLV(string cmd, key kID)
 {
     // send the rlv command to oc_rlvsys
     llMessageLinked(LINK_THIS, RLV_CMD,
         llGetSubString(cmd,1,999),  // knock off the "@"
-        "a94c4e13-ff4f-4686-b14f-877c6424d9d8");
-    // we use a UUID as the source because oc_rlvsys determines
-    // if this is an external object or an internal script which sent the RLV_CMD.
-    // since we're sending this internally on behalf of an external object we use a UUID
-    // eventually we should pass the actual object, so oc_relay can then handle multiple relay objects
-    // because oc_rlvsys seems to be able to handle/abritrate/manage multiple sources.
+        kID);
+    // Use the source UUID, so oc_relay can then handle multiple relay objects
+    // and let oc_rlvsys handle/abritrate/manage multiple sources.
 }
 
-Release(){
-
-    llRegionSayTo(Source, RLV_RELAY_CHANNEL, "release,"+(string)Source+",!release,ok");
-
-    /*
-    integer i=0;
-    integer end=llGetListLength(Restrictions);
-    for(i=0;i<end;i++){
-        // Release restrictions!
-        string stripped = "@clear="+llList2String(Restrictions,i);//llGetSubString(llList2String(Restrictions,i),0,llSubStringIndex(llList2String(Restrictions,i), "=")-1);
-        RLV(stripped);
+Reapply(key kSourceId) {
+    integer ix = llListFindList(g_lPendingReapply,[kSourceId]);
+    // Only reapply sources in g_lPendingReapply list
+    if (ix >= 0) {
+        //llOwnerSay("Pong and reapply: "+(string)kSourceId);
+        // first try to resit
+        if( kSourceId == g_kForceSitter && g_kSitTarget != NULL_KEY ) {
+            RLV("@sit:"+(string)g_kSitTarget+"=force", kSourceId);
+        }
+        // read restictions from LSD and apply them
+        list lRestr=llParseString2List(LSDRead("source_"+(string)kSourceId),["§"],[]);
+        integer iRestr = 0;
+        for (iRestr = 0;iRestr < llGetListLength(lRestr); iRestr++) {
+             string sBehav = llList2String(lRestr,iRestr);
+             RLV("@"+sBehav+"=add", kSourceId);
+             AddRestriction(kSourceId, sBehav);
+        }
+        g_lPendingReapply = llDeleteSubList(g_lPendingReapply,ix,ix);
     }
-    */
-    // don't need the above, just a clear, as rlvsys handles clearing by source.
-    RLV("@clear");
-    Source=NULL_KEY;
-    Restrictions=[];
-    g_lAllowedSources=[];
-    g_kPendingSource=NULL_KEY;
-    g_lPendingRLV=[];
+    else {
+        //llOwnerSay("Pong not found");    
+    }
+}
+
+ReleaseAll(){
+    integer i;
+    list sources = llLinksetDataFindKeys(LSDPrefix+"_source_.*", 0, 10);
+    for (i=0; i< llGetListLength(sources); i++) {
+        list data = llParseString2List(llList2String(sources,i),["_"],[""]);
+        key kID = llList2Key(data, 2);
+        Release(kID);  
+    }
+}
+
+Release(key kID){
+    llRegionSayTo(kID, RLV_RELAY_CHANNEL, "release,"+(string)kID+",!release,ok");
+    // rlvsys handles clearing by source.
+    RLV("@clear", kID);
+    // Clear from LSD relay source's
+    LSDWrite("source_"+(string)kID,"");
+    if (g_kPendingSource == kID) {
+        g_kPendingSource=NULL_KEY;
+        g_lPendingRLV=[];
+    }
+}
+
+AddRestriction(key kID, string sBehav) {
+    // read restrictions for this source, if any
+    string sSrcRestr = LSDRead("source_"+(string)kID);
+    //add new sources to sources list
+    if (sSrcRestr == "") {  //if this is a restriction from a new source
+        if (llGetListLength(llLinksetDataFindKeys(LSDPrefix+"_source_.*", 0, 10)) > 5) {
+            llOwnerSay("Capping number of RLV sources, dropping: "+(string)kID);
+            return;
+        }
+    }
+    if (llSubStringIndex("§"+sSrcRestr+"§","§"+sBehav+"§") == -1) {
+        //Debug("AddRestriction 2.2");
+        sSrcRestr+="§"+sBehav;
+        if (llSubStringIndex(sSrcRestr,"§")==0) sSrcRestr=llGetSubString(sSrcRestr,1,-1);
+        if (sBehav=="unsit") {
+            g_kSitTarget = llList2Key(llGetObjectDetails(g_kWearer, [OBJECT_ROOT]), 0);
+            g_kForceSitter=kID;
+            LSDWrite("sitter", (string)g_kForceSitter);
+            LSDWrite("sittarget", (string)g_kSitTarget);                            
+        }
+    }
+    LSDWrite("source_"+(string)kID,sSrcRestr);
+}
+
+RemRestriction(key kID, string sBehav) {
+    // read restrictions for this source, if any
+    string sSrcRestr = LSDRead("source_"+(string)kID);
+    if (sSrcRestr) { //if this source set has any restrictions
+        list lSrcRestr = llParseString2List(sSrcRestr,["§"],[]); //get a list of this source's restrictions
+        integer iRestr=llListFindList(lSrcRestr,[sBehav]);  //get index of this restriction from that list
+        if (~iRestr) {   //if the restriction is in the list
+            lSrcRestr=llDeleteSubList(lSrcRestr,iRestr,iRestr); //delete the restriction from the list
+            sSrcRestr=llDumpList2String(lSrcRestr,"§");//store the list in the sources restrictions list
+            LSDWrite("source_"+(string)kID,sSrcRestr);
+            if (sBehav=="unsit"&&g_kForceSitter==kID) {
+                g_kForceSitter=NULL_KEY;
+                g_kSitTarget=NULL_KEY;
+                LSDWrite("sitter", (string)g_kForceSitter);
+                LSDWrite("sittarget", (string)g_kSitTarget);                            
+            }
+        }
+    }
 }
 
 
@@ -272,71 +359,72 @@ RepromptForSource(key kID){
 ///param msg=RLV command
 Process(string msg, key id, integer iWillPrompt){
     integer DoPrompt=FALSE;
-        list args = llParseStringKeepNulls(msg,[","],[]);
-        if (llGetListLength(args)!=3) return;
-        if (llList2Key(args,1)!=g_kWearer && llList2Key(args, 1)!=(key)"ffffffff-ffff-ffff-ffff-ffffffffffff") return;
-        string ident = llList2String(args,0);
-        list commands = llParseString2List(llList2String(args,2),["|"],[]);
-        integer i;
-        string command;
-        integer nc = llGetListLength(commands);
-        for (i=0; i<nc; ++i) {
-            command = llList2String(commands,i);
-            if (llGetSubString(command,0,0)=="@") {
-                if(llSubStringIndex(command, "@version")!=-1){
-                    jump overPromptChecks;
-                }
-                if(iWillPrompt)DoPrompt=TRUE;
-                if(iWillPrompt)jump skipSection;
-                @overPromptChecks;
+    list args = llParseStringKeepNulls(msg,[","],[]);
+    if (llGetListLength(args)!=3) return;
+    if (llList2Key(args,1)!=g_kWearer && llList2Key(args, 1)!=(key)"ffffffff-ffff-ffff-ffff-ffffffffffff") return;
+    string ident = llList2String(args,0);
+    list commands = llParseString2List(llList2String(args,2),["|"],[]);
+    integer i;
+    string command;
+    integer nc = llGetListLength(commands);
+    // Any command from a ping object will reapply restrictions
+    if (llListFindList(g_lPendingReapply,[(string)id]) >= 0)  {
+//        llOwnerSay("Hear from pong source, set as allowed and reapply");
+        g_lAllowedSources = [id] + g_lAllowedSources;
+        Reapply(id);
+        iWillPrompt = FALSE;
+    };
+//    llOwnerSay("relay:process "+msg);
+    for (i=0; i<nc; ++i) {
+        command = llList2String(commands,i);
+        // rlv commands
+        if (llGetSubString(command,0,0)=="@") {
+            integer isVersionCheck = (llSubStringIndex(command, "@version")!=-1);
+            // all @command except version checks are delayed while waiting for ask prompt
+            if (!iWillPrompt || isVersionCheck) { 
                 if(command == "@clear" || command == "@detach=y"){
-                    Release();
+                    Release(id);
                     return;
                 }
-                RLV(command);
+                RLV(command, id);
                 llRegionSayTo(id, RLV_RELAY_CHANNEL, ident+","+(string)id+","+command+",ok");
                 list subargs = llParseString2List(command, ["="], []);
                 string behav = llGetSubString(llList2String(subargs, 0), 1, -1);
-                integer index = llListFindList(Restrictions, [behav]);
                 string comtype = llList2String(subargs, 1);
-                if (index == -1 && (comtype == "n" || comtype == "add")) {
-                    Restrictions += [behav];
-                    //RLV("@detach=n");
-                    Source = id;
-                    if (behav == "unsit" && llGetAgentInfo(g_kWearer) & AGENT_SITTING) {
-                        sitid = llList2Key(llGetObjectDetails(g_kWearer, [OBJECT_ROOT]), 0);
-                        forcesitter = id;
-                    }
-                }
-                else if (index != -1 && (comtype=="y" || comtype == "rem")) {
-                    Restrictions = llDeleteSubList(Restrictions, index, index);
-                    if (Restrictions == []) {
-                        Source = NULL_KEY;
-                    }
-                    if (behav == "unsit") sitid = NULL_KEY;
-                }
-                @skipSection;
+                if (comtype == "n" || comtype == "add") AddRestriction(id, behav);
+                if (comtype == "y" || comtype == "rem") RemRestriction(id, behav);
             }
-            else if (command=="!pong" && id == Source ) g_iResit_status = 1;
-            else if (command=="!version") llRegionSayTo(id, RLV_RELAY_CHANNEL, ident+","+(string)id+",!version,1100");
-            else if (command=="!implversion") llRegionSayTo(id, RLV_RELAY_CHANNEL, ident+","+(string)id+",!implversion,ORG=805000/Satomi's Damn Fast Relay v4:OPENCOLLAR");
-            else if (command=="!x-orgversions") llRegionSayTo(id, RLV_RELAY_CHANNEL, ident+","+(string)id+",!x-orgversions,ORG=805000");
-            else if (command=="!release" && id == Source) Release();
-            else llRegionSayTo(id, RLV_RELAY_CHANNEL, ident+","+(string)id+","+command+",ko");
+            if (!isVersionCheck) {
+                if (iWillPrompt) {
+                    DoPrompt = iWillPrompt;
+                } else {
+                    if (llListFindList(g_lAllowedSources,[id]) == -1) g_lAllowedSources = [id] + g_lAllowedSources;
+                }
+            }
         }
+        // relay meta commands
+        else if (command=="!pong") { Reapply(id); }
+        else if (command=="!version") llRegionSayTo(id, RLV_RELAY_CHANNEL, ident+","+(string)id+",!version,1100");
+        else if (command=="!implversion") llRegionSayTo(id, RLV_RELAY_CHANNEL, ident+","+(string)id+",!implversion,ORG=805000/Satomi's Damn Fast Relay v4:OPENCOLLAR");
+        else if (command=="!x-orgversions") llRegionSayTo(id, RLV_RELAY_CHANNEL, ident+","+(string)id+",!x-orgversions,ORG=805000");
+        else if (command=="!release") Release(id);
+        else llRegionSayTo(id, RLV_RELAY_CHANNEL, ident+","+(string)id+","+command+",ko");
+    }
 
-        if(DoPrompt){
-            // Calculate authorization first
+    if(DoPrompt){
+        // Calculate authorization first, do not prompt for disallowed sources
+        if (llListFindList(g_lDisallowedSources,[id])==-1) {
             g_kPendingSource=id;
             llMessageLinked(LINK_SET, AUTH_REQUEST,  "relay`"+msg, llList2Key(llGetObjectDetails(id, [OBJECT_OWNER]),0));
-            //PromptForSource(id,msg);
+        //PromptForSource(id,msg);
         }
+    }
 }
-integer g_iHelplessMode=FALSE;
+
 HelplessChecks(){
     if(g_iWearer && g_iHelplessMode) {
         g_iHelplessMode=FALSE;
-        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "relay_helpless=0", "");
+        llLinksetDataWrite("relay_helpless",(string)g_iHelplessMode);
     }
 }
 
@@ -381,35 +469,44 @@ state active
     {
         g_kWearer = llGetOwner();
         llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "global_locked","");
-    }
-    on_rez(integer i) {
-        if(llGetOwner()!=g_kWearer) llResetScript();
-        if (Source) {
-            //RLV("@detach=n"); // no escaping before we are sure the former source really is not active anymore
-            g_iResit_status = 0;
-            llSetTimerEvent(30);
-            llRegionSayTo(Source, RLV_RELAY_CHANNEL, "ping,"+(string)Source+",ping,ping");
+        g_lPendingReapply = [];
+        // read list of previous sources for possible reapply
+        integer i;
+        list sources = llLinksetDataFindKeys(LSDPrefix+"_source_.*", 0, 10);
+        for (i=0; i< llGetListLength(sources); i++) {
+            list data = llParseString2List(llList2String(sources,i),["_"],[""]);
+            key kID = llList2Key(data, 2);
+            g_lPendingReapply += [kID];  
+        }
+        
+        g_kForceSitter = (key)LSDRead("sitter");
+        g_kSitTarget = (key)LSDRead("sittarget");
+        g_iMode=(integer)llLinksetDataRead("relay_mode");
+        g_iWearer=(integer)llLinksetDataRead("relay_wearer");                    
+        g_iHelplessMode=(integer)llLinksetDataRead("relay_helpless");                    
+        g_iTrustOwners=(integer)llLinksetDataRead("relay_trustowner");                    
+        g_iTrustTrusted=(integer)llLinksetDataRead("relay_trusttrust");        
+        HelplessChecks();
 
-        }else llResetScript();
+        RELAY_LISTENER = 0;
+        
+    }
+
+    on_rez(integer i) {
+        llResetScript();
     }
 
     timer() {
-        if (g_iResit_status == 1) {
-            g_iResit_status = 2;
-            llSetTimerEvent(20);   //this must be long enough to happen AFTER oc_rlvsys is initialised or restrictions get cleared again
-            //only do the force-sit if the wearer was indeed locked sitting on something
-            if( Source == forcesitter && sitid != NULL_KEY ) {
-                RLV("@sit:"+(string)sitid+"=force");
-            }
-        } else if (g_iResit_status == 2) {
-            llSetTimerEvent(0);
-            // this must also restore detach=n as oc_rlvsys may have cleared it
-            RLV("@"+llDumpList2String(Restrictions, "=n,")+"=n");//,detach=n");
-        } else {
-            llSetTimerEvent(0);
-            Release(); // The source is no longer active. Let's forget everything.
+        // non responding sources removed after 30s
+        integer i = 0;
+        for (i=0; i<llGetListLength(g_lPendingReapply); i++) {
+//            llOwnerSay("no pong: "+LSDRead("source_"+llList2String(g_lPendingReapply,i))); 
+            LSDWrite("source_"+llList2String(g_lPendingReapply,i),"");
         }
+        g_lPendingReapply = [];
+        llSetTimerEvent(0);
     }
+
     link_message(integer iSender,integer iNum,string sStr,key kID){
         if(iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
         else if(iNum == CMD_EVERYONE && (llToLower(sStr)==llToLower(g_sSubMenu) || llToLower(sStr) == "menu "+llToLower(g_sSubMenu)) ){
@@ -453,9 +550,9 @@ state active
                             g_iMode=0;
                             llMessageLinked(LINK_SET, NOTIFY, "0The relay has been turned off", kAv);
                         }
-
                         g_lAllowedSources=[];
-                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "relay_mode="+(string)g_iMode, "");
+                        g_lDisallowedSources = [];
+                        llLinksetDataWrite("relay_mode",(string)g_iMode);
                     } else if(sMsg == Checkbox(bool((g_iMode==MODE_ASK)),"Ask")){
                         if(g_iMode == MODE_ASK){
                             llMessageLinked(LINK_SET, NOTIFY, "0The relay is already set to ask", kAv);
@@ -463,9 +560,9 @@ state active
                             g_iMode=MODE_ASK;
                             llMessageLinked(LINK_SET, NOTIFY, "0The relay has been set to ask", kAv);
                         }
-
                         g_lAllowedSources=[];
-                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "relay_mode="+(string)g_iMode, "");
+                        g_lDisallowedSources=[];
+                        llLinksetDataWrite("relay_mode",(string)g_iMode);
                     } else if(sMsg == Checkbox(bool((g_iMode==MODE_AUTO)), "Auto")){
                         if(g_iMode == MODE_AUTO){
                             llMessageLinked(LINK_SET, NOTIFY, "0The relay is already set to auto", kAv);
@@ -473,25 +570,26 @@ state active
                             g_iMode=MODE_AUTO;
                             llMessageLinked(LINK_SET, NOTIFY, "0The relay is now set to auto", kAv);
                         }
-
-
                         g_lAllowedSources=[];
-                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "relay_mode="+(string)g_iMode, "");
+                        g_lDisallowedSources=[];
+                        llLinksetDataWrite("relay_mode",(string)g_iMode);
                     } else if(sMsg == Checkbox(g_iWearer, "Wearer")){
                         g_iWearer=1-g_iWearer;
-                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "relay_wearer="+(string)g_iWearer, "");
+                        llLinksetDataWrite("relay_wearer",(string)g_iWearer);
                         if(g_iWearer)llMessageLinked(LINK_SET, NOTIFY, "0Wearer access now allowed", kAv);
                         else llMessageLinked(LINK_SET, NOTIFY, "0Wearer access now denied", kAv);
                     } else if(sMsg == Checkbox(g_iHelplessMode, "Helpless")){
                         g_iHelplessMode = 1-g_iHelplessMode;
-                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "relay_helpless="+(string)g_iHelplessMode,"");
+                        llLinksetDataWrite("relay_helpless",(string)g_iHelplessMode);
                     } else if(sMsg == Checkbox(g_iTrustOwners, "Trust Owners")){
-                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "relay_trustowner="+(string)((g_iTrustOwners=1-g_iTrustOwners)), "");
+                        g_iTrustOwners=1-g_iTrustOwners;
+                        llLinksetDataWrite("relay_trustowner",(string)g_iTrustOwners);
                     } else if(sMsg == Checkbox(g_iTrustTrusted, "Trust Trusted")){
-                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "relay_trusttrust="+(string)((g_iTrustTrusted=1-g_iTrustTrusted)),"");
+                        g_iTrustTrusted=1-g_iTrustTrusted;
+                        llLinksetDataWrite("relay_trusttrust",(string)g_iTrustTrusted);
                     }
                     @noaccess;
-                    if(sMsg == "REFUSE" && (iAuth == CMD_OWNER || iAuth==CMD_WEARER) && !g_iHelplessMode){
+                    if(sMsg == "REFUSE" && (iAuth == CMD_OWNER || kAv == g_kWearer) && !g_iHelplessMode){
                         llMessageLinked(LINK_SET, CMD_RELAY_SAFEWORD, "safeword", "");
                     }
 
@@ -526,49 +624,35 @@ state active
                     }
                 }
             }
-        } else if(iNum == LM_SETTING_RESPONSE){
+        } else if (iNum == RLV_ON) {
+            // start listener for !pong
+            integer i;
+//            llOwnerSay("oc_relay:RLV ON start listener for ping/pong, mode is "+(string)g_iMode);
+            if (g_iMode) {
+                RELAY_LISTENER = llListen(RLV_RELAY_CHANNEL, "", NULL_KEY, "");
+                for (i=0;i<llGetListLength(g_lPendingReapply);i++) {
+                    // ping the sources
+                    key kSource = llList2Key(g_lPendingReapply,i);
+                    llRegionSayTo(kSource, RLV_RELAY_CHANNEL,"ping,"+(string)kSource+",ping,ping");
+//                    llOwnerSay("oc_relay:RLV ON ping,"+(string)kSource+",ping,ping");
+                }
+                // pong timer
+                llSetTimerEvent(30);
+            }
+        } else if (iNum == RLV_REFRESH) {
+//            llOwnerSay("oc_relay:RLV_REFRESH");
+        } else if (iNum == LM_SETTING_RESPONSE){
             // Detect here the Settings
             list lSettings = llParseString2List(sStr, ["_","="],[]);
-
-
-            //integer ind = llListFindList(g_lSettingsReqs, [llList2String(lSettings,0)+"_"+llList2String(lSettings,1)]);
-            //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
-
-
-            if(llList2String(lSettings,0)=="global"){
-                if(llList2String(lSettings,1)=="locked"){
-                    g_iLocked=llList2Integer(lSettings,2);
-                }
-            } else if(llList2String(lSettings,0) == "relay"){
-                if(llList2String(lSettings,1) == "mode"){
-                    g_iMode=llList2Integer(lSettings,2);
-
-                    if(g_iMode==0){
-                        llListenRemove(RELAY_LISTENER);
-                    } else {
-                        RELAY_LISTENER = llListen(RLV_RELAY_CHANNEL, "", NULL_KEY, "");
-                    }
-                } else if(llList2String(lSettings,1) == "wearer"){
-                    g_iWearer=(integer)llList2String(lSettings,2);
-                } else if(llList2String(lSettings,1) == "helpless"){
-                    g_iHelplessMode = (integer)llList2String(lSettings,2);
-                    // Perform sanity check on helpless mode
-                    HelplessChecks();
-                } else if(llList2String(lSettings,1) == "trustowner"){
-                    g_iTrustOwners = (integer)llList2String(lSettings,2);
-                } else if(llList2String(lSettings,1) == "trusttrust"){
-                    g_iTrustTrusted=(integer)llList2String(lSettings,2);
-                }
-            } else if(llList2String(lSettings,0)=="auth"){
+            
+            if(llList2String(lSettings,0)=="auth"){
                 if(llList2String(lSettings,1)=="owner"){
                     g_iHasOwners=TRUE;
                     list lTmp = llParseString2List(llList2String(lSettings,2), [","],[]);
                     if(llGetListLength(lTmp)==1 && llList2Key(lTmp,0)==g_kWearer)g_iHasOwners=FALSE;
                     if(lTmp == [])g_iHasOwners=FALSE;
-
                 }
             }
-
             if(sStr=="settings=sent"){
                 if(!g_iWearer && !g_iHasOwners){
                     g_iWearer=TRUE;
@@ -579,40 +663,37 @@ state active
         } else if(iNum == LM_SETTING_DELETE){
             // This is recieved back from settings when a setting is deleted
             list lSettings = llParseString2List(sStr, ["_"],[]);
-            if(llList2String(lSettings,0)=="global"){
-                if(llList2String(lSettings,1) == "locked") g_iLocked=FALSE;
-            } else if(llList2String(lSettings,0)=="auth"){
+            if(llList2String(lSettings,0)=="auth"){
                 if(llList2String(lSettings,1)=="owner"){
                     if(!g_iWearer){
-                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "relay_wearer=1","");
+                        g_iWearer = 1;
+                        llLinksetDataWrite("relay_wearer",(string)g_iWearer);
                     }
                     g_iHasOwners=FALSE;
                 }
             }
-        } else if(iNum == CMD_SAFEWORD){
-            // Process safeword, can be removed, is done by SafeWord() in oc_rlvsys sending RLV_CLEAR
-            //llMessageLinked(LINK_SET, CMD_RELAY_SAFEWORD, "safeword", "");
+        } else if(iNum == LSD_REQUEST){
+            llMessageLinked(LINK_SET, LSD_RESPONSE, LSDPrefix,"");
         } else if(iNum == RLV_CLEAR){
-            llMessageLinked(LINK_SET, CMD_RELAY_SAFEWORD, "","");
-        } else if(iNum == CMD_RELAY_SAFEWORD){
             if(g_iHelplessMode)return;
-            Release();
+            ReleaseAll();
+            g_lAllowedSources = [];
             integer iOldMode=g_iMode;
             g_iMode=0;
-            if(!g_iLocked)RLV("@detach=y");
             llMessageLinked(LINK_SET, NOTIFY,"0Relay temporarily suppressed for 30 seconds due to safeword or clear all.", g_kWearer);
             llSleep(30);
             g_iMode=iOldMode;
             llMessageLinked(LINK_SET,NOTIFY, "0 Relay settings have been restored.",g_kWearer);
         } else if(iNum == REBOOT){
-            if((Source=="" || Source==NULL_KEY) || sStr=="reboot --f")
+            if(sStr=="reboot")
                 llResetScript();
         }
-        //llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
     }
 
     listen(integer c, string w, key id, string msg) {
-        if (Source) { if (Source != id) return; } // already grabbed by another device
+//        if(llListFindList(g_lDisallowedSources, [id]) >= 0){
+//            return; // Dont listen to disallowed sources
+//        }
         integer iWillPrompt=FALSE;
         if(g_iMode==MODE_ASK){
             if(g_kPendingSource == id){
@@ -620,17 +701,27 @@ state active
                     g_lPendingRLV+=msg;
                 return;
             }
-
             if(llListFindList(g_lAllowedSources, [id]) ==-1){
                 iWillPrompt=TRUE;
             }
-
-
         }
-
         // Strip lists if too long
         if(llGetListLength(g_lAllowedSources)>5)g_lAllowedSources = llList2List(g_lAllowedSources,0,4);
         if(llGetListLength(g_lDisallowedSources)>5)g_lDisallowedSources = llList2List(g_lDisallowedSources,0,4);
-        Process(msg,id, iWillPrompt); // Prompt is moved inside of PROCESS
+        Process(msg, id, iWillPrompt); // Prompt is moved inside of PROCESS
+    }
+    
+    linkset_data( integer action, string name, string value ){ 
+//        llOwnerSay("LSD: "+name+"="+value); 
+        if (name == "relay_mode") {
+            g_iMode=(integer)value;
+//            llOwnerSay("oc_relay:mode set "+(string)g_iMode);
+            if(g_iMode==0){
+                llListenRemove(RELAY_LISTENER);
+                RELAY_LISTENER = 0;
+            } else {
+                if (RELAY_LISTENER == 0) RELAY_LISTENER = llListen(RLV_RELAY_CHANNEL, "", NULL_KEY, "");
+            }
+        }
     }
 }
