@@ -195,7 +195,7 @@ integer LabelsCount() {
         } else if (sLabel == "LabelBase") g_lLabelBaseElements += iLink;
     }
     
-    if (bMultiLine && llGetListLength(lSingleParamLinks) > 0) // if we have multible lines, check if all prims are correctly named
+    if (bMultiLine && llGetListLength(lSingleParamLinks) > 0) // if we have multiple lines, check if all prims are correctly named
     {
         g_sErrorMsg += "Error! Some of your label prims don't have the line parameter in the name! (Should be: MeshLabel~num~line) \n";
         integer i;
@@ -208,7 +208,7 @@ integer LabelsCount() {
         ok = FALSE;
     }
     
-    if (bMultiLine && llListFindList(g_lLabelLinks,[""]) != -1) llOwnerSay("NonConsecutive lines");
+    if (bMultiLine && llListFindList(g_lLabelLinks,[""]) != -1)
     {
         g_sErrorMsg += "Error! Line numbers must be consecutive starting at 0.\n";
         ok = FALSE;
