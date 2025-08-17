@@ -20,6 +20,9 @@ Kristen Mynx -
 Nikki Lacrima -
         Sept 2024   -   Implemented Yosty7b3's menu streamlining, see pr#963 
         July 2025   -   Removed ping/pong, handled by relay
+        Aug  2025   -   CMD_RELAY_SAFEWORD shall not clear collar restrictions
+                        Clean up "clear" handling and handle clear after g_iRlvActive set to 0 to allow clearing g_lRestrictions
+                        removed CMD_ADDSRC and CMD_REMSRC (handled in relay)
 
 */
 
@@ -53,7 +56,7 @@ integer CMD_WEARER = 503;
 integer CMD_EVERYONE = 504;
 integer CMD_RLV_RELAY = 507;
 integer CMD_SAFEWORD = 510;
-integer CMD_RELAY_SAFEWORD = 511;
+//integer CMD_RELAY_SAFEWORD = 511;
 //integer CMD_BLOCKED = 520;
 
 //integer POPUP_HELP = 1001;
@@ -110,9 +113,6 @@ list g_lBaked=[]; //list of restrictions currently in force
 key g_kSitter=NULL_KEY;
 key g_kSitTarget=NULL_KEY;
 
-integer CMD_ADDSRC = 11;
-integer CMD_REMSRC = 12;
-
 /*
 integer g_iProfiled;
 Debug(string sStr) {
@@ -128,6 +128,7 @@ Debug(string sStr) {
 */
 
 DoMenu(key kID, integer iAuth){
+llScriptProfiler( PROFILE_SCRIPT_MEMORY );
     string sPrompt = "\n[Remote Scripted Viewer Controls]\n";
     if (g_iRlvActive) {
         if (g_iRlvVersion) sPrompt += "\nRestrainedLove API: RLV v"+g_sRlvVersionString;
@@ -138,6 +139,9 @@ DoMenu(key kID, integer iAuth){
         else sPrompt += "\nRLV appears to be disabled in the viewer's preferences.\n\n[ON] attempts another RLV handshake with the viewer.";
         sPrompt += "\n\n[OFF] will prevent the %DEVICETYPE% from attempting another \"@versionnew=293847\" handshake at the next login.\n\nNOTE: Turning RLV off here means that it has to be turned on manually once it is activated in the viewer.";
     }
+llScriptProfiler( PROFILE_NONE );
+       // display memory usage...
+    sPrompt +="\nMemory used: " + (string)llGetSPMaxMemory() + " bytes, total memory: " + (string)llGetMemoryLimit() + " bytes.";
     list lButtons;
     if (g_iRlvActive) {
         lButtons = llListSort(g_lMenu, 1, TRUE);
@@ -212,7 +216,6 @@ AddRestriction(key kID, string sBehav) {
     if (! ~iSource ) {  //if this is a restriction from a new source
         g_lRestrictions += [kID,""];
         iSource=-2;
-        if ((key)kID) llMessageLinked(LINK_SET, CMD_ADDSRC,"",kID);  //tell relay script we have a new restriction source
     }
     string sSrcRestr = llList2String(g_lRestrictions,iSource+1);
     //Debug("AddRestriction 2.1");
@@ -252,7 +255,6 @@ RemRestriction(key kID, string sBehav) {
         if (~iRestr) {   //if the restriction is in the list
             if (llGetListLength(lSrcRestr)==1) {  //if it is the only restriction in the list
                 g_lRestrictions=llDeleteSubList(g_lRestrictions,iSource, iSource+1);  //remove the restrictions list
-                if ((key)kID) llMessageLinked(LINK_SET, CMD_REMSRC,"",kID);    //tell the relay the source has no restrictions
             } else {                              //else, the source has other restrictions
                 lSrcRestr=llDeleteSubList(lSrcRestr,iRestr,iRestr);                 //delete the restriction from the list
                 g_lRestrictions=llListReplaceList(g_lRestrictions,[llDumpList2String(lSrcRestr,"§")] ,iSource+1,iSource+1);//store the list in the sources restrictions list
@@ -527,7 +529,7 @@ state active
                     setRlvState();
                 }
             }
-        } else if (iNum == CMD_SAFEWORD || iNum == CMD_RELAY_SAFEWORD) SafeWord("");
+        } else if (iNum == CMD_SAFEWORD) SafeWord("");
         else if (iNum==RLV_QUERY) {
             if (g_iRlvActive) llMessageLinked(LINK_SET, RLV_RESPONSE, "ON", "");
             else llMessageLinked(LINK_SET, RLV_RESPONSE, "OFF", "");
@@ -554,7 +556,7 @@ state active
             }
         }
         else if (iNum == REBOOT && sStr == "reboot") llResetScript();
-        else if (g_iRlvActive) {
+        else if (g_iRlvActive || sStr == "clear") { // Handle clear commands even after RLV turned off
             if (iNum == RLV_CMD) {
                 //Debug("Received RLV_CMD: "+sStr+" from "+(string)kID);
                 list lCommands=llParseString2List(llToLower(sStr),[","],[]);
@@ -575,22 +577,14 @@ state active
                         } else if (~iSource) {   //if this is a known source
                             //Debug("Clearing restrictions:\nrestrictions: "+sVal+"\nfor key: "+(string)kID+"\nindex: "+(string)iSource);
                             list lSrcRestr=llParseString2List(llList2String(g_lRestrictions,iSource+1),["§"],[]); //get a list of this source's restrictions
-                            list lRestrictionsToRemove;
-
-                            while (llGetListLength(lSrcRestr)) {//loop through all of this source's restrictions and store them in a new list
-                                string  sBehav=llList2String(lSrcRestr,-1);  //get the name of the restriction from the list
-                                if (sVal=="" || llSubStringIndex(sBehav,sVal)!=-1) {  //if the restriction to remove matches the start of the behaviour in the list, or we need to remove all of them
+                            integer ix = 0;
+                            for (ix = 0; ix < llGetListLength(lSrcRestr); ix++) {//loop through all of this source's restrictions
+                                string  sBehav=llList2String(lSrcRestr,ix);  //get the name of the restriction from the list
+                                 //if the restriction to remove matches the start of the behaviour in the list, or we need to remove all of them
+                                 if (sVal=="" || llSubStringIndex(sBehav,sVal)!=-1) { 
                                     //Debug("Clearing restriction "+sBehav+" for "+(string)kID);
-                                    lRestrictionsToRemove+=sBehav;
-                                    //RemRestriction(kID,sBehav); //remove the restriction from the list
+                                    RemRestriction(kID,sBehav); //remove the restriction from the list
                                 }
-                                lSrcRestr=llDeleteSubList(lSrcRestr,-1,-1);
-                            }
-                            lSrcRestr=[]; //delete the list to free memory
-                            //Debug("removing restrictions:"+llDumpList2String(lRestrictionsToRemove,"|")+" for "+(string)kID);
-                            while(llGetListLength(lRestrictionsToRemove)){
-                                RemRestriction(kID,llList2String(lRestrictionsToRemove,-1)); //remove the restriction from the list
-                                lRestrictionsToRemove=llDeleteSubList(lRestrictionsToRemove,-1,-1);
                             }
                         }
                     } else {         //perform other command
