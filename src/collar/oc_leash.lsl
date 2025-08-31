@@ -18,17 +18,31 @@ Medea (medea.destiny)
                 so that the strict leash restrictions do not instantly get removed
                 when leash holder is absent. Time buffer now functions as intended and 
                 is extended from 15 to 60 seconds to give leash holder time after a 
-                teleport to send leashee a tp lure.         
+                teleport to send leashee a tp lure.  
+    Feb 2025    -  Added castray function to test for leasher being in line of sight
+                before releashing.  
+    May 2025    - Removed g_iRezAuth and object_rez events which appear to be dead code
+                intended for unimplemented post rezzing function.   
+                - Changed menuprompt to use g_sLeashedToName rather than NameURI as this
+                returns object name if not an agent in sim, thus returning a blank when
+                leasher is an avatar but not in sim.
+                - Minor streamlining of menu 
+                - Streamlined leashholder inventory search and trigger it only on inventory
+                change and state_entry rather than rechecking on menu 
+                -  Added feature to teleport leashee to leashholder if leashee gets
+                stuck behind a wall etc. and is unable to move 
+    Jun 2025    - Expanded castray function for releash to handle releashing to seated avatar
+                - Commented out DebugOutput function and associated LINK_CMD_DEBUG use to save
+                memory in general use as this is only used for debugging.
 Nikki Larima 
-    Nov 2023    - Remove processing of "runaway" command string, handled by CMD_SAFEWORD
+    Nov 2023    - Remove processing of "runaway" command string, handled by CMD_SATEWORD
                   implemented Yosty7b3's menu streamlining, see pr#963    
-    Oct 2024    - Stop g_iAwayCounter from clearing restrictions when nothing has changed    
 
 Licensed under the GPLv2.  See LICENSE for full details. 
 https://github.com/OpenCollarTeam/OpenCollar               
 */
 
-string g_sScriptVersion = "8.4";
+string g_sScriptVersion = "8.3";
 integer LINK_CMD_DEBUG=1999;
 
 // ------ TOKEN DEFINITIONS ------
@@ -122,9 +136,12 @@ string g_sSettingToken = "leash_";
 //string g_sGlobalToken = "global_";
 
 integer g_iPassConfirmed;
-integer g_iRezAuth;
+//integer g_iRezAuth;
 
 string g_sCheck;
+
+integer g_iVelCount;
+
 
 //realleash variables
 integer g_iStrictModeOn=FALSE; //default is Real-Leash OFF
@@ -431,6 +448,7 @@ DoUnleash(integer iDelSettings) {
 
 YankTo(key kIn){
     llMoveToTarget(llList2Vector(llGetObjectDetails(kIn, [OBJECT_POS]), 0), 0.5);
+   // llOwnerSay("m2t on yankto");
     if (llGetAgentInfo(g_kWearer)&AGENT_SITTING) llMessageLinked(LINK_SET, RLV_CMD, "unsit=force", "");
     llSleep(2.0);
     llStopMoveToTarget();
@@ -454,7 +472,7 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
         sMessage = llToLower(sMessage);  //convert sMessage to lower case for caseless comparisson
         //debug(sMessage);
         if (sMessage=="leashmenu" || sMessage == "menu leash"){
-            if(g_sLeashHolder=="na")LHSearch(); // Try to find the leash holder before showing the menu if leash holder was not found at init.
+           // if(g_sLeashHolder=="na")LHSearch(); // Let's do this on state entry and changed inventory only, not every time the menu is used if it's not found.
             list lButtons;
             if (kMessageID != g_kWearer) lButtons += "Grab";// Only if not the wearer.
             else lButtons += ["-"];
@@ -465,9 +483,7 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
             else lButtons += "-";
             if (kMessageID == g_kLeashedTo) lButtons += "Yank";//only if leash holder
             else lButtons += "-";
-            lButtons += ["Follow"];
-            lButtons += ["Anchor","Pass"];
-            lButtons += ["Length"];
+            lButtons += ["Follow","Anchor","Pass","Length"];
             if(g_sLeashHolder!="na")
                 lButtons += ["Give Holder"];
             lButtons += g_lButtons;
@@ -476,7 +492,7 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
             if (g_kLeashedTo) {
                 if (g_bFollowMode) sPrompt += "\nFollowing: ";
                 else sPrompt += "\nLeashed to: ";
-                sPrompt += NameURI(g_kLeashedTo);
+                sPrompt += g_sLeashedToName;
             } else if (!g_iStay) sPrompt += "\n%WEARERNAME% can move freely.";
             if (g_iStay) sPrompt += "\n%WEARERNAME% can't move on their own.";
             Dialog(kMessageID, sPrompt, lButtons, [BUTTON_UPMENU], 0, iAuth, "MainDialog");
@@ -629,6 +645,7 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
         }
     }
 }
+/*
 DebugOutput(key kID, list ITEMS){
     integer i=0;
     integer end=llGetListLength(ITEMS);
@@ -637,21 +654,20 @@ DebugOutput(key kID, list ITEMS){
         final+=llList2String(ITEMS,i)+" ";
     }
     llInstantMessage(kID, llGetScriptName() +final);
-}
-LHSearch(){
-    integer iBegin=0;
-    integer iEnd = llGetInventoryNumber(INVENTORY_OBJECT);
-    if(iEnd == 0)g_sLeashHolder="na";
-    else{
-        for(iBegin=0;iBegin<iEnd;iBegin++){
-            string sItem  = llGetInventoryName(INVENTORY_OBJECT,iBegin);
-            if(llSubStringIndex(llToLower(sItem),"leashholder")!=-1){
-                g_sLeashHolder=sItem;
-                sItem="";
-                iBegin=0;
-                iEnd=0;
-                return;
-            }
+}*/
+LHSearch()
+{
+    integer num=llGetInventoryNumber(INVENTORY_OBJECT);
+    g_sLeashHolder="na";
+    string sItem;
+    while(num)
+    {
+        --num;
+        sItem=llGetInventoryName(INVENTORY_OBJECT,num);
+        if(llSubStringIndex(llToLower(sItem),"leashholder")!=-1)
+        {
+            num=0;
+            g_sLeashHolder=sItem;
         }
     }
 }
@@ -715,6 +731,23 @@ state active
             dtext("timer : iIsInSimOrJustOutside && VecDist < (60+(iLength=3))");
             if(!g_iLeasherInRange) 
             { //and the leasher was previously not in range
+            
+                key kRoot=llList2Key(llGetObjectDetails(g_kLeashedTo,[OBJECT_ROOT]),0);
+                //Correct postion for castray check when leasher is seated
+                key CRTarg;
+                vector CRPos;
+                if(kRoot!=g_kLeashedTo)
+                {
+                    CRPos=llList2Vector(llGetObjectDetails(kRoot,[OBJECT_POS]),0);
+                    CRTarg=kRoot;
+                }
+                else
+                {
+                    CRPos=vLeashedToPos;
+                    CRTarg=g_kLeashedTo;
+                }
+                if(llList2Key(llCastRay(llGetPos()-<0,0,0.5>,CRPos,[RC_DETECT_PHANTOM,FALSE,RC_DATA_FLAGS,RC_GET_ROOT_KEY]),0)!=CRTarg) return;
+                // check for line of sight between collar wearer and target, do not releash if no line of sight. Hopefully this involves through-the-wall grabs!
                 if (g_iAwayCounter) 
                 {
                     g_iAwayCounter = -1;
@@ -730,7 +763,11 @@ state active
                 dtext("Status: OK");
                 g_vPos = vLeashedToPos;
                 g_iTargetHandle = llTarget(g_vPos, (float)g_iLength);
-                if (g_vPos != ZERO_VECTOR) llMoveToTarget(g_vPos, 0.8);
+                if (g_vPos != ZERO_VECTOR)
+                {
+                   // llOwnerSay("restart move to target on timer");
+                     llMoveToTarget(g_vPos, 0.8);
+                }
                 ApplyRestrictions();
                 
                 if(!g_iAlreadyMoving) llMessageLinked(LINK_SET, LEASH_START_MOVEMENT,"","");
@@ -753,25 +790,27 @@ state active
                     //step 1, set AwayCounterto 0, 3 second timer.
                     llSetTimerEvent(3);
                     g_iAwayCounter=0;
-                    dtext("Leash holder was previously in range");
+                   // llOwnerSay("Leash holder was previously in range");
                 }
                 else if(g_iAwayCounter==0)
                 {
                     //3 seconds after first fail to locate, disable leash motion
+                    g_iLeasherInRange=FALSE;
                     llTargetRemove(g_iTargetHandle);
                     llStopMoveToTarget();
+                   // llOwnerSay("stop move to target on 3 second fail to locate");
                     if(!g_bFollowMode)
                         llMessageLinked(LINK_SET, CMD_PARTICLE, "unleash", g_kLeashedTo);
                     dtext("No leash holder in range\n* Stopping leash particles");
                     if(g_iAlreadyMoving)llMessageLinked(LINK_SET, LEASH_END_MOVEMENT,"","");
                     g_iAwayCounter=llGetUnixTime()+60;
-                    g_iLeasherInRange=FALSE;
+                    
                     //set awaycounter to +60 seconds.
                 }
             } 
             else 
             {
-                if (g_iAwayCounter>0 && g_iAwayCounter <= llGetUnixTime()) 
+                if (g_iAwayCounter <= llGetUnixTime()) 
                 {
                     //indicate out of range, clear realleash restrictions, reset awaycounter
                     
@@ -928,7 +967,7 @@ state active
             if(sMessage == "ver")onlyver=1;
             llInstantMessage(kMessageID, llGetScriptName() +" SCRIPT VERSION: "+g_sScriptVersion);
             if(onlyver)return; // basically this command was: <prefix> versions
-            DebugOutput(kMessageID, [" LEASHED TO:", g_kLeashedTo, g_sLeashedToName]);
+        /*    DebugOutput(kMessageID, [" LEASHED TO:", g_kLeashedTo, g_sLeashedToName]);
             DebugOutput(kMessageID, [" LENGTH:", g_iLength]);
             DebugOutput(kMessageID, [" STAY:", g_iStay]);
             DebugOutput(kMessageID, [" LEASHER IN RANGE:", g_iLeasherInRange]);
@@ -937,7 +976,7 @@ state active
             DebugOutput(kMessageID, [" COMMAND GIVER:",g_kCmdGiver]);
             DebugOutput(kMessageID, [" LEASH COMMANDER ID:",g_kLeashCmderID]);
             DebugOutput(kMessageID, [" LEASHED TO AVI:",g_bLeashedToAvi]);
-            DebugOutput(kMessageID, [" LEASH HOLDER:",g_sLeashHolder]);
+            DebugOutput(kMessageID, [" LEASH HOLDER:",g_sLeashHolder]);*/
         }
     }
 
@@ -963,21 +1002,73 @@ state active
         //to prevent to get stay in the target events i added a check on g_kLeashedTo is NULL_KEY
         if(g_kLeashedTo) {
             vector vNewPos = llList2Vector(llGetObjectDetails(g_kLeashedTo,[OBJECT_POS]),0);
+            if(llVecMag(llGetVel())<1) g_iVelCount++;
+            else g_iVelCount=0;
+            if(g_iVelCount>6)
+            {
+                if(llList2Key(llGetObjectDetails(g_kWearer,[OBJECT_ROOT]),0)!=g_kWearer)
+                { //Do not process this if sitting!
+                    g_iVelCount=0;
+                    jump skipall;
+                }
+                if(llList2Key(llCastRay(llGetPos()-<0,0,0.5>,vNewPos,[RC_DETECT_PHANTOM,FALSE,RC_DATA_FLAGS,RC_GET_ROOT_KEY]),0)==g_kLeashedTo) jump skipall; //check this is caused by a blockage not by dangling, fighting the leash etc.
+                //resolve stuck;
+                list t=[<1.5,0,0>,<-1.5,0,0>,<0,1.5,0>,<0,-1.5,0>];
+                list floorfind;
+                integer c;
+                vector vTelP;
+                rotation rTargetRot=llList2Rot(llGetObjectDetails(g_kLeashedTo,[OBJECT_ROT]),0);
+                while(c<4) // check space 1.5m north, south, east or west of target is free of obstructions and teleport
+                {
+                    vTelP=vNewPos+(llList2Vector(t,c)*rTargetRot);
+                    if(llList2Integer(llCastRay(vNewPos,vTelP,[RC_DETECT_PHANTOM,FALSE,RC_MAX_HITS,1]),-1)==0)
+                    {
+                        if(llList2Integer(llGetParcelDetails(vTelP,[PARCEL_DETAILS_TP_ROUTING]),0)==2)
+                        { //confirm TP isn't blocked
+                            floorfind=llCastRay(vTelP,vTelP-<0,0,3>,[RC_DETECT_PHANTOM,FALSE,RC_MAX_HITS,1]);
+                            if(llList2Integer(floorfind,-1)>0)
+                            { 
+                                c=4;
+                                vTelP+=llGetRegionCorner();
+                                llOwnerSay("@tpto:"+(string)vTelP.x+"/"+(string)vTelP.y+"/"+(string)vTelP.z+"=force");
+                                g_iVelCount=0;
+                            }
+                        }
+                    }
+                    ++c;
+                }
+                if(g_iVelCount!=0)
+                {  //No clear spots found to teleport to, switch off move to target.
+                    llStopMoveToTarget();
+                    g_iVelCount=0;
+                    llTargetRemove(g_iTargetHandle);
+                    llMessageLinked(LINK_THIS,NOTIFY,"1Leash movement blocked, unleashing until back in line of sight",g_kLeashedTo);
+                    g_iLeasherInRange=FALSE;
+                    return;
+                }
+              @skipall;  
+            }
+            
             if (g_vPos != vNewPos) {
                 llTargetRemove(g_iTargetHandle);
                 g_vPos = vNewPos;
                 g_iTargetHandle = llTarget(g_vPos, (float)g_iLength);
             }
-            if (g_vPos != ZERO_VECTOR){
+            if (g_vPos != ZERO_VECTOR && g_iLeasherInRange==TRUE){
+                
+                // Added check for inrange because removing target and stopping move to target doesn't actually seem to stop not_at_target being triggered at least one more time.
+
                 // The below code was causing users to fly if the z height of the person holding the leash was different.
                 
                 
                 //vector currentPos = llGetPos();
                 //g_vPos = <g_vPos.x, g_vPos.y, currentPos.z>;
                 llMoveToTarget(g_vPos,1.0);
+               
             }
             else{
                 llStopMoveToTarget();
+                g_iVelCount=0;
                 llTargetRemove(g_iTargetHandle);
             }
             
@@ -996,15 +1087,16 @@ state active
             llTakeControls(CONTROL_ROT_LEFT | CONTROL_ROT_RIGHT | CONTROL_LBUTTON | CONTROL_ML_LBUTTON, FALSE, FALSE);
         }
     }
-    object_rez(key id) {
+/*    object_rez(key id) {
         //g_iLength=3;
         // The above code overrides user preferences for leash length.
         DoLeash(id, g_iRezAuth, [],TRUE);
-    }
+    }*/
 
     changed (integer iChange){
         if (iChange & CHANGED_OWNER){
             g_kWearer = llGetOwner();
         }
+        if(iChange & CHANGED_INVENTORY) LHSearch();
     }
 }
