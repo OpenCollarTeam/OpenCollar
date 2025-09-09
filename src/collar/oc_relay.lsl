@@ -238,6 +238,7 @@ UserCommand(integer iNum, string sStr, key kID) {
             if(sChangetype == "refuse")sReply +="safeworded!";
             else if(sChangetype == "helpless")sReply += "helpless toggled to "+tf(g_iHelplessMode);
             else if(sChangetype == "wearer")sReply += "wearer access toggled to "+tf(g_iWearer);
+            else if(sChangetype == "pending")sReply += "pending ask source dialog reopened";
             else sReply += "mode set to "+sChangetype;
             llMessageLinked(LINK_SET, NOTIFY, "0"+sReply, kID);
 
@@ -275,7 +276,7 @@ Reapply(key kSourceId) {
     integer ix = llListFindList(g_lPendingReapply,[kSourceId]);
     // Only reapply sources in g_lPendingReapply list
     if (ix >= 0) {
-        llOwnerSay("Pong and reapply: "+(string)kSourceId);
+//        llOwnerSay("Pong and reapply: "+(string)kSourceId);
         // first try to resit
         if( kSourceId == g_kForceSitter && g_kSitTarget != NULL_KEY ) {
             RLV("@sit:"+(string)g_kSitTarget+"=force", kSourceId);
@@ -326,7 +327,7 @@ AddRestriction(key kID, string sBehav) {
     string sSrcRestr = LSDRead("source_"+(string)kID);
     //add new sources to sources list
     if (sSrcRestr == "") {  //if this is a restriction from a new source
-        if (llGetListLength(llLinksetDataFindKeys(LSDPrefix+"_source_.*", 0, 10)) > 5) {
+        if (llGetListLength(llLinksetDataFindKeys(LSDPrefix+"_source_.*", 0, 20)) > 14) {
             llOwnerSay("Capping number of RLV sources, dropping: "+(string)kID);
             return;
         }
@@ -379,6 +380,7 @@ RelayClear() {
 
 PromptForSource(key kID){    
     Dialog(llGetOwner(), "[Relay]\n\nObject Name: "+llKey2Name(kID)+"\nObject ID: "+(string)kID+"\nObject Owner: secondlife:///app/agent/"+(string)g_kObjectOwner+"/about\n\nIs requesting to use your RLV Relay, do you want to allow it?", ["Yes", "No"], [], 0, CMD_WEARER, "AskPrompt");
+    llSetTimerEvent(60);
 }
 
 ///param id=source
@@ -394,7 +396,7 @@ Process(string msg, key id, integer iWillPrompt){
     string command;
     integer nc = llGetListLength(commands);
     // Any command from a ping object will reapply restrictions
-    if (llListFindList(g_lPendingReapply,[(string)id]) >= 0)  {
+    if (llListFindList(g_lPendingReapply,[id]) >= 0)  {
 //        llOwnerSay("Command from pong source, set as allowed and reapply");
         g_lAllowedSources = [id] + g_lAllowedSources;
         Reapply(id);
@@ -419,14 +421,8 @@ Process(string msg, key id, integer iWillPrompt){
                 string comtype = llList2String(subargs, 1);
                 if (comtype == "n" || comtype == "add") AddRestriction(id, behav);
                 if (comtype == "y" || comtype == "rem") RemRestriction(id, behav);
-            }
-            if (!isVersionCheck) {
-                if (iWillPrompt) {
-                    DoPrompt = iWillPrompt;
-                } else {
-                    if (llListFindList(g_lAllowedSources,[id]) == -1) g_lAllowedSources = [id] + g_lAllowedSources;
-                }
-            }
+            } 
+            else DoPrompt = TRUE; // We just skipped a rlv @command, dopromt before returning !
         }
         // relay meta commands
         else if (command=="!pong") { Reapply(id); }
@@ -438,17 +434,21 @@ Process(string msg, key id, integer iWillPrompt){
     }
 
     if(DoPrompt){
-        // New source pending for ask approval, do not prompt for disallowed sources
-        if (llListFindList(g_lDisallowedSources,[id])==-1 && llListFindList(g_lPendingSourceList,[id])==-1) {
-            g_lPendingSourceList=g_lPendingSourceList+[id];
-            LSDWrite("ask_"+(string)id,msg);
-            if (llGetListLength(g_lPendingSourceList)==1) {
-                g_kObjectOwner = llList2Key(llGetObjectDetails(id, [OBJECT_OWNER]),0);
-                llMessageLinked(LINK_SET, AUTH_REQUEST, "relay", g_kObjectOwner);
-            }
-//            llOwnerSay("new ask source: "+LSDRead("ask_"+(string)id));
+        // New source pending for ask approval, do not prompt for disallowed sources or sources already pending approval
+        if (llListFindList(g_lDisallowedSources,[id])>-1) {
+            llOwnerSay("Trying to ask add a disallowed source - Shouldnt happen");
+            return;
         }
-//        else llOwnerSay("Already in pending list, dropped!");
+        if (llListFindList(g_lPendingSourceList,[id])>-1) {
+            llOwnerSay("Trying to ask add an already pending source - Shouldnt happen");
+            return;        
+        }
+        g_lPendingSourceList=g_lPendingSourceList+[id];
+        LSDWrite("ask_"+(string)id,msg);
+        if (llGetListLength(g_lPendingSourceList)==1) {
+            g_kObjectOwner = llList2Key(llGetObjectDetails(id, [OBJECT_OWNER]),0);
+            llMessageLinked(LINK_SET, AUTH_REQUEST, "relay", g_kObjectOwner);
+        }
     }
 }
 
@@ -465,11 +465,12 @@ DoPending(){
     g_lAllowedSources = [kSource]+g_lAllowedSources;
     string msg = LSDRead("ask_"+(string)kSource);
     LSDWrite("ask_"+(string)kSource,"");
-    llOwnerSay("DoPending: "+msg);
+//    llOwnerSay("DoPending: "+msg);
     list messages = llParseString2List(msg,["||"],[]);
     integer ii = 0;
     integer iEnd = llGetListLength(messages);
     for(ii=0;ii<iEnd;ii++){
+//    llOwnerSay("DoPending:Process: "+llList2String(messages,ii));
         Process(llList2String(messages,ii), kSource, FALSE);
     }
     // We have more pending ask sources
@@ -480,12 +481,13 @@ DoPending(){
     }
 }
 
-DenyAskSource() {
+DenyAskSource(integer verbose) {
     key kSource = llList2Key(g_lPendingSourceList,0);
     g_lPendingSourceList=llDeleteSubList(g_lPendingSourceList,0,0);
     g_lDisallowedSources=[kSource]+g_lDisallowedSources;
     LSDWrite("ask_"+(string)kSource,"");
     if (llGetListLength(g_lPendingSourceList)) PromptForSource(llList2Key(g_lPendingSourceList,0));
+    if (verbose) llMessageLinked(LINK_SET, NOTIFY, "0Denying this relay source: "+llKey2Name(kSource), g_kWearer);
 }
 
 default
@@ -540,12 +542,20 @@ state active
 
     timer() {
         // non responding sources removed after 30s
-        integer i = 0;
-        for (i=0; i<llGetListLength(g_lPendingReapply); i++) {
+        if (llGetListLength(g_lPendingReapply)>0) {
+            integer i = 0;
+            for (i=0; i<llGetListLength(g_lPendingReapply); i++) {
 //            llOwnerSay("no pong: "+LSDRead("source_"+llList2String(g_lPendingReapply,i))); 
-            LSDWrite("source_"+llList2String(g_lPendingReapply,i),"");
+                LSDWrite("source_"+llList2String(g_lPendingReapply,i),"");
+            }
+            g_lPendingReapply = [];
+            return;
         }
-        g_lPendingReapply = [];
+        else if (llGetListLength(g_lPendingSourceList)>0) {
+            llOwnerSay("Timeout waiting for source approval");
+            DenyAskSource(1);
+            return;
+        }
         llSetTimerEvent(0);
     }
 
@@ -639,8 +649,7 @@ state active
                         HelplessChecks();
                 } else if(sMenu == "AskPrompt"){
                     if(sMsg == "No"){
-                        llMessageLinked(LINK_SET, NOTIFY, "0Ignoring this relay request!", g_kWearer);
-                        DenyAskSource();
+                        DenyAskSource(1);
                     } else {
                         DoPending();
                     }
@@ -651,7 +660,7 @@ state active
             if(iPos>0){
                 string sMenu = llGetSubString(kID, 0, iPos-1);
                 if(sMenu == "AskPrompt"){
-                    DenyAskSource();
+                    DenyAskSource(1);
                 }
             }
         } else if(iNum == AUTH_REPLY){
@@ -683,7 +692,7 @@ state active
                     // ping the sources
                     key kSource = llList2Key(g_lPendingReapply,i);
                     llRegionSayTo(kSource, RLV_RELAY_CHANNEL,"ping,"+(string)kSource+",ping,ping");
-                    llOwnerSay("oc_relay:RLV ON ping,"+(string)kSource+",ping,ping");
+//                    llOwnerSay("oc_relay:RLV ON ping,"+(string)kSource+",ping,ping");
                 }
                 // pong timer
                 llSetTimerEvent(30);
@@ -737,6 +746,13 @@ state active
 
     listen(integer c, string w, key id, string msg) {
         integer iWillPrompt=FALSE;
+
+        /* Check msg format and recipient */
+        list args = llParseStringKeepNulls(msg,[","],[]);
+        if (llGetListLength(args)!=3) return;
+        if (llList2Key(args,1)!=g_kWearer && llList2Key(args, 1)!=(key)"ffffffff-ffff-ffff-ffff-ffffffffffff") return;
+
+        /* Ask mode */
         if(g_iMode==MODE_ASK){
             // Ignore disallowed sources
             if(llListFindList(g_lDisallowedSources, [id]) >= 0){
@@ -746,7 +762,7 @@ state active
             integer i = llListFindList(g_lPendingSourceList,[id]);
             if(i>-1){
                 key kID = llList2Key(g_lPendingSourceList,i);
-                LSDWrite("ask_"+(string)kID,LSDRead("source_"+(string)kID)+"||"+msg);
+                LSDWrite("ask_"+(string)kID,LSDRead("ask_"+(string)kID)+"||"+msg);
                 return;
             }
             // Prompt if souce not allowed
@@ -754,9 +770,10 @@ state active
                 iWillPrompt=TRUE;
             }
         }
+
         // Strip lists if too long
-        if(llGetListLength(g_lAllowedSources)>10) g_lAllowedSources = llList2List(g_lAllowedSources,0,9);
-        if(llGetListLength(g_lDisallowedSources)>10) g_lDisallowedSources = llList2List(g_lDisallowedSources,0,9);
+        if(llGetListLength(g_lAllowedSources)>15) g_lAllowedSources = llList2List(g_lAllowedSources,0,14);
+        if(llGetListLength(g_lDisallowedSources)>15) g_lDisallowedSources = llList2List(g_lDisallowedSources,0,14);
         Process(msg, id, iWillPrompt); // Prompt is moved inside of PROCESS
     }
     
