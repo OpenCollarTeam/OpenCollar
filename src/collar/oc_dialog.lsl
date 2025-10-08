@@ -339,9 +339,8 @@ integer IsUUIDList(list lTmp)
 {
     integer i=0;
     integer end = llGetListLength(lTmp);
-    key item;
     for(i=0;i<end;i++){
-        item = (key)llList2String(lTmp,i);
+        key item = (key)llList2String(lTmp,i);
         if(item) return TRUE;
     }
     return FALSE;
@@ -351,9 +350,8 @@ list SortUUIDList(list lToSort){
     integer i = 0;
     list lIndexNameList = [];
     integer end = llGetListLength(lToSort);
-    string sButton;
     for(i=0;i<end;i++){
-        sButton = llList2String(lToSort,i);
+        string sButton = llList2String(lToSort,i);
         if(IsLikelyAvatar((key)sButton)){
             if(llGetAgentSize((key)sButton)==ZERO_VECTOR)
                 sButton = NameURI((key)sButton);
@@ -566,7 +564,7 @@ state active
 
 
     sensor(integer num_detected){
-        if(num_detected>24) num_detected=24;
+        //if(num_detected>16) num_detected=16;
         //LL just expanded sensor to up to 32 hits. Thanks LL, but there's a ton of content 
         //out there not designed to cope with that which are gonna stack-heap now. For now at least we'll trim back to 16.
         //emergency fix removed with updated memory handling in sortuuid function
@@ -789,4 +787,3 @@ state inUpdate{
         }
     }
 }
-
