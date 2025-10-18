@@ -62,6 +62,10 @@ Krysten Minx -
 chew -
     Jun 2025    -   Reduced memory footprint: Refactor MuffleText, refactor Dialog, reduce redundant
                     list calls in MenuSetValue, shorten some language strings
+
+Nikki Lacrima   -
+    Oct 2025    -   Respring to parent menu after Force Sit                    
+                    
 */
 string g_sParentMenu = "RLV";
 string g_sSubMenu1 = "Force Sit";
@@ -355,7 +359,7 @@ SetUserExes(key id, integer mask, integer lastmask)
     while(i<7)
     {
         // Equivalent of (1 << i) to test each bit individually
-        maskval=(integer)llPow(2,i);
+        maskval=(1<<i);
         if((mask&maskval)==maskval && (lastmask&maskval)!=maskval) out+=llList2String(lExcepts,i)+":"+(string)id+"=add";
         else if((mask&maskval)!=maskval && (lastmask&maskval)==maskval) out+=llList2String(lExcepts,i)+":"+(string)id+"=rem";
         ++i;
@@ -713,11 +717,8 @@ state active
                     if (sMsg == UPMENU) llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
                     else{
                         UserCommand(iAuth,"sit "+sMsg,kAv);
-                        
-                        // Time-delayed remenu because the sensor misses the object immediately
-                        // after an unsit. Reopen the menu after 3 seconds so the sensor has
-                        // time to detect the newly stood object.
-                        llMessageLinked(LINK_SET,TIMEOUT_REGISTER,"3","remenu_forcesit:"+(string)kAv+":"+(string)iAuth);
+                        // Respring one level up to reduce crashes also removed TIMEOUT handling
+                        llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
                     }
                 } else if (sMenu == "Settings~Camera") {
                     if (sMsg == UPMENU)llMessageLinked(LINK_SET, iAuth,g_sCameraBackMenu, kAv);
@@ -933,13 +934,6 @@ state active
             if (llList2String(lCMD,0) == "sendchat" && llList2Integer(lCMD,2) < 0) {
                 g_bCanChat = llList2Integer(lCMD,1);
                 SetMuffle(g_bMuffle);
-            }
-        } else if (iNum == TIMEOUT_FIRED) {
-            // Timer events from the helper script. Currently used to
-            // re-open the force sit menu after an unsit.
-            list to=llParseString2List(sStr,[":"],[]);
-            if(llList2String(to,0)=="remenu_forcesit"){
-                MenuForceSit((key)llList2String(to,1), (integer)llList2String(to,2));
             }
         }
     }
