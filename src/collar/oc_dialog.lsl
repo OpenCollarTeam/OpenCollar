@@ -532,13 +532,7 @@ state active
         g_sDeviceName = llList2String(llGetLinkPrimitiveParams(1,[PRIM_DESC]),0);
         if (g_sDeviceName == "" || g_sDeviceName =="(No Description)")
             g_sDeviceName = llList2String(llGetLinkPrimitiveParams(1,[PRIM_NAME]),0);
-        list toDelete=llLinksetDataFindKeys("^dialog.temp",0,0);
-        integer i=llGetListLength(toDelete);
-        while(i)
-        {
-            --i;
-            llLinksetDataDelete(llList2String(toDelete,i));
-        }
+        llLinksetDataDeleteFound("^dialog.temp","");
     }
 
     timer() {
@@ -822,3 +816,4 @@ state inUpdate{
         }
     }
 }
+
