@@ -494,7 +494,7 @@ CheckSitTarget() {
     LSDWrite("sittarget", (string)g_kSitTarget);                            
 }
 
-// Startup code, called instead of reset on rez
+// Starup code, called instead of reset on rez
 // Normal behavor on rez is to simply call init()
 // pending sources are cleared, allowed and disallowed lists are kept
 
@@ -519,6 +519,42 @@ init() {
     llLinksetDataDeleteFound("^relay_ask_",""); 
 }
 
+/*
+default
+{
+    on_rez(integer iNum){
+        llResetScript();
+    }
+    state_entry(){
+        llMessageLinked(LINK_SET, ALIVE, llGetScriptName(),"");
+    }
+    link_message(integer iSender, integer iNum, string sStr, key kID){
+        if(iNum == REBOOT){
+            if(sStr == "reboot"){
+                llResetScript();
+            }
+        } else if(iNum == READY){
+            llMessageLinked(LINK_SET, ALIVE, llGetScriptName(), "");
+        } else if(iNum == STARTUP){
+            state active;
+        }
+    }
+
+    changed(integer change)
+    {
+        if(change & CHANGED_OWNER)
+        {
+            llLinksetDataDeleteFound("^relay_",""); 
+            llResetScript();
+        }
+    }
+
+}
+
+
+state active
+*/
+
 default
 {
     state_entry()
@@ -542,7 +578,7 @@ default
             return;
         }
         else if (llGetListLength(g_lPendingSourceList)>0) {
-            llOwnerSay("Timeout waiting for source approval");
+//            llOwnerSay("Timeout waiting for source approval");
             DenyAskSource(1);
             return;
         }
@@ -815,11 +851,11 @@ default
         // Strip lists if too long
         if(llGetListLength(g_lAllowedSources)>15) g_lAllowedSources = llList2List(g_lAllowedSources,0,14);
         if(llGetListLength(g_lDisallowedSources)>15) g_lDisallowedSources = llList2List(g_lDisallowedSources,0,14);
-llScriptProfiler( PROFILE_SCRIPT_MEMORY );
+//llScriptProfiler( PROFILE_SCRIPT_MEMORY );
         Process(msg, id, iWillPrompt); // Prompt is moved inside of PROCESS
-llScriptProfiler( PROFILE_NONE );
+//llScriptProfiler( PROFILE_NONE );
        // display memory usage...
-llOwnerSay("\nMemory used: " + (string)llGetSPMaxMemory() + " bytes, total memory: " + (string)llGetMemoryLimit() + " bytes." +(string)llStringLength(msg));
+//llOwnerSay("\nMemory used: " + (string)llGetSPMaxMemory() + " bytes, total memory: " + (string)llGetMemoryLimit() + " bytes." +(string)llStringLength(msg));
     }
     
     linkset_data( integer action, string name, string value ){ 
