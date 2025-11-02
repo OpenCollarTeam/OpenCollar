@@ -16,7 +16,7 @@ Medea (Medea Destiny)
                         so for now this will toggle between full invisible and part invisible rather than
                         supporting GLTF alpha).  
     Nov 2025        -   added support for 'hidden' desc element in prims to make them stay hidden through
-                        show/hide toggling.
+                        show/hide toggling. issue #1156
                                             
     
     
