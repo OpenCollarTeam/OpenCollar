@@ -69,7 +69,7 @@ showHide(integer show)
     {
         lElements=llParseStringKeepNulls(llList2String(llGetLinkPrimitiveParams(num,[PRIM_DESC]),0),["~"],[]);
         if(show==FALSE && llListFindList(lElements,["nohide"])==-1) Invis(num,TRUE);
-        else if(show==TRUE && llListFindList(lElements,["nohide"])==-1)
+        else if(show==TRUE && llListFindList(lElements,["nohide"])==-1 && llListFindList(lElements,["hidden"])==-1)
         {
             if(llListFindList(lElements, ["OpenLock"])!=-1 && g_iLocked==TRUE)
                  Invis(num,TRUE);
