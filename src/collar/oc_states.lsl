@@ -9,11 +9,14 @@ Medea (Medea Destiny)
     July 2021       -   See issue #587: Added warning when script resets folders script that user
                         should consider cleaning
                         up their #RLV 
-    Sept 2021       -   Tighten timings and number of passes on reboot process and reduced sleep padding.             Jun 2025            -   Moved Show/Hide function here so it is no longer dependent on themes, and 
+    Sept 2021       -   Tighten timings and number of passes on reboot process and reduced sleep padding.             
+    Jun 2025        -   Moved Show/Hide function here so it is no longer dependent on themes, and 
                         added handling of PBR (semi functional due to pathetic script support by LL,
                         llSetLinkGLTFOverride does not actually allow overrides for alpha to be removed
                         so for now this will toggle between full invisible and part invisible rather than
-                        supporting GLTF alpha).                      
+                        supporting GLTF alpha).  
+    Nov 2025        -   added support for 'hidden' desc element in prims to make them stay hidden through
+                        show/hide toggling.
                                             
     
     
