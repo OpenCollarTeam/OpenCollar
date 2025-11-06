@@ -129,7 +129,7 @@ Debug(string sStr) {
 */
 
 DoMenu(key kID, integer iAuth){
-llScriptProfiler( PROFILE_SCRIPT_MEMORY );
+//llScriptProfiler( PROFILE_SCRIPT_MEMORY );
     string sPrompt = "\n[Remote Scripted Viewer Controls]\n";
     if (g_iRlvActive) {
         if (g_iRlvVersion) sPrompt += "\nRestrainedLove API: RLV v"+g_sRlvVersionString;
@@ -140,9 +140,9 @@ llScriptProfiler( PROFILE_SCRIPT_MEMORY );
         else sPrompt += "\nRLV appears to be disabled in the viewer's preferences.\n\n[ON] attempts another RLV handshake with the viewer.";
         sPrompt += "\n\n[OFF] will prevent the %DEVICETYPE% from attempting another \"@versionnew=293847\" handshake at the next login.\n\nNOTE: Turning RLV off here means that it has to be turned on manually once it is activated in the viewer.";
     }
-llScriptProfiler( PROFILE_NONE );
-       // display memory usage...
-    sPrompt +="\nMemory used: " + (string)llGetSPMaxMemory() + " bytes, total memory: " + (string)llGetMemoryLimit() + " bytes.";
+//llScriptProfiler( PROFILE_NONE );
+// display memory usage...
+//    sPrompt +="\nMemory used: " + (string)llGetSPMaxMemory() + " bytes, total memory: " + (string)llGetMemoryLimit() + " bytes.";
     list lButtons;
     if (g_iRlvActive) {
         lButtons = llListSort(g_lMenu, 1, TRUE);
@@ -729,3 +729,4 @@ state inUpdate{
         }
     }
 }
+
