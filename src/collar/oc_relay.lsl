@@ -164,7 +164,7 @@ Menu(key kID, integer iAuth) {
     string sPrompt = "\n[Relay App]\n\nNote: Wearer checkbox will allow or disallow wearer changes to relay\n\n";
     list lButtons = [Checkbox((g_iMode==0), "OFF"), Checkbox((g_iMode==MODE_ASK),"Ask"), Checkbox((g_iMode==MODE_AUTO),"Auto"), Checkbox(g_iWearer, "Wearer")];
     list sources = llLinksetDataFindKeys(LSDPrefix+"_source_.*", 0, 1);
-llScriptProfiler( PROFILE_SCRIPT_MEMORY );
+//llScriptProfiler( PROFILE_SCRIPT_MEMORY );
     if (llGetListLength(sources)>0) {
         list data = llParseString2List(llList2String(sources,0),["_"],[""]);
         key kSourceID = llList2Key(data, 2);
@@ -174,9 +174,9 @@ llScriptProfiler( PROFILE_SCRIPT_MEMORY );
     } else {
         sPrompt += "Source: NONE";
     }
-llScriptProfiler( PROFILE_NONE );
-       // display memory usage...
-    sPrompt +="\nMemory used: " + (string)llGetSPMaxMemory() + " bytes, total memory: " + (string)llGetMemoryLimit() + " bytes.";
+//llScriptProfiler( PROFILE_NONE );
+// display memory usage...
+//    sPrompt +="\nMemory used: " + (string)llGetSPMaxMemory() + " bytes, total memory: " + (string)llGetMemoryLimit() + " bytes.";
 
     if(!g_iWearer){
         lButtons += [Checkbox(g_iHelplessMode, "Helpless")];
