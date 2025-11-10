@@ -54,6 +54,8 @@ medea (medea destiny)
                     with RLV menu
                 -   Removed double menu for (prefix) restrictions
       Jun 2024  -   Extended chat command function above to allow for capitalization of individual restriction names.
+      Nov 2025  -   Fixed correction values for second byte of restrictions to go with bitshift changes in various 
+                    places.
 Nikki Lacrima
       Sept 2024 -   Remove superflous llOwnerSay commands and replace g_lMenuIDs (Yosty patch PR #963)
       Oct  2024 -   Correct off by one bitshift and improve bitpos and bitvalue handling for restriction bitmaps. 
@@ -273,7 +275,7 @@ list ListRestrictions(integer r1, integer r2)
     {
         bit= 1<<i;
         if(r1&bit) out+=llList2String(g_lRLVList,i*3);
-        if(r2&bit) out2+=llList2String(g_lRLVList,i*3+93);
+        if(r2&bit) out2+=llList2String(g_lRLVList,i*3+90);
         ++i;
     }
     if(out+out2==[]) return ["None"];
@@ -322,7 +324,7 @@ MenuCategory(key kID, integer iAuth, string sCategory)
             integer Flag2 = 0;
             if((i/3)>=31){
                 Flag1=0;
-                Flag2 = 1 << ((i/3)-31);
+                Flag2 = 1 << ((i/3)-30);
             }
             if(iAuth==CMD_OWNER || iAuth==CMD_TRUSTED){
                 if((g_iRestrictions1 & Flag1) || (g_iRestrictions2 & Flag2)) lMenu+= [Checkbox(TRUE, llList2String(g_lRLVList, i))];
@@ -395,7 +397,7 @@ ApplyAll(integer iMask1, integer iMask2, integer iBoot)
            // llSay(0, "lRLVListPart1.\npos: "+(string)pos+"\niIndex: "+(string)iIndex+"\nlResult[-1]: "+llList2String(lResult,-1));
         }
 
-        iIndex = (iBitNumber+31)*3+2;
+        iIndex = (iBitNumber+30)*3+2;
         if (bool(iBitValue & iMask2) != bool(iBitValue & g_iRestrictions2)) {
             lResult += [FormatCommand(llList2String(g_lRLVList,iIndex),bool(iBitValue & iMask2))];
           //  llSay(0, "lRLVListPart2.\npos: "+(string)pos+"\niIndex: "+(string)iIndex+"\nlResult[-1]: "+llList2String(lResult,-1));
@@ -436,7 +438,7 @@ ApplyCommand(string sCommand, integer iAdd,key kID, integer iAuth)
     integer iActualIndex=iMenuIndex;
     integer iMenuIndex2;
     if(iMenuIndex/3>=31){
-        iMenuIndex2 = 1<<((iMenuIndex/3)-31); // (integer)llPow(2, ((iMenuIndex/3)-31);
+        iMenuIndex2 = 1<<((iMenuIndex/3)-30); // (integer)llPow(2, ((iMenuIndex/3)-31);
         iMenuIndex=0;
     }else {
         iMenuIndex2=0;
