@@ -34,6 +34,7 @@ Medea (medea.destiny)
     Jun 2025    - Expanded castray function for releash to handle releashing to seated avatar
                 - Commented out DebugOutput function and associated LINK_CMD_DEBUG use to save
                 memory in general use as this is only used for debugging.
+    Nov 2025    - Issue setrot locally rather than through RLVsys
 Nikki Larima 
     Nov 2023    - Remove processing of "runaway" command string, handled by CMD_SATEWORD
                   implemented Yosty7b3's menu streamlining, see pr#963    
@@ -989,7 +990,7 @@ state active
         if(g_iJustMoved) {
             vector pointTo = llList2Vector(llGetObjectDetails(g_kLeashedTo,[OBJECT_POS]),0) - llGetPos();
             float  turnAngle = llAtan2(pointTo.x, pointTo.y);// - myAngle;
-            if (g_iTurnModeOn) llMessageLinked(LINK_SET, RLV_CMD, "setrot:" + (string)(turnAngle) + "=force", NULL_KEY);   //transient command, doesn;t need our fakekey
+            if(g_iTurnModeOn) llOwnerSay("@setrot:"+(string)turnAngle+"=force");
             g_iJustMoved = 0;
         }
         
