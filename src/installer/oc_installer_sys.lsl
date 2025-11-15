@@ -309,7 +309,7 @@ default {
 
     on_rez(integer iStartParam) {
         string sPrefix = llToLower(llGetSubString(llKey2Name(llGetOwner()),0,1));
-        llSay(0, "Thank you for rezzing me.  Next:  In the Collar menu, go to Help/About and press Update. Or, use the chat command '"+sPrefix+" update'.");
+        llOwnerSay("Thank you for rezzing me.  Next:  In the Collar menu, go to Help/About and press Update. Or, use the chat command '"+sPrefix+" update'.");
         llResetScript();
     }
     no_sensor()
