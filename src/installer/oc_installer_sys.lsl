@@ -13,8 +13,6 @@
 // script right after handshaking, we're free to rewrite everything that comes
 // after the handshake.
 
-// Stormed DarkShade  - Mar 22 - Added voice prompting to the install process
-
 // In addition to the handshake and shim installation, this script decides
 // which bundles should be installed into (or removed from) the collar.  It
 // loops over each bundle in inventory, telling the BundleGiver script to
@@ -122,8 +120,8 @@ Particles(key kTarget) {
             PSYS_PART_END_GLOW,0,
             PSYS_PART_BLEND_FUNC_SOURCE,PSYS_PART_BF_SOURCE_ALPHA,
             PSYS_PART_BLEND_FUNC_DEST,PSYS_PART_BF_ONE_MINUS_SOURCE_ALPHA,
-            PSYS_PART_START_SCALE,<0.500000,0.500000,0.000000>,
-            PSYS_PART_END_SCALE,<0.231000,0.231000,0.000000>,
+            PSYS_PART_START_SCALE,<0.3500000,0.3500000,0.000000>,
+            PSYS_PART_END_SCALE,<0.131000,0.131000,0.000000>,
             PSYS_SRC_TEXTURE,"50f9fb96-f1b5-6357-02b4-5585bc4cc55b",
             PSYS_SRC_MAX_AGE,0,
             PSYS_PART_MAX_AGE,2.9,
@@ -220,7 +218,6 @@ default {
     touch_start(integer iNumber) {
         llOwnerSay("Hello! In your collar menu, go to Help/About and press Update to begin the update");
         return;
-        //If we weren't planning to redo this for 9.x anyway I'd scream right here.
         if (llDetectedKey(0) != llGetOwner()) return;
         if (g_iDone) {
             g_iDone = FALSE;
@@ -257,7 +254,7 @@ default {
                     g_iDone = FALSE;
                     //llSetTimerEvent(30.0);
                 }
-                llPlaySound("9fc93abc-98d0-9ed1-05eb-2d41bd5b7506",1.0);
+                llPlaySound("d023339f-9a9d-75cf-4232-93957c6f620c",1.0);
                 if((integer)llGetSubString(sParam,0,0)>=8)llWhisper(g_initChannel,"-.. ---|"+g_sBuildVersion); //tell collar we are here and to send the pin
                 else llWhisper(g_initChannel, "-.. ---|AppInstall"); // fix for the deprecated message in previous versions
             } else if (sCmd == "ready") {
@@ -312,7 +309,7 @@ default {
 
     on_rez(integer iStartParam) {
         string sPrefix = llToLower(llGetSubString(llKey2Name(llGetOwner()),0,1));
-        llOwnerSay("Thank you for rezzing me.  Next:  In the Collar menu, go to Help/About and press Update. Or, use the chat command '"+sPrefix+" update'.");
+        llSay(0, "Thank you for rezzing me.  Next:  In the Collar menu, go to Help/About and press Update. Or, use the chat command '"+sPrefix+" update'.");
         llResetScript();
     }
     no_sensor()
