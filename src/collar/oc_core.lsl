@@ -43,12 +43,16 @@ Medea (Medea Destiny)
                 -   added delay after name change to ensure report is correct and added clarification text here
                     and in device name. Issue #1053
    Jun 2025     -   Restored HELP button to help/about menu to deliver help notecard                         
+
 Stormed Darkshade (StormedStormy)
     March 2022  -   Added a button for reboot to help/about menu.  
 
 Yosty7B3
     Nov 2022    -   Removed Setor() and bool() functions for streamlining.
     Aug 2023    -   Combine all menu functions into the Dialog function to save memory.
+
+Nikki Lacrima
+    Oct 2025    -   Move @detach=y/n handling for collar lock to rlvsys.
 
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
@@ -58,7 +62,7 @@ integer NOTIFY_OWNERS=1003;
 
 //string g_sParentMenu = "";
 string g_sSubMenu = "Main";
-string COLLAR_VERSION = "8.3.0000"; // Provide enough room
+string COLLAR_VERSION = "8.4.0000"; // Provide enough room
 // LEGEND: Major.Minor.Build RC Beta Alpha
 integer UPDATE_AVAILABLE=FALSE;
 string NEW_VERSION = "";
@@ -441,7 +445,6 @@ default
                 llResetScript();
             }
         } else if(iNum == READY){
-            llOwnerSay("@detach=n");
             llMessageLinked(LINK_SET, ALIVE, llGetScriptName(), "");
         } else if(iNum == STARTUP){
             state active;
@@ -732,15 +735,8 @@ state active
             if(sToken=="global"){
                 if(sVar=="locked"){
                     g_iLocked=(integer)sVal;
-
-                    if(g_iLocked){
-                        llOwnerSay("@detach=n");
-                    }else{
-                        llOwnerSay("@detach=y");
-                    }
                 } else if(sVar == "safeword"){
-                    g_sSafeword = sVal;
-                    
+                    g_sSafeword = sVal;                    
                 } else if(sVar == "safeworddisable"){
                     g_iSafewordDisable=1;
                 } else if(sVar == "prefix"){
@@ -810,7 +806,6 @@ state active
             if(sToken=="global"){
                 if(sVar == "locked") {
                     g_iLocked=FALSE;
-                    llOwnerSay("@detach=y");
                 }
                 else if(sVar == "safeworddisable"){
                     g_iSafewordDisable=0;
@@ -875,16 +870,9 @@ state active
                 }
                 llListenRemove(g_iUpdateListener);
             }
-        } else if(iNum == RLV_REFRESH){
-            if(g_iLocked){
-                llOwnerSay("@detach=n");
-            } else {
-                llOwnerSay("@detach=y");
-            }
-        }else if(iNum == -99999){
+        } else if(iNum == -99999){
             if(sStr == "update_active")llResetScript();
         }
-        //llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
     }
     http_response(key kRequest, integer iStatus, list lMeta, string sBody){
         if(kRequest == g_kUpdateCheck){
