@@ -30,6 +30,7 @@ Medea (Medea Destiny)
                 
     Jan 2025    - Added groundsit button. Triggers ground sit and locks standing. Must have same or
                 higher auth to undo.
+    Nov 2025   -  Added CMD_INFO handling for UNSIT to manage ground sits.
 
 Nikki Larima 
     May 2025    - CMD_SAFEWORD handler to remove animlock and stop all animations
@@ -54,7 +55,7 @@ integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
 integer CMD_SAFEWORD = 510;
 //integer CMD_RELAY_SAFEWORD = 511;
-
+//integer CMD_INFO = 555;
 integer NOTIFY = 1002;
 integer REBOOT = -1000;
 
@@ -676,7 +677,8 @@ state active
                     if(iRespring)PoseMenu(kAv,iAuth, iPage);
                 }
             }
-            
+        } else if(iNum==555) { //CMD_INFO
+            if(llGetSubString(sMsg,0,4)=="unsit") UserCommand((integer)llGetSubString(sMsg,6,-1),"groundsit off",kAv);
         } else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
@@ -839,3 +841,4 @@ state inUpdate{
         }
     }
 }
+
