@@ -678,7 +678,7 @@ state active
                 }
             }
         } else if(iNum==555) { //CMD_INFO
-            if(llGetSubString(sMsg,0,4)=="unsit") UserCommand((integer)llGetSubString(sMsg,6,-1),"groundsit off",kAv);
+            if(llGetSubString(sStr,0,4)=="unsit") UserCommand((integer)llGetSubString(sStr,6,-1),"groundsit off",kID);
         } else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
@@ -841,4 +841,5 @@ state inUpdate{
         }
     }
 }
+
 
