@@ -55,6 +55,7 @@ Medea Destiny -
                     memory load, this one's already very tight. Issue #1008
                 -   folded bool() function into checkbox() function with (iValue&1) and strReplace() into
                     MuffleText() to save memory
+    Nov 2025    -   Added informational LM to indicate UNSIT sent via CMD_INFO (555)
 
 Krysten Minx -
     May 2022    -   Added check for valid UUID when setting custom exception
@@ -85,7 +86,7 @@ integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
 //integer CMD_SAFEWORD = 510;
 //integer CMD_RELAY_SAFEWORD = 511;
-
+//integer CMD_INFO=555;
 integer NOTIFY = 1002;
 
 // Link message constants used for communication with other scripts.
@@ -499,6 +500,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                 llSleep(1.5);
                 if(iNum==CMD_OWNER) llMessageLinked(LINK_SET,RLV_CMD_OVERRIDE,"unsit~unsit",kID);
                 else llMessageLinked(LINK_SET,RLV_CMD,"unsit=force","Macros");
+                llMessageLinked(LINK_SET,555,"unsit|"+(string)iNum,kID); //555=CMD_INFO
                 g_iLastSitAuth = 599;
             } else {
                 if(iNum > g_iLastSitAuth){
