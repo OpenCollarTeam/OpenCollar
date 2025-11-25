@@ -303,7 +303,7 @@ ReleaseAll(integer iClearLSD){
     for (i=0; i< llGetListLength(sources); i++) {
         list data = llParseString2List(llList2String(sources,i),["_"],[""]);
         key kID = llList2Key(data, 2);
-        g_lPendingReapply = g_lPendingReapply + [kID];
+//        g_lPendingReapply = g_lPendingReapply + [kID]; Shouldnt happen when releasing everithing
         Release(kID, iClearLSD);  
     }
 }
