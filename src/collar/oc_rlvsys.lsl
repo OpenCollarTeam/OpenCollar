@@ -494,7 +494,7 @@ state active
         } else if (iNum == LM_SETTING_REQUEST && sStr == "ALL") { //inventory changed in root
             if (g_iRlvActive == TRUE) {
                 llSleep(2);
-                llMessageLinked(LINK_SET, RLV_ON, "", NULL_KEY);
+                llMessageLinked(LINK_SET, RLV_REFRESH, "", NULL_KEY);
                 if (g_iRlvaVersion) {
                     llMessageLinked(LINK_SET, RLVA_VERSION, (string) g_iRlvaVersion, NULL_KEY);
                 }
@@ -729,4 +729,5 @@ state inUpdate{
         }
     }
 }
+
 
