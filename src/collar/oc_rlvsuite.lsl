@@ -54,6 +54,7 @@ medea (medea destiny)
                     with RLV menu
                 -   Removed double menu for (prefix) restrictions
       Jun 2024  -   Extended chat command function above to allow for capitalization of individual restriction names.
+      Nov 2025  -   Changed macros setting to rlvsys_macrosnew and added conversion function.
 Nikki Lacrima
       Sept 2024 -   Remove superflous llOwnerSay commands and replace g_lMenuIDs (Yosty patch PR #963)
       Oct  2024 -   Correct off by one bitshift and improve bitpos and bitvalue handling for restriction bitmaps. 
@@ -98,7 +99,7 @@ integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have s
 //str must be in form of "token=value"
 //integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
 integer LM_SETTING_RESPONSE = 2002;//the settings script sends responses on this channel
-//integer LM_SETTING_DELETE = 2003;//delete token from settings
+integer LM_SETTING_DELETE = 2003;//delete token from settings
 //integer LM_SETTING_EMPTY = 2004;//sent when a token has no value
 
 //string g_sSettingToken = "rlvsuite_";
@@ -681,7 +682,7 @@ state active
                         else  {
                             g_lMacros = ["Hear", 4, 0, "Talk" , 3, 0, "Touch", 0, 8192 /*0x2000*/, "Stray", 62914560 /*0x3C00000*/, 524288 /*0x80000*/,
                                          "Inventory", 1342179328 /*0x50000800*/, 48 /*0x30*/, "Dress", 0, 15 /*0xF*/, "IM", 384 /*0x180*/, 0, "Names/Map", 323584 /*0x4F000*/, 0, "Blur", 0, 16777216 /*0x1000000*/];
-                            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvsuite_macros=" + llDumpList2String(g_lMacros,"^"), "");
+                            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvsuite_macrosnew=" + llDumpList2String(g_lMacros,"^"), "");
                         }
                     }MenuManage(kAv,iAuth);    
                 } else if (sMenu == "Restrictions~Restrictions"){
@@ -732,7 +733,7 @@ state active
                             sMsg = llGetSubString(sMsg,0,11);
                             sMsg = llDumpList2String(llParseStringKeepNulls((sMsg = "") + sMsg, [" "], []), "_");
                             g_lMacros += [sMsg, g_iRestrictions1, g_iRestrictions2];
-                            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvsuite_macros=" + llDumpList2String(g_lMacros,"^"), "");
+                            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvsuite_macrosnew=" + llDumpList2String(g_lMacros,"^"), "");
                             Menu(kAv,iAuth);
                         }
                     }
@@ -741,7 +742,7 @@ state active
                     if (sMsg == "YES"){
                         integer iIndex = llListFindList(g_lMacros,[g_sTmpMacroName]);
                         g_lMacros = llListReplaceList(g_lMacros, [g_sTmpMacroName,g_iRestrictions1,g_iRestrictions2], iIndex, iIndex+2);
-                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvsuite_macros=" + llDumpList2String(g_lMacros,"^"), "");
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvsuite_macrosnew=" + llDumpList2String(g_lMacros,"^"), "");
                         Menu(kAv,iAuth);
                     } else Dialog(kAv, "Enter the name of the new button:", [], [], 0, iAuth,"Restrictions~textbox");
                 } else if (sMenu == "Restrictions~Delete"){
@@ -749,7 +750,7 @@ state active
                         integer iIndex = llListFindList(g_lMacros,[sMsg]);
                         if (iIndex > -1) {
                             g_lMacros = llDeleteSubList(g_lMacros,iIndex, iIndex+2);
-                            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvsuite_macros=" + llDumpList2String(g_lMacros,"^"), "");
+                            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvsuite_macrosnew=" + llDumpList2String(g_lMacros,"^"), "");
                             Menu(kAv,iAuth);
                         } else Menu(kAv,iAuth);
                     } else {
@@ -773,9 +774,19 @@ state active
                     g_iRestrictions1 = llList2Integer(lMasks, 0);
                     g_iRestrictions2 = llList2Integer(lMasks, 1);
                 }
-            } else if (llList2String(lParams, 0) == "rlvsuite_macros") {
+            } else if (llList2String(lParams, 0) == "rlvsuite_macrosnew") {
                 g_lMacros = llParseStringKeepNulls(llList2String(lParams, 1), ["^"],[]);
                 if(llGetListLength(g_lMacros)<3) g_lMacros=[];  
+            }else if (llList2String(lParams, 0) == "rlvsuite_macros") {
+                list temp = llParseStringKeepNulls(llList2String(lParams, 1), ["^"],[]);
+                integer i=llGetListLength(temp)-1;
+                while(i>1)
+                {
+                    temp=llListReplaceList(temp,[llList2Integer(temp,i)>>1],i,i);
+                    i=i-3;
+                }
+                llMessageLinked(LINK_THIS, LM_SETTING_SAVE, "rlvsuite_macrosnew=" + llDumpList2String(temp,"^"), "");
+                llMessageLinked(LINK_THIS,LM_SETTING_DELETE,"rlvsuite_macros",""); 
             }
             else if(llList2String(lParams,0) == "global_checkboxes") g_lCheckboxes = llCSV2List(llList2String(lParams,1));
         } else if (iNum == CMD_SAFEWORD || iNum == RLV_CLEAR || iNum == RLV_OFF){
