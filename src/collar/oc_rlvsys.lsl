@@ -209,8 +209,8 @@ setRlvState(){
                     llMessageLinked(LINK_SET, RLVA_VERSION, (string)g_iRlvaVersion, "");
                 if (!llGetStartParameter()) llMessageLinked(LINK_SET,NOTIFY,"0"+"RLV active!",g_kWearer);
                 //tell rlv plugins to reinstate restrictions  (and wake up the relay listener... so that it can at least hear !pong's!
-                llMessageLinked(LINK_SET, RLV_REFRESH, "", NULL_KEY);
                 llMessageLinked(LINK_SET, RLV_ON, "", NULL_KEY);
+                llMessageLinked(LINK_SET, RLV_REFRESH, "", NULL_KEY);
             }
         }
         else { //g_iViewerCheck is FALSE, so g_iRLVOn must have just been set to TRUE, so do viewer check
@@ -494,7 +494,7 @@ state active
         } else if (iNum == LM_SETTING_REQUEST && sStr == "ALL") { //inventory changed in root
             if (g_iRlvActive == TRUE) {
                 llSleep(2);
-                llMessageLinked(LINK_SET, RLV_REFRESH, "", NULL_KEY);
+                llMessageLinked(LINK_SET, RLV_ON, "", NULL_KEY);
                 if (g_iRlvaVersion) {
                     llMessageLinked(LINK_SET, RLVA_VERSION, (string) g_iRlvaVersion, NULL_KEY);
                 }
@@ -729,5 +729,6 @@ state inUpdate{
         }
     }
 }
+
 
 
