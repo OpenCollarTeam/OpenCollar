@@ -34,7 +34,13 @@ Medea (medea.destiny)
     Jun 2025    - Expanded castray function for releash to handle releashing to seated avatar
                 - Commented out DebugOutput function and associated LINK_CMD_DEBUG use to save
                 memory in general use as this is only used for debugging.
-    Nov 2025    - Issue setrot locally rather than through RLVsys
+    Nov 2025    - Issue setrot locally rather than through RLVsys, added llSetAgentRot option
+    Dec 2025    - Added LSL Turn option (set in settings) to use llSetAgentRot rather than 
+                RLV rotation. Refactored turning as a UserCommand "face", added it to Yank, 
+                and created chat command options for "face me", "face (name)" or just "face" to 
+                get sensor menu
+                - Added Strict(ish) mode that doesn't include fartouch restriction. Refactored code
+                to avoid menu desync & reduce redundancy
 Nikki Larima 
     Nov 2023    - Remove processing of "runaway" command string, handled by CMD_SATEWORD
                   implemented Yosty7b3's menu streamlining, see pr#963    
@@ -43,7 +49,7 @@ Licensed under the GPLv2.  See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar               
 */
 
-string g_sScriptVersion = "8.3";
+string g_sScriptVersion = "8.4";
 integer LINK_CMD_DEBUG=1999;
 
 // ------ TOKEN DEFINITIONS ------
@@ -151,7 +157,10 @@ integer g_iLeasherInRange=FALSE; //
 integer g_iRLVOn=FALSE;     // To store if RLV was enabled in the collar
 integer g_iAwayCounter=-1;
 
+integer g_iLSLTurn=FALSE; //when true, use llSetAgentRot instead of @setrot
 
+integer g_iFacerAuth;
+key g_iFacerKey;
 
 string g_sLeashHolder="na"; // Leash holder item name
 // ---------------------------------------------
@@ -234,14 +243,23 @@ SetLength(integer iIn) {
     }
 }
 
+integer g_iStrictChanged;
 ApplyRestrictions() {
     //Debug("Applying Restrictions");
     if (g_iLeasherInRange) {
         if (g_iStrictModeOn) {
             if (g_kLeashedTo) {
+                if(g_iStrictChanged)
+                {
+                     llMessageLinked(LINK_SET, RLV_CMD, "clear", "realleash"); 
+                     g_iStrictChanged=FALSE;
+                     llSleep(0.3);
+                }
                 //Debug("Setting restrictions");
                 //llSay(0, "RLV_CMD issue: no fly, notp");
-                llMessageLinked(LINK_SET, RLV_CMD, "fly=n,tplm=n,tplure=n,tploc=n,tplure:" + (string) g_kLeashedTo + "=add,fartouch=n,sittp=n,accepttp:"+(string)g_kLeashedTo+"=add", "realleash"); 
+                string sRest="fly=n,tplm=n,tplure=n,tploc=n,tplure:" + (string) g_kLeashedTo + "=add,sittp=n,accepttp:"+(string)g_kLeashedTo+"=add";
+                if(g_iStrictModeOn==1) sRest+=",fartouch=n";
+                llMessageLinked(LINK_SET, RLV_CMD, sRest, "realleash"); 
     //set all restrictions
                 llMessageLinked(LINK_SET,NOTIFY,"1Strict leash mode active. If leash holder leaves range, restrictions will persist for 1 minute. Leash holder may force TP leashee after leaving range during that 1 minute period.",g_kLeashedTo);
                 return;
@@ -448,6 +466,7 @@ DoUnleash(integer iDelSettings) {
 }
 
 YankTo(key kIn){
+    UserCommand(CMD_WEARER, "face "+(string)kIn,g_kWearer,FALSE); 
     llMoveToTarget(llList2Vector(llGetObjectDetails(kIn, [OBJECT_POS]), 0), 0.5);
    // llOwnerSay("m2t on yankto");
     if (llGetAgentInfo(g_kWearer)&AGENT_SITTING) llMessageLinked(LINK_SET, RLV_CMD, "unsit=force", "");
@@ -484,7 +503,7 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
             else lButtons += "-";
             if (kMessageID == g_kLeashedTo) lButtons += "Yank";//only if leash holder
             else lButtons += "-";
-            lButtons += ["Follow","Anchor","Pass","Length"];
+            lButtons += ["Follow","Anchor","Pass","Length","Face"];
             if(g_sLeashHolder!="na")
                 lButtons += ["Give Holder"];
             lButtons += g_lButtons;
@@ -551,26 +570,44 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
                 llMessageLinked(LINK_SET,NOTIFY,"0"+"You allowed %WEARERNAME% to move freely again.",kMessageID);
                 if (bFromMenu) UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
             }
-        } else if (sMessage == "strict on") {
-            if (g_iStrictModeOn) llMessageLinked(LINK_SET,NOTIFY,"0"+"Strict leashing is already enabled.",kMessageID);
-            else {
-                g_iStrictRank = iAuth;
-                g_iStrictModeOn=TRUE;
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "strict=1,"+ (string)iAuth, "");
-                //llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sSettingToken + "strict=1,"+ (string)iAuth, kMessageID);
-                llMessageLinked(LINK_SET, LM_SETTING_REQUEST, TOK_DEST, "");  //query current leasher, the response will trigger ApplyRestrictions
-                llMessageLinked(LINK_SET,NOTIFY,"0"+"Strict leashing enabled.",kMessageID);
-                ApplyRestrictions();
+        } 
+        else if (sComm == "strict" || sComm == "mstrict") 
+        {
+            integer iMode=llListFindList(["off","on","ish"],[sVal]); 
+            if(iMode==-1) return;
+            integer iSendMenu;
+            if(sComm=="mstrict") iSendMenu=TRUE;
+            integer fail;
+            if (iMode==g_iStrictModeOn)
+            {
+                 llMessageLinked(LINK_SET,NOTIFY,"0"+"Strict leashing is already enabled.",kMessageID);
+                 fail=TRUE;
             }
-        } else if (sMessage == "strict off") {
-            if (iAuth <= g_iStrictRank) {
-                g_iStrictModeOn=FALSE;
-                llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken + "strict", "");
-                llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sSettingToken + "strict=0,"+ (string)iAuth,kMessageID);
-                ApplyRestrictions();
-                llMessageLinked(LINK_SET,NOTIFY,"0"+"Strict leashing disabled.",kMessageID);
-            } else {
-                llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS% to strict leash",kMessageID);
+            else if(g_iStrictModeOn==1 || (g_iStrictModeOn==2 &&iMode==0))
+            {
+                if(iAuth >g_iStrictRank)
+                {
+                     llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS% to changing strict leash",kMessageID);
+                     fail=TRUE;
+                }
+            }
+            if(fail==FALSE)
+            {                    
+                    g_iStrictRank = iAuth;
+                    g_iStrictModeOn=iMode;
+                    fail=FALSE;
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "strict="+(string)iMode+","+ (string)iAuth, "");
+                //llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sSettingToken + "strict=1,"+ (string)iAuth, kMessageID);
+                    llMessageLinked(LINK_SET, LM_SETTING_REQUEST, TOK_DEST, "");  //query current leasher, the response will trigger ApplyRestrictions
+                    string sMode=llList2String(["off","on","strict(ish)"],iMode);
+                    llMessageLinked(LINK_SET,NOTIFY,"0Strict leashing mode is "+sMode+".",kMessageID);
+                    //g_iStrictChanged=TRUE;
+                    //ApplyRestrictions();
+            }
+            if(iSendMenu)
+            {
+                llSleep(0.2);
+                llMessageLinked(LINK_THIS,iAuth,"leash configure",kMessageID);
             }
         } else if (sMessage == "turn on") {
             g_iTurnModeOn=TRUE;
@@ -582,24 +619,59 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken + "turn", "");
             llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sSettingToken + "turn=0,"+ (string)iAuth,kMessageID);
             llMessageLinked(LINK_SET,NOTIFY,"1"+"Turning towards leasher disabled.",kMessageID);
-        } else if (sComm == "pass") {
-            if (!CheckCommandAuth(kMessageID, iAuth)) return;
-            if (sVal==llToLower(BUTTON_UPMENU))
-                UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
-            else if((key)sVal) {
-                list lPoints;
-                if (llGetListLength(lParam) > 2) lPoints = llList2List(lParam, 2, -1);
-                g_kPassLeashFrom = kMessageID;
-                g_lPasslPoints = lPoints;
-                g_iPreviousAuth=iAuth;
-                //debug("leash target is key");//could be a post, or could be we specified an av key
-                llMessageLinked(LINK_SET, AUTH_REQUEST, "passLeash", sVal); // All this does, is recalculate the authorization level of the leash so that the leash holder has proper permissions and could unleash it themselves if they wanted to.
-//                LeashTo((key)sVal, kMessageID, iAuth, lPoints, FALSE);
-            } else
-                SensorDialog(g_kCmdGiver, "\nWho shall we pass the leash?\n", sVal,iAuth,"LeashTarget", AGENT);
-        } else if (sComm == "length") {
-            if(!CheckCommandAuth(kMessageID,iAuth)){
+        } else if(sComm=="lslturn") {
+            if(iAuth!=CMD_OWNER && g_kCmdGiver!=g_kWearer) llMessageLinked(LINK_THIS,NOTIFY,"0Only owner and wearer can set that.",g_kCmdGiver);
+            else 
+            {
+                if(sVal=="on") g_iLSLTurn=TRUE;     
+                else if(sVal=="off") g_iLSLTurn=FALSE;
+                llMessageLinked(LINK_THIS,LM_SETTING_SAVE,g_sSettingToken+"lslturn="+(string)g_iLSLTurn,g_kCmdGiver);
+                llMessageLinked(LINK_THIS,NOTIFY,"1Leash using LSL rather than RLV to turn is switched to "+sVal+".",g_kCmdGiver);
+               // if(g_iLSLTurn) llRequestPermissions(g_kWearer,PERMISSION_TRIGGER_ANIMATION);
+
+            }
+        }else if (sComm=="face") 
+        {
+            if(sVal=="me") sVal=(string)kMessageID;
+            vector vTargPos=llList2Vector(llGetObjectDetails((key)sVal,[OBJECT_POS]),0);
+            if(vTargPos==ZERO_VECTOR) 
+            {
+                SensorDialog(kMessageID,"Who or what would you like them to face?",sVal,iAuth,"leash_facer",AGENT|PASSIVE|ACTIVE);
                 return;
+            }
+            else 
+            {
+                vTargPos=vTargPos-llGetPos();
+                if(g_iLSLTurn)
+                {
+                    rotation rot=llRotBetween(<1,0,0>,llVecNorm(vTargPos));
+                    llSetAgentRot(rot,0);
+                }
+                else
+                {
+                    float  turnAngle = llAtan2(vTargPos.x, vTargPos.y);
+                    llOwnerSay("@setrot:"+(string)turnAngle+"=force");
+                }
+            } 
+        }
+        else if (sComm == "pass") {
+                if (!CheckCommandAuth(kMessageID, iAuth)) return;
+                if (sVal==llToLower(BUTTON_UPMENU))
+                UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
+                else if((key)sVal) {
+                    list lPoints;
+                    if (llGetListLength(lParam) > 2) lPoints = llList2List(lParam, 2, -1);
+                    g_kPassLeashFrom = kMessageID;
+                    g_lPasslPoints = lPoints;
+                    g_iPreviousAuth=iAuth;
+                //debug("leash target is key");//could be a post, or could be we specified an av key
+                    llMessageLinked(LINK_SET, AUTH_REQUEST, "passLeash", sVal); // All this does, is recalculate the authorization level of the leash so that the leash holder has proper permissions and could unleash it themselves if they wanted to.
+//                LeashTo((key)sVal, kMessageID, iAuth, lPoints, FALSE);
+                } else
+                SensorDialog(g_kCmdGiver, "\nWho shall we pass the leash?\n", sVal,iAuth,"LeashTarget", AGENT);
+            } else if (sComm == "length") {
+                if(!CheckCommandAuth(kMessageID,iAuth)){
+                    return;
             }
             integer iNewLength = (integer)sVal;
             if (sVal==llToLower(BUTTON_UPMENU)){
@@ -714,6 +786,7 @@ state active
         DoUnleash(FALSE);
         //Debug("Starting");
         LHSearch();
+        
     }
 
     timer() {
@@ -874,9 +947,15 @@ state active
                     list lParam = llParseString2List(llGetSubString(sMessage, iInd + 1, -1), [","], []);
                     g_iStrictModeOn = (integer)sValue;
                     g_iStrictRank = (integer)llList2String(lParam, 1);
+                    g_iStrictChanged=TRUE;
                     ApplyRestrictions();
                 } else if (sToken == "turn") g_iTurnModeOn = (integer)sValue;
                 else if(sToken == TOK_DEST+"name") g_sLeashedToName = sValue;
+                else if(sToken=="lslturn")
+                {
+                    if(sValue=="1") llRequestPermissions(g_kWearer,PERMISSION_TRIGGER_ANIMATION);
+                    else g_iLSLTurn=FALSE;
+                }
             }
         
         } else if(iNum == LM_SETTING_EMPTY){
@@ -913,6 +992,7 @@ state active
                         llMessageLinked(LINK_SET, iAuth, "menu "+sButton, kAV);
                     else UserCommand(iAuth, llToLower(sButton), kAV, TRUE);
                 }
+                else if(sMenu=="leash_facer") UserCommand(iAuth, "face "+sButton,kAV,FALSE);
                 else if (sMenu == "PostTarget") UserCommand(iAuth, "anchor " + sButton, kAV, TRUE);
                 else if (sMenu == "SetLength") UserCommand(iAuth, "length " + sButton, kAV, TRUE);
                 // added for Confirmation Request 15-04-17 Otto
@@ -988,10 +1068,10 @@ state active
         g_vPos = llList2Vector(llGetObjectDetails(g_kLeashedTo,[OBJECT_POS]),0);
         g_iTargetHandle = llTarget(g_vPos, (float)g_iLength);
         if(g_iJustMoved) {
-            vector pointTo = llList2Vector(llGetObjectDetails(g_kLeashedTo,[OBJECT_POS]),0) - llGetPos();
-            float  turnAngle = llAtan2(pointTo.x, pointTo.y);// - myAngle;
-            if(g_iTurnModeOn) llOwnerSay("@setrot:"+(string)turnAngle+"=force");
+            //vector pointTo = llList2Vector(llGetObjectDetails(g_kLeashedTo,[OBJECT_POS]),0) - llGetPos();
+            if(g_iTurnModeOn) UserCommand(CMD_WEARER, "face "+(string)g_kLeashedTo,g_kWearer,FALSE);        
             g_iJustMoved = 0;
+
         }
         
         if(g_iAlreadyMoving) llMessageLinked(LINK_SET, LEASH_END_MOVEMENT, "","");
@@ -1087,6 +1167,8 @@ state active
             //disbale all controls but left mouse button (for stay cmd)
             llTakeControls(CONTROL_ROT_LEFT | CONTROL_ROT_RIGHT | CONTROL_LBUTTON | CONTROL_ML_LBUTTON, FALSE, FALSE);
         }
+        if(iPerm&PERMISSION_TRIGGER_ANIMATION) g_iLSLTurn=TRUE;
+
     }
 /*    object_rez(key id) {
         //g_iLength=3;
