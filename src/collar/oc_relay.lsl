@@ -129,6 +129,7 @@ key g_kObjectOwner;
 key g_kWearer;
 integer g_iHasOwners=FALSE;
 
+integer g_iRlvActive = 0;  // oc_rlvsys active state
 integer g_iMode = 0;      //  LSD relay_mode
 integer g_iWearer=TRUE;    // LSD relay_wearer    Lockout wearer option 
 integer g_iTrustOwners = FALSE;  //  LSD relay_trustowner
@@ -514,6 +515,7 @@ init() {
     llListenRemove(RELAY_LISTENER);
     llSetTimerEvent(0);
     RELAY_LISTENER = 0;
+    g_iRlvActive = 0;
 
     g_lPendingSourceList = [];
     llLinksetDataDeleteFound("^relay_ask_",""); 
@@ -703,6 +705,8 @@ default
                 }
             }
         } else if (iNum == RLV_ON) {
+            if (g_iRlvActive) return; // RLV already set as active, not much to do
+
             // read list of previous sources to ping for reapply
             g_lPendingReapply = [];
             integer i;
@@ -725,10 +729,12 @@ default
                 // pong timer
                 llSetTimerEvent(30);
             }
+            g_iRlvActive = 1;
         } else if (iNum == RLV_OFF) {
             ReleaseAll(FALSE);
             llListenRemove(RELAY_LISTENER);
             RELAY_LISTENER = 0;
+            g_iRlvActive = 0;
         } else if (iNum == RLV_REFRESH) {
 //            llOwnerSay("oc_relay:RLV_REFRESH");
         } else if (iNum == LM_SETTING_RESPONSE){
