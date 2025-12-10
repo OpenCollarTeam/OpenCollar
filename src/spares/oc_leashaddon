@@ -1,13 +1,58 @@
 /*
-Based on oc_addon_template RELEASED UNDER THE Public Domain
--Authors Attribution-
+INSTRUCTIONS FOR USE
+
+This script is intended as a single-script drop in for separate leash points or
+"virtual collars" that can be worn on top of your regular collar, attaching
+to an actual collar via the add-ons system. It's two main uses are to provide an 
+alternate leash point for a collar (for example, it could be added to a nose ring) or
+to effectively replace the visual component of a collar (thus the collar scripts could
+be worn in a HUD while various designs of collar could be used with different outfits, 
+each with just this script in it, or an outfit-specific collar can be worn on top of a
+regular hidden collar, so that you don't need to unlock, remove and replace a collar if 
+you change avatar to one your regular collar doesn't fit. Clicking the object this script
+is in will bring up the collar's menu, and the autohide command in the add-on menu, when
+active, will cause your regular collar to autohide when the item containing this script is
+worn.
+
+The menu to control an attached device can be found in your collar's add-ons menu, where
+you will find a button named for the attachment. The menu inside here contains three buttons:
+LOCK - toggles locking the add-on object
+AUTOHIDE - Toggles autohiding your actual collar when this is worn. If you're using this for 
+"virtual collar" then switch this on. If you're using it as an alternative leash point, don't.
+ACTIVATE - Toggles the item on/off.
+
+INSTALLATION
+This can be installed in any attachment with mod perms. If your attachment is rigged mesh, then
+the source of particles drawn from it is unpredictable and might not be well positioned. In such
+cases, first ensure that the item is actually attached to a logical attachment point, and if that
+does not give a visually satisfying solution, link a small invisible prim to the attachment and edit
+it into the correct position for the leash to connect to.
+
+To install, simply drop the script into the attachment's contents. We strongly suggest having
+a child prim as your leash point as described above, and that prim should be named
+"leashpoint". While you can drop this script directly into a suitable child prim and not bother 
+with this step, not all features will work so we don't recommend it. The attachment will appear
+in your collar's add-on menu when connected, and will show up as a button named by the prim that 
+the script is found in. If you have placed the script in a child prim but wish the button to show
+the name of the object, edit the script to change the line:
+string g_sAddon = "PRIMNAME";
+...to instead read:
+string g_sAddon = "OBJECTNAME";
+You'll find this line around line 95ish of the script.
+
+When installed, remove your attachment (or pick it up if rezzed) to ensure changes are saved, 
+then reattach it.
+
+If you are using this for an alternative leashpoint, that's all you need to do. As a virtual
+collar, you'll want to activate Autohide in the menu (found in the collar's Add-Ons menu) so
+that it'll automatically hide your actual collar when worn.
+
+Designed by Nikki Lacrima, and based on:
+-oc_addon_template RELEASED UNDER THE Public Domain-
 Aria (tiff589) - (August 2020)
 Lysea - (December 2020)
 Taya'Phidoux' (taya.maruti) - (july 2021)
-*/
-
-/* 
-Based on oc_particle
+-oc_particle-
 Copyright (c) 2008 - 2023 Lulu Pink, Nandana Singh, Garvin Twine,
 Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, Romka Swallowtail,
 lillith xue, littlemousy, Nikki Lacrima et al.
