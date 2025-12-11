@@ -11,7 +11,11 @@
     Feb 2025: Support for multiple leashpoints, "leashpoint" and "leashpointX", for ponybits
     and "fchain" for front chainpoint that does not interfere with leash
     Jun 2025: Separate chain and leash visual parameters
-    
+  
+Medea Destiny
+    Nov 2025: Added llSetAgentRot option to configure menu 
+             Added Strict(ish) mode that doesn't include fartouch restriction. Refactored code
+            to avoid menu desync & reduce redundancy    
 */
 
 /* 
@@ -109,6 +113,7 @@ key g_kParticleTarget;
 
 integer g_iLeashActive;
 integer g_iTurnMode;
+integer g_iLSLTurn;
 integer g_iStrictMode;
 integer g_iStrictRank;
 string g_sParticleMode = "Ribbon"; //modes can be: Ribbon, Classic and noParticle
@@ -426,15 +431,14 @@ string Checkbox(integer iValue, string sLabel) {
 
 ConfigureMenu(key kIn, integer iAuth) {
     list lButtons;
-    lButtons += [Checkbox(g_iParticleGlow, L_GLOW), Checkbox(g_iTurnMode, L_TURN), Checkbox(g_iStrictMode, L_STRICT)];
-
+    lButtons += [Checkbox(g_iParticleGlow, L_GLOW), Checkbox(g_iTurnMode, L_TURN), llList2String(["□","▣","◨"],g_iStrictMode)+" "+L_STRICT,Checkbox(g_iLSLTurn,"LSL Turn")];
 
     if (g_sLeashParticleMode == "Ribbon") lButtons += [Checkbox(FALSE,L_CLASSIC_TEX),Checkbox(TRUE,L_RIBBON_TEX),Checkbox(FALSE, "Invisible")];
     else if (g_sLeashParticleMode == "noParticle") lButtons += [Checkbox(FALSE,L_CLASSIC_TEX),Checkbox(FALSE,L_RIBBON_TEX),Checkbox(TRUE,"Invisible")];
     else if (g_sLeashParticleMode == "Classic")  lButtons += [Checkbox(TRUE,L_CLASSIC_TEX), Checkbox(FALSE, L_RIBBON_TEX), Checkbox(FALSE, "Invisible")];
 
     lButtons += [L_FEEL, L_COLOR];
-    string sPrompt = "\n[Leash Configuration]\n\nCustomize the looks and feel of your leash.";
+    string sPrompt = "\n[Leash Configuration]\n\nCustomize the looks and feel of your leash.\nTurn mode turns you to face leasher. LSLTurn uses non-RLV method (requires recent viewer).\n Strict mode is "+llList2String(["off","on","strictish (no fartouch restriction)"],g_iStrictMode)+".";
     Dialog(kIn, sPrompt, lButtons, [UPMENU], 0, iAuth,"configure");
 }
 
@@ -557,6 +561,12 @@ state active
                     else ConfigureMenu(kAv, iAuth);
                 } else  if (sMenu == "configure") {
                     string sButtonType = Uncheckbox(sButton);
+                    if(sButtonType=="LSL Turn")
+                    {
+                        g_iLSLTurn=!g_iLSLTurn;
+                        if(g_iLSLTurn)llMessageLinked(LINK_THIS,iAuth,"lslturn on",kAv);
+                        else llMessageLinked(LINK_THIS,iAuth,"lslturn off",kAv);
+                    }
                     if (sButton == L_COLOR) {
                         ColorMenu(kAv, iAuth);
                         return;
@@ -571,15 +581,10 @@ state active
                         if (g_iTurnMode) llMessageLinked(LINK_SET, iAuth, "turn on", kAv);
                         else llMessageLinked(LINK_SET, iAuth, "turn off", kAv);
                     } else if(sButtonType == L_STRICT) {
-                        if (!g_iStrictMode) {
-                            g_iStrictMode = TRUE;
-                            g_iStrictRank = iAuth;
-                            llMessageLinked(LINK_SET, iAuth, "strict on", kAv);
-                        } else if (iAuth <= g_iStrictRank) {
-                            g_iStrictMode = FALSE;
-                            g_iStrictRank = iAuth;
-                            llMessageLinked(LINK_SET, iAuth, "strict off", kAv);
-                        } else llMessageLinked(LINK_SET, NOTIFY,"0%NOACCESS% to changing strict settings",kAv);
+                        integer iMode=g_iStrictMode+1;
+                        if(iMode==3) iMode=0;
+                        llMessageLinked(LINK_THIS,iAuth,"mstrict "+llList2String(["off","on","ish"],iMode),kAv);
+                        return;
                     } else if(sButtonType == L_RIBBON_TEX) {
 
                         if (!(g_sLeashParticleMode == "Ribbon")) {
@@ -691,6 +696,10 @@ state active
             } else if (llGetSubString(sToken, 0, i) == "leash_") {
                 sToken = llGetSubString(sToken, i + 1, -1);
                 //Debug(sToken + sValue);
+                if(sToken=="lslturn")
+                {
+                     g_iLSLTurn=(integer)sValue;
+                }
                 if (sToken == "strict") {
                     // Debug((string)iAuth);
                     g_iStrictMode = (integer)llGetSubString(sValue,0,0);

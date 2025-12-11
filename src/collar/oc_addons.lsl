@@ -1,3 +1,4 @@
+
 /*
 This file is a part of OpenCollar.
 Copyright ©2021
@@ -8,7 +9,11 @@ Aria (Tashia Redrose)
 Medea (medea.destiny)
     Sept 2021           -   Provided auth failure mode for menu. Insufficient auth now
                             provides suitable notification to user and respawns main menu. 
-                            Fixes issue #665   
+                            Fixes issue #665  
+    Oct 2025            -   Translate DIALOG requests to DIALOG_RENDER_REQ so we only send 
+                            link messages for dialogs back to this script when they've
+                            been requested from this script. Requires parallel changes in
+                            OC_DIALOG 
 KristenMynx
     Dec 2021            -   Fix timeout removal stride
     May 2022            -   Fix offline removal stride
@@ -27,7 +32,7 @@ https://github.com/OpenCollarTeam/OpenCollar
 string g_sParentMenu = "Main";
 string g_sSubMenu = "Addons";
 
-string COLLAR_VERSION = "8.3.0000";
+string COLLAR_VERSION = "8.4.0000";
 
 string Auth2Str(integer iAuth){
     if(iAuth == CMD_OWNER)return "Owner";
@@ -139,6 +144,7 @@ integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 integer DIALOG_RENDER = -9013;
+integer DIALOG_RENDER_REQ = -9014;
 string UPMENU = "BACK";
 //string ALL = "ALL";
 
@@ -396,7 +402,7 @@ state active
                 integer iNum = (integer)llJsonGetValue(m,["iNum"]);
                 string sMsg = llJsonGetValue(m,["sMsg"]);
                 key kID = llJsonGetValue(m,["kID"]);
-
+                if(iNum==DIALOG) iNum=DIALOG_RENDER_REQ;
                 if((iNum == LM_SETTING_DELETE || iNum == LM_SETTING_SAVE)&& llGetOwnerKey(i)==g_kWearer && g_iWearerAddonLimited){
                     //string sTest = llToLower(sMsg);
                     if(llSubStringIndex(sMsg, "auth_")!=-1)return;
