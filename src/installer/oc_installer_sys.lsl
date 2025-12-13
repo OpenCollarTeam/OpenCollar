@@ -286,7 +286,7 @@ default {
                 // remove the script pin, and delete himself.
                 string sMyName = llList2String(llParseString2List(llGetObjectName(), [" - "], []), 1);
                 llRegionSayTo(g_kCollarKey, g_iSecureChannel, "DONE|" + sMyName);
-                llSetText("DONE!\n \n████████100%████████", <0,1,0>, 1.0);
+                llSetText("Script updates installed!\nWait for collar to finish\nInstallation and reboot.", <0,1,0>, 1.0);
                 llSetTimerEvent(0);
                 llParticleSystem([]);
                 llSensorRemove();
