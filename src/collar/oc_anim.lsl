@@ -289,7 +289,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                     
                 }
             }else llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to changing pose offset", kID);
-        } else if( sChangetype=="groundsit" || sChangeType=="park") {
+        } else if( sChangetype=="groundsit" || sChangetype=="park") {
                 if(sChangevalue=="on" && g_iGroundSit==FALSE)
                 {
                     llOwnerSay("@sitground=force");
@@ -841,6 +841,7 @@ state inUpdate{
         }
     }
 }
+
 
 
 
