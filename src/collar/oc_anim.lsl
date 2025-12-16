@@ -31,7 +31,7 @@ Medea (Medea Destiny)
     Jan 2025    - Added groundsit button. Triggers ground sit and locks standing. Must have same or
                 higher auth to undo.
     Nov 2025   -  Added CMD_INFO handling for UNSIT to manage ground sits.
-
+    Dec 2025   - Changed "groundsit" to "park"
 Nikki Larima 
     May 2025    - CMD_SAFEWORD handler to remove animlock and stop all animations
 
@@ -134,7 +134,7 @@ integer g_iPosture = FALSE;
 integer g_iStandOffset = FALSE;
 Menu(key kID, integer iAuth) {
     string sPrompt = "\n[Animations]\n\nCurrent Animation: "+setor((g_lCurrentAnimations==[]), "None", llList2String(g_lCurrentAnimations, 0)+"\nCurrent Pose: "+setor((g_sPose==""), "None", g_sPose));
-    list lButtons = [Checkbox(g_iGroundSit, "Ground Sit"),Checkbox(g_iAnimLock,"AnimLock"), "Pose"];
+    list lButtons = [Checkbox(g_iGroundSit, "Park"),Checkbox(g_iAnimLock,"AnimLock"), "Pose"];
     
     if(llGetInventoryType("~stiff")==INVENTORY_ANIMATION){
         lButtons += [Checkbox(g_iPosture, "Posture")];
@@ -289,7 +289,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                     
                 }
             }else llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to changing pose offset", kID);
-        } else if( sChangetype=="groundsit") {
+        } else if( sChangetype=="groundsit" || sChangeType=="park") {
                 if(sChangevalue=="on" && g_iGroundSit==FALSE)
                 {
                     llOwnerSay("@sitground=force");
@@ -650,7 +650,7 @@ state active
                             }
                         }
                     } 
-                    else if(sMsg == Checkbox(g_iGroundSit,"Ground Sit"))
+                    else if(sMsg == Checkbox(g_iGroundSit,"Park"))
                     { 
                         if(g_iGroundSit) UserCommand(iAuth,"groundsit off",kAv);
                         else UserCommand(iAuth,"groundsit on",kAv);
@@ -841,5 +841,6 @@ state inUpdate{
         }
     }
 }
+
 
 
