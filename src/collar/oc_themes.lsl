@@ -11,9 +11,10 @@ https://github.com/OpenCollarTeam/OpenCollar
 Contributrs:
 
 Medea (Medea Destiny):
-   Jun 2026 -  removed show/hide function to move it to oc_settings, so script
+   Jun 2025 -  removed show/hide function to move it to oc_settings, so script
                is no longer needed for collars without themes.
-
+    Dec 2025 - added 20 second timer on changed_inventory to trigger scanThemes()
+               to avoid spamming on update
 
 */
 
@@ -358,10 +359,14 @@ state active
 
     changed(integer iChange){
         if(iChange&CHANGED_INVENTORY){
-            ScanThemes();
+            llSetTimerEvent(20);
         }
     }
-
+    timer()
+    {
+        llSetTimerEvent(0);
+        ScanThemes();
+    }
     dataserver(key kID, string sData){
         if(HasDSRequest(kID)!=-1){
             if(sData==EOF){
