@@ -1,17 +1,20 @@
 /*
 This file is a part of OpenCollar.
 Copyright ©2021
-
-
 : Contributors :
-
 Aria (Tashia Redrose)
     * Oct 2020       -       Created oc_themes
-
-
 et al.
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
+
+Contributrs:
+
+Medea (Medea Destiny):
+   Jun 2025 -  removed show/hide function to move it to oc_settings, so script
+               is no longer needed for collars without themes.
+    Dec 2025 - added 20 second timer on changed_inventory to trigger scanThemes()
+               to avoid spamming on update
 
 */
 
@@ -20,7 +23,7 @@ string g_sParentMenu = "Apps";
 string g_sSubMenu = "Themes";
 
 
-integer g_iHide;
+//integer g_iHide;
 
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
@@ -134,7 +137,9 @@ UserCommand(integer iNum, string sStr, key kID) {
             if(gp(llGetObjectPermMask(MASK_OWNER))=="full"){
                 PrintCurrentProperties(kID);
             }
-        } else if(sChangetype == "hide"){
+        }
+        /* else if(sChangetype == "hide")
+         {
             // Process collar hide
             if(kID == g_kWearer && !g_iAllowHide){
                 llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% due to: Allow Hiding is blocked", kID);
@@ -143,7 +148,9 @@ UserCommand(integer iNum, string sStr, key kID) {
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_hide=1", "");
                 ToggleCollarAlpha(FALSE);
             }
-        } else if(sChangetype == "show"){
+        } 
+        else if(sChangetype == "show")
+        {
             if(kID == g_kWearer && !g_iAllowHide){
                 llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% due to: Allow Hiding is blocked", kID);
                 return;
@@ -151,9 +158,10 @@ UserCommand(integer iNum, string sStr, key kID) {
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_hide=0", "");
                 ToggleCollarAlpha(TRUE);
             }
-        }
+        }*/
     }
 }
+/*
 integer g_iAllowHide = 1;
 //integer g_iHidden;
 ToggleCollarAlpha(integer iHide){ // iHide is inverted for the alpha masking.
@@ -185,7 +193,7 @@ ToggleCollarAlpha(integer iHide){ // iHide is inverted for the alpha masking.
     }
 }
 
-
+*/
 list g_lDSRequests;
 key NULL=NULL_KEY;
 UpdateDSRequest(key orig, key new, string meta){
@@ -245,7 +253,7 @@ integer g_iMenuStride;
 list g_lOwner;
 list g_lTrust;
 list g_lBlock;
-integer g_iLocked=FALSE;
+//integer g_iLocked=FALSE;
 string sBuffer = "";
 E(key kID, string sMsg){
     sBuffer += "\n"+sMsg;
@@ -351,10 +359,14 @@ state active
 
     changed(integer iChange){
         if(iChange&CHANGED_INVENTORY){
-            ScanThemes();
+            llSetTimerEvent(20);
         }
     }
-
+    timer()
+    {
+        llSetTimerEvent(0);
+        ScanThemes();
+    }
     dataserver(key kID, string sData){
         if(HasDSRequest(kID)!=-1){
             if(sData==EOF){
@@ -573,7 +585,9 @@ state active
         } else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
-        } else if(iNum == LM_SETTING_RESPONSE){
+       }
+       /* else if(iNum == LM_SETTING_RESPONSE)
+       {
             // Detect here the Settings
             list lSettings = llParseString2List(sStr, ["_","="],[]);
             string sToken = llList2String(lSettings,0);
@@ -594,8 +608,9 @@ state active
                 if(sVar == "owner"){
                     g_lOwners = llParseString2List(sVal,[","],[]);
                 }
-            }*/
-        } else if(iNum == LM_SETTING_DELETE){
+            }*//*
+        } 
+        else if(iNum == LM_SETTING_DELETE){
             // This is received back from settings when a setting is deleted
             list lSettings = llParseString2List(sStr, ["_"],[]);
             if(llList2String(lSettings,0)=="global"){
@@ -604,7 +619,8 @@ state active
                     ToggleCollarAlpha(!g_iHide);
                 }
             }
-        } else if(iNum == REBOOT){
+        } */
+        else if(iNum == REBOOT){
             // Reboot. We dont care if --f or not.
             llResetScript();
         }
