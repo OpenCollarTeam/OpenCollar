@@ -32,6 +32,7 @@ Medea (Medea Destiny)
                 higher auth to undo.
     Nov 2025   -  Added CMD_INFO handling for UNSIT to manage ground sits.
     Dec 2025   - Changed "groundsit" to "park"
+    Jan 2026   - Restore groundsit on teleport when parked
 Nikki Larima 
     May 2025    - CMD_SAFEWORD handler to remove animlock and stop all animations
 
@@ -525,6 +526,10 @@ state active
     
     changed(integer t){
         if(t&CHANGED_INVENTORY)llResetScript(); // maybe changed animations
+        else if(t&CHANGED_TELEPORT)
+        {
+            if(g_iGroundSit==TRUE) llOwnerSay("@sitground=force");
+        }
     }
     
     run_time_permissions(integer iPerms){
@@ -841,6 +846,7 @@ state inUpdate{
         }
     }
 }
+
 
 
 
