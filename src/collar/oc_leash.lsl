@@ -43,6 +43,7 @@ Medea (medea.destiny)
                 to avoid menu desync & reduce redundancy
                 - Set g_iAwayCounter when dropping leash due to line of sight in case leasher leaves
                 sim while in this state, causing strict mode restrictions to drop
+   Jan 2026    - fix for face menu backbutton not working
 Nikki Larima 
     Nov 2023    - Remove processing of "runaway" command string, handled by CMD_SATEWORD
                   implemented Yosty7b3's menu streamlining, see pr#963    
@@ -634,6 +635,11 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
             }
         }else if (sComm=="face") 
         {
+            if (sVal==llToLower(BUTTON_UPMENU))
+            {
+                UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
+                return;
+            }
             if(sVal=="me") sVal=(string)kMessageID;
             vector vTargPos=llList2Vector(llGetObjectDetails((key)sVal,[OBJECT_POS]),0);
             if(vTargPos==ZERO_VECTOR) 
