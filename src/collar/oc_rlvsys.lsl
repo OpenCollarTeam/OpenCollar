@@ -543,8 +543,11 @@ state active
                 }
             }
             else if(sStr == "settings=sent"){
-                // Just in case RLV_REFRESH was sent before other modules are active when not resetting on rez
-                if (g_iRlvActive) llMessageLinked(LINK_SET, RLV_REFRESH, "", NULL_KEY);
+                // Just in case RLV_ON and RLV_REFRESH was sent before other modules are active when not resetting on rez
+                if (g_iRlvActive) {
+                    llMessageLinked(LINK_SET, RLV_ON, "", NULL_KEY);
+                    llMessageLinked(LINK_SET, RLV_REFRESH, "", NULL_KEY);
+                }
             }
         } else if (iNum == CMD_SAFEWORD) SafeWord("");
         else if (iNum==RLV_QUERY) {
@@ -729,6 +732,7 @@ state inUpdate{
         }
     }
 }
+
 
 
 
