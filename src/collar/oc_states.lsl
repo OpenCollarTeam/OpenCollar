@@ -471,7 +471,7 @@ default
                 if(llList2String(lSettings,1) == "locked") 
                 {
                     g_iLocked=FALSE;
-                    showHide(TRUE);
+                    showHide(!g_iHide);
                 }
             }
         }
