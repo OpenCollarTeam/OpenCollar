@@ -4,6 +4,14 @@ Created by Medea Destiny copyright 2023
 Licensed under the GPLv2. See LICENSE for full details.
 https://github.com/OpenCollarTeam/OpenCollar
 
+Nikki Lacrima
+    June 2025 - Fix dialog message overflow due to use of secondlife:///app/agent/key/about
+Medea Destiny
+    June 2025 - Trim hit list for excesses to help with dialog overflow and put pause between
+                chat commands as sometimes commands were being dropped and hopefully that
+                fixes it!
+
+
 
 This script is intended as an example to demonstrate more complicated
 applications of the OC interface channel. Until OC8.3, the interface channel
@@ -191,7 +199,7 @@ default
 {
     state_entry()
     {
-        
+       
     }
 
     touch_start(integer total_number)
@@ -294,8 +302,11 @@ default
                 {
                     iRestricted=TRUE;
                     llRegionSayTo(kTarget,iTargetChan,"authas:"+(string)kID+"="+(string)kTarget+":restriction add Sit TP");
+                    llSleep(0.1); //Brief sleep between commands to ensure collar doesn't drop a message
                     llRegionSayTo(kTarget,iTargetChan,"authas:"+(string)kID+"="+(string)kTarget+":restriction add Landmark");
+                    llSleep(0.1);
                     llRegionSayTo(kTarget,iTargetChan,"authas:"+(string)kID+"="+(string)kTarget+":restriction add TP Location");
+                    llSleep(0.1);
                     llRegionSayTo(kTarget,iTargetChan,"authas:"+(string)kID+"="+(string)kTarget+":restriction add Accept TP");
                     //Although this is a bit more complicated, it's all the same principle. This is really just the same as
                     //using chat commands to add restrictions, one after the other. Note that you can (as of 8.3) use the
@@ -313,15 +324,20 @@ default
                     if(iLeashed)
                     {
                         iLeashed=FALSE;
+                        llSleep(0.1);//Brief sleep between commands to ensure collar doesn't drop a message
                         llRegionSayTo(kTarget,iTargetChan,"authas:"+(string)kID+"="+(string)kTarget+":unleash");
                         //Clear the variable and send the chat command to unleash
                     }
                     if(iRestricted)
                     {
                         iRestricted=FALSE;
+                        llSleep(0.1);//Brief sleep between commands to ensure collar doesn't drop a message
                         llRegionSayTo(kTarget,iTargetChan,"authas:"+(string)kID+"="+(string)kTarget+":restriction rem Sit TP");
+                        llSleep(0.1);
                         llRegionSayTo(kTarget,iTargetChan,"authas:"+(string)kID+"="+(string)kTarget+":restriction rem Landmark");
+                        llSleep(0.1);
                         llRegionSayTo(kTarget,iTargetChan,"authas:"+(string)kID+"="+(string)kTarget+":restriction rem TP Location");
+                        llSleep(0.1);
                         llRegionSayTo(kTarget,iTargetChan,"authas:"+(string)kID+"="+(string)kTarget+":restriction rem Accept TP");
                         //You get the drill by now!
                     }
@@ -341,6 +357,7 @@ default
             //timer while listening for checkauth responses is up.
             iScan=FALSE;
             if(llGetListLength(lHits)==0) llRegionSayTo(kOperator,0,"Sorry, there's nobody on the parcel wearing an OC8.3 or newer collar that you have access to.");
+            else if (llGetListLength(lHits)>16) lHits=llList2List(lHits,0,15);
             else
             {
                 //We've got at least one collar response, so create a menu to allow user to pick their target from the options
@@ -354,7 +371,7 @@ default
                 integer x;
                 while(x<i)
                 {
-                    text+=(string)((integer)x/2+1)+": "+llList2String(lHits,x)+" / secondlife:///app/agent/"+llList2String(lHits,x+1)+"/about\n";
+                    text+=(string)((integer)x/2+1)+": "+llList2String(lHits,x)+" / "+llGetDisplayName(llList2Key(lHits,x+1))+"\n";
                     x=x+2;
                 }
                 iHandle=llListen(iChan,"",kOperator,"");
