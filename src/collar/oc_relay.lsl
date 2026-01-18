@@ -505,7 +505,9 @@ init() {
         
     g_kSitTarget = (key)LSDRead("sittarget");
     g_iMode=(integer)llLinksetDataRead("relay_mode");
-    g_iWearer=(integer)llLinksetDataRead("relay_wearer");                    
+    // g_iWearer defaults to 1 if no setting has been stored
+    g_iWearer = 1;
+    if (llLinksetDataRead("relay_wearer")!="") g_iWearer=(integer)llLinksetDataRead("relay_wearer"); 
     g_iHelplessMode=(integer)llLinksetDataRead("relay_helpless");                    
     g_iTrustOwners=(integer)llLinksetDataRead("relay_trustowner");                    
     g_iTrustTrusted=(integer)llLinksetDataRead("relay_trusttrust");        
@@ -764,7 +766,7 @@ default
                     llMessageLinked(LINK_SET,LM_SETTING_DELETE, "relay_trustowner","");
                 } else if(sVar == "trusttrust"){
                     g_iTrustTrusted=(integer)sValue;
-                    llLinksetDataWrite("relay_trustrust",sValue);
+                    llLinksetDataWrite("relay_trusttrust",sValue);
                     llMessageLinked(LINK_SET,LM_SETTING_DELETE, "relay_trusttrust","");
                 }
             }          
