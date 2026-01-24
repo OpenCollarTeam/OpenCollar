@@ -546,6 +546,12 @@ state active
                 // Just in case RLV_ON and RLV_REFRESH was sent before other modules are active when not resetting on rez
                 if (g_iRlvActive) {
                     llMessageLinked(LINK_SET, RLV_ON, "", NULL_KEY);
+                    if (g_iRlvaVersion) {
+                        llMessageLinked(LINK_SET, RLVA_VERSION, (string) g_iRlvaVersion, NULL_KEY);
+                    }
+                    else {
+                        llMessageLinked(LINK_SET,RLV_VERSION, (string) g_iRlvVersion,NULL_KEY);
+                    }
                     llMessageLinked(LINK_SET, RLV_REFRESH, "", NULL_KEY);
                 }
             }
@@ -732,6 +738,7 @@ state inUpdate{
         }
     }
 }
+
 
 
 
