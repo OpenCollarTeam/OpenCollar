@@ -7,7 +7,7 @@
 //    *Apr 2024   -   Added optional partner controlled couples pose system to remove legacy ask box if initiator is trusted
  
 // Licensed under the GPLv2.  See LICENSE for full details. 
-string g_sScriptVersion="8.3";
+string g_sScriptVersion="8.4";
 integer LINK_CMD_DEBUG=1999;
 DebugOutput(key kID, list ITEMS){
 	integer i=0;
@@ -724,3 +724,4 @@ state active
 */
     }
 }
+
