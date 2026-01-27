@@ -28,7 +28,7 @@
 //          ***************** ***************** *****************
 
 string g_sAppVersion = "1.1";
-string g_sScriptVersion = "8.3";
+string g_sScriptVersion = "8.4";
 
 string g_sParentMenu = "Apps";
 string g_sSubMenu = "Label";
