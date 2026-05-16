@@ -7,12 +7,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v6
 
-      - name: "Download prerequisite: Makopo/lslint"
-        uses: actions/checkout@v2
+      - name: "Download prerequisite: NikkiLacrima/lslint"
+        uses: actions/checkout@v6
         with:
-          repository: "Makopo/lslint"
+          repository: "NikkiLacrima/lslint"
           path: "linter"
       - name: "Compile Linter"
         run: |
@@ -23,3 +23,4 @@ jobs:
         run: |
           chmod +x ${{github.workspace}}/run_lslint.sh
           ${{github.workspace}}/run_lslint.sh ${{github.workspace}}/linter/lslint
+  
