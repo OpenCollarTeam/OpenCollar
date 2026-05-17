@@ -33,7 +33,7 @@ When adding a front chain a check is made if leash is active and if leash shares
 In this case no chain is added.
 */
 
-string g_sScriptVersion = "8.3.1";
+string g_sScriptVersion = "8.4";
 integer LINK_CMD_DEBUG=1999;
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
