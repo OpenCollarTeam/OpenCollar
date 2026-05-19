@@ -38,6 +38,8 @@ Nikki Lacrima
    *Oct 2025   - init() function for rez state, factory clean on CHANGE_OWNER
                  reducing memory use to handle large relay messages
                  only default state, remove RLV function (just a wrapper to linkmessage RLV_CMD)
+   *May 2026   - Add relay ping after teleport 
+
 
 et al.
 
@@ -495,6 +497,29 @@ CheckSitTarget() {
     LSDWrite("sittarget", (string)g_kSitTarget);                            
 }
 
+DoRelayPing() {
+    // read list of previous sources to ping for reapply
+    g_lPendingReapply = [];
+    integer i;
+    list sources = llLinksetDataFindKeys(LSDPrefix+"_source_.*", 0, 20);
+    for (i=0; i< llGetListLength(sources); i++) {
+        list data = llParseString2List(llList2String(sources,i),["_"],[""]);
+        key kID = llList2Key(data, 2);
+        g_lPendingReapply += [kID];  
+    }
+
+    if (g_iMode) {
+        for (i=0;i<llGetListLength(g_lPendingReapply);i++) {
+            // ping the sources
+            key kSource = llList2Key(g_lPendingReapply,i);
+            llRegionSayTo(kSource, RLV_RELAY_CHANNEL,"ping,"+(string)kSource+",ping,ping");
+//            llOwnerSay("oc_relay:ping,"+(string)kSource+",ping,ping");
+        }
+    }
+    // pong timer
+    llSetTimerEvent(30);
+}
+
 // Starup code, called instead of reset on rez
 // Normal behavor on rez is to simply call init()
 // pending sources are cleared, allowed and disallowed lists are kept
@@ -575,7 +600,8 @@ default
         if (llGetListLength(g_lPendingReapply)>0) {
             integer i = 0;
             for (i=0; i<llGetListLength(g_lPendingReapply); i++) {
-//            llOwnerSay("no pong: "+LSDRead("source_"+llList2String(g_lPendingReapply,i))); 
+//                llOwnerSay("no pong: "+LSDRead("source_"+llList2String(g_lPendingReapply,i))); 
+                llMessageLinked(LINK_THIS, RLV_CMD, "clear",(key)llList2String(g_lPendingReapply,i));
                 LSDWrite("source_"+llList2String(g_lPendingReapply,i),"");
             }
             g_lPendingReapply = [];
@@ -708,29 +734,8 @@ default
             }
         } else if (iNum == RLV_ON) {
             if (g_iRlvActive) return; // RLV already set as active, not much to do
-
-            // read list of previous sources to ping for reapply
-            g_lPendingReapply = [];
-            integer i;
-            list sources = llLinksetDataFindKeys(LSDPrefix+"_source_.*", 0, 20);
-            for (i=0; i< llGetListLength(sources); i++) {
-                list data = llParseString2List(llList2String(sources,i),["_"],[""]);
-                key kID = llList2Key(data, 2);
-                g_lPendingReapply += [kID];  
-            }
-            // start listener for !pong
-//            llOwnerSay("oc_relay:RLV ON start listener for ping/pong, mode is "+(string)g_iMode);
-            if (g_iMode) {
-                RELAY_LISTENER = llListen(RLV_RELAY_CHANNEL, "", NULL_KEY, "");
-                for (i=0;i<llGetListLength(g_lPendingReapply);i++) {
-                    // ping the sources
-                    key kSource = llList2Key(g_lPendingReapply,i);
-                    llRegionSayTo(kSource, RLV_RELAY_CHANNEL,"ping,"+(string)kSource+",ping,ping");
-//                    llOwnerSay("oc_relay:RLV ON ping,"+(string)kSource+",ping,ping");
-                }
-                // pong timer
-                llSetTimerEvent(30);
-            }
+            if (g_iMode) RELAY_LISTENER = llListen(RLV_RELAY_CHANNEL, "", NULL_KEY, "");
+            DoRelayPing();
             g_iRlvActive = 1;
         } else if (iNum == RLV_OFF) {
             ReleaseAll(FALSE);
@@ -886,6 +891,10 @@ default
         {
             llLinksetDataDeleteFound("^relay_",""); 
             llResetScript();
+        }
+        if(change & CHANGED_TELEPORT)
+        {
+            DoRelayPing(); 
         }
     }
 
