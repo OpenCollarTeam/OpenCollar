@@ -399,9 +399,10 @@ state active
     link_message(integer iSender,integer iNum,string sStr,key kID){
         if(iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID);
         else if(iNum == RLVA_VERSION ){
-               if(sStr != "0"){
-                  g_iRLVa=TRUE;
-               }else g_iRLVa=FALSE;
+            if(sStr != "0"){
+                g_iRLVa=TRUE;
+            } else g_iRLVa=FALSE;
+            Process();
         }
         else if(iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu+"|"+ g_sSubMenu,"");
