@@ -152,7 +152,8 @@ list lRLVEx = [
     "RcvEmote"      , "recvemote"   , 8     ,
     "Lure"          , "tplure"      , 16    ,
     "Force TP"      , "accepttp"    , 32    ,
-    "Start IM"      , "startim"     , 64
+    "Start IM"      , "startim"     , 64    ,
+    "TP Request"    , "accepttprequest" , 128
 ];
 
 string g_sExTarget = "";
@@ -161,10 +162,11 @@ list g_lOwners = [];
 list g_lTrusted = [];
 list g_lTempOwners = [];
 
-// Default exception masks for owners and trusted users. 127 grants all
-// available exceptions (bits 0-6 set), while 95 excludes the "Force TP"
-// bit so trusted users cannot auto-teleport the wearer by default.
-integer g_iOwnerEx = 127;
+// Default exception masks for owners and trusted users. 255 grants all
+// available exceptions (bits 0-7 set), while 95 excludes the "Force TP"
+// and "Accept TP" bits so trusted users cannot force teleports on the
+// wearer by default.
+integer g_iOwnerEx = 255;
 integer g_iTrustedEx = 95;
 
 //integer TIMEOUT_READY = 30497;
@@ -274,7 +276,7 @@ MenuSetExceptions(key kID, integer iAuth, string sTarget){
     if(sTarget=="Owner") menutext+="OWNERS";
     else if(sTarget=="Trusted") menutext+="TRUSTED PEOPLE";
     else menutext+="'"+g_sTmpExceptionName+"'";
-    menutext+=" from being impacted by restrictions. Wearer can always:\n *IM - send them IMs\n *RcvIM - Receive their IMs\n *RcvChat - Hear their chat\n *RcvEmote - See their emotes\n *Lure - Receive their TP offers\n *StartIM - Start IM conversations with them\n *Force TP - When on, auto-accept their TP offers";
+    menutext+=" from being impacted by restrictions. Wearer can always:\n *IM - send them IMs\n *RcvIM - Receive their IMs\n *RcvChat - Hear their chat\n *RcvEmote - See their emotes\n *Lure - Receive their TP offers\n *StartIM - Start IM conversations with them\n *Force TP - When on, auto-accept their TP offers\n *TP Request - When on, auto-accept their TP requests";
     
     Dialog(kID, menutext, lButtons, [UPMENU], 0, iAuth, "Exceptions~Set");
 }
@@ -352,12 +354,12 @@ UpdateList(list newlist, integer type) // type 1=owner, 2=trusted;
 SetUserExes(key id, integer mask, integer lastmask)
 {
     if(id==g_kWearer) return;
-    list lExcepts=["sendim","recvim","recvchat","recvemote","tplure","accepttp","startim"];
+    list lExcepts=["sendim","recvim","recvchat","recvemote","tplure","accepttp","startim","accepttprequest"];
     integer i;
     integer maskval;
     list out;
-    // Cycle through the seven possible exception bits (0-6)
-    while(i<7)
+    // Cycle through the eight possible exception bits (0-7)
+    while(i<8)
     {
         // Equivalent of (1 << i) to test each bit individually
         maskval=(1<<i);
@@ -419,9 +421,9 @@ SetAllExes(integer clearall, integer type, integer send)
         // Custom exceptions are stored as triplets [name, id, mask]
         while(i<end)
         {
-            // Clear any previously applied exceptions. 127 represents all
+            // Clear any previously applied exceptions. 255 represents all
             // possible bits so the whole mask is removed first.
-            SetUserExes(llList2Key(g_lCustomExceptions,i),0,127);
+            SetUserExes(llList2Key(g_lCustomExceptions,i),0,255);
             if(!clearall) SetUserExes(llList2Key(g_lCustomExceptions,i),llList2Integer(g_lCustomExceptions,i+1),0);
             i=i+3;
         }
@@ -551,7 +553,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                     sExceptionMasks += llList2String(lRLVEx,ix)+" = "+llList2String(lRLVEx,ix+2)+", ";
                 }
                 // list all possible bitmasks
-                llMessageLinked(LINK_SET, NOTIFY, "0Exceptions use a bitmask. Allowed values: "+sExceptionMasks+". Add selected values together for the bitmask value. Max bitmask is 127.", kID);
+                llMessageLinked(LINK_SET, NOTIFY, "0Exceptions use a bitmask. Allowed values: "+sExceptionMasks+". Add selected values together for the bitmask value. Max bitmask is 255.", kID);
             } else if(sChangekey == "help"){
                 // Provide a short usage summary for the console command
                 llMessageLinked(LINK_SET, NOTIFY, "0Commands: listmasks, modify, listcustom\n\nmodify takes 2-3 arguments.\nmodify owner [newBitmask]\nmodify trust [newMask]\nmodify [customExceptionName(no spaces)] [customExceptionUUID] [bitmask]", kID);
