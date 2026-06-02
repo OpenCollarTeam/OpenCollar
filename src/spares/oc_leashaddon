@@ -15,11 +15,16 @@ active, will cause your regular collar to autohide when the item containing this
 worn.
 
 The menu to control an attached device can be found in your collar's add-ons menu, where
-you will find a button named for the attachment. The menu inside here contains three buttons:
+you will find a button named for the attachment. The menu inside here contains five buttons:
 LOCK - toggles locking the add-on object
 AUTOHIDE - Toggles autohiding your actual collar when this is worn. If you're using this for 
 "virtual collar" then switch this on. If you're using it as an alternative leash point, don't.
 ACTIVATE - Toggles the item on/off.
+ADDON MENU - When activated the addon menu is opened on click, otherwise the main collar menu is opened. 
+Note that there is no public access to the addon menu. 
+SMART TARGET - (EXPERIMENTAL) If the leasher (dom) does not wear a collar or leashhandle then the leash chain 
+goes to the avatar center (groin). With SMART TARGET the addon searches for objects attached to leasher's
+ring fingers, wrists or hands to send the chain to.
 
 INSTALLATION
 This can be installed in any attachment with mod perms. If your attachment is rigged mesh, then
@@ -66,6 +71,8 @@ Licensed under the GPLv2.  See LICENSE for full details.
 
 Nikki Lacrima
     Oct 2025  -   Leash Addon to replace collar leashpoint
+    May 2026  -   Updated Lockmeister code that searches for leash target.
+                  Added AddonMenu and SmartTarget, and save settings in LSD. 
 
 Medea Destiny
     Oct 2025  -   Added autohide function to menu. When active, collar hides on connect
@@ -84,6 +91,7 @@ string g_sLeashgroup = "Addon Leash"; // String used to identify this script whe
 integer g_iAddonActive = TRUE;
 integer g_iAddonLocked = FALSE;
 integer g_iAddonMenuOnClick = FALSE;
+integer g_iSmartLeashTarget = TRUE;
 
 //integer CMD_ZERO            = 0;
 integer CMD_OWNER           = 500;
@@ -241,13 +249,28 @@ Particles(integer iLink, key kParticleTarget, vector vScale) {
     llLinkParticleSystem(iLink, lTemp);
 }
 
+list g_lAttachPoints = [
+    ATTACH_RHAND_RING1, ATTACH_LHAND_RING1, 
+    ATTACH_RLARM, ATTACH_LLARM, 
+    ATTACH_RHAND, ATTACH_LHAND
+];
+
 StartParticles(key kParticleTarget) {
     /* Look for leash target instead of avatar center */
     if (kParticleTarget == NULL_KEY || g_iAddonActive == 0) return;
     if (kParticleTarget == g_kLeashedTo) {
-        list attachments = llGetAttachedListFiltered(g_kLeashedTo, [FILTER_INCLUDE, ATTACH_RHAND,FILTER_INCLUDE, ATTACH_LHAND]);
-        key target = (key)llList2String(attachments,0);
-        if (target) kParticleTarget = target;
+        if (g_iSmartLeashTarget) {
+            integer i;
+            list lAttachments;
+            key kTarget = NULL_KEY;
+            for (i=0; i<llGetListLength(g_lAttachPoints) && (kTarget == NULL_KEY); i+=1) {
+                lAttachments = llGetAttachedListFiltered(g_kLeashedTo, [FILTER_INCLUDE, llList2Integer(g_lAttachPoints,i)] );
+                //llOwnerSay("  "+(string)llGetObjectDetails((key)llList2String(attachments,0), [OBJECT_NAME]) );
+                kTarget = (key)llList2String(lAttachments,0);
+                if (kTarget) kParticleTarget = kTarget; else kTarget = NULL_KEY;
+            }
+        }
+        
     }
     //llWhisper(0, "start particles, prio "+(string)g_iCurrentPrio+" "+(string)kParticleTarget+" "+(string)llGetObjectDetails(kParticleTarget, [OBJECT_NAME]) );
     g_iDisplayedPrio = g_iCurrentPrio;
@@ -446,6 +469,8 @@ Menu(key kID, integer iAuth) {
         sPrompt += "\nAutohide collar when wearing addon.";
         lButtons = lButtons+[llList2String(g_lCheckboxes, g_iAutohide)+" Autohide"];
     }
+    sPrompt += "\nSmart Target: Try to find leash target from attachments when collar or leashhandle is missing.";
+    lButtons = lButtons+[llList2String(g_lCheckboxes, (g_iSmartLeashTarget>0))+" "+"Smart Target"];
     
     //llSay(0, "opening menu");
     Dialog(kID, sPrompt, lButtons, ["DISCONNECT", UPMENU], 0, iAuth, "Menu~Main");
@@ -554,6 +579,9 @@ default
             g_iAutohide = 0;
             llLinksetDataWrite("leashaddon_autohide","0");
         }
+        sValue = llLinksetDataRead("leashaddon_smarttarget");
+        if (sValue) g_iSmartLeashTarget = (integer)sValue;         
+        
         if (g_sAddon == "OBJECTNAME") g_sAddon = llGetLinkName(LINK_ROOT);
         if (g_sAddon == "PRIMNAME") g_sAddon = llGetLinkName(LINK_THIS);
         API_CHANNEL = ((integer)("0x" + llGetSubString((string)llGetOwner(), 0, 8))) + 0xf6eb - 0xd2;
@@ -794,7 +822,14 @@ default
                                          g_iSentHide=FALSE;
                                     }
 
-                                }                 
+                                } 
+                                      
+                                else if (sMsg == llList2String(g_lCheckboxes, (g_iSmartLeashTarget>0))+" "+"Smart Target")
+                                {
+                                    g_iSmartLeashTarget = !g_iSmartLeashTarget;
+                                    StartParticles(g_kParticleTarget);
+                                    llLinksetDataWrite("leashaddon_smarttarget", (string)g_iSmartLeashTarget );
+                                } 
                                 else if (sMsg == "DISCONNECT")
                                 {
                                     Link("offline", 0, "", llGetOwnerKey(g_kCollar));
