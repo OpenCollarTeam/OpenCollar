@@ -105,7 +105,7 @@ integer CMD_EVERYONE        = 504;
 //integer CMD_RELAY_SAFEWORD  = 511;
 //integer CMD_NOACCESS        = 599;
 
-integer LM_SETTING_SAVE     = 2000; //scripts send messages on this channel to have settings saved, <string> must be in form of "token=value"
+//integer LM_SETTING_SAVE     = 2000; //scripts send messages on this channel to have settings saved, <string> must be in form of "token=value"
 integer LM_SETTING_REQUEST  = 2001; //when startup, scripts send requests for settings on this channel
 integer LM_SETTING_RESPONSE = 2002; //the settings script sends responses on this channel
 integer LM_SETTING_DELETE   = 2003; //delete token from settings
@@ -113,7 +113,7 @@ integer LM_SETTING_DELETE   = 2003; //delete token from settings
 
 integer DIALOG          = -9000;
 integer DIALOG_RESPONSE = -9001;
-integer DIALOG_TIMEOUT  = -9002;
+//integer DIALOG_TIMEOUT  = -9002;
 
 /*********************** Leash particle handling and settings from oc_particle ****************************/
 integer CMD_PARTICLE = 20000;
@@ -124,9 +124,9 @@ key g_kLeashToPoint = NULL_KEY;    /* Actual prim that is used for displayed cha
 integer g_bLeasherIsAv = FALSE;
 
 integer g_iLeashActive;
-integer g_iTurnMode;
-integer g_iStrictMode;
-integer g_iStrictRank;
+//integer g_iTurnMode;
+//integer g_iStrictMode;
+//integer g_iStrictRank;
 string g_sParticleMode = "Ribbon"; //modes can be: Ribbon, Classic and noParticle
 string g_sRibbonTexture;
 string g_sClassicTexture;
@@ -135,16 +135,14 @@ string g_sClassicTexture;
 list g_lLeashPrims;
 
 string UPMENU       = "BACK";
-string PARENTMENU   = "Leash";
-string SUBMENU      = "Configure";
 string L_COLOR      = "color";
 string L_GRAVITY    = "gravity";
 string L_SIZE       = "size";
-string L_FEEL       = "feel";
+//string L_FEEL       = "feel";
 string L_GLOW       = "shine";
 string L_STRICT     = "strict";
 string L_TURN       = "turn";
-string L_DEFAULTS   = "RESET";
+//string L_DEFAULTS   = "RESET";
 string L_CLASSIC_TEX= "Chain"; //texture name when using the classic particle stream
 string L_RIBBON_TEX = "Silk"; //texture name when using the ribbon_mask particle stream
 // Defalut leash particle, can read from defaultsettings:
@@ -403,6 +401,7 @@ LockMeister_Handler(string sMessage, key id) {
     if (kLMKey != llGetOwner() && kLMKey != g_kLeashedTo) return;
 
     if (kLMKey == llGetOwner()) { // Request handling is empty for now
+        return;
     } 
 
     if (kLMKey == g_kLeashedTo) { // Response from g_kLeashedTo 
@@ -445,9 +444,6 @@ LockMeister_Handler(string sMessage, key id) {
 list g_lOptedLM     = [];
 
 list g_lCheckboxes=["□","▣"];
-string Checkbox(integer iValue, string sLabel) {
-    return llList2String(g_lCheckboxes, (iValue>0))+" "+sLabel;
-}
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
     
