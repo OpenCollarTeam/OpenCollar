@@ -39,7 +39,8 @@ Nikki Lacrima
                  reducing memory use to handle large relay messages
                  only default state, remove RLV function (just a wrapper to linkmessage RLV_CMD)
    *May 2026   - Add relay ping after teleport 
-
+   *Jul 2026   - Display correct object owner in PromptForSource(key kID), removed global g_kObjectOwner. 
+                 Proposed solution by SheryBanana in world.
 
 et al.
 
@@ -127,7 +128,6 @@ list g_lPendingReapply;   // sourceId to wait for pong reply
 
 key g_kForceSitSource;       //  LSD relay_sitter = UUID
 key g_kSitTarget;         //  LSD relay_sittarget=UUID
-key g_kObjectOwner;
 key g_kWearer;
 integer g_iHasOwners=FALSE;
 
@@ -449,15 +449,25 @@ CheckAskSource(){
     if (llGetListLength(g_lPendingSourceList) == 0) return;    
     key kSource = llList2Key(g_lPendingSourceList,0);
     if (g_iTrustOwners || g_iTrustTrusted) {
-        g_kObjectOwner = llList2Key(llGetObjectDetails(kSource, [OBJECT_OWNER]),0);
-        llMessageLinked(LINK_SET, AUTH_REQUEST, "relay", g_kObjectOwner);
+        key kOwner = llList2Key(llGetObjectDetails(kSource, [OBJECT_OWNER]),0);
+        llMessageLinked(LINK_SET, AUTH_REQUEST, "relay", kOwner);
     } else {
         PromptForSource(kSource);
     }
 }
 
-PromptForSource(key kID){    
-    Dialog(llGetOwner(), "[Relay]\n\nObject Name: "+llKey2Name(kID)+"\nObject ID: "+(string)kID+"\nObject Owner: secondlife:///app/agent/"+(string)g_kObjectOwner+"/about\n\nIs requesting to use your RLV Relay, do you want to allow it?", ["Yes", "No"], [], 0, CMD_WEARER, "AskPrompt");
+PromptForSource(key kID)
+{    
+    key kOwner = llList2Key(llGetObjectDetails(kID, [OBJECT_OWNER]), 0);
+
+    Dialog(
+        llGetOwner(),
+        "[Relay]\n\nObject Name: " + llKey2Name(kID) +
+        "\nObject ID: " + (string)kID +
+        "\nObject Owner: secondlife:///app/agent/" + (string)kOwner + "/about" +
+        "\n\nIs requesting to use your RLV Relay, do you want to allow it?",
+        ["Yes", "No"], [], 0, CMD_WEARER, "AskPrompt"
+    );
     llSetTimerEvent(60);
 }
 
