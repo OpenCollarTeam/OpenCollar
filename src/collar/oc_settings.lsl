@@ -12,34 +12,24 @@ Medea Destiny
                         padding on initialize
 */
 
-//string g_sParentMenu = "Apps";
-
+// This script uses LinksetData for storage settings 
 
 integer TIMEOUT_REGISTER = 30498;
 integer TIMEOUT_FIRED = 30499;
 
-
 string GetSetting(string sToken) {
-    integer i = llListFindList(g_lSettings, [llToLower(sToken)]);
-    if(i == -1)return "NOT_FOUND";
-    return llList2String(g_lSettings, i + 1);
+    string data = llLinksetDataRead(llToLower(sToken));
+    if (data == "") return "NOT_FOUND";
+    else return data;
 }
 
 DelSetting(string sToken) { // we'll only ever delete user settings
     sToken = llToLower(sToken);
-    integer i = llGetListLength(g_lSettings) - 1;
-    if(sToken == "intern_weld")DeleteWeldFlag();
+
     if (SplitToken(sToken, 1) == "all") {
         sToken = SplitToken(sToken, 0);
-      //  string sVar;
-        for (; ~i; i -= 2) {
-            if (SplitToken(llList2String(g_lSettings, i - 1), 0) == sToken)
-                g_lSettings = llDeleteSubList(g_lSettings, i - 1, i);
-        }
-        return;
-    }
-    i = llListFindList(g_lSettings, [sToken]);
-    if (~i) g_lSettings = llDeleteSubList(g_lSettings, i, i + 1);
+        llLinksetDataDeleteFound(sToken+"_", "");
+    } else llLinksetDataDelete(sToken);
 }
 
 
@@ -50,34 +40,11 @@ string SplitToken(string sIn, integer iSlot) {
     return llGetSubString(sIn, i + 1, -1);
 }
 
-// To add new entries at the end of Groupings
-integer GroupIndex(string sToken) {
-    sToken = llToLower(sToken);
-    string sGroup = SplitToken(sToken, 0);
-    integer i = llGetListLength(g_lSettings) - 1;
-    // start from the end to find last instance, +2 to get behind the value
-    for (; ~i ; i -= 2) {
-        if (SplitToken(llList2String(g_lSettings, i - 1), 0) == sGroup) return i + 1;
-    }
-    return -1;
-}
-
 integer SettingExists(string sToken) {
-    sToken = llToLower(sToken);
-    if (~llListFindList(g_lSettings, [sToken])) return TRUE;
-    return FALSE;
+    if (llLinksetDataRead(llToLower(sToken)) !="") return TRUE;
+    else return FALSE;
 }
 
-list SetSetting(string sToken, string sValue) {
-    sToken = llToLower(sToken);
-    integer idx = llListFindList(g_lSettings, [sToken]);
-    if (~idx) return llListReplaceList(g_lSettings, [sValue], idx + 1, idx + 1);
-    idx = GroupIndex(sToken);
-    if (~idx) return llListInsertList(g_lSettings, [sToken, sValue], idx);
-    return g_lSettings + [sToken, sValue];
-}
-
-list g_lSettings;
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
@@ -144,20 +111,22 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 
 
 PrintAll(key kID, string sExtra){
-    integer i=0;
-    integer end = llGetListLength(g_lSettings);
+    list tokens = llLinksetDataListKeys(0, 0);
+    integer i=0;    
+    integer end = llGetListLength(tokens);
+    
     llMessageLinked(LINK_SET, NOTIFY, "0OpenCollar Settings: ",kID);
     //llMessageLinked(LINK_SET, NOTIFY, "0settings=nocomma~1", kID);
     string sBuffer = "settings=nocomma~1";
-    for(i=0;i<end;i+=2){
-        list lTmp = llParseStringKeepNulls(llList2String(g_lSettings,i),["_"],[]);
+
+    for(i=0;i<end;i++){
+        list lTmp = llParseStringKeepNulls(llList2String(tokens,i),["_"],[]);
         string sTok = llList2String(lTmp,0);
         string sVar = llDumpList2String(llList2List(lTmp,1,-1), "_");
+        
         integer iProcess=TRUE;
         if(llToLower(sTok)=="settings" && llToLower(sVar) == "nocomma") iProcess=FALSE;
-        if(llToLower(sExtra) != "debug" && llToLower(sTok) == "intern"){
-            iProcess=FALSE;
-        }
+        if(llToLower(sExtra) != "debug" && llToLower(sTok) == "intern") iProcess=FALSE;
 
         if(iProcess){
             integer iStart=TRUE;
@@ -203,16 +172,18 @@ PrintAll(key kID, string sExtra){
     if(llStringLength(sBuffer)>0)llMessageLinked(LINK_SET, NOTIFY, "0"+sBuffer, kID);
 }
 
-integer g_iCurrentIndex =0;
-integer SendAValue(){
+integer g_iCurrentIndex = 0;
+integer SendAValue(){    
+    list tokens = llLinksetDataListKeys(0, 0);
+    integer end = llGetListLength(tokens);    
     // a non-blocking send setting method
-    if(g_iCurrentIndex>=llGetListLength(g_lSettings)){
+    if(g_iCurrentIndex >= end){
         g_iCurrentIndex=0;
         llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "settings=sent", "");
         return FALSE;
     } else {
-        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, llList2String(g_lSettings,g_iCurrentIndex),"");
-        g_iCurrentIndex+=2;
+        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, GetSetting(llList2String(tokens,g_iCurrentIndex)) ,"");
+        g_iCurrentIndex++;
         return TRUE;
     }
 }
@@ -234,8 +205,7 @@ UserCommand(integer iNum, string sStr, key kID) {
         if(AuthCheck(iNum))PrintAll(kID, llGetSubString(sLower,0,4));
         else Error(kID, sStr);
     }
-    else if(llGetSubString(sLower,0,5) == "reboot")
-    {
+    else if(llGetSubString(sLower,0,5) == "reboot") {
         if(AuthCheck(iNum)){
             if(g_iRebootConfirmed || sLower == "reboot --f"){
                 llMessageLinked(LINK_SET, NOTIFY, "0Rebooting your %DEVICETYPE%...", kID);
@@ -281,7 +251,7 @@ UserCommand(integer iNum, string sStr, key kID) {
 integer g_iRebootConfirmed=FALSE;
 key g_kWearer;
 list g_lMenuIDs;
-integer g_iMenuStride;
+integer g_iMenuStride = 3;    // DON'T FORGET FOR THIS CONSTANT !!!
 //integer g_iLocked=FALSE;
 
 key g_kSettingsRead;
@@ -296,8 +266,7 @@ integer iSetor(integer test,integer a,integer b){
     else return b;
 }
 
-ProcessSettingLine(string sLine)
-{
+ProcessSettingLine(string sLine){
     // # = comments, at front of line or at end
     // = = sets a setting
     // + = appends a setting (if nocomma = 1, then dont append comma
@@ -327,7 +296,7 @@ ProcessSettingLine(string sLine)
             if(llList2String(lTmp,0)=="settings" && llList2String(l2,i)=="nocomma"){
                 g_iNoComma=(integer)llList2String(l2,i+1);
             }
-            g_lSettings = SetSetting(llList2String(lTmp,0)+"_"+llList2String(l2,i), llList2String(l2,i+1));
+            llLinksetDataWrite(llToLower(llList2String(lTmp,0)+"_"+llList2String(l2,i)), llList2String(l2,i+1));
         }
     } else {
         // append!!
@@ -341,15 +310,15 @@ ProcessSettingLine(string sLine)
             else sValCur+=","+llList2String(l2,i+1);
 
             //llOwnerSay(llList2String(lTmp,0)+"+"+llList2String(l2,i)+"="+llList2String(l2,i+1));
-            g_lSettings = SetSetting(sToken,sValCur);
+            llLinksetDataWrite(llToLower(sToken),sValCur);
+            
         }
 
     }
     if(iWeldSetting) llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "5", "check_weld");
 }
 integer g_iWeldStorage = -99;
-FindLeashpointOrLock()
-{
+FindLeashpointOrLock(){
     g_iWeldStorage=-99;
     integer i=0;
     integer end = llGetNumberOfPrims();
@@ -379,7 +348,7 @@ CheckForAndSaveWeld(){
         //llSay(0, "Parameters: "+llList2CSV(lPara));
         if(llListFindList(lPara, ["weld"])==-1){
             if(Welded){
-                if(GetSetting("intern_weldby")=="NOT_FOUND")g_lSettings = SetSetting("intern_weldby", (string)NULL_KEY);
+                if(GetSetting("intern_weldby")=="NOT_FOUND") llLinksetDataWrite("intern_weldby", (string)NULL_KEY);
                 lPara+=["weld",GetSetting("intern_weldby")];
             }
         }else {
@@ -399,44 +368,9 @@ CheckForAndSaveWeld(){
     }
 }
 
-RestoreWeldState(){
-    FindLeashpointOrLock();
-    if(g_iWeldStorage==-99)return;
-    if(g_iWeldStorage == LINK_ROOT)return;
-
-
-    // get welded
-    list lPara = llParseString2List(llList2String(llGetLinkPrimitiveParams(g_iWeldStorage,[PRIM_DESC]),0),["~"],[]);
-    if(llListFindList(lPara,["weld"])!=-1){
-        integer index = llListFindList(lPara,["weld"]);
-        g_lSettings = SetSetting("intern_weldby", llList2String(lPara, index+1));
-        g_lSettings = SetSetting("intern_weld","1");
-
-        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "intern_weld","");
-        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "intern_weldby","");
-    }
-}
-
-DeleteWeldFlag()
-{
-    FindLeashpointOrLock();
-    if(g_iWeldStorage == -99)return;
-    if(g_iWeldStorage == LINK_ROOT)return;
-
-    list lPara = llParseString2List(llList2String(llGetLinkPrimitiveParams(g_iWeldStorage, [PRIM_DESC]) , 0), ["~"], []);
-    integer iIndex = llListFindList(lPara,["weld"]);
-
-
-    if(iIndex==-1)return;
-
-    lPara = llDeleteSubList(lPara,iIndex,iIndex+1);
-
-    llSetLinkPrimitiveParams(g_iWeldStorage, [PRIM_DESC, llDumpList2String(lPara,"~")]);
-}
 integer g_iBootup;
 
-integer CheckModifyPerm(string sSetting, key kStr)
-{
+integer CheckModifyPerm(string sSetting, key kStr){
     sSetting = llToLower(sSetting);
     list lTmp = llParseString2List(sSetting,["_", "="],[]);
     if(llList2String(lTmp,0)=="auth") // Protect the auth settings against manual editing via load url or via the settings editor
@@ -447,26 +381,22 @@ integer CheckModifyPerm(string sSetting, key kStr)
     if(kStr == "url" && llList2String(lTmp,0) == "intern")return FALSE;
     return TRUE;
 }
-default
-{
+
+default{
     on_rez(integer t){
         if(llGetOwner()!=g_kWearer) llResetScript();
         g_iCurrentIndex=0;
         llSetTimerEvent(10);
     }
-    state_entry()
-    {
+    state_entry() {
         if(llGetLinkNumber()==LINK_ROOT || llGetLinkNumber()==0){}else{
             // I didn't feel like doing a bunch of complex logic there, so we're just doing an else case. If we are not in the root prim, delete ourself
             llOwnerSay("Moving oc_settings");
             llRemoveInventory(llGetScriptName());
         }
         g_kWearer = llGetOwner();
-
-        FindLeashpointOrLock();
-        RestoreWeldState();
-
-        if (!SettingExists("global_checkboxes")) g_lSettings = SetSetting("global_checkboxes", "□,▣");
+        
+        if (!SettingExists("global_checkboxes")) llLinksetDataWrite("global_checkboxes", "□,▣");
 
         if(llGetInventoryType(g_sSettings)!=INVENTORY_NONE){
             g_iSettingsRead=0;
@@ -534,12 +464,10 @@ default
                         g_iRebootConfirmed=TRUE;
                         llMessageLinked(LINK_SET, iAuth, "reboot", kAv);
                     }
-                } else if(sMenu == "Consent~LoadURL")
-                {
+                } else if(sMenu == "Consent~LoadURL"){
                     if(sMsg == "DECLINE"){
                         llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to loading auth or intern settings", g_kLoadURLBy);
-                    } else if(sMsg == "ACCEPT")
-                    {
+                    } else if(sMsg == "ACCEPT"){
                         llMessageLinked(LINK_SET, NOTIFY, "1Consented. Reloading URL", g_kLoadURLBy);
                         g_iLoadURLConsented=TRUE;
                         g_kLoadURL = llHTTPRequest(g_sLoadURL, [], "");
@@ -573,21 +501,17 @@ default
             list lTmp = llParseString2List(sStr,["="],[]);
             string sTok = llList2String(lTmp,0);
             string sVal = llList2String(lTmp,1);
-
             if(sTok == "intern_weld" || sTok == "intern_weldby") llMessageLinked(LINK_SET,TIMEOUT_REGISTER, "10", "check_weld");
-
             if(sTok == "intern_weld") {
                 if(kID) { //arrow code because X && KiD throws error
-                    g_lSettings = SetSetting("intern_weldby", (string)kID); //Setting the welder so CheckForAndSaveWeld() can set the WeldStorage desc
+                    llLinksetDataWrite("intern_weldby", (string)kID); //Setting the welder so CheckForAndSaveWeld() can set the WeldStorage desc
                     llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "intern_weldby=" + (string)kID, ""); //We need to tell oc_core who is the welder
                 }
+            } else {
+                llLinksetDataWrite(llToLower(sTok),sVal);
+                llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, sStr, "");
             }
-
-            g_lSettings = SetSetting(sTok,sVal);
-
-            llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, sStr, "");
-        } else if(iNum == LM_SETTING_REQUEST)
-        {
+        } else if(iNum == LM_SETTING_REQUEST){
             if(SettingExists(sStr)) llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, sStr+"="+GetSetting(sStr), "");
             else if(sStr == "ALL"){
                 g_iCurrentIndex=0;
@@ -604,10 +528,8 @@ default
         //llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
     }
 
-    http_response(key kID, integer iStatus, list lMeta, string sBody)
-    {
-        if(kID == g_kLoadURL)
-        {
+    http_response(key kID, integer iStatus, list lMeta, string sBody){
+        if(kID == g_kLoadURL){
             g_kLoadURL = NULL_KEY;
 
             list lSettings = llParseString2List(sBody, ["\n"],[]);
