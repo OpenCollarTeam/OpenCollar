@@ -10,7 +10,7 @@ else
 	endif
 endif
 
-LSLINT_VERSION := v1.0.8
+LSLINT_VERSION := v1.3
 LSLINT_FILE := lslint_$(LSLINT_VERSION)_$(LSLINT_ENV).zip
 LSLINT_URL := https://github.com/Makopo/lslint/releases/download/$(LSLINT_VERSION)/$(LSLINT_FILE)
 LSLINT := bin/lslint
